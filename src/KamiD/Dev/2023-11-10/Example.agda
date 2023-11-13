@@ -6,8 +6,10 @@ open import Agora.Data.Power.Definition
 open import Data.Fin
 open import Data.Nat
 open import Relation.Nullary.Decidable.Core
+open import KamiD.Dev.2023-11-10.Core
 open import KamiD.Dev.2023-11-10.Rules
 open import KamiD.Dev.2023-11-10.Utils
+open import KamiD.Dev.2023-11-10.Utils.Context
 
 a b c d p q r : String
 a = "a"
@@ -28,5 +30,7 @@ twopt : Ctx
 twopt = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ]
 
 line : Ctx
-line = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ] ,[ p ∶ (a ∷ b ∷ []) ?⊩ 𝒮 ({!!} , {!!}) ]
+line = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ] ,[ p ∶ (a ∷ b ∷ []) ?⊩ 𝒮 ([] & ‵ a & ‵ b) ]
+
+
 

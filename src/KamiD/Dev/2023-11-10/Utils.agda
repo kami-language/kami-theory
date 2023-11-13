@@ -4,29 +4,75 @@ module KamiD.Dev.2023-11-10.Utils where
 open import Agora.Conventions hiding (Σ)
 open import Agora.Data.Power.Definition
 open import Data.Fin
-open import Data.Nat
+open import Data.Nat hiding (_!)
 open import Data.List using (List ; [] ; _∷_)
 open import Data.String
 open import Relation.Nullary.Decidable.Core
+
+open import KamiD.Dev.2023-11-10.Core
 open import KamiD.Dev.2023-11-10.Rules
-
-record ∑ₕ {A : 𝒰 𝑖} (B : {{_ : A}} -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
-  constructor make∑ₕ
-  field {{fst}} : A
-  field snd : B {{fst}}
-open ∑ₕ public
-
-pattern _,ₕ_ f s = make∑ₕ {{f}} s
-infixr 30 _,ₕ_
+open import KamiD.Dev.2023-11-10.Utils.Context
 
 
-len-Ctx : Ctx -> ℕ
-len-Ctx [] = 0
-len-Ctx (Γ ,[ x ∶ x₁ ]) = suc (len-Ctx Γ)
+wk-⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> (B : Γ ⊢Type j) -> Γ ,[ x ∶ A ] ⊢Type j
+wk-⊢Type (Ε ⊩ B) = Ε ⊩ B
 
 instance
-  _ : Notation-Absolute Ctx ℕ
-  _ = record { ∣_∣ = len-Ctx }
+  hasNotation-wk:⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> hasNotation-wk (Γ ⊢Type j) (const $ Γ ,[ x ∶ A ] ⊢Type j)
+  hasNotation-wk:⊢Type = record { wk = wk-⊢Type }
+
+wk-⊢Var : ∀{Γ k j Ε x} -> {i : Γ ⊢Varkind k} {A : Ε ⊢Type! k} {B : Γ ⊢Type j} -> Γ ⊢Var i ∶ A -> Γ ,[ x ∶ B ] ⊢Var (suc i) ∶ A
+wk-⊢Var (var x by X) = var x by skip {{X}} {{it}}
+
+instance
+  hasNotation-wk:⊢Var : ∀{Γ k j Ε x} -> {i : Γ ⊢Varkind k} {A : Ε ⊢Type! k} {B : Γ ⊢Type j} -> hasNotation-wk (Γ ⊢Var i ∶ A) (const $ Γ ,[ x ∶ B ] ⊢Var (suc i) ∶ A)
+  hasNotation-wk:⊢Var = record { wk = λ x -> wk-⊢Var x }
+
+_＠-⊢Type_ : (Γ : Ctx) -> ∀{k} -> Γ ⊢Varkind k -> Γ ⊢Type k
+(Γ ,[ x ∶ A ]) ＠-⊢Type zero = wk A
+(Γ ,[ x ∶ A ]) ＠-⊢Type suc i = wk (Γ ＠-⊢Type i)
+
+instance
+  hasNotation-＠:⊢Type : ∀{k} -> hasNotation-＠ Ctx (λ Γ -> Γ ⊢Varkind k) (λ Γ i -> Γ ⊢Type k)
+  hasNotation-＠:⊢Type = record { _＠_ = λ Γ i -> Γ ＠-⊢Type i }
+
+
+_＠-⊢Var_ : ∀{k} -> ∀(Γ) -> (i : Γ ⊢Varkind k) -> Γ ⊢Var i ∶ (Γ ＠ i)!
+_＠-⊢Var_ (Γ ,[ x ∶ Ε ⊩ A ]) zero = var x by (take {{it}} {{id-⊇}})
+_＠-⊢Var_ (Γ ,[ x ∶ x₁ ]) (suc i) = wk (Γ ＠-⊢Var i)
+
+instance
+  hasNotation-＠:⊢Var : ∀{k} -> hasNotation-＠ Ctx (λ Γ -> Γ ⊢Varkind k) (λ Γ i -> Γ ⊢Var i ∶ (Γ ＠ i)!)
+  hasNotation-＠:⊢Var = record { _＠_ = λ Γ i -> Γ ＠-⊢Var i }
+
+instance
+  Derive:⊢Var : ∀{k Γ} -> {i : Γ ⊢Varkind k} -> Γ ⊢Var i ∶ (Γ ＠ i)!
+  Derive:⊢Var {k} {Γ} {i} = Γ ＠ i
+
+
+findVar : (Γ : Ctx) -> (x : Name) -> Maybe (Fin ∣ Γ ∣)
+findVar [] x = nothing
+findVar (Γ ,[ y ∶ x₂ ]) x with (Data.String._≟_ x y).does
+... | false = map-Maybe suc (findVar Γ x)
+... | true = just zero
+
+varByIndex : (Γ : Ctx) -> Fin ∣ Γ ∣ -> ∑ (Γ ⊢Varkind_)
+varByIndex (Γ ,[ x ∶ x₁ ]) zero = (_ , zero)
+varByIndex (Γ ,[ x ∶ x₁ ]) (suc i) =
+  let (k , i) = varByIndex Γ i
+  in (k , suc i)
+
+varByName : (Γ : Ctx) -> Name -> Maybe (∑ (Γ ⊢Varkind_))
+varByName Γ x = map-Maybe (varByIndex Γ) (findVar Γ x)
+
+
+
+
+‵ : ∀{k} -> {Γ : Ctx} -> (x : Name)
+     -> {{_ : map-Maybe fst (varByName Γ x) ≣ just k }}
+     -> Γ ⊢Varkind k
+‵ {Γ = Γ} x {{P}} with varByName Γ x | P
+... | just (k , i) | refl-≣ = i
 
 
 getVarCtx : (Γ : Ctx) -> Fin ∣ Γ ∣ -> ∑ Γ ⊇_
@@ -37,75 +83,8 @@ getVarCtx (Γ ,[ x ∶ x₁ ]) (suc i) =
   let Γ' , P' = getVarCtx Γ i
   in Γ' , skip {{P'}}
 
-findVar : (Γ : Ctx) -> (x : Name) -> Maybe (Fin ∣ Γ ∣)
-findVar [] x = nothing
-findVar (Γ ,[ y ∶ x₂ ]) x with (Data.String._≟_ x y).does
-... | false = map-Maybe suc (findVar Γ x)
-... | true = just zero
-
-skip-right : ∀{Γ Δ Ε k x} -> {A : Ε ⊢Type! k} -> {{_ : Δ ⊇ Ε}}
-           -> Γ ⊇ Δ ,[ x ∶ Ε ⊩ A ] -> Γ ⊇ Δ
-skip-right take = skip {{it}} {{it}}
-skip-right skip = skip {{skip-right it}} {{it}}
-
-compose-⊇ : ∀(Γ Δ Ε : Ctx) -> {{_ : Γ ⊇ Δ}} -> {{_ : Δ ⊇ Ε}} -> Γ ⊇ Ε
-compose-⊇ .[] .[] Ε ⦃ empty ⦄ ⦃ B ⦄ = B
-compose-⊇ (Γ ,[ _ ∶ _ ⊩ _ ]) (Δ ,[ _ ∶ _ ⊩ _ ]) (Ε ,[ _ ∶ _ ⊩ _ ]) ⦃ take ⦄ ⦃ take ⦄ =
-  let instance _ = compose-⊇ Γ Δ Ε
-  in take
-compose-⊇ (Γ ,[ _ ∶ _ ⊩ _ ]) (Δ ,[ _ ∶ _ ⊩ _ ]) Ε ⦃ take ⦄ ⦃ skip ⦄ =
-  let instance _ = compose-⊇ Γ Δ Ε
-  in skip
-compose-⊇ .(_ ,[ _ ∶ _ ⊩ _ ]) .[] .[] ⦃ skip ⦄ ⦃ empty ⦄ = it
-compose-⊇ (Γ ,[ x₀ ∶ Γ₀ ⊩ A₀ ]) (Δ ,[ x₁ ∶ Γ₁ ⊩ A₁ ]) (Ε ,[ _ ∶ _ ⊩ _ ]) ⦃ skip ⦄ ⦃ take ⦄ =
-  let A : Γ ⊇ (Ε ,[ _ ∶ _ ⊩ _ ])
-      A = compose-⊇ Γ (Δ ,[ x₁ ∶ Γ₁ ⊩ A₁ ]) (Ε ,[ _ ∶ _ ⊩ _ ]) {{it}} {{take}}
-  in skip {{A}} {{it}}
-compose-⊇ (Γ ,[ _ ∶ _ ⊩ _ ]) (Δ ,[ _ ∶ _ ⊩ _ ]) Ε ⦃ skip ⦄ ⦃ skip ⦄ =
-  let X = compose-⊇ Γ Δ Ε {{skip-right it}}
-  in skip {{X}} {{it}}
 
 
-joinCtx : ∀(Γ Δ Ε : Ctx) -> {{_ : Γ ⊇ Δ}} -> {{_ : Γ ⊇ Ε}}
-          -> ∑ λ Ρ -> ∑ₕ λ {{_ : Γ ⊇ Ρ}} -> ∑ₕ λ {{_ : Ρ ⊇ Δ}} -> ∑ₕ λ {{_ : Ρ ⊇ Ε}} -> Ρ ↤ Δ ∪ Ε
--- joinCtx .(_ ,[ _ ∶ _ ⊩ _ ]) [] Ε ⦃ skip ⦄ ⦃ Y ⦄ = {!!}
--- joinCtx .(_ ,[ x ∶ ctx₁ ⊩ typ₁ ]) (Δ ,[ x ∶ ctx₁ ⊩ typ₁ ]) [] ⦃ take ⦄ ⦃ Y ⦄ = {!!}
--- joinCtx .(_ ,[ _ ∶ _ ⊩ _ ]) (Δ ,[ x ∶ x₁ ]) [] ⦃ skip ⦄ ⦃ Y ⦄ = {!!}
--- joinCtx Γ (Δ ,[ x ∶ x₁ ]) (Ε ,[ x₂ ∶ x₃ ]) ⦃ X ⦄ ⦃ Y ⦄ = {!!}
-
-
-joinCtx .[] .[] Ε ⦃ empty ⦄ ⦃ Y ⦄ = Ε , Y ,ₕ isTop-⊇-[] ,ₕ id-⊇ ,ₕ emptyright
-joinCtx (Γ ,[ x ∶ Γ₀ ⊩ A ]) Δ@(_ ,[ .x ∶ .Γ₀ ⊩ .A ]) Ε@[] ⦃ take ⦄ ⦃ skip ⦄ = Δ , take ,ₕ id-⊇ ,ₕ isTop-⊇-[] ,ₕ emptyleft
-joinCtx (Γ ,[ x ∶ Γ₀ ⊩ A ]) (Δ ,[ _ ∶ _ ⊩ _ ]) (Ε ,[ _ ∶ _ ⊩ _ ]) ⦃ take ⦄ ⦃ take ⦄ =
-  let Ρ , _ ,ₕ _ ,ₕ _ ,ₕ Ρ↤Δ∪Ε = joinCtx Γ Δ Ε
-      instance _ = compose-⊇ Ρ Ε Γ₀
-      instance _ = Ρ↤Δ∪Ε
-  in Ρ ,[ x ∶ Γ₀ ⊩ A ] , take ,ₕ take ,ₕ take ,ₕ takeboth
-
-joinCtx (Γ ,[ x ∶ Γ₀ ⊩ A ]) (Δ ,[ .x ∶ .Γ₀ ⊩ .A ]) Ε@(_ ,[ _ ∶ _ ]) ⦃ take ⦄ ⦃ skip ⦄ =
-  let Ρ , _ ,ₕ _ ,ₕ _ ,ₕ Ρ↤Δ∪Ε = joinCtx Γ Δ Ε
-      instance _ = compose-⊇ Ρ Δ Γ₀
-      instance _ = Ρ↤Δ∪Ε
-  in Ρ ,[ x ∶ Γ₀ ⊩ A ] , take ,ₕ take ,ₕ skip ,ₕ takeleft
-
-joinCtx (Γ ,[ x ∶ Γ₀ ⊩ A ]) Δ (Ε ,[ _ ∶ _ ⊩ _ ]) ⦃ skip ⦄ ⦃ take ⦄ =
-  let Ρ , _ ,ₕ _ ,ₕ _ ,ₕ Ρ↤Δ∪Ε = joinCtx Γ Δ Ε
-      instance _ = compose-⊇ Ρ Ε Γ₀
-      instance _ = Ρ↤Δ∪Ε
-  in Ρ ,[ x ∶ Γ₀ ⊩ A ] , take ,ₕ skip ,ₕ take ,ₕ takeright
-joinCtx (Γ ,[ _ ∶ _ ⊩ _ ]) Δ@[] Ε@[] ⦃ skip ⦄ ⦃ skip ⦄ = [] , isTop-⊇-[] ,ₕ id-⊇ ,ₕ id-⊇ ,ₕ emptyleft
-  -- let Ρ , _ ,ₕ _ ,ₕ _ ,ₕ Ρ↤Δ∪Ε = joinCtx Γ Δ Ε
-  -- in Ρ , skip ,ₕ _ ,ₕ _ ,ₕ Ρ↤Δ∪Ε
-joinCtx (Γ ,[ _ ∶ _ ⊩ _ ]) Δ@[] Ε@(_ ,[ x ∶ x₁ ]) ⦃ skip ⦄ ⦃ skip ⦄ = -- Ε , skip {{skip-right it}} ,ₕ isTop-⊇-[] ,ₕ {!!} ,ₕ {!!}
-  let Ρ , _ ,ₕ _ ,ₕ _ ,ₕ Ρ↤Δ∪Ε = joinCtx Γ Δ Ε
-  in Ρ , skip ,ₕ _ ,ₕ _ ,ₕ Ρ↤Δ∪Ε
-joinCtx (Γ ,[ _ ∶ _ ⊩ _ ]) Δ@(_ ,[ x ∶ x₁ ]) Ε@[] ⦃ skip ⦄ ⦃ skip ⦄ =
-  let Ρ , _ ,ₕ _ ,ₕ _ ,ₕ Ρ↤Δ∪Ε = joinCtx Γ Δ Ε
-  in Ρ , skip ,ₕ _ ,ₕ _ ,ₕ Ρ↤Δ∪Ε
-joinCtx (Γ ,[ _ ∶ _ ⊩ _ ]) Δ@(_ ,[ x ∶ x₁ ]) Ε@(_ ,[ x₂ ∶ x₃ ]) ⦃ skip ⦄ ⦃ skip ⦄ =
--- joinCtx (Γ ,[ _ ∶ _ ⊩ _ ]) (Δ ,[ x ∶ x₁ ]) Ε ⦃ skip ⦄ ⦃ skip ⦄ = {!!}
-  let Ρ , _ ,ₕ _ ,ₕ _ ,ₕ Ρ↤Δ∪Ε = joinCtx Γ Δ Ε
-  in Ρ , skip ,ₕ _ ,ₕ _ ,ₕ Ρ↤Δ∪Ε
 
 
 
@@ -127,4 +106,7 @@ _?⊩_ : ∀{Γ Δ k} -> {X : Γ ⊇ Δ} -> (xs : List Name) -> {{_ : getVarsCtx
 _?⊩_ {Δ = Δ} {X = X} xs tp =
   let instance _ = X
   in Δ ⊩ tp
+
+
+
 
