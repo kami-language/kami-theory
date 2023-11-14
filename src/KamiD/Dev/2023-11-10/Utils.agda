@@ -6,12 +6,28 @@ open import Agora.Data.Power.Definition
 open import Data.Fin
 open import Data.Nat hiding (_!)
 open import Data.List using (List ; [] ; _∷_)
-open import Data.String
+open import Data.String hiding (_≈_)
 open import Relation.Nullary.Decidable.Core
 
 open import KamiD.Dev.2023-11-10.Core
 open import KamiD.Dev.2023-11-10.Rules
 open import KamiD.Dev.2023-11-10.Utils.Context
+
+_＠-Kind_ : ∀(Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Kind
+(_,[_∶_] Γ x {k = k} A) ＠-Kind zero = k
+(Γ ,[ x ∶ x₁ ]) ＠-Kind suc i = Γ ＠-Kind i
+
+instance
+  hasNotation-＠:Kind : hasNotation-＠ Ctx (λ Γ -> Fin ∣ Γ ∣) (λ _ _ -> Kind)
+  hasNotation-＠:Kind = record { _＠_ = λ Γ i -> Γ ＠-Kind i }
+
+_＠-⊢Varkind_ : ∀(Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Γ ⊢Varkind (Γ ＠ i)
+(Γ ,[ x ∶ x₁ ]) ＠-⊢Varkind zero = zero
+(Γ ,[ x ∶ x₁ ]) ＠-⊢Varkind suc i = suc (Γ ＠-⊢Varkind i)
+
+instance
+  hasNotation:＠-⊢Varkind : hasNotation-＠ Ctx (λ Γ -> Fin ∣ Γ ∣) (λ Γ i -> Γ ⊢Varkind (Γ ＠ i))
+  hasNotation:＠-⊢Varkind = record { _＠_ = λ Γ i -> Γ ＠-⊢Varkind i }
 
 
 wk-⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> (B : Γ ⊢Type j) -> Γ ,[ x ∶ A ] ⊢Type j
@@ -75,6 +91,98 @@ varByName Γ x = map-Maybe (varByIndex Γ) (findVar Γ x)
 ... | just (k , i) | refl-≣ = i
 
 
+
+
+----------------------------------------------------
+-- Derivation for ⊇
+
+-- Derive:⊇ : ∀{Γ Δ} -> Γ ⊇ Δ
+
+
+
+
+----------------------------------------------------
+-- Old Var Ctxs
+
+
+data _⊢Ctx_ : (Γ : Ctx) -> (m : ℕ) -> 𝒰₀ where
+  [] : ∀{Γ} -> Γ ⊢Ctx 0
+  [_∶_]∷_ : ∀{Γ k m} -> (x : Name) -> (A : Γ ⊢Type k) -> (Γ ,[ x ∶ A ]) ⊢Ctx m -> Γ ⊢Ctx (suc m)
+
+infixl 60 [_∶_]∷_
+
+_⋆_ : ∀{m} -> (Γ : Ctx) -> (Δ : Γ ⊢Ctx m) -> Ctx
+Γ ⋆ [] = Γ
+Γ ⋆ [ x ∶ A ]∷ Δ = Γ ,[ x ∶ A ] ⋆ Δ
+
+infixl 30 _⋆_
+
+data _≈_⋆_ : ∀{m} -> (Γ : Ctx) -> (Γ₀ : Ctx)-> (Γ₁ : Γ₀ ⊢Ctx m) -> 𝒰₀ where
+  zero : ∀{Γ} -> Γ ≈ Γ ⋆ []
+  suc : ∀{Γ Γ₀ k x} -> {A : Γ₀ ⊢Type k} -> ∀{Γ₁} -> Γ ≈ Γ₀ ,[ x ∶ A ] ⋆ Γ₁ -> Γ ≈ Γ₀ ⋆ [ x ∶ A ]∷ Γ₁
+
+id-≅⋆ : ∀{Γ Δ} -> Γ ⋆ Δ ≈ Γ ⋆ Δ
+id-≅⋆ {Γ} {[]} = zero
+id-≅⋆ {Γ} {[ x ∶ A ]∷ Δ} = suc id-≅⋆
+
+cutCtx : ∀{m} -> (Γ : Ctx) -> (i : Fin (suc ∣ Γ ∣)) -> (Δ : Γ ⊢Ctx m) -> ∑ λ Γ₀ -> ∑ λ Γ₁ -> (Γ ⋆ Δ) ≈ Γ₀ ⋆ Γ₁
+cutCtx Γ zero Δ = Γ , Δ , id-≅⋆
+cutCtx (Γ ,[ x ∶ A ]) (suc i) Δ = cutCtx Γ i ([ x ∶ A ]∷ Δ)
+
+_©ₗ_ : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Ctx
+_©ₗ_ Γ i = fst (cutCtx Γ (suc i) [])
+
+infixl 40 _©ₗ_
+
+typett : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> ∑ λ k -> Γ ©ₗ i ⊢Type k
+typett Γ i =
+  let a , b , c = cutCtx Γ (suc i) []
+  in {!!}
+
+
+
+-- getVarCtx' : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Γ ≈ ((Γ ©ₗ (suc i)) ,[ {!!} ∶ {!!} ]) ⋆ {!!}
+-- getVarCtx' = {!!}
+
+-- getVarCtx' : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> ∑ λ Γ₀ -> ∑ λ x -> ∑ λ (A : Γ₀ ⊢Type (Γ ＠ i)) -> ∑ λ Γ₁ -> Γ ≈ (Γ₀ ,[ x ∶ A ]) ⋆ Γ₁
+-- getVarCtx' = {!!}
+
+
+
+
+
+-- _©ᵣ_ : (Γ)
+
+
+
+
+
+data _⋖_ : (Γ Δ : Ctx) -> 𝒰₀ where
+  id-⋖ : ∀{Γ} -> Γ ⋖ Γ
+  _,[_∶_] : ∀{Γ x k} -> (A : Γ ⊢Type k) -> Γ ⋖ Γ ,[ x ∶ A ]
+
+
+record Result-cutCtx {Γ k} (i : Γ ⊢Varkind k) : 𝒰₀ where
+  field prefix : Ctx
+  field isPrefix : prefix ⋖ Γ
+  field varctx : Ctx
+  field hasvarctx : prefix ⊇ varctx
+  field vartype : varctx ⊢Type! k
+  -- field subvarctx : prefix ⊢Var i ∶ 
+
+open Result-cutCtx public
+
+-- cutCtx : ∀{Γ k} -> (i : Γ ⊢Varkind k) -> Result-cutCtx i
+-- cutCtx {Γ ,[ x ∶ Ε ⊩ A ]} zero = record
+--   { prefix = Γ
+--   ; isPrefix = {!!}
+--   ; varctx = Ε
+--   ; hasvarctx = it
+--   ; vartype = A
+--   }
+-- cutCtx {Γ ,[ x ∶ x₁ ]} (suc i) = {!!}
+
+
 getVarCtx : (Γ : Ctx) -> Fin ∣ Γ ∣ -> ∑ Γ ⊇_
 getVarCtx (Γ ,[ x ∶ Ε ⊩ A ]) zero = (Ε ,[ x ∶ Ε ⊩ A ]) , take
   where
@@ -86,18 +194,22 @@ getVarCtx (Γ ,[ x ∶ x₁ ]) (suc i) =
 
 
 
-
-
 getVarsCtx : (Γ : Ctx) -> List Name -> Maybe (∑ Γ ⊇_)
 getVarsCtx Γ [] = just ([] , it)
   where instance _ = isTop-⊇-[]
 getVarsCtx Γ (x ∷ xs) = do
-  Δ₀ , P <- map-Maybe (getVarCtx Γ) (findVar Γ x)
-  Δ₁ , Q <- getVarsCtx Γ xs
-  let instance _ = P
-  let instance _ = Q
-  let Δ , _ ,ₕ _ ,ₕ _ ,ₕ _ = joinCtx Γ Δ₀ Δ₁
-  just (Δ , it)
+  i <- findVar Γ x
+  let x = cutCtx Γ (suc i) []
+  {! !}
+
+
+  -- Δ₀ , P <- map-Maybe (getVarCtx Γ) (findVar Γ x)
+  -- {!!}
+  -- Δ₁ , Q <- getVarsCtx Γ xs
+  -- let instance _ = P
+  -- let instance _ = Q
+  -- let Δ , _ ,ₕ _ ,ₕ _ ,ₕ _ = joinCtx Γ Δ₀ Δ₁
+  -- just (Δ , it)
 
   where _>>=_ = bind-Maybe
 

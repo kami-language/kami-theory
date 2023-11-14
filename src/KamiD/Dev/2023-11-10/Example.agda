@@ -34,3 +34,14 @@ line = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ] ,[ p ∶ (a ∷ b ∷ []) ?⊩ 𝒮 ([] & 
 
 
 
+-- 2023-11-14
+-- As next steps we need to do:
+--  - Think about how situations should be dealt with where a single
+--    channel (at a point) is used by more than two higher processes.
+--    Because composition (gluing) along channels makes sense as long as
+--    there is a +A and a -A. But how can we deal with more than two?
+--    Crazy thought: do we want that the "sum" has to be zero??
+--  - Putting datatypes into the context, e.g. the natural numbers.
+
+
+
