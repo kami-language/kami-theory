@@ -1,4 +1,6 @@
 
+{-# OPTIONS --rewriting #-}
+
 module KamiD.Dev.2023-11-10.Example where
 
 open import Agora.Conventions hiding (Σ)
@@ -11,6 +13,8 @@ open import KamiD.Dev.2023-11-10.Rules
 open import KamiD.Dev.2023-11-10.Utils
 open import KamiD.Dev.2023-11-10.Utils.Context
 
+instance _ = Derive:⊇
+
 a b c d p q r : String
 a = "a"
 b = "b"
@@ -20,7 +24,7 @@ p = "p"
 q = "q"
 r = "r"
 
-Pt : ∀{Γ} -> {{_ : Γ ⊇ []}} -> _⊢Type_ Γ 𝑆
+Pt : ∀{Γ} -> _⊢Type_ Γ 𝑆
 Pt = [] ⊩ 𝒮 []
 
 pt : Ctx

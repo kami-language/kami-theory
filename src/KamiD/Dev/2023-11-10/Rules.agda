@@ -52,9 +52,9 @@ data _⊢Varkind_ : (Γ : Ctx) -> (k : Kind) -> Set where
   suc : ∀{Γ x k j} -> {A : Γ ⊢Type k} -> Γ ⊢Varkind j -> Γ ,[ x ∶ A ] ⊢Varkind j
 
 data _⊇_ where
-  instance empty : [] ⊇ []
-  instance take : ∀{Γ Δ Ε k x} -> {A : Ε ⊢Type! k} -> {{_ : Γ ⊇ Δ}} -> {{_ : Δ ⊇ Ε}} -> {{_ : Γ ⊇ Ε}} -> Γ ,[ x ∶ Ε ⊩ A ] ⊇ Δ ,[ x ∶ Ε ⊩ A ]
-  instance skip : ∀{Γ Δ Ε k x} -> {A : Ε ⊢Type! k} -> {{_ : Γ ⊇ Δ}} -> {{_ : Γ ⊇ Ε}} -> Γ ,[ x ∶ Ε ⊩ A ] ⊇ Δ
+  empty : [] ⊇ []
+  take : ∀{Γ Δ Ε k x} -> {A : Ε ⊢Type! k} -> {{_ : Γ ⊇ Δ}} -> {{_ : Δ ⊇ Ε}} -> {{_ : Γ ⊇ Ε}} -> Γ ,[ x ∶ Ε ⊩ A ] ⊇ Δ ,[ x ∶ Ε ⊩ A ]
+  skip : ∀{Γ Δ Ε k x} -> {A : Ε ⊢Type! k} -> {{_ : Γ ⊇ Δ}} -> {{_ : Γ ⊇ Ε}} -> Γ ,[ x ∶ Ε ⊩ A ] ⊇ Δ
 
 isTop-⊇-[] : ∀{Γ} -> Γ ⊇ []
 isTop-⊇-[] {[]} = empty

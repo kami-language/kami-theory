@@ -148,6 +148,8 @@ instance
   Derive:⊢Var : ∀{k Γ} -> {i : Γ ⊢Varkind k} -> Γ ⊢Var i ∶ (Γ ＠ i)!
   Derive:⊢Var {k} {Γ} {i} = Γ ＠ i
 
+-}
+
 
 findVar : (Γ : Ctx) -> (x : Name) -> Maybe (Fin ∣ Γ ∣)
 findVar [] x = nothing
@@ -174,12 +176,9 @@ varByName Γ x = map-Maybe (varByIndex Γ) (findVar Γ x)
 ... | just (k , i) | refl-≣ = i
 
 
+{-
 
 
-----------------------------------------------------
--- Derivation for ⊇
-
--- Derive:⊇ : ∀{Γ Δ} -> Γ ⊇ Δ
 
 
 
@@ -233,6 +232,8 @@ open Result-cutCtx public
 --   }
 -- cutCtx {Γ ,[ x ∶ x₁ ]} (suc i) = {!!}
 
+-}
+
 
 getVarCtx : (Γ : Ctx) -> Fin ∣ Γ ∣ -> ∑ Γ ⊇_
 getVarCtx (Γ ,[ x ∶ Ε ⊩ A ]) zero = (Ε ,[ x ∶ Ε ⊩ A ]) , take
@@ -243,16 +244,39 @@ getVarCtx (Γ ,[ x ∶ x₁ ]) (suc i) =
   in Γ' , skip {{P'}}
 
 
-
-
 getVarsCtx : (Γ : Ctx) -> List Name -> Maybe (∑ Γ ⊇_)
 getVarsCtx Γ [] = just ([] , it)
   where instance _ = isTop-⊇-[]
 getVarsCtx Γ (x ∷ xs) = do
   i <- findVar Γ x
-  let x = cutCtx Γ (suc i) []
-  {! !}
+  let z : Γ ⊢Type (Γ ＠ i)
+      z = Γ ＠ i
+  let Δ₀ ⊩ A = z
+  Δ₁ , P <- getVarsCtx (Γ ©ₗ i) xs
+  let instance
+        _ = P
+        _ = proj-©ₗ Γ i
+        _ = compose-⊇ Γ (Γ ©ₗ i) Δ₁
 
+  let Δ , _ ,ₕ _ ,ₕ _ ,ₕ _ = joinCtx Γ Δ₀ Δ₁
+  just (Δ , it)
+
+  where _>>=_ = bind-Maybe
+
+getNamesOfCtx : (Δ : Ctx) -> List Name
+getNamesOfCtx [] = []
+getNamesOfCtx (Δ ,[ x ∶ x₁ ]) = x ∷ getNamesOfCtx Δ
+
+
+
+----------------------------------------------------
+-- Derivation for ⊇
+
+Derive:⊇ : ∀{Γ Δ} -> {X : Γ ⊇ Δ} -> {{_ : getVarsCtx Γ (getNamesOfCtx Δ) ≣ just (Δ , X)}} -> Γ ⊇ Δ
+Derive:⊇ {Γ} {Δ} {X} = X
+
+
+{-
 
   -- Δ₀ , P <- map-Maybe (getVarCtx Γ) (findVar Γ x)
   -- {!!}
@@ -265,11 +289,12 @@ getVarsCtx Γ (x ∷ xs) = do
   where _>>=_ = bind-Maybe
 
 
+-}
+
 _?⊩_ : ∀{Γ Δ k} -> {X : Γ ⊇ Δ} -> (xs : List Name) -> {{_ : getVarsCtx Γ xs ≣ just (Δ , X)}} -> Δ ⊢Type! k -> Γ ⊢Type k
 _?⊩_ {Δ = Δ} {X = X} xs tp =
   let instance _ = X
   in Δ ⊩ tp
 
 
--}
 
