@@ -78,15 +78,26 @@ proj-©ₗ Γ i =
 -- various ＠ notation
 
 _＠-Kind_ : ∀(Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Kind
-Γ ＠-Kind i = head-Kind (Γ ©ᵣ i)
--- (_,[_∶_] Γ x {k = k} A) ＠-Kind zero = k
--- (Γ ,[ x ∶ x₁ ]) ＠-Kind suc i = Γ ＠-Kind i
+-- Γ ＠-Kind i = head-Kind (Γ ©ᵣ i)
+(_,[_∶_] Γ x {k = k} A) ＠-Kind zero = k
+(Γ ,[ x ∶ x₁ ]) ＠-Kind suc i = Γ ＠-Kind i
 
 instance
   hasNotation-＠:Kind : hasNotation-＠ Ctx (λ Γ -> Fin ∣ Γ ∣) (λ _ _ -> Kind)
   hasNotation-＠:Kind = record { _＠_ = λ Γ i -> Γ ＠-Kind i }
 
--- _＠-⊢Varkind_ : ∀(Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Γ ⊢Varkind (Γ ＠ i)
+
+instance
+  isKind:＠-Kind : ∀{Γ i} -> Γ ⊢ i isKind (Γ ＠ i)
+  isKind:＠-Kind {Γ ,[ x ∶ x₁ ]} {zero} = zero
+  -- isKind:＠-Kind {Γ ,[ x ∶ x₁ ]} {suc i} = {!!}
+  isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ] ,[ x ∶ x₁ ]} {suc i} =
+    let X = isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ]} {i}
+    in {!!}
+    -- isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ] ,[ x ∶ x₁ ]} {suc zero} = let X = isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ]} {i} in ?
+    -- isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ] ,[ x ∶ x₁ ]} {suc (suc i)} = let X = isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ]} {i} in ?
+
+-- _＠-⊢isKind_ : ∀(Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Γ ⊢Varkind (Γ ＠ i)
 -- -- Γ ＠-⊢Varkind i = 
 -- (Γ ,[ x ∶ x₁ ]) ＠-⊢Varkind zero = zero
 -- (Γ ,[ x ∶ x₁ ]) ＠-⊢Varkind suc i =
@@ -157,23 +168,29 @@ findVar (Γ ,[ y ∶ x₂ ]) x with (Data.String._≟_ x y).does
 ... | false = map-Maybe suc (findVar Γ x)
 ... | true = just zero
 
-varByIndex : (Γ : Ctx) -> Fin ∣ Γ ∣ -> ∑ (Γ ⊢Varkind_)
-varByIndex (Γ ,[ x ∶ x₁ ]) zero = (_ , zero)
-varByIndex (Γ ,[ x ∶ x₁ ]) (suc i) =
-  let (k , i) = varByIndex Γ i
-  in (k , suc i)
+-- varByIndex : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> ∑ λ k -> (Γ ⊢ i isKind k)
+-- varByIndex (Γ ,[ x ∶ x₁ ]) zero = (_ , zero)
+-- varByIndex (Γ ,[ x ∶ x₁ ]) (suc i) =
+--   let (k , i) = varByIndex Γ i
+--   in (k , suc i)
 
-varByName : (Γ : Ctx) -> Name -> Maybe (∑ (Γ ⊢Varkind_))
-varByName Γ x = map-Maybe (varByIndex Γ) (findVar Γ x)
-
-
+-- varByName : (Γ : Ctx) -> Name -> Maybe (∑ λ k -> (Γ ⊢ i isKind k))
+-- varByName Γ x = map-Maybe (varByIndex Γ) (findVar Γ x)
 
 
-‵ : ∀{k} -> {Γ : Ctx} -> (x : Name)
-     -> {{_ : map-Maybe fst (varByName Γ x) ≣ just k }}
-     -> Γ ⊢Varkind k
-‵ {Γ = Γ} x {{P}} with varByName Γ x | P
-... | just (k , i) | refl-≣ = i
+
+
+-- ‵ : ∀{k} -> {Γ : Ctx} -> (x : Name)
+--      -> {{_ : map-Maybe fst (varByName Γ x) ≣ just k }}
+--      -> Γ ⊢Varkind k
+-- ‵ {Γ = Γ} x {{P}} with varByName Γ x | P
+-- ... | just (k , i) | refl-≣ = i
+
+‵ : ∀{Γ k} -> (x : Name)
+     -> {{_ : findVar Γ x ≣ just k }}
+     -> Fin ∣ Γ ∣
+‵ {Γ = Γ} x {{P}} with findVar Γ x | P
+... | just k | refl-≣ = k
 
 
 {-

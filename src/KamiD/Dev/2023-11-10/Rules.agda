@@ -47,9 +47,13 @@ data Ctx where
 
 infixl 50 _,[_∶_]
 
-data _⊢Varkind_ : (Γ : Ctx) -> (k : Kind) -> Set where
-  zero : ∀{Γ x k} -> {A : Γ ⊢Type k} -> Γ ,[ x ∶ A ] ⊢Varkind k
-  suc : ∀{Γ x k j} -> {A : Γ ⊢Type k} -> Γ ⊢Varkind j -> Γ ,[ x ∶ A ] ⊢Varkind j
+len-Ctx : Ctx -> ℕ
+len-Ctx [] = 0
+len-Ctx (Γ ,[ x ∶ x₁ ]) = suc (len-Ctx Γ)
+
+instance
+  Notation-Absolute-Ctx : Notation-Absolute Ctx ℕ
+  Notation-Absolute-Ctx = record { ∣_∣ = len-Ctx }
 
 data _⊇_ where
   empty : [] ⊇ []
@@ -63,6 +67,29 @@ isTop-⊇-[] {Γ ,[ x ∶ Ε ⊩ A ]} = skip {{isTop-⊇-[]}} {{it}}
 id-⊇ : ∀{Γ} -> Γ ⊇ Γ
 id-⊇ {[]} = empty
 id-⊇ {Γ ,[ x ∶ Ε ⊩ A ]} = take {{id-⊇}} {{it}}
+
+
+pattern _⊩⁺_ Ε A = _⊩_ Ε {{skip}} A
+
+data _⊢_isKind_ : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> (k : Kind) -> Set where
+  zero : ∀{Γ x k} -> {A : Γ ⊢Type k} -> Γ ,[ x ∶ A ] ⊢ zero isKind k
+  suc : ∀{Γ x k i j} -> {A : Γ ⊢Type k} -> {{_ : Γ ⊢ i isKind j}} -> Γ ,[ x ∶ A ] ⊢ suc i isKind j
+
+module isKindInstances where
+  instance
+    isKind:zero : ∀{Γ x k} -> {A : Γ ⊢Type k} -> Γ ,[ x ∶ A ] ⊢ zero isKind k
+    isKind:zero = _⊢_isKind_.zero
+
+    isKind:suc : ∀{Γ x k i j} -> {A : Γ ⊢Type k} -> {{_ : Γ ⊢ i isKind j}} -> Γ ,[ x ∶ A ] ⊢ suc i isKind j
+    isKind:suc = suc
+
+module _ where
+  open isKindInstances
+  data _⊢_isType_ : (Γ : Ctx) -> ∀ i -> ∀{k} -> {{_ : Γ ⊢ i isKind k}} -> Γ ⊢Type k -> Set where
+    zero : ∀{Γ Ε x k} -> {{_ : Γ ⊇ Ε}} -> {A : Ε ⊢Type! k} -> Γ ,[ x ∶ Ε ⊩ A ] ⊢ zero isType (_⊩⁺_ Ε A)
+    suc : ∀{Γ Ε Η x k j i} -> {{_ : Γ ⊢ i isKind k}} -> {{_ : Γ ⊇ Ε}} -> {A : Ε ⊢Type! k} -> {{_ : Γ ⊢ i isType (Ε ⊩ A)}}
+                -> {{_ : Γ ⊇ Η}} -> {B : Η ⊢Type! j} -> Γ ,[ x ∶ Η ⊩ B ] ⊢ (suc i) isType (Ε ⊩⁺ A)
+
 
 module _ where
   private instance
@@ -101,17 +128,21 @@ module _ where
 --   Notation-Absolute-WithVar : ∀{Ε k} -> {A : Ε ⊢Type! k} -> Notation-Absolute (WithVar A) Ctx
 --   Notation-Absolute-WithVar = record { ∣_∣ = getCtxWithVar }
 
+
 _∶!_ : ∀ x -> ∀ {Ε k} (A : Ε ⊢Type! k) -> Ctx
 _∶!_ x {Ε} A = Ε ,[ x ∶ Ε ⊩ A ]
   where instance _ = id-⊇
 
-record _⊢Var_∶_ {k} (Γ : Ctx) (i : Γ ⊢Varkind k) {Ε : Ctx} (A : Ε ⊢Type! k) : Set where
-  constructor var_by_
-  inductive
-  field name : Name
-  field ⟨_⟩ : Γ ⊇ (name ∶! A)
+-- mergeType : ∀{Γ k} -> (A : Γ ⊢Type k) -> Ctx
+-- mergeType (Ε ⊩ A) = (_ ∶! A)
 
-open _⊢Var_∶_ public
+-- record _⊢Var_∶_ {k} (Γ : Ctx) (i : Γ ⊢Varkind k) {Ε : Ctx} (A : Ε ⊢Type! k) : Set where
+--   constructor var_by_
+--   inductive
+--   field name : Name
+--   field ⟨_⟩ : Γ ⊇ (name ∶! A)
+
+-- open _⊢Var_∶_ public
 
 data _⊢Type!_ where
   -- Shape : [] ⊢Type!
@@ -119,13 +150,15 @@ data _⊢Type!_ where
 
 data _⊢Shapes! where
   [] : [] ⊢Shapes!
-  _&_ : ∀{Γ Δ Ε} -> {{_ : Γ ⊇ Δ}}
+  _&_ : ∀{Γ Δ} -> {{_ : Γ ⊇ Δ}}
         -> Δ ⊢Shapes!
-        -> ∀ x -> {A : Ε ⊢Type! 𝑆}
-        -> {{X : Γ ⊢Var x ∶ A}}
+        -> {A : Γ ⊢Type 𝑆}
+        -> ∀ i -> {{_ : Γ ⊢ i isKind 𝑆}} -> {{_ : Γ ⊢ i isType A}}
         -- -> {{X : Γ ⊇ (x ∶! A)}}
-        -> let instance _ = ⟨ X ⟩
-           in {{_ : Γ ↤ Δ ∪ (_ ∶! A)}}
+        -> let instance _ = jni A
+           in {{_ : Γ ↤ Δ ∪ (ctx A)}}
+           -- in {{_ : Γ ↤ Δ ∪ (_ ∶! A)}}
+        -- -> {{_ : Γ ↤ Δ ∪ ctx A}}
         -> Γ ⊢Shapes!
 
 infixl 40 _&_
@@ -135,14 +168,8 @@ data _⊢!_ where
 
 --------------------------------------------------------------------
 
-len-Ctx : Ctx -> ℕ
-len-Ctx [] = 0
-len-Ctx (Γ ,[ x ∶ x₁ ]) = suc (len-Ctx Γ)
-
-
-instance
-  Notation-Absolute-Ctx : Notation-Absolute Ctx ℕ
-  Notation-Absolute-Ctx = record { ∣_∣ = len-Ctx }
+wk₀-⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> (B : Γ ⊢Type j) -> Γ ,[ x ∶ A ] ⊢Type j
+wk₀-⊢Type (Ε ⊩ B) = _⊩_ Ε {{skip }} B
 
 
 
