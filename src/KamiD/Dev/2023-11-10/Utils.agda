@@ -73,14 +73,28 @@ proj-©ₗ Γ i =
   in cast-≈⋆,⊇ P
 
 
+_＠ₗ-⊢Type_ : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> (Γ ©ₗ i) ⊢Type _
+_＠ₗ-⊢Type_ Γ i = head-⊢Type (Γ ©ᵣ i)
+
+--------------------------------------------------------------------
+-- variant independenty
+
+wks-⊢Type : ∀{Γ Δ j} -> Δ ⊇ Γ -> (B : Γ ⊢Type j) -> Δ ⊢Type j
+wks-⊢Type {Γ = Γ} {Δ = Δ} Δ⊇Γ (Ε ⊩ B) = Ε ⊩ B
+  where
+    instance _ = Δ⊇Γ
+    instance _ = compose-⊇ Δ Γ Ε
 
 --------------------------------------------------------------------
 -- various ＠ notation
 
+
 _＠-Kind_ : ∀(Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Kind
--- Γ ＠-Kind i = head-Kind (Γ ©ᵣ i)
 (_,[_∶_] Γ x {k = k} A) ＠-Kind zero = k
 (Γ ,[ x ∶ x₁ ]) ＠-Kind suc i = Γ ＠-Kind i
+
+-- _＠-Kind_ : ∀(Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Kind
+-- Γ ＠-Kind i = head-Kind (Γ ©ᵣ i)
 
 instance
   hasNotation-＠:Kind : hasNotation-＠ Ctx (λ Γ -> Fin ∣ Γ ∣) (λ _ _ -> Kind)
@@ -90,12 +104,13 @@ instance
 instance
   isKind:＠-Kind : ∀{Γ i} -> Γ ⊢ i isKind (Γ ＠ i)
   isKind:＠-Kind {Γ ,[ x ∶ x₁ ]} {zero} = zero
-  -- isKind:＠-Kind {Γ ,[ x ∶ x₁ ]} {suc i} = {!!}
-  isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ] ,[ x ∶ x₁ ]} {suc i} =
-    let X = isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ]} {i}
-    in {!!}
-    -- isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ] ,[ x ∶ x₁ ]} {suc zero} = let X = isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ]} {i} in ?
-    -- isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ] ,[ x ∶ x₁ ]} {suc (suc i)} = let X = isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ]} {i} in ?
+  isKind:＠-Kind {Γ ,[ x₂ ∶ x₃ ]} {suc i} = suc isKind:＠-Kind
+
+instance
+  hasNotation-refine:isKind : ∀{Γ} -> hasNotation-refine (Fin ∣ Γ ∣) (λ i -> Γ ⊢ i isKind (Γ ＠ i))
+  hasNotation-refine:isKind = record { refine = λ i -> it }
+
+
 
 -- _＠-⊢isKind_ : ∀(Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Γ ⊢Varkind (Γ ＠ i)
 -- -- Γ ＠-⊢Varkind i = 
@@ -109,19 +124,19 @@ instance
 --   hasNotation:＠-⊢Varkind : hasNotation-＠ Ctx (λ Γ -> Fin ∣ Γ ∣) (λ Γ i -> Γ ⊢Varkind (Γ ＠ i))
 --   hasNotation:＠-⊢Varkind = record { _＠_ = λ Γ i -> Γ ＠-⊢Varkind i }
 
-wk-⊢Type : ∀{Γ Δ j} -> {{_ : Δ ⊇ Γ}} -> (B : Γ ⊢Type j) -> Δ ⊢Type j
-wk-⊢Type {Γ = Γ} {Δ = Δ} (Ε ⊩ B) = Ε ⊩ B
+
+
+wk-⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> (B : Γ ⊢Type j) -> Γ ,[ x ∶ A ] ⊢Type j
+wk-⊢Type A = wks-⊢Type skip A
   where
-    instance _ = compose-⊇ Δ Γ Ε
+    instance _ = id-⊇
 
 
--- wk-⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> (B : Γ ⊢Type j) -> Γ ,[ x ∶ A ] ⊢Type j
--- wk-⊢Type (Ε ⊩ B) = Ε ⊩ B
+instance
+  hasNotation-wk:⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> hasNotation-wk (Γ ⊢Type j) (const $ Γ ,[ x ∶ A ] ⊢Type j)
+  hasNotation-wk:⊢Type = record { wk = wk-⊢Type }
 
--- instance
---   hasNotation-wk:⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> hasNotation-wk (Γ ⊢Type j) (const $ Γ ,[ x ∶ A ] ⊢Type j)
---   hasNotation-wk:⊢Type = record { wk = wk-⊢Type }
-
+{-
 -- wk-⊢Var : ∀{Γ k j Ε x} -> {i : Γ ⊢Varkind k} {A : Ε ⊢Type! k} {B : Γ ⊢Type j} -> Γ ⊢Var i ∶ A -> Γ ,[ x ∶ B ] ⊢Var (suc i) ∶ A
 -- wk-⊢Var (var x by X) = var x by skip {{X}} {{it}}
 
@@ -129,21 +144,48 @@ wk-⊢Type {Γ = Γ} {Δ = Δ} (Ε ⊩ B) = Ε ⊩ B
 --   hasNotation-wk:⊢Var : ∀{Γ k j Ε x} -> {i : Γ ⊢Varkind k} {A : Ε ⊢Type! k} {B : Γ ⊢Type j} -> hasNotation-wk (Γ ⊢Var i ∶ A) (const $ Γ ,[ x ∶ B ] ⊢Var (suc i) ∶ A)
 --   hasNotation-wk:⊢Var = record { wk = λ x -> wk-⊢Var x }
 
-_＠ₗ-⊢Type_ : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> (Γ ©ₗ i) ⊢Type (Γ ＠ i)
-_＠ₗ-⊢Type_ Γ i = head-⊢Type (Γ ©ᵣ i)
+-}
+
+-- _＠-⊢Type_ : (Γ : Ctx) -> ∀{i k} -> (i₁ : Γ ⊢ i isKind k) -> Γ ⊢Type k
+-- (Γ ,[ x ∶ A ]) ＠-⊢Type zero = wk₀-⊢Type A
+-- (Γ ,[ x ∶ A ]) ＠-⊢Type suc i = wk₀-⊢Type (Γ ＠-⊢Type i)
+
+
+
+-- instance
+--   isType:＠-⊢Type : ∀{Γ i₀ k} -> {i₁ : Γ ⊢ i₀ isKind k} -> Γ ⊢ i₁ isType (Γ ＠-⊢Type i₁)
+--   isType:＠-⊢Type = {!!}
+
+
+-- _＠-⊢Type_ : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Γ ⊢Type (Γ ＠ i)
+-- _＠-⊢Type_ Γ i = wk-⊢Type (Γ ＠ₗ-⊢Type i)
+--   where
+--     instance _ = proj-©ₗ Γ i
+
 
 _＠-⊢Type_ : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Γ ⊢Type (Γ ＠ i)
-_＠-⊢Type_ Γ i = wk-⊢Type (Γ ＠ₗ-⊢Type i)
-  where
-    instance _ = proj-©ₗ Γ i
-
--- _＠-⊢Type_ : (Γ : Ctx) -> ∀{k} -> Γ ⊢Varkind k -> Γ ⊢Type k
--- (Γ ,[ x ∶ A ]) ＠-⊢Type zero = wk A
--- (Γ ,[ x ∶ A ]) ＠-⊢Type suc i = wk (Γ ＠-⊢Type i)
+(Γ ,[ x ∶ A ]) ＠-⊢Type zero = wk₀-⊢Type A
+(Γ ,[ x ∶ A ]) ＠-⊢Type suc i = wk₀-⊢Type (Γ ＠-⊢Type i)
 
 instance
   hasNotation-＠:⊢Type : hasNotation-＠ Ctx (λ Γ -> Fin ∣ Γ ∣) (λ Γ i -> Γ ⊢Type (Γ ＠ i))
   hasNotation-＠:⊢Type = record { _＠_ = λ Γ i -> Γ ＠-⊢Type i }
+
+instance
+  isType:＠-⊢Type : ∀{Γ i} -> Γ ⊢ i isType (Γ ＠-⊢Type i)!
+  isType:＠-⊢Type {Γ ,[ x ∶ x₁ ]} {zero} = zero
+  isType:＠-⊢Type {Γ ,[ x ∶ Ε ⊩ A ]} {suc i} = suc isType:＠-⊢Type
+
+
+
+_＠-Name_ : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Name
+(Γ ,[ x ∶ x₁ ]) ＠-Name zero = x
+(Γ ,[ x ∶ x₁ ]) ＠-Name suc i = Γ ＠-Name i
+
+instance
+  isName:＠-Name : ∀{Γ i} -> Γ ⊢ i isName (Γ ＠-Name i)
+  isName:＠-Name {Γ ,[ x ∶ x₁ ]} {zero} = zero
+  isName:＠-Name {Γ ,[ x ∶ x₁ ]} {suc i} = suc isName:＠-Name
 
 
 {-
@@ -164,7 +206,7 @@ instance
 
 findVar : (Γ : Ctx) -> (x : Name) -> Maybe (Fin ∣ Γ ∣)
 findVar [] x = nothing
-findVar (Γ ,[ y ∶ x₂ ]) x with (Data.String._≟_ x y).does
+findVar (Γ ,[ y ∶ x₂ ]) x with (Data.Nat._≟_ x y).does
 ... | false = map-Maybe suc (findVar Γ x)
 ... | true = just zero
 
@@ -289,7 +331,7 @@ getNamesOfCtx (Δ ,[ x ∶ x₁ ]) = x ∷ getNamesOfCtx Δ
 ----------------------------------------------------
 -- Derivation for ⊇
 
-Derive:⊇ : ∀{Γ Δ} -> {X : Γ ⊇ Δ} -> {{_ : getVarsCtx Γ (getNamesOfCtx Δ) ≣ just (Δ , X)}} -> Γ ⊇ Δ
+Derive:⊇ : ∀{Γ Δ Δ'} -> {X : Γ ⊇ Δ} -> {{_ : getVarsCtx Γ (getNamesOfCtx Δ) ≣ just (Δ , X)}} -> Γ ⊇ Δ
 Derive:⊇ {Γ} {Δ} {X} = X
 
 
@@ -312,6 +354,5 @@ _?⊩_ : ∀{Γ Δ k} -> {X : Γ ⊇ Δ} -> (xs : List Name) -> {{_ : getVarsCtx
 _?⊩_ {Δ = Δ} {X = X} xs tp =
   let instance _ = X
   in Δ ⊩ tp
-
 
 

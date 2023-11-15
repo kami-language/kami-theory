@@ -15,14 +15,23 @@ open import KamiD.Dev.2023-11-10.Utils.Context
 
 instance _ = Derive:⊇
 
-a b c d p q r : String
-a = "a"
-b = "b"
-c = "c"
-d = "d"
-p = "p"
-q = "q"
-r = "r"
+-- a b c d p q r : String
+-- a = "a"
+-- b = "b"
+-- c = "c"
+-- d = "d"
+-- p = "p"
+-- q = "q"
+-- r = "r"
+
+a b c d p q r : ℕ
+a = 1
+b = 2
+c = 3
+d = 4
+p = 5
+q = 6
+r = 7
 
 Pt : ∀{Γ} -> _⊢Type_ Γ 𝑆
 Pt = [] ⊩ 𝒮 []
@@ -34,7 +43,7 @@ twopt : Ctx
 twopt = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ]
 
 line : Ctx
-line = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ] ,[ p ∶ (b ∷ a ∷ []) ?⊩ 𝒮 ([] & (‵ a) & (‵ b)) ]
+line = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ] ,[ p ∶ (b ∷ a ∷ []) ?⊩ 𝒮 ([] & (# 0) & (# 1)) ]
 
 
 

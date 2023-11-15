@@ -23,7 +23,10 @@ compose-⊇ .[] .[] Ε ⦃ empty ⦄ ⦃ B ⦄ = B
 compose-⊇ (Γ ,[ _ ∶ _ ⊩ _ ]) (Δ ,[ _ ∶ _ ⊩ _ ]) (Ε ,[ _ ∶ _ ⊩ _ ]) ⦃ take ⦄ ⦃ take ⦄ =
   let instance _ = compose-⊇ Γ Δ Ε
   in take
-compose-⊇ (Γ ,[ _ ∶ _ ⊩ _ ]) (Δ ,[ _ ∶ _ ⊩ _ ]) Ε ⦃ take ⦄ ⦃ skip ⦄ =
+compose-⊇ (Γ ,[ _ ∶ _ ⊩ _ ]) (Δ ,[ _ ∶ _ ⊩ _ ]) Ε@[] ⦃ take ⦄ ⦃ skip ⦄ =
+  let instance _ = compose-⊇ Γ Δ Ε
+  in skip
+compose-⊇ (Γ ,[ _ ∶ _ ⊩ _ ]) (Δ ,[ _ ∶ _ ⊩ _ ]) Ε@(_ ,[ x ∶ x₁ ]) ⦃ take ⦄ ⦃ skip ⦄ =
   let instance _ = compose-⊇ Γ Δ Ε
   in skip
 compose-⊇ .(_ ,[ _ ∶ _ ⊩ _ ]) .[] .[] ⦃ skip ⦄ ⦃ empty ⦄ = isTop-⊇-[]

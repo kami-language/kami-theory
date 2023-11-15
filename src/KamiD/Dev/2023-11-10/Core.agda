@@ -36,3 +36,9 @@ record hasNotation-＠ (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) (C : ∀(a : A) -> B
 open hasNotation-＠ {{...}} public
 
 
+record hasNotation-refine (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
+  field refine : (a : A) -> B a
+
+open hasNotation-refine {{...}} public
+
+
