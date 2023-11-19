@@ -11,24 +11,30 @@ open import KamiD.Dev.2023-11-19.Core
 
 Name = ℕ
 
-data Kind : 𝒰₀ where
-  𝑆 𝑇 : Kind
 
 data Ctx : 𝒰₀
-data _⊢Type_ : (Γ : Ctx) -> Kind -> 𝒰₀
+data _⊢Shapes : (Γ : Ctx) -> 𝒰₀
+data _⊢Kind : (Γ : Ctx) -> 𝒰₀
+data _⊢Type_ : (Γ : Ctx) -> Γ ⊢Kind -> 𝒰₀
 -- data _⊢Type : (Γ : Ctx) -> 𝒰₀
 -- data _⊢Var!_ : (Γ : Ctx) ->  -> 𝒰₀
-data _⊢Shapes : (Γ : Ctx) -> 𝒰₀
-data _⊢_ : ∀{k} -> (Γ : Ctx) -> Γ ⊢Type k -> 𝒰₀
+data _⊢_ : (Γ : Ctx) -> ∀{k} -> Γ ⊢Type k -> 𝒰₀
 -- data _⊇_ : (Γ : Ctx) (Δ : Ctx) -> 𝒰₀
 
 -- infixl 40 _⊇_
+
 
 data Ctx where
   [] : Ctx
   _,[_∶_] : (Γ : Ctx) -> Name -> ∀{k} -> _⊢Type_ Γ k -> Ctx
 
 infixl 50 _,[_∶_]
+
+data _⊢Kind where
+  𝑆 : ∀{Γ} -> Γ ⊢Kind
+  𝑇 : ∀{Γ} -> Γ ⊢Type 𝑆 -> Γ ⊢Kind
+  ⩝_∶_,_ : ∀{Γ} -> ∀ x -> {k : Γ ⊢Kind} -> (A : Γ ⊢Type k) -> Γ ,[ x ∶ A ] ⊢Kind -> Γ ⊢Kind
+  weak : ∀{Γ} -> ∀ {x} -> {k : Γ ⊢Kind} -> {A : Γ ⊢Type k} -> Γ ⊢Kind -> Γ ,[ x ∶ A ] ⊢Kind
 
 
 len-Ctx : Ctx -> ℕ
@@ -39,9 +45,13 @@ instance
   Notation-Absolute-Ctx : Notation-Absolute Ctx ℕ
   Notation-Absolute-Ctx = record { ∣_∣ = len-Ctx }
 
-data _⊢_isKind_ : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> (k : Kind) -> Set where
-  zero : ∀{Γ x k} -> {A : Γ ⊢Type k} -> Γ ,[ x ∶ A ] ⊢ zero isKind k
-  suc : ∀{Γ x k i₀ j} -> {A : Γ ⊢Type k} -> (i : Γ ⊢ i₀ isKind j) -> Γ ,[ x ∶ A ] ⊢ suc i₀ isKind j
+-- data _⊢_isShape : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> Set where
+--   zero : ∀{Γ x} -> {A : Γ ⊢Type 𝑆} -> Γ ,[ x ∶ A ] ⊢ zero isShape
+--   suc : ∀{Γ x k i₀} -> {A : Γ ⊢Type k} -> (i : Γ ⊢ i₀ isShape) -> Γ ,[ x ∶ A ] ⊢ suc i₀ isShape
+
+data _⊢_isKind_ : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> (k : Γ ⊢Kind) -> Set where
+  zero : ∀{Γ x k} -> {A : Γ ⊢Type k} -> Γ ,[ x ∶ A ] ⊢ zero isKind weak k
+  suc : ∀{Γ x k i₀ j} -> {A : Γ ⊢Type k} -> (i : Γ ⊢ i₀ isKind j) -> Γ ,[ x ∶ A ] ⊢ suc i₀ isKind (weak j)
 
 -- data _⊢_isName_ : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> (x : Name) -> Set where
 --   zero : ∀{Γ x k} -> {A : Γ ⊢Type k} -> Γ ,[ x ∶ A ] ⊢ zero isName x
@@ -49,11 +59,12 @@ data _⊢_isKind_ : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> (k : Kind) -> Set wher
 
 
 data _⊢Type_ where
+  var : ∀{Γ i k} -> Γ ⊢ i isKind k -> Γ ⊢Type k
   -- Shape : [] ⊢Type
   𝒮 : ∀{Γ} -> Γ ⊢Shapes -> Γ ⊢Type 𝑆
   𝟘 : ∀{Γ} -> Γ ⊢Type 𝑆
-  Unit : ∀{Γ} -> Γ ⊢Type 𝑇
-  ⩝_∶_,_ : ∀{Γ k} -> (x : Name) -> (S : Γ ⊢Type 𝑆) -> Γ ,[ x ∶ S ] ⊢Type k -> Γ ⊢Type k
+  -- Unit : ∀{Γ} -> Γ ⊢Type 𝑇
+  ⩝_∶_,_ : ∀{Γ} -> (x : Name) -> (S : Γ ⊢Type 𝑆) -> ∀{k} -> Γ ,[ x ∶ S ] ⊢Type k -> Γ ⊢Type (⩝ x ∶ S , k)
 
 data _⊢Shapes where
   [] : ∀{Γ} -> Γ ⊢Shapes
@@ -80,6 +91,7 @@ data _⊢_ where
   -- 𝒮 : ∀
 
 
+{-
 
 
 {-
@@ -219,5 +231,5 @@ wk₀-⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> (B : Γ ⊢Type j) -> Γ 
 wk₀-⊢Type (Ε ⊩ B) = _⊩_ Ε {{skip }} B
 
 -}
-
+-}
 

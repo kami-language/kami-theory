@@ -45,10 +45,10 @@ twopt : Ctx
 twopt = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ]
 
 line : Ctx
-line = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ] ,[ p ∶ 𝒮 ([] & ‵ a & ‵ b) ]
+line = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ] ,[ p ∶ 𝒮 ([] & {!!} & {!!}) ]
 
-Nat : [] ⊢Type 𝑇
-Nat = ⩝ a ∶ Pt , (⩝ p ∶ 𝒮 ([] & ‵ a) , {!!})
+Nat : [] ⊢Type (⩝ a ∶ Pt , {!!})
+Nat = ⩝ a ∶ Pt , {!!}
 
 
 
