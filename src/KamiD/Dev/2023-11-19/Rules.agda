@@ -12,7 +12,7 @@ open import KamiD.Dev.2023-11-19.Core
 Name = ℕ
 
 data Kind : 𝒰₀ where
-  𝑆 : Kind
+  𝑆 𝑇 : Kind
 
 data Ctx : 𝒰₀
 data _⊢Type_ : (Γ : Ctx) -> Kind -> 𝒰₀
@@ -51,6 +51,9 @@ data _⊢_isKind_ : (Γ : Ctx) -> (i : Fin ∣ Γ ∣) -> (k : Kind) -> Set wher
 data _⊢Type_ where
   -- Shape : [] ⊢Type
   𝒮 : ∀{Γ} -> Γ ⊢Shapes -> Γ ⊢Type 𝑆
+  𝟘 : ∀{Γ} -> Γ ⊢Type 𝑆
+  Unit : ∀{Γ} -> Γ ⊢Type 𝑇
+  ⩝_∶_,_ : ∀{Γ k} -> (x : Name) -> (S : Γ ⊢Type 𝑆) -> Γ ,[ x ∶ S ] ⊢Type k -> Γ ⊢Type k
 
 data _⊢Shapes where
   [] : ∀{Γ} -> Γ ⊢Shapes
@@ -70,9 +73,10 @@ data _⊢Shapes where
   --       -- -> {{_ : Γ ↤ Δ ∪ Ε}}
         -- -> Γ ⊢Shapes
 
--- infixl 40 _&_
+infixl 40 _&_
 
 data _⊢_ where
+  -- ℧ : ∀{Γ} -> Γ ⊢ 
   -- 𝒮 : ∀
 
 
