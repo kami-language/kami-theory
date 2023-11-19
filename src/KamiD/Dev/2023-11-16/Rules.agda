@@ -11,33 +11,56 @@ open import KamiD.Dev.2023-11-16.Core
 
 Name = ℕ
 
+data VarMode : 𝒰₀ where
+  strict lax : VarMode
+
+_∨-VarMode_ : VarMode -> VarMode -> VarMode
+strict ∨-VarMode b = strict
+lax ∨-VarMode strict = strict
+lax ∨-VarMode lax = lax
+
+instance
+  hasNotation-∨:VarMode : hasNotation-∨ VarMode VarMode VarMode
+  hasNotation-∨:VarMode = record { _∨_ = _∨-VarMode_ }
+
+Mode = VarMode
+
+private variable
+  μ : Mode
+
 data Kind : 𝒰₀ where
   𝑆 : Kind
 
 data Ctx : 𝒰₀
-data _⊢Type!_ : (Γ : Ctx) -> Kind -> 𝒰₀
+data _⊢Type!_ : (Γ : Ctx) -> (Kind ×-𝒰 Mode) -> 𝒰₀
 -- data _⊢Type : (Γ : Ctx) -> 𝒰₀
 -- data _⊢Var!_ : (Γ : Ctx) ->  -> 𝒰₀
 data _⊢Shapes! : (Γ : Ctx) -> 𝒰₀
 data _⊢!_ : ∀{k} -> (Γ : Ctx) -> Γ ⊢Type! k -> 𝒰₀
 data _⊇_ : (Γ : Ctx) (Δ : Ctx) -> 𝒰₀
 
-infixl 40 _⊇_
+infixl 20 _⊢Type!_
+infixl 40 _⊇_ -- _⊇[_]_
+
+-- _⊇[_]_ : Ctx -> VarMode -> Ctx -> 𝒰₀
+-- Γ ⊇[ strict ] Δ = Γ ⊇ Δ
+-- Γ ⊇[ lax ] Δ = Γ ≣ Δ
 
 record _⊢Type_ (Γ : Ctx) (k : Kind) : 𝒰₀ where
   inductive
   pattern
   constructor _⊩_
   field ctx : Ctx
+  field {varmode} : VarMode
   field {{jni}} : Γ ⊇ ctx
-  field typ : ctx ⊢Type! k
+  field typ : ctx ⊢Type! k , varmode
 
 infixl 50 _⊩_
 
 open _⊢Type_ public
 
 instance
-  hasNotation-!:⊢Type : ∀{Γ k} -> hasNotation-! (Γ ⊢Type k) (λ x -> x .ctx ⊢Type! k)
+  hasNotation-!:⊢Type : ∀{Γ k} -> hasNotation-! (Γ ⊢Type k) (λ x -> x .ctx ⊢Type! k , x .varmode)
   hasNotation-!:⊢Type = record { _! = λ a → a .typ }
 
 
@@ -55,18 +78,32 @@ instance
   Notation-Absolute-Ctx : Notation-Absolute Ctx ℕ
   Notation-Absolute-Ctx = record { ∣_∣ = len-Ctx }
 
+
+-- compose-⊇[] : ∀(Γ Δ Ε : Ctx) -> ∀{μ ν} -> {{_ : Γ ⊇[ μ ] Δ}} -> {{_ : Δ ⊇[ ν ] Ε}} -> Γ ⊇[ μ ∨ ν ] Ε
+-- compose-⊇[] = {!!}
+
 data _⊇_ where
+  -- comp : ∀(Γ Δ Ε : Ctx) -> {{_ : Γ ⊇ Δ}} -> {{_ : Δ ⊇ Ε}} -> Γ ⊇ Ε
+  id-⊇ : ∀{Γ} -> Γ ⊇ Γ
+  comp : ∀{Γ Δ Ε : Ctx} -> (_ : Γ ⊇ Δ) -> (_ : Δ ⊇ Ε) -> Γ ⊇ Ε
   empty : [] ⊇ []
-  take : ∀{Γ Δ Ε k x} -> {A : Ε ⊢Type! k} -> {{_ : Γ ⊇ Δ}} -> {{_ : Δ ⊇ Ε}} -> {{_ : Γ ⊇ Ε}} -> Γ ,[ x ∶ Ε ⊩ A ] ⊇ Δ ,[ x ∶ Ε ⊩ A ]
+  take : ∀{Γ Δ Ε k x μ} -> {A : Ε ⊢Type! k , μ} -> {{f : Γ ⊇ Δ}} -> {{g : Δ ⊇ Ε}} -- -> {{_ : Γ ⊇ Ε}} ->
+   ->
+         let instance
+               _ : Γ ⊇ Ε
+               _ = comp f g
+         in Γ ,[ x ∶ Ε ⊩ A ] ⊇ Δ ,[ x ∶ Ε ⊩ A ]
+
   skip : ∀{Γ Δ Ε k x} -> {A : Ε ⊢Type! k} -> {{_ : Γ ⊇ Δ}} -> {{_ : Γ ⊇ Ε}} -> Γ ,[ x ∶ Ε ⊩ A ] ⊇ Δ
 
 isTop-⊇-[] : ∀{Γ} -> Γ ⊇ []
 isTop-⊇-[] {[]} = empty
 isTop-⊇-[] {Γ ,[ x ∶ Ε ⊩ A ]} = skip {{isTop-⊇-[]}} {{it}}
 
-id-⊇ : ∀{Γ} -> Γ ⊇ Γ
-id-⊇ {[]} = empty
-id-⊇ {Γ ,[ x ∶ Ε ⊩ A ]} = take {{id-⊇}} {{it}}
+-- id-⊇ : ∀{Γ} -> Γ ⊇ Γ
+-- id-⊇ {[]} = empty
+-- id-⊇ {Γ ,[ x ∶ Ε ⊩ A ]} = take {{?}} {{?}}
+-- take -- {{id-⊇}} {{it}}
 
 
 pattern _⊩⁺_ Ε A = _⊩_ Ε {{skip}} A
@@ -107,25 +144,51 @@ module _ where
 module _ where
   private instance
     _ = isTop-⊇-[]
+
+    _ : ∀{Γ} -> Γ ⊇ Γ
     _ = id-⊇
   data _↤_∪_ : (Γ Δ Ε : Ctx) -> {{_ : Γ ⊇ Δ}} -> {{_ : Γ ⊇ Ε}} -> 𝒰₀ where
     emptyleft : ∀{Γ} -> Γ ↤ Γ ∪ []
     emptyright : ∀{Γ} -> Γ ↤ [] ∪ Γ
     takeleft : ∀{Γ Γ₀ Δ Ε k x} -> {A : Γ₀ ⊢Type! k}
-     -> {{_ : Γ ⊇ Ε}} -> {{_ : Γ ⊇ Δ}}
-     -> {{_ : Δ ⊇ Γ₀}} -> {{_ : Γ ⊇ Γ₀}}
-     -> {{_ : Γ ↤ Δ ∪ Ε}}
+     -> {{_ : Γ ⊇ Ε}} -> {{f : Γ ⊇ Δ}}
+     -> {{g : Δ ⊇ Γ₀}} -- -> {{_ : Γ ⊇ Γ₀}}
+     -> let instance
+               _ : Γ ⊇ Γ₀
+               _ = comp f g
+        in {{_ : Γ ↤ Δ ∪ Ε}}
      -> _↤_∪_ (Γ ,[ x ∶ Γ₀ ⊩ A ]) (Δ ,[ x ∶ Γ₀ ⊩ A ]) Ε {{take}} {{skip}}
+
     takeright : ∀{Γ Γ₀ Δ Ε k x} -> {A : Γ₀ ⊢Type! k}
-     -> {{_ : Γ ⊇ Ε}} -> {{_ : Γ ⊇ Δ}}
-     -> {{_ : Ε ⊇ Γ₀}} -> {{_ : Γ ⊇ Γ₀}}
-     -> {{_ : Γ ↤ Δ ∪ Ε}}
+     -> {{f : Γ ⊇ Ε}} -> {{_ : Γ ⊇ Δ}}
+     -> {{g : Ε ⊇ Γ₀}} -- -> {{_ : Γ ⊇ Γ₀}}
+     -> let instance
+               _ : Γ ⊇ Γ₀
+               _ = comp f g
+        in
+        {{_ : Γ ↤ Δ ∪ Ε}}
      -> _↤_∪_ (Γ ,[ x ∶ Γ₀ ⊩ A ]) Δ (Ε ,[ x ∶ Γ₀ ⊩ A ]) {{skip}} {{take}}
+
     takeboth : ∀{Γ Γ₀ Δ Ε k x} -> {A : Γ₀ ⊢Type! k}
-     -> {{_ : Γ ⊇ Ε}} -> {{_ : Γ ⊇ Δ}}
-     -> {{_ : Ε ⊇ Γ₀}} -> {{_ : Δ ⊇ Γ₀}} -> {{_ : Γ ⊇ Γ₀}}
+     -> {{f : Γ ⊇ Ε}} -> {{h : Γ ⊇ Δ}}
+     -> {{g : Ε ⊇ Γ₀}} -> {{i : Δ ⊇ Γ₀}} -- -> {{_ : Γ ⊇ Γ₀}}
      -> {{_ : Γ ↤ Δ ∪ Ε}}
-     -> _↤_∪_ (Γ ,[ x ∶ Γ₀ ⊩ A ]) (Δ ,[ x ∶ Γ₀ ⊩ A ]) (Ε ,[ x ∶ Γ₀ ⊩ A ]) {{take}} {{take}}
+     -> let
+               fg : Γ ⊇ Γ₀
+               fg = comp f g
+
+               hi : Γ ⊇ Γ₀
+               hi = comp h i
+        in
+        _↤_∪_
+          (Γ ,[ x ∶ Γ₀ ⊩ A ])
+          (Δ ,[ x ∶ Γ₀ ⊩ A ])
+          (Ε ,[ x ∶ Γ₀ ⊩ A ])
+          {{take {{h}} {{i}}}}
+          {{let x = take {Γ} {Ε} {Γ₀} {{f}} {{g}} in ?}}
+
+
+{-
 
 -- record WithVar {Ε k} (A : Ε ⊢Type! k) : 𝒰₀ where
 --   field name : Name
@@ -203,5 +266,5 @@ wk₀-⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> (B : Γ ⊢Type j) -> Γ 
 wk₀-⊢Type (Ε ⊩ B) = _⊩_ Ε {{skip }} B
 
 
-
+-}
 

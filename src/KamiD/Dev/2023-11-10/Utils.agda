@@ -11,6 +11,7 @@ open import Data.Nat hiding (_!)
 open import Data.List using (List ; [] ; _∷_)
 open import Data.String hiding (_≈_)
 open import Relation.Nullary.Decidable.Core
+open import Relation.Nullary.Reflects
 
 open import KamiD.Dev.2023-11-10.Core
 open import KamiD.Dev.2023-11-10.Rules
@@ -220,6 +221,8 @@ findVar (Γ ,[ y ∶ x₂ ]) x with (Data.Nat._≟_ x y).does
 -- varByName Γ x = map-Maybe (varByIndex Γ) (findVar Γ x)
 
 
+testx : ℕ
+testx = ?
 
 
 -- ‵ : ∀{k} -> {Γ : Ctx} -> (x : Name)

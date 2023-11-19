@@ -42,3 +42,13 @@ record hasNotation-refine (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 
 open hasNotation-refine {{...}} public
 
 
+record hasNotation-∧ (A : 𝒰 𝑖) (B : 𝒰 𝑗) (C : 𝒰 𝑘) : 𝒰 (𝑖 ､ 𝑗 ､ 𝑘) where
+  field _∧_ : A -> B -> C
+
+open hasNotation-∧ {{...}} public
+
+record hasNotation-∨ (A : 𝒰 𝑖) (B : 𝒰 𝑗) (C : 𝒰 𝑘) : 𝒰 (𝑖 ､ 𝑗 ､ 𝑘) where
+  field _∨_ : A -> B -> C
+
+open hasNotation-∨ {{...}} public
+
