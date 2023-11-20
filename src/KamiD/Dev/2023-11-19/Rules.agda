@@ -11,6 +11,20 @@ open import KamiD.Dev.2023-11-19.Core
 
 Name = ℕ
 
+--------------------------------------------------------------------
+-- Plan: we need two contexts: one for shapes, one for types!
+--
+-- Reason: types exist sometimes in a role-restricted context,
+-- i.e., to build this type, only variables existing at some
+-- role are allowed. In order to restrict a context in the _⊢Type_
+-- signature, we need to speak about roles here. This is only
+-- possible if we don't define them as types of kind 𝑆.
+--
+-- Additionally: every type in the type context has a role at which it
+-- lives, while a role does not have such an annotation...
+--
+
+
 
 data Ctx : 𝒰₀
 data _⊢Shapes : (Γ : Ctx) -> 𝒰₀
