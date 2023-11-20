@@ -45,7 +45,7 @@ twopt : Ctx
 twopt = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ]
 
 line : Ctx
-line = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ] ,[ p ∶ 𝒮 ([] & {!!} & {!!}) ]
+line = [] ,[ a ∶ Pt ] ,[ b ∶ Pt ] ,[ p ∶ 𝒮 ([] & {!‵ a!} & {!!}) ]
 
 Nat : [] ⊢Type (⩝ a ∶ Pt , {!!})
 Nat = ⩝ a ∶ Pt , {!!}
