@@ -31,16 +31,53 @@ private variable
   Σ : Shapes
 data _⊢Shape : Shapes -> 𝒰₀
 data _⊢NodeVar : Shapes -> 𝒰₀
-data _⊢Node : Shapes -> 𝒰₀
-data _⊢Nodes : Shapes -> 𝒰₀
-data _<-NodeVar_ : (a b : Σ ⊢NodeVar) -> 𝒰₀
-data _≤-Node_ : (a b : Σ ⊢Node) -> 𝒰₀
+data _⊢Cover : Shapes -> 𝒰₀
+data _⊢NodeVars : Shapes -> 𝒰₀
+
+
+-- new types
+
+-- abstract set
+-- data ⊢Set : 𝒰₀ where
+--   _×_ : ⊢Set -> ⊢Set -> ⊢Set
+--   _＋_ : ⊢Set -> ⊢Set -> ⊢Set
+--   ∅ : ⊢Set
+--   𝟙 : ⊢Set
+
+data Spaces : 𝒰₀
+
+private variable
+  Τ : Spaces
+
+data _⊢Space : Spaces -> 𝒰₀
+
+
+
+data _⊢Point_ : ∀ Τ -> Τ ⊢Space -> 𝒰₀
+data _⊢Points_ : ∀ Τ -> Τ ⊢Space -> 𝒰₀
+
+private variable
+  X Y : Τ ⊢Space
+
+
+-- data _<-NodeVar_ : (a b : Σ ⊢NodeVar) -> 𝒰₀
+-- data _≤-Node_ : (a b : Σ ⊢Node) -> 𝒰₀
 -- data ⊢_isNode : (Γ : Shapes) -> (i : Fin ∣ Γ ∣) -> 𝒰₀
+
+data _⊢_∈-Node_ : ∀ Σ -> (a b : Σ ⊢NodeVar) -> 𝒰₀
+
+data _⊆-Cover_ : (U V : Σ ⊢Cover) -> 𝒰₀
 
 data _⊢Ctx : Shapes -> 𝒰₀
 
+data _⊢Cover_⇾_ : ∀ Σ -> (U V : Σ ⊢Cover) -> 𝒰₀
+
+
 private variable
   Γ : Σ ⊢Ctx
+
+fresh : Σ ⊢Ctx -> Name
+fresh = {!!}
 
 -- record RCtx Σ : 𝒰₀ where
 --   inductive
@@ -50,53 +87,158 @@ private variable
 
 -- data _⊢Shapes : (Γ : Ctx) -> 𝒰₀
 -- data _⊢Kind : (Γ : Ctx) -> 𝒰₀
-data _⨾_at_⊢Type : ∀ Σ -> Σ ⊢Ctx -> Σ ⊢Node -> 𝒰₀
+data _⨾_⊢Type_ : ∀ Σ -> Σ ⊢Ctx -> Σ ⊢Cover -> 𝒰₀
 -- data _⊢Type : (Γ : Ctx) -> 𝒰₀
 -- data _⊢Var!_ : (Γ : Ctx) ->  -> 𝒰₀
-data _⨾_at_⊢_ : ∀ Σ Γ i -> Σ ⨾ Γ at i ⊢Type -> 𝒰₀
+data _⨾_⊢_↓_ : ∀ Σ Γ -> ∀{i j} -> Σ ⨾ Γ ⊢Type j -> Σ ⊢Cover i ⇾ j -> 𝒰₀
 -- data _⊇_ : (Γ : Ctx) (Δ : Ctx) -> 𝒰₀
 
 -- infixl 40 _⊇_
 
 
-data _⊢Nodes where
-  [] : Σ ⊢Nodes
-  _&_ : Σ ⊢Nodes -> Σ ⊢NodeVar -> Σ ⊢Nodes
+data _⊢NodeVars where
+  [] : Σ ⊢NodeVars
+  _&_ : Σ ⊢NodeVars -> Σ ⊢NodeVar -> Σ ⊢NodeVars
 
 infixl 30 _&_
 
+
+--------------------------------------------------------------------
+-- New variant
+
+data Spaces where
+  [] : Spaces
+
+
+
+
+-- -- selecting points inside a space to create a new space
+data _⊢Points_ where
+  [] : Τ ⊢Points X
+  _&_ : Τ ⊢Points X -> Τ ⊢Point X -> Τ ⊢Points X
+
+
+data _⊢Space where
+  -- The empty space
+  ∅ : Τ ⊢Space
+
+  -- The singleton space
+  𝟙 : Τ ⊢Space
+
+  -- we select points in a single space and create a new space with more points
+  𝒮 : ∀ X -> Τ ⊢Points X -> Τ ⊢Space
+
+  _＋_ : Τ ⊢Space -> Τ ⊢Space -> Τ ⊢Space
+
+
+infixl 30 _＋_
+
+data _⊢Point_ where
+  ∞ : {ps : Τ ⊢Points X} -> Τ ⊢Point 𝒮 X ps
+  near : {ps : Τ ⊢Points X} -> Τ ⊢Point X -> Τ ⊢Point 𝒮 X ps
+
+  left : Τ ⊢Point X -> Τ ⊢Point (X ＋ Y)
+  right : Τ ⊢Point Y -> Τ ⊢Point (X ＋ Y)
+
+  tt : Τ ⊢Point 𝟙
+
+
+
+--------------------------------------------------------------------
+
 data _⊢Shape where
-  𝒮 : Σ ⊢Nodes -> Σ ⊢Shape
+  -- we select points in a single space and create a new space with more points
+  𝒮 : Σ ⊢NodeVars -> Σ ⊢Shape
 
 data Shapes where
   [] : Shapes
   _,[_∶_] : (Σ : Shapes) -> Name -> Σ ⊢Shape -> Shapes
 
 data _⊢NodeVar where
-  zero : ∀{i S} -> Σ ,[ i ∶ S ] ⊢NodeVar
-  suc : ∀{i S} -> Σ ⊢NodeVar -> Σ ,[ i ∶ S ] ⊢NodeVar
+  zero : ∀{x S} -> Σ ,[ x ∶ S ] ⊢NodeVar
+  suc : ∀{x S} -> Σ ⊢NodeVar -> Σ ,[ x ∶ S ] ⊢NodeVar
 
-data _⊢Node where
-  var : Σ ⊢NodeVar -> Σ ⊢Node
-  ∅ : Σ ⊢Node
-  ⩝_∶_,_ : ∀(x : Name) -> (S : Σ ⊢Shape) -> Σ ,[ x ∶ S ] ⊢Node -> Σ ⊢Node
+-- data _⊢Node where
+--   var : Σ ⊢NodeVar -> Σ ⊢Node
+--   ∅ : Σ ⊢Node
+--   ⩝_∶_,_ : ∀(x : Name) -> (S : Σ ⊢Shape) -> Σ ,[ x ∶ S ] ⊢Node -> Σ ⊢Node
 
+data _⊢Cover where
+  var : Σ ⊢NodeVar -> Σ ⊢Cover
+  ⟮_⟯ : Σ ⊢Cover -> Σ ⊢Cover
+  -- _⋎_ : Σ ⊢Cover -> Σ ⊢Cover -> Σ ⊢Cover
+  ∂ : Σ ⊢Cover -> Σ ⊢Cover
+  int : Σ ⊢Cover -> Σ ⊢Cover
 
+data _⊢_∈-NodeVars_ : ∀ Σ -> Σ ⊢NodeVar -> Σ ⊢NodeVars -> 𝒰₀ where
+  take : ∀{vs v} -> Σ ⊢ v ∈-NodeVars vs & v
+  step : ∀{vs v w} -> Σ ⊢ w ∈-NodeVars vs -> Σ ⊢ w ∈-NodeVars (vs & v)
 
-data _<-NodeVar_ where
-  -- base : 
+data _⊢_∈-Node_ where
+  incl : ∀{Vs} -> ∀{x : Name} -> {i : Σ ⊢NodeVar} -> Σ ⊢ i ∈-NodeVars Vs -> (Σ ,[ x ∶ 𝒮 Vs ]) ⊢ (suc i) ∈-Node zero
+  step : ∀{x S i j} -> Σ ⊢ i ∈-Node j -> Σ ,[ x ∶ S ] ⊢ suc i ∈-Node suc j
+  -- refl-≤-Node : ∀{a : Σ ⊢Node} -> a ≤-Node a
 
-data _≤-Node_ where
-  refl-≤-Node : ∀{a : Σ ⊢Node} -> a ≤-Node a
+data _⊆-Cover_ where
+
+data _⊢Cover_⇾_ where
+
+-- data _<-NodeVar_ where
+--   -- base : 
+
+-- data _≤-Node_ where
+--   refl-≤-Node : ∀{a : Σ ⊢Node} -> a ≤-Node a
 
 data _⊢Ctx where
   [] : Σ ⊢Ctx
-  _,[_at_∶_] : (Γ : Σ ⊢Ctx) -> Name -> ∀ i -> Σ ⨾ Γ at i ⊢Type -> Σ ⊢Ctx
+  _,[_∶_] : (Γ : Σ ⊢Ctx) -> Name -> ∀ {i} -> Σ ⨾ Γ ⊢Type i -> Σ ⊢Ctx
   _↑ : Σ ⊢Ctx -> ∀{i S} -> (Σ ,[ i ∶ S ]) ⊢Ctx
 
-infixl 50 _,[_at_∶_]
+infixl 50 _,[_∶_]
 
-data _⨾_at_⊢Type where
+data _⨾_⊢Type_ where
+  wk-Type : ∀{U V x} -> {X : Σ ⨾ Γ ⊢Type V} -> Σ ⨾ Γ ⊢Type U -> Σ ⨾ Γ ,[ x ∶ X ] ⊢Type U
+  Universe : ∀{i} -> Σ ⨾ Γ ⊢Type var i
+  FinType : ∀{i} -> List String -> Σ ⨾ Γ ⊢Type var i
+  ∂ : ∀{j} -> Σ ⨾ Γ ⊢Type j -> Σ ⨾ Γ ⊢Type (∂ j)
+  Space : (U : Σ ⊢Cover) -> Σ ⨾ Γ ⊢Type ⟮ U ⟯
+  Fill : ∀{j} -> (Ts : Σ ⨾ Γ ⊢Type ∂ j)
+              -> (T0 : Σ ⨾ Γ ⊢Type int j)
+              -- -> (∀{i} -> (p : i ∈-Node j) -> Σ ⨾ Γ ,[ fresh Γ ∶ T0 ] ⊢ wk-Type (Ts p) ↓ {!!})
+              -> Σ ⨾ Γ ⊢Type j
+  -- Fill : ∀{j} -> (Ts : ∀{i} -> Σ ⊢ i ∈-Node j -> Σ ⨾ Γ ⊢Type ⟮ i ⟯)
+  --             -> (T0 : Σ ⨾ Γ ⊢Type only j)
+  --             -- -> (∀{i} -> (p : i ∈-Node j) -> Σ ⨾ Γ ,[ fresh Γ ∶ T0 ] ⊢ wk-Type (Ts p) ↓ {!!})
+  --             -> Σ ⨾ Γ ⊢Type ⟮ j ⟯
+  Rt : ∀{U V} -> U ⊆-Cover V -> Σ ⨾ Γ ⊢Type V -> Σ ⨾ Γ ⊢Type U
+
+data _⨾_⊢_↓_ where
+
+
+module Example where
+  Pt : Σ ⊢Shape
+  Pt = 𝒮 []
+
+  △₂ : Shapes
+  △₂ = [] ,[ 0 ∶ Pt ] ,[ 1 ∶ 𝒮 ([] & zero)]
+
+  -- Nat₀ : △₂ ⨾ [] ⊢Type ⟮ suc zero ⟯
+  -- Nat₀ = Fill (λ { (step (incl ()))}) (FinType ("1" ∷ "ℕ" ∷ []))
+
+  -- Nat₁ : △₂ ⨾ [] ⊢Type ⟮ zero ⟯
+  -- Nat₁ = Fill (λ { (incl take) → Nat₀}) (FinType ("zero" ∷ "suc" ∷ []))
+
+-- module Examples2 where
+--   Pt : [] ⊢Space
+--   Pt = 𝟙
+
+--   Line : [] ⊢Space
+--   Line = 𝒮 (Pt ＋ Pt) ([] & left tt & right tt)
+
+
+
+
+{-
   ⩝_∶_,_ :  (x : Name) -> (S : Σ ⊢Shape)
          -> ∀{i} -> Σ ,[ x ∶ S ] ⨾ Γ ↑ at i ⊢Type
          -> Σ ⨾ Γ at (⩝ x ∶ S , i) ⊢Type
@@ -117,7 +259,6 @@ pattern ⨇[_≤_by_][_∶_]_ a b x y z W = ⨇[_≤_][_∶_]_ a b {{x}} y z W
   -- Unit : ∀{Γ} -> Γ ⊢Type 𝑇
   -- ⩝_∶_,_ : ∀{Γ} -> (x : Name) -> (S : Γ ⊢Type 𝑆) -> ∀{k} -> Γ ,[ x ∶ S ] ⊢Type k -> Γ ⊢Type (⩝ x ∶ S , k)
 
-data _⨾_at_⊢_ where
 
 
 _⇒_ : ∀{a b x}
@@ -341,6 +482,7 @@ module _ where
 wk₀-⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> (B : Γ ⊢Type j) -> Γ ,[ x ∶ A ] ⊢Type j
 wk₀-⊢Type (Ε ⊩ B) = _⊩_ Ε {{skip }} B
 
+-}
 -}
 -}
 -}
