@@ -12,31 +12,79 @@ open import KamiD.Dev.2023-11-27.Core
 Name = ℕ
 
 
-data Ctx : 𝒰₀
+-- a context contains both types, but is also the "base space"
+-- for spaces, though we keep this implicit
 
-private variable Γ : Ctx
+-- data TypeCtx : 𝒰₀
+data SpaceCtx : 𝒰₀
+data Ctx : SpaceCtx -> 𝒰₀
 
-data _⊢Space : Ctx -> 𝒰₀
+private variable
+  Σ : SpaceCtx
+  Γ : Ctx Σ
 
-data _⊢Pt_ : ∀ Γ -> Γ ⊢Space -> 𝒰₀
 
-private variable X Y : Γ ⊢Space
+data _⊢Cover : SpaceCtx -> 𝒰₀
 
-data _⊢Cover_ : ∀ Γ -> Γ ⊢Space -> 𝒰₀
+private variable U : Σ ⊢Cover
 
-private variable U : Γ ⊢Cover X
+data _⊢Space_ : ∀ Σ -> Σ ⊢Cover -> 𝒰₀
 
-data _⊢Type_≥_ : ∀ Γ -> (X : Γ ⊢Space) -> Γ ⊢Cover X -> 𝒰₀
+-- TODO: unclear
+data _⊢Pt : SpaceCtx -> 𝒰₀
 
-data _⊢_ : ∀ Γ -> ∀{X U} -> Γ ⊢Type X ≥ U -> 𝒰₀
+private variable X : Σ ⊢Space U
+
+data _⊢Type_ : ∀ (Γ : Ctx Σ) -> (X : Σ ⊢Cover) -> 𝒰₀
+
+data _⊢_ : ∀ (Γ : Ctx Σ) -> ∀{U} -> Γ ⊢Type U -> 𝒰₀
+
+-- base : Γ ⊢Type U -> Σ ⊢Space
+-- base = {!!}
+
+data isBase : Γ ⊢Type U -> Σ ⊢Space U -> 𝒰₀
+
+data SpaceCtx where
+  [] : SpaceCtx
+  _,[_≤_] : ∀ Σ U -> Σ ⊢Space U -> SpaceCtx
 
 data Ctx where
-  [] : Ctx
-  _,[_∶_] : (Γ : Ctx) -> Name -> ∀{X U} -> Γ ⊢Type X ≥ U -> Ctx
-  -- _↑ : Σ ⊢Ctx -> ∀{i S} -> (Σ ,[ i ∶ S ]) ⊢Ctx
+  [] : Ctx []
+  _,[_≤_] : ∀ (Γ : Ctx Σ) -> ∀ (U : Σ ⊢Cover) -> ∀{X} -> (A : Γ ⊢Type U) -> Ctx (Σ ,[ U ≤ X ]) -- {{_ : isBase A X}} -> 
+
+data _⊢Space_ where
+  𝒮 : (U : Σ ⊢Cover) -> Σ ⊢Space U
+  -- Paths : Σ ⊢Cover -> (V : Σ ⊢Cover) -> Σ ⊢Space V
+
+data _⊢Cover where
+  var : Σ ⊢Pt -> Σ ⊢Cover
+
+data _⊢Type_ where
+  Nat : ∀{i} -> Γ ⊢Type var i
+  Flat : Σ ⊢Space U -> Γ ⊢Type U
+  Point : ∀ U -> Γ ⊢Type U
+
+  Paths : (U V : Σ ⊢Cover) -> Γ ⊢Type V
+
+  -- we also want to embed covers as types, since we need cover maps (in order to restrict types on covers...)
+  -- or we use the path space for that
+
+  -- effectively this is a sum operation over spaces??
+  Restr : ∀{U V} -> Γ ⊢Type U -> (Γ ⊢ {!Point U!}) -> Γ ⊢Type V -- given a cover U, we can take a cover V, and look at a cover of the paths from U to V and give a corresponding type on V
+
+data isBase where
+  Flat : ∀{Γ} -> (X : Σ ⊢Space U) -> isBase {Γ = Γ} (Flat X) X -- TODO: link U with X, that is, the cover U should be the actual cover of X on the context...
+
+-- data Ctx where
+--   [] : Ctx
+--   _,[_∶_] : (Γ : Ctx) -> Name -> ∀{X U} -> Γ ⊢Type X ≥ U -> Ctx
+--   -- _↑ : Σ ⊢Ctx -> ∀{i S} -> (Σ ,[ i ∶ S ]) ⊢Ctx
 
 infixr 25 _,[_∶_]
 
+data _⊢_ where
+
+{-
 data _⊢Space where
 
   -- constructors
@@ -588,6 +636,7 @@ module _ where
 wk₀-⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> (B : Γ ⊢Type j) -> Γ ,[ x ∶ A ] ⊢Type j
 wk₀-⊢Type (Ε ⊩ B) = _⊩_ Ε {{skip }} B
 
+-}
 -}
 -}
 -}
