@@ -11,6 +11,112 @@ open import KamiD.Dev.2023-11-26.Core
 
 Name = ℕ
 
+
+data Ctx : 𝒰₀
+
+private variable Γ : Ctx
+
+data _⊢Space : Ctx -> 𝒰₀
+
+data _⊢Pt_ : ∀ Γ -> Γ ⊢Space -> 𝒰₀
+
+private variable X Y : Γ ⊢Space
+
+data _⊢Cover_ : ∀ Γ -> Γ ⊢Space -> 𝒰₀
+
+private variable U : Γ ⊢Cover X
+
+data _⊢Type_≥_ : ∀ Γ -> (X : Γ ⊢Space) -> Γ ⊢Cover X -> 𝒰₀
+
+data _⊢_ : ∀ Γ -> ∀{X U} -> Γ ⊢Type X ≥ U -> 𝒰₀
+
+data Ctx where
+  [] : Ctx
+  _,[_∶_] : (Γ : Ctx) -> Name -> ∀{X U} -> Γ ⊢Type X ≥ U -> Ctx
+  -- _↑ : Σ ⊢Ctx -> ∀{i S} -> (Σ ,[ i ∶ S ]) ⊢Ctx
+
+infixr 25 _,[_∶_]
+
+data _⊢Space where
+
+  -- constructors
+  ∅ : Γ ⊢Space
+  sp : ∀{U} -> Γ ⊢Type X ≥ U -> Γ ⊢Space -- actually should be the whole cover
+  _×_ : (X Y : Γ ⊢Space) -> Γ ⊢Space
+  _⨿_ : (X Y : Γ ⊢Space) -> Γ ⊢Space
+  𝒮 : ∀ X -> Γ ⊢Cover X -> Γ ⊢Space
+
+  -- normalizable
+  Base : Γ ⊢Space -> Γ ⊢Space
+  Paths : (x : Γ ⊢Pt X) -> Γ ⊢Space
+
+  weak : Γ ⊢Space -> ∀{x Y V} -> {B : Γ ⊢Type Y ≥ V} -> Γ ,[ x ∶ B ] ⊢Space
+
+  -- NOTES: We have to define functions between spaces which preserve
+  --        the subspace / cover relation.
+
+
+data _⊢Cover_ where
+  ∅ : Γ ⊢Cover X
+  var : Γ ⊢Pt X -> Γ ⊢Cover X
+  ⟮_⟯ : Γ ⊢Cover X -> Γ ⊢Cover X
+  -- -- _⋎_ : Γ ⊢Cover -> Γ ⊢Cover -> Γ ⊢Cover
+  ∂ : Γ ⊢Cover X -> Γ ⊢Cover X
+  int : Γ ⊢Cover X -> Γ ⊢Cover X
+
+
+  -- normalizable
+  ℧ : Γ ⊢Cover X
+  weak : Γ ⊢Cover X -> ∀{x Y V} -> {B : Γ ⊢Type Y ≥ V} -> Γ ,[ x ∶ B ] ⊢Cover weak X
+
+data _⊢Type_≥_ where
+
+  weak : (A : Γ ⊢Type X ≥ U) -> ∀{x Y V} -> {B : Γ ⊢Type Y ≥ V} -> Γ ,[ x ∶ B ] ⊢Type weak X ≥ weak U
+
+  -- constructors
+  Nat : ∀{i} -> Γ ⊢Type X ≥ var i
+  Type : ∀{i} -> Γ ⊢Type X ≥ var i
+  Point : ∀{i} -> Γ ⊢Space -> Γ ⊢Type X ≥ var i
+
+  yo : (X : Γ ⊢Space) -> ∀{U} -> Γ ⊢Type X ≥ U
+  _⇒_ : ∀{X U} -> (A B : Γ ⊢Type X ≥ U) -> Γ ⊢Type X ≥ U
+
+  Paths : (U : Γ ⊢Cover X) -> Γ ⊢Type X ≥ ⟮ U ⟯
+
+  Restr : Γ ⊢Type X ≥ U -> (x : Γ ⊢Pt X) -> Γ ⊢Type X ≥ var x
+
+
+  Fill : ∀{U} -> (Ts : Γ ⊢Type X ≥ ∂ U) -- the boundaries
+              -> (T0 : Γ ⊢Type X ≥ int U) -- only the top
+              -- here we want to require, (for every point `p : int U`),
+              -- for every element x : T0 (which is at a certain point of `int U`),
+              -- for every point `q : int (∂ U)`, for every path (p ⇝ q) in the space X,
+              -- a value of Ts @ q
+              -> Γ ,[ 0 ∶ T0 ] ⊢ Restr (weak Ts) {!!}
+
+
+              -- -> (∀{i} -> (p : i ∈-Node j) -> Σ ⨾ Γ ,[ fresh Γ ∶ T0 ] ⊢ wk-Type (Ts p) ↓ {!!})
+              -> Γ ⊢Type X ≥ U
+
+  -- destructors
+  _at_ : (X : Γ ⊢Space) -> (U : Γ ⊢Cover Base X) -> Γ ⊢Type Base X ≥ U
+
+data _⊢_ where
+  
+
+module Example where
+  Pt : [] ⊢Space
+  Pt = 𝒮 ∅ ∅
+
+  Line : [] ⊢Space
+  Line = 𝒮 (Pt ⨿ Pt) ℧
+
+
+-- Question: what is the base space of the universe? => maybe there is no universe space?
+-- But it can be created?
+
+
+{-
 --------------------------------------------------------------------
 -- Plan: we need two contexts: one for shapes, one for types!
 --
@@ -482,6 +588,7 @@ module _ where
 wk₀-⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> (B : Γ ⊢Type j) -> Γ ,[ x ∶ A ] ⊢Type j
 wk₀-⊢Type (Ε ⊩ B) = _⊩_ Ε {{skip }} B
 
+-}
 -}
 -}
 -}
