@@ -2,7 +2,7 @@
 
 module KamiD.Dev.2023-12-05.Rules where
 
-open import Agora.Conventions hiding (Σ)
+open import Agora.Conventions hiding (Σ ; Lift)
 open import Agora.Data.Power.Definition
 open import Data.Fin
 open import Data.Nat hiding (_!)
@@ -12,37 +12,203 @@ open import KamiD.Dev.2023-12-05.Core
 Name = ℕ
 
 
--- a context contains both types, but is also the "base space"
+
 -- for spaces, though we keep this implicit
 
 -- data TypeCtx : 𝒰₀
 data Ctx : 𝒰₀
 
 private variable
-  Γ : Ctx
+  Γ Δ : Ctx
 
+data _⇛_ : Ctx -> Ctx -> 𝒰₀
 
-data _⊢Cover : Ctx -> 𝒰₀
+data _⊢Subspace : Ctx -> 𝒰₀
+data _⊢Var : Ctx -> 𝒰₀
 
-private variable U V : Γ ⊢Cover
+private variable U V : Γ ⊢Subspace
+
+data _⊢_⊆_ : ∀ Γ -> (U V : Γ ⊢Subspace) -> 𝒰₀
 
 -- this property should be decidable and propositional
-data _⊢Cover_⊆_ : ∀ Γ -> (U V : Γ ⊢Cover) -> 𝒰₀
+-- data _⊢Subspace_⊆_ : ∀ Γ -> (U V : Γ ⊢Subspace) -> 𝒰₀
 
-data _⊢Space_ : ∀ Γ -> Γ ⊢Cover -> 𝒰₀
+
+-- this might be both:
+-- either a space extension or a space cover
+-- data _⊢Space_ : ∀ Γ -> Γ ⊢Subspace -> 𝒰₀
+data _⊢Projected_ : ∀ Γ -> Γ ⊢Subspace -> 𝒰₀
+data _⊢Extended : ∀ Γ -> 𝒰₀
+
+private variable
+  X : Γ ⊢Projected U
+  Y : Γ ⊢Projected V
+
+data _⊢Section_ : ∀ Γ {U} -> Γ ⊢Projected U -> 𝒰₀
+-- data _⊢Closed_ : ∀ Γ {U} -> Γ ⊢Projected U -> 𝒰₀
 
 -- TODO: unclear
-data _⊢Pt : Ctx -> 𝒰₀
+-- data _⊢Pt : Ctx -> 𝒰₀
 
-private variable X : Γ ⊢Space U
+-- private variable X : Γ ⊢Space U
 
-data _⊢Type_ : ∀ (Γ : Ctx) -> (X : Γ ⊢Cover) -> 𝒰₀
+-- data _⊢Type_ : ∀ (Γ : Ctx) -> (X : Γ ⊢Subspace) -> 𝒰₀
 
-data _⊢_ : ∀ (Γ : Ctx) -> ∀{U} -> Γ ⊢Type U -> 𝒰₀
+-- A universe over a subspace U of a context
+-- means that this universe can only be used
+-- for sums which are at least over this subspace (?)
+--
+-- A universe has an attached partitioning scheme
+data _⊢Universe_ : ∀ (Γ : Ctx) -> (X : Γ ⊢Subspace) -> 𝒰₀
+
+data Ctx where
+  [] : Ctx
+  _,[_↞_] : ∀ Γ -> ∀ U -> Γ ⊢Projected U -> Ctx
+  _&_ : ∀ Γ -> Γ ⊢Extended -> Ctx
+
+infixl 30 _&_
+
+infixl 40 _,[_↞_]
+
+data _⇛_ where
+  π₀ : Γ ⇛ Δ ,[ U ↞ X ] -> Γ ⇛ Δ
+
+  id : Γ ⇛ Γ
+
+data _⊢Var where
+  zero : Γ ,[ U ↞ X ] ⊢Var
+  suc : Γ ⊢Var -> Γ ,[ U ↞ X ] ⊢Var
+  ∞ : Γ ⊢Var
+
+data _⊢Subspace where
+  var : Γ ⊢Var -> Γ ⊢Subspace
+  ∅ : Γ ⊢Subspace
+
+  -- interiour
+  °_ : Γ ⊢Subspace -> Γ ⊢Subspace
+
+  -- boundary
+  -- ∂_ : (x : Γ ⊢Subspace) -> Γ ⊢Point (° x) -> Γ ⊢Subspace
+
+  -- closure
+  ⟮_⟯ : Γ ⊢Subspace -> Γ ⊢Subspace
+
+  -- the subspace U extended by exactly the points of X which get added in (Γ , X)
+  -- _◁_ : (U : Γ ⊢Subspace) -> (X : Γ ⊢Projected U) -> Γ ,[ U ↞ X ] ⊢Subspace
+
+  --pullback of subspaces
+  _[_] : Γ ⊢Subspace -> Δ ⇛ Γ -> Δ ⊢Subspace
+
+  -- not normal forms
+  -- weak : ∀{X : Γ ⊢Projected U} -> Γ ⊢Subspace -> Γ ,[ U ↞ X ] ⊢Subspace
+
+infixl 100 _[_]
+
+infixl 150 °_
+
+data _⊢_⊆_ where
+  inj-° : Γ ⊢ ° U ⊆ U
+
+data _⊢Extended where
+  -- the one point compactification
+  _* : ∀ (U : Γ ⊢Subspace) -> Γ ⊢Extended
+
+  -- sum for extensions
+  ∫ : (X : Γ ⊢Extended) -> Γ & X ⊢Extended -> Γ ⊢Extended
+
+
+data _⊢Projected_ where
+  -- the flat modality (discretization of space)
+  _♭ : ∀ U -> Γ ⊢Projected U
+
+  -- sum (and compactification ?)
+  ∫ : (X : Γ ⊢Projected U) -> Γ ,[ U ↞ X ] ⊢Projected var zero -> Γ ⊢Projected U
+
+  -- product
+  ∮ : (X : Γ ⊢Projected U) -> Γ ,[ U ↞ X ] ⊢Projected var zero -> Γ ⊢Projected U
+
+  -- sum over a subspace U
+  _⊕'_ : (X Y : Γ ⊢Projected U) -> Γ ⊢Projected U
+  -- ∐
+
+
+  Univ : ∀{x} -> Γ ⊢Projected var x
+
+  ---- Not normal
+
+  -- restriction along inclusion
+  _⇂_⨾_ : Γ ⊢Projected V -> ∀ U -> Γ ⊢ U ⊆ V -> Γ ⊢Projected U
+
+  -- computes as restriction
+  °_ : Γ ⊢Projected U -> Γ ⊢Projected ° U
+
+  -- extension of section to closure of space
+  -- computes by using the restriction maps and ⋀-ing the resulting subspaces
+  Sub : (X : Γ ⊢Projected U) -> Γ ⊢Section X -> Γ ⊢Projected ⟮ U ⟯
+
+
+  -- the identity projected space over U
+  -- this is probably not normal
+  Id : Γ ⊢Projected U
+
+
+  -- pullback of projected spaces
+  _[_] : (X : Δ ⊢Projected U) -> (σ : Γ ⇛ Δ) -> Γ ⊢Projected U [ σ ]
+
+
+infixl 30 _⇂_⨾_
+
+-- data _⊢Closed_ where
+  -- zero : Γ ,[ U ↞ X ] ⊢Closed {!!}
+
+
+
+data _⊢Section_ where
+  -- π₁ : (σ : Γ ⇛ Δ ,[ U ↞ X ]) -> Γ ⊢Section (X [ π₀ σ ])
+
+  -- a section can be constructed by splitting the source space into interiour and boundary
+  split : {X : Γ ⊢Projected U}
+          -> (s : Γ ⊢Section ° X)
+          -> Γ ⊢Section Sub _ s
+          -> Γ ⊢Section X
+
+
+-- wk-⇛ : Γ ,[ U ↞ X ] ⇛ Γ
+-- wk-⇛ = π₀ id
+
+-- vz : Γ ,[ U ↞ X ] ⊢Section X [ wk-⇛ ]
+-- vz = π₁ id
+
+-- vs : (Γ ⊢Section Y) -> (Γ ,[ U ↞ X ] ⊢Section Y [ wk-⇛ ])
+-- vs = {!!}
+
+data _⊢Universe_ where
+  𝕌 : Γ ⊢Universe ∅
+
+
+module Example where
+
+  -- the subspace created from a closed subset (a term / a section)
+  -- Lift : {X : Γ ⊢Projected U} -> Γ ⊢Section X -> Γ ⊢Projected U
+  -- Lift {X} s = {!!}
+
+  -- Id : Γ ⊢Projected U
+  -- Id = ∫ {!!} {!!}
+  Tri : [] ⊢Projected (var ∞)
+  Tri = ∫ Id (Id ⊕' Id)
+
+  -- example: map Tri to Bi
+
+  -- Poly : (L : Γ ⊢Projected var ∞) -> Γ ⊢Section ∮ {!!} Univ
+  -- Poly = {!!}
+
+
+-- data _⊢_ : ∀ (Γ : Ctx) -> ∀{U} -> Γ ⊢Type U -> 𝒰₀
 
 -- base : Γ ⊢Type U -> Γ ⊢Space
 -- base = {!!}
 
+{-
 data isBase : Γ ⊢Type U -> Γ ⊢Space U -> 𝒰₀
 
 -- data SpaceCtx where
@@ -51,28 +217,28 @@ data isBase : Γ ⊢Type U -> Γ ⊢Space U -> 𝒰₀
 
 data Ctx where
   [] : Ctx
-  _,[_↞_] : ∀ (Γ : Ctx) -> ∀ (U : Γ ⊢Cover) -> (A : Γ ⊢Type U) -> Ctx -- {{_ : isBase A X}} -> 
+  _,[_↞_] : ∀ (Γ : Ctx) -> ∀ (U : Γ ⊢Subspace) -> (A : Γ ⊢Type U) -> Ctx -- {{_ : isBase A X}} -> 
 
 data _⊢Space_ where
-  𝒮 : (U : Γ ⊢Cover) -> Γ ⊢Space U
-  -- Paths : Γ ⊢Cover -> (V : Γ ⊢Cover) -> Γ ⊢Space V
+  𝒮 : (U : Γ ⊢Subspace) -> Γ ⊢Space U
+  -- Paths : Γ ⊢Subspace -> (V : Γ ⊢Subspace) -> Γ ⊢Space V
 
-data _⊢Cover where
-  var : Γ ⊢Pt -> Γ ⊢Cover
+data _⊢Subspace where
+  var : Γ ⊢Pt -> Γ ⊢Subspace
 
-data _⊢Cover_⊆_ where
+data _⊢Subspace_⊆_ where
 
 data _⊢Type_ where
   Nat : ∀{i} -> Γ ⊢Type var i
   Flat : Γ ⊢Space U -> Γ ⊢Type U
   Point : ∀ U -> Γ ⊢Type U
 
-  Paths : (U V : Γ ⊢Cover) -> Γ ⊢Type V
+  Paths : (U V : Γ ⊢Subspace) -> Γ ⊢Type V
 
   -- we also want to embed covers as types, since we need cover maps (in order to restrict types on covers...)
   -- or we use the path space for that
 
-  Restr : ∀{U V} -> Γ ⊢Cover U ⊆ V -> Γ ⊢Type V -> Γ ⊢Type U -- given a cover U, we can take a cover V, and look at a cover of the paths from U to V and give a corresponding type on V
+  Restr : ∀{U V} -> Γ ⊢Subspace U ⊆ V -> Γ ⊢Type V -> Γ ⊢Type U -- given a cover U, we can take a cover V, and look at a cover of the paths from U to V and give a corresponding type on V
 
 data isBase where
   -- Flat : ∀{Γ} -> (X : Γ ⊢Space U) -> isBase {Γ = Γ} (Flat X) X -- TODO: link U with X, that is, the cover U should be the actual cover of X on the context...
@@ -97,7 +263,7 @@ data _⊢Space where
   sp : ∀{U} -> Γ ⊢Type X ≥ U -> Γ ⊢Space -- actually should be the whole cover
   _×_ : (X Y : Γ ⊢Space) -> Γ ⊢Space
   _⨿_ : (X Y : Γ ⊢Space) -> Γ ⊢Space
-  𝒮 : ∀ X -> Γ ⊢Cover X -> Γ ⊢Space
+  𝒮 : ∀ X -> Γ ⊢Subspace X -> Γ ⊢Space
 
   -- normalizable
   Base : Γ ⊢Space -> Γ ⊢Space
@@ -109,18 +275,18 @@ data _⊢Space where
   --        the subspace / cover relation.
 
 
-data _⊢Cover_ where
-  ∅ : Γ ⊢Cover X
-  var : Γ ⊢Pt X -> Γ ⊢Cover X
-  ⟮_⟯ : Γ ⊢Cover X -> Γ ⊢Cover X
-  -- -- _⋎_ : Γ ⊢Cover -> Γ ⊢Cover -> Γ ⊢Cover
-  ∂ : Γ ⊢Cover X -> Γ ⊢Cover X
-  int : Γ ⊢Cover X -> Γ ⊢Cover X
+data _⊢Subspace_ where
+  ∅ : Γ ⊢Subspace X
+  var : Γ ⊢Pt X -> Γ ⊢Subspace X
+  ⟮_⟯ : Γ ⊢Subspace X -> Γ ⊢Subspace X
+  -- -- _⋎_ : Γ ⊢Subspace -> Γ ⊢Subspace -> Γ ⊢Subspace
+  ∂ : Γ ⊢Subspace X -> Γ ⊢Subspace X
+  int : Γ ⊢Subspace X -> Γ ⊢Subspace X
 
 
   -- normalizable
-  ℧ : Γ ⊢Cover X
-  weak : Γ ⊢Cover X -> ∀{x Y V} -> {B : Γ ⊢Type Y ≥ V} -> Γ ,[ x ∶ B ] ⊢Cover weak X
+  ℧ : Γ ⊢Subspace X
+  weak : Γ ⊢Subspace X -> ∀{x Y V} -> {B : Γ ⊢Type Y ≥ V} -> Γ ,[ x ∶ B ] ⊢Subspace weak X
 
 data _⊢Type_≥_ where
 
@@ -134,7 +300,7 @@ data _⊢Type_≥_ where
   yo : (X : Γ ⊢Space) -> ∀{U} -> Γ ⊢Type X ≥ U
   _⇒_ : ∀{X U} -> (A B : Γ ⊢Type X ≥ U) -> Γ ⊢Type X ≥ U
 
-  Paths : (U : Γ ⊢Cover X) -> Γ ⊢Type X ≥ ⟮ U ⟯
+  Paths : (U : Γ ⊢Subspace X) -> Γ ⊢Type X ≥ ⟮ U ⟯
 
   Restr : Γ ⊢Type X ≥ U -> (x : Γ ⊢Pt X) -> Γ ⊢Type X ≥ var x
 
@@ -152,7 +318,7 @@ data _⊢Type_≥_ where
               -> Γ ⊢Type X ≥ U
 
   -- destructors
-  _at_ : (X : Γ ⊢Space) -> (U : Γ ⊢Cover Base X) -> Γ ⊢Type Base X ≥ U
+  _at_ : (X : Γ ⊢Space) -> (U : Γ ⊢Subspace Base X) -> Γ ⊢Type Base X ≥ U
 
 data _⊢_ where
   
@@ -190,7 +356,7 @@ private variable
   Γ : Shapes
 data _⊢Shape : Shapes -> 𝒰₀
 data _⊢NodeVar : Shapes -> 𝒰₀
-data _⊢Cover : Shapes -> 𝒰₀
+data _⊢Subspace : Shapes -> 𝒰₀
 data _⊢NodeVars : Shapes -> 𝒰₀
 
 
@@ -225,11 +391,11 @@ private variable
 
 data _⊢_∈-Node_ : ∀ Γ -> (a b : Γ ⊢NodeVar) -> 𝒰₀
 
-data _⊆-Cover_ : (U V : Γ ⊢Cover) -> 𝒰₀
+data _⊆-Cover_ : (U V : Γ ⊢Subspace) -> 𝒰₀
 
 data _⊢Ctx : Shapes -> 𝒰₀
 
-data _⊢Cover_⇾_ : ∀ Γ -> (U V : Γ ⊢Cover) -> 𝒰₀
+data _⊢Subspace_⇾_ : ∀ Γ -> (U V : Γ ⊢Subspace) -> 𝒰₀
 
 
 private variable
@@ -246,10 +412,10 @@ fresh = {!!}
 
 -- data _⊢Shapes : (Γ : Ctx) -> 𝒰₀
 -- data _⊢Kind : (Γ : Ctx) -> 𝒰₀
-data _⨾_⊢Type_ : ∀ Γ -> Γ ⊢Ctx -> Γ ⊢Cover -> 𝒰₀
+data _⨾_⊢Type_ : ∀ Γ -> Γ ⊢Ctx -> Γ ⊢Subspace -> 𝒰₀
 -- data _⊢Type : (Γ : Ctx) -> 𝒰₀
 -- data _⊢Var!_ : (Γ : Ctx) ->  -> 𝒰₀
-data _⨾_⊢_↓_ : ∀ Γ Γ -> ∀{i j} -> Γ ⨾ Γ ⊢Type j -> Γ ⊢Cover i ⇾ j -> 𝒰₀
+data _⨾_⊢_↓_ : ∀ Γ Γ -> ∀{i j} -> Γ ⨾ Γ ⊢Type j -> Γ ⊢Subspace i ⇾ j -> 𝒰₀
 -- data _⊇_ : (Γ : Ctx) (Δ : Ctx) -> 𝒰₀
 
 -- infixl 40 _⊇_
@@ -322,12 +488,12 @@ data _⊢NodeVar where
 --   ∅ : Γ ⊢Node
 --   ⩝_∶_,_ : ∀(x : Name) -> (S : Γ ⊢Shape) -> Γ ,[ x ∶ S ] ⊢Node -> Γ ⊢Node
 
-data _⊢Cover where
-  var : Γ ⊢NodeVar -> Γ ⊢Cover
-  ⟮_⟯ : Γ ⊢Cover -> Γ ⊢Cover
-  -- _⋎_ : Γ ⊢Cover -> Γ ⊢Cover -> Γ ⊢Cover
-  ∂ : Γ ⊢Cover -> Γ ⊢Cover
-  int : Γ ⊢Cover -> Γ ⊢Cover
+data _⊢Subspace where
+  var : Γ ⊢NodeVar -> Γ ⊢Subspace
+  ⟮_⟯ : Γ ⊢Subspace -> Γ ⊢Subspace
+  -- _⋎_ : Γ ⊢Subspace -> Γ ⊢Subspace -> Γ ⊢Subspace
+  ∂ : Γ ⊢Subspace -> Γ ⊢Subspace
+  int : Γ ⊢Subspace -> Γ ⊢Subspace
 
 data _⊢_∈-NodeVars_ : ∀ Γ -> Γ ⊢NodeVar -> Γ ⊢NodeVars -> 𝒰₀ where
   take : ∀{vs v} -> Γ ⊢ v ∈-NodeVars vs & v
@@ -340,7 +506,7 @@ data _⊢_∈-Node_ where
 
 data _⊆-Cover_ where
 
-data _⊢Cover_⇾_ where
+data _⊢Subspace_⇾_ where
 
 -- data _<-NodeVar_ where
 --   -- base : 
@@ -360,7 +526,7 @@ data _⨾_⊢Type_ where
   Universe : ∀{i} -> Γ ⨾ Γ ⊢Type var i
   FinType : ∀{i} -> List String -> Γ ⨾ Γ ⊢Type var i
   ∂ : ∀{j} -> Γ ⨾ Γ ⊢Type j -> Γ ⨾ Γ ⊢Type (∂ j)
-  Space : (U : Γ ⊢Cover) -> Γ ⨾ Γ ⊢Type ⟮ U ⟯
+  Space : (U : Γ ⊢Subspace) -> Γ ⨾ Γ ⊢Type ⟮ U ⟯
   Fill : ∀{j} -> (Ts : Γ ⨾ Γ ⊢Type ∂ j)
               -> (T0 : Γ ⨾ Γ ⊢Type int j)
               -- -> (∀{i} -> (p : i ∈-Node j) -> Γ ⨾ Γ ,[ fresh Γ ∶ T0 ] ⊢ wk-Type (Ts p) ↓ {!!})
@@ -641,6 +807,7 @@ module _ where
 wk₀-⊢Type : ∀{Γ k j x} -> {A : Γ ⊢Type k} -> (B : Γ ⊢Type j) -> Γ ,[ x ∶ A ] ⊢Type j
 wk₀-⊢Type (Ε ⊩ B) = _⊩_ Ε {{skip }} B
 
+-}
 -}
 -}
 -}
