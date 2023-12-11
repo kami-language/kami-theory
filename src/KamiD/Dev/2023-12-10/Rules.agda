@@ -136,74 +136,143 @@ data _⊢Subspace : Space -> 𝒰₀
 data _⊢Pt : Space -> 𝒰₀
 data _⊢Ln_⇾_ : (Σ : Space) -> (a b : Σ ⊢Pt) -> 𝒰₀
 
--- types
-data Ctx : Space -> 𝒰₀
-data _⨾_⊢Type_ : ∀ Σ (Γ : Ctx Σ) -> Σ ⊢Subspace -> 𝒰₀
-data _⨾_⊢VType_,_ : ∀ Σ (Γ : Ctx Σ) -> Σ ⊢Pt -> ℕ -> 𝒰₀
-data _⨾_⊢PtType_ : ∀ Σ (Γ : Ctx Σ) -> Σ ⊢Pt -> 𝒰₀
-data _⨾_⊢LnType_ : ∀ Σ (Γ : Ctx Σ) -> ∀{a b} -> Σ ⊢Ln a ⇾ b -> 𝒰₀
-
--- terms
-data _⨾_⊢V_ : ∀ Σ Γ {x n} -> (A : Σ ⨾ Γ ⊢VType x , n) -> 𝒰₀
-
 private variable
   Σ : Space
-  Γ : Ctx Σ
+
+-- times
+data Time : 𝒰₀
+data _⊢T : Time -> 𝒰₀
+data _⊢TExt : Time -> 𝒰₀
+data _⊢T_ : (Τ : Time) -> Τ ⊢TExt -> 𝒰₀
+data _⊢_<T_ : (Τ : Time) -> ∀{X} -> (s t : Τ ⊢T X) -> 𝒰₀
+
+private variable
+  Τ : Time
+
+-- types
+data Ctx : Space -> Time -> 𝒰₀
+
+private variable
+  Γ : Ctx Σ Τ
+
+data _⊢Type_ : ∀ (Γ : Ctx Σ Τ) -> Σ ⊢Subspace -> 𝒰₀
+-- data _⊢VType_,_ : ∀ Σ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> ℕ -> 𝒰₀
+data _⊢PtType_ : ∀ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> 𝒰₀
+data _⊢LnType_ : ∀ (Γ : Ctx Σ Τ) -> ∀{a b} -> Σ ⊢Ln a ⇾ b -> 𝒰₀
+
+-- terms
+data _⊢Pt_ : ∀ {Γ : Ctx Σ Τ} {x} -> (A : Γ ⊢PtType x) -> 𝒰₀
+
+private variable
   U V : Σ ⊢Subspace
   x y : Σ ⊢Pt
-  -- m n : ℕ
+
+
+---------------------------------------------
+-- spaces
 
 data Space where
   [] : Space
   _,Fill_ : (Σ : Space) -> Σ ⊢Subspace -> Space
 
 data _⊢Pt where
+  top : (Σ ,Fill U) ⊢Pt
 
 data _⊢Subspace where
   pt : Σ ⊢Pt -> Σ ⊢Subspace
+  ∅ : Σ ⊢Subspace
 
 data _⊢Ln_⇾_ where
 
+---------------------------------------------
+-- times
+data Time where
+  [] : Time
+  _,_ : (Τ : Time) -> Τ ⊢TExt -> Time
+  -- I⃗ : Time
+  -- _,[_<_by_] : (Τ : Time) -> (s t : Τ ⊢T) -> Τ ⊢T s < t -> Time
+
+data _⊢T where
+  zero : ∀{X} -> Τ ⊢T X -> Τ , X ⊢T
+  suc : ∀{X} -> Τ ⊢T -> Τ , X ⊢T
+
+data _⊢TExt where
+  I⃗ : Τ ⊢TExt
+  _&_ : {Τ : Time} -> (X : Τ ⊢TExt) -> {s t : Τ ⊢T X} -> Τ ⊢ s <T t -> Τ ⊢TExt
+
+data _⊢T_ where
+  zero : Τ ⊢T I⃗
+  one : Τ ⊢T I⃗
+  weak : {X : Τ ⊢TExt} -> ∀{s t} -> {p : Τ ⊢ s <T t} -> Τ ⊢T X -> Τ ⊢T (X & p)
+  split : {X : Τ ⊢TExt} -> ∀{s t} -> {p : Τ ⊢ s <T t} -> Τ ⊢T (X & p)
+
+data _⊢_<T_ where
+
+
+
+
+
+---------------------------------------------
+-- typs
+
 data Ctx where
-  [] : Ctx Σ
+  [] : Ctx Σ Τ
 
   -- this should actually also contain the fragmentation
   -- assignment
-  _,[_,_⇜_] : ∀ Γ U (n : ℕ) -> Σ ⨾ Γ ⊢Type U -> Ctx Σ
+  _,[_⇜_] : ∀ (Γ : Ctx Σ Τ) U -> Γ ⊢Type U -> Ctx Σ Τ
 
-data _⨾_⊢Type_ where
+  --------------
+  -- Normalizable
+  wkT : ∀ T -> Ctx Σ Τ -> Ctx Σ (Τ , T)
+
+
+data _⊢Type_ where
+
+
   -- this should be different, probably this is
   -- actually the closure operation which takes
   -- a somewhat complete term and closes it over
-  pt : Σ ⨾ Γ ⊢PtType x -> Σ ⨾ Γ ⊢Type pt x
+  pt : Γ ⊢PtType x -> Γ ⊢Type pt x
 
-data _⨾_⊢VType_,_ where
-  End : Σ ⨾ Γ ⊢PtType x -> Σ ⨾ Γ ⊢VType x , n
-  [_]▶_ : (A : Σ ⨾ Γ ⊢PtType x)
-            -> Σ ⨾ Γ ,[ pt x , n ⇜ pt A ] ⊢VType x , suc n
-            -> Σ ⨾ Γ ⊢VType x , n
+-- data _⊢VType_,_ where
+--   End : Γ ⊢PtType x -> Γ ⊢VType x , n
+--   [_]▶_ : (A : Γ ⊢PtType x)
+--             -> Γ ,[ pt x , n ⇜ pt A ] ⊢VType x , suc n
+--             -> Γ ⊢VType x , n
 
-infixl 40 [_]▶_
+-- infixl 40 [_]▶_
 
-data _⨾_⊢PtType_ where
+data _⊢PtType_ where
+
+  -- time quantification
+  ∀T_,_ : ∀ T -> wkT T Γ ⊢PtType x -> Γ ⊢PtType x
 
   -- we can filter a type to contain only the positive parts
-  ⁺_ : Σ ⨾ Γ ⊢PtType x -> Σ ⨾ Γ ⊢PtType x
+  ⁺_ : Γ ⊢PtType x -> Γ ⊢PtType x
 
   -- we can 
 
-data _⨾_⊢LnType_ where
+data _⊢LnType_ where
 
-data _⨾_⊢V_ where
+data _⊢Pt_ where
   -- introducing new vars
-  Λ : ∀{x A B}
-      -> Σ ⨾ Γ ,[ pt x , n ⇜ pt A ] ⊢V B
-      -> Σ ⨾ Γ ⊢V [ A ]▶ B
+  -- Λ : ∀{x A B}
+  --     -> Γ ,[ pt x , n ⇜ pt A ] ⊢V B
+  --     -> Γ ⊢V [ A ]▶ B
 
   -- discharging negative vars in the context
   -- we take a path to a var in the context,
   -- and change the context to have a value for that var
   -- Ψ : 
+
+
+module Example where
+  Σ₁ : Space
+  Σ₁ = [] ,Fill ∅
+
+  fun : ∀{Γ : Ctx Σ₁ []} -> Γ ⊢PtType top
+  fun = ∀T I⃗ , ∀T {!!} , {!!}
 
 {-
 -- for spaces, though we keep this implicit
