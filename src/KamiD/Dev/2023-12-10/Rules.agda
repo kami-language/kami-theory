@@ -158,14 +158,47 @@ private variable
 data _⊢Type_ : ∀ (Γ : Ctx Σ Τ) -> Σ ⊢Subspace -> 𝒰₀
 -- data _⊢VType_,_ : ∀ Σ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> ℕ -> 𝒰₀
 data _⊢PtType_ : ∀ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> 𝒰₀
+data _⊢PtBase_ : ∀ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> 𝒰₀
 data _⊢LnType_ : ∀ (Γ : Ctx Σ Τ) -> ∀{a b} -> Σ ⊢Ln a ⇾ b -> 𝒰₀
 
 -- terms
-data _⊢Pt_ : ∀ {Γ : Ctx Σ Τ} {x} -> (A : Γ ⊢PtType x) -> 𝒰₀
+data _⊢Pt_ : ∀ (Γ : Ctx Σ Τ) {x} -> (A : Γ ⊢PtType x) -> 𝒰₀
 
 private variable
   U V : Σ ⊢Subspace
   x y : Σ ⊢Pt
+
+
+---------------------------------------------
+-- parameters for basic types
+data Charge : 𝒰₀ where
+  ⁺ ⁻ : Charge
+
+Param : (Σ : Space) -> (Τ : Time) -> 𝒰₀
+Param Σ Τ = Charge ×-𝒰 Τ ⊢T
+
+
+-- _⦘_ : ∀{A : 𝒰 𝑖} {B : A -> 𝒰 𝑗} -> (a : A) -> (∀ (a : A) -> B a) -> B a
+-- _⦘_ a f = f a
+
+-- ℕ ⦗ ⁺ t	⦘
+
+
+-- ⦋ ⁺ t	⦌
+
+-- ⦉ ⁺ t	⦊
+
+-- ⦑ ⁺ t ⦒
+
+-- ⦋ ⁺ t	⦌
+
+
+-- ⦇ ⁺ t ⦈
+
+--   ⧵
+--  	⧶ 	⧷ 	 	⧹ 
+-- ⦅ 	⦆ 	⦇ 	⦈ 	⦉ 	⦊ 	⦋ 	⦌ 	⦍ 	⦎ 	⦏
+-- U+299x 	⦐ 	⦑ 	⦒
 
 
 ---------------------------------------------
@@ -193,8 +226,8 @@ data Time where
   -- _,[_<_by_] : (Τ : Time) -> (s t : Τ ⊢T) -> Τ ⊢T s < t -> Time
 
 data _⊢T where
-  zero : ∀{X} -> Τ ⊢T X -> Τ , X ⊢T
-  suc : ∀{X} -> Τ ⊢T -> Τ , X ⊢T
+  z : ∀{X} -> Τ ⊢T X -> Τ , X ⊢T
+  s : ∀{X} -> Τ ⊢T -> Τ , X ⊢T
 
 data _⊢TExt where
   I⃗ : Τ ⊢TExt
@@ -207,13 +240,14 @@ data _⊢T_ where
   split : {X : Τ ⊢TExt} -> ∀{s t} -> {p : Τ ⊢ s <T t} -> Τ ⊢T (X & p)
 
 data _⊢_<T_ where
+  arr : Τ ⊢ zero <T one
 
 
 
 
 
 ---------------------------------------------
--- typs
+-- types
 
 data Ctx where
   [] : Ctx Σ Τ
@@ -225,6 +259,9 @@ data Ctx where
   --------------
   -- Normalizable
   wkT : ∀ T -> Ctx Σ Τ -> Ctx Σ (Τ , T)
+  _⟨_⟩ : Ctx Σ Τ -> Τ ⊢T -> Ctx Σ Τ
+
+infixl 40 _,[_⇜_]
 
 
 data _⊢Type_ where
@@ -244,18 +281,39 @@ data _⊢Type_ where
 -- infixl 40 [_]▶_
 
 data _⊢PtType_ where
+  -- sum/product
+  ⨇ : (A : Γ ⊢PtType x) -> Γ ,[ pt x ⇜ pt A ] ⊢PtType x -> Γ ⊢PtType x
 
-  -- time quantification
-  ∀T_,_ : ∀ T -> wkT T Γ ⊢PtType x -> Γ ⊢PtType x
+  -- we can restrict a type to a value at a time
+  _⟨_⟩ : {Γ : Ctx Σ Τ} -> Γ ⊢PtType x -> Τ ⊢T -> Γ ⊢PtType x
 
   -- we can filter a type to contain only the positive parts
-  ⁺_ : Γ ⊢PtType x -> Γ ⊢PtType x
+  -- ⁺_ : Γ ⊢PtType x -> Γ ⊢PtType x
 
-  -- we can 
+  _⦗_⦘ : {Γ : Ctx Σ Τ} -> Γ ⊢PtBase x -> Param Σ Τ -> Γ ⊢PtType x
+
+
+data _⊢PtBase_ where
+  -- natural numbers
+  Bℕ : Γ ⊢PtBase x
+
+  -- time quantification
+  B∀_,_ : ∀ T -> wkT T Γ ⊢PtType x -> Γ ⊢PtBase x
+
+pattern ℕ⁺ x = Bℕ ⦗ ⁺ , x ⦘
+pattern ℕ⁻ x = Bℕ ⦗ ⁻ , x ⦘
+pattern ∀⁺⦗_⦘[_]_ t x y = (B∀ x , y) ⦗ ⁺ , t ⦘
+
+pattern t₀ x = z x
+pattern t₁ x = s (z x)
+pattern t₂ x = s (s (z x))
+
+-- pattern Nat⁺ x = Nat (⁺ , x)
 
 data _⊢LnType_ where
 
 data _⊢Pt_ where
+  -- abs : ⟨ Γ ⟩ t ⊢ 
   -- introducing new vars
   -- Λ : ∀{x A B}
   --     -> Γ ,[ pt x , n ⇜ pt A ] ⊢V B
@@ -271,8 +329,16 @@ module Example where
   Σ₁ : Space
   Σ₁ = [] ,Fill ∅
 
-  fun : ∀{Γ : Ctx Σ₁ []} -> Γ ⊢PtType top
-  fun = ∀T I⃗ , ∀T {!!} , {!!}
+  Τ₁ : Time
+  Τ₁ = [] , I⃗
+
+  fun : ∀{Γ : Ctx Σ₁ Τ₁} -> Γ ⊢PtType top
+  fun = ∀⁺⦗ t₀ zero ⦘[ I⃗ ] ⨇ (ℕ⁻ (t₁ zero)) (ℕ⁺ (t₁ one))
+
+  f1 : [] ⊢Pt fun
+  f1 = {!!}
+
+
 
 {-
 -- for spaces, though we keep this implicit
