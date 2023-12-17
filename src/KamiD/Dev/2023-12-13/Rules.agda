@@ -131,28 +131,28 @@ Name = ℕ
 
 
 -- spaces
-data Space : 𝒰₀
-data _⊢Subspace : Space -> 𝒰₀
-data _⊢Pt : Space -> 𝒰₀
-data _⊢Ln_⇾_ : (Σ : Space) -> (a b : Σ ⊢Pt) -> 𝒰₀
+-- data Space : 𝒰₀
+-- data _⊢Subspace : Space -> 𝒰₀
+-- data _⊢Pt : Space -> 𝒰₀
+-- data _⊢Ln_⇾_ : (Σ : Space) -> (a b : Σ ⊢Pt) -> 𝒰₀
 
-private variable
-  Σ : Space
+-- private variable
+--   Σ : Space
 
 -- times
-data Time : 𝒰₀
-data _⊢T : Time -> 𝒰₀
-data _⊢TExt : Time -> 𝒰₀
-data _⊢T_ : (Τ : Time) -> Τ ⊢TExt -> 𝒰₀
-data _⊢_<T_ : (Τ : Time) -> ∀{X} -> (s t : Τ ⊢T X) -> 𝒰₀
+-- data Time : 𝒰₀
+-- data _⊢T : Time -> 𝒰₀
+-- data _⊢TExt : Time -> 𝒰₀
+-- data _⊢T_ : (Τ : Time) -> Τ ⊢TExt -> 𝒰₀
+-- data _⊢_<T_ : (Τ : Time) -> ∀{X} -> (s t : Τ ⊢T X) -> 𝒰₀
 
-private variable
-  Τ : Time
+-- private variable
+--   Τ : Time
 
 -------------------
 -- we have a layer system for the context argument
 
-data Layer : 𝒰₀
+Layer : 𝒰₀
 
 private variable
   K L : Layer
@@ -162,7 +162,9 @@ private variable
 data Ctx : Layer -> 𝒰₀
 
 private variable
-  Γ : Ctx L
+  Γ Δ : Ctx L
+
+data _⇛_ : Ctx L -> Ctx L -> 𝒰₀
 
 data _⊢Type : ∀ (Γ : Ctx L) -> 𝒰₀
 -- -- data _⊢VType_,_ : ∀ Σ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> ℕ -> 𝒰₀
@@ -173,6 +175,7 @@ data _⊢Type : ∀ (Γ : Ctx L) -> 𝒰₀
 data _⊢TypeOp : (Γ : Ctx L) -> 𝒰₀
 
 -- terms
+data _⊢Var_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₀
 data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₀
 
 -- private variable
@@ -188,13 +191,19 @@ _↷_ : Γ ⊢TypeOp -> Γ ⊢Type -> Γ ⊢Type
 -- data Charge : 𝒰₀ where
 --   ⁺ ⁻ : Charge
 
-data Layer where
-  𝟙 : Layer
-  ℂ : Layer
+data Chargelike : 𝒰₀ where
+  ◌ +- : Chargelike
 
+data Timelike : 𝒰₀ where
+  𝟙 : Timelike
 
-data _⇌_ : Layer -> Layer -> 𝒰₀ where
-  ⁺ ⁻ : 𝟙 ⇌ ℂ
+private variable
+  τ : Timelike
+
+-- data _⇌_ : Layer -> Layer -> 𝒰₀ where
+--   ⁺ ⁻ : 𝟙 ⇌ ℂ
+
+Layer = Chargelike ×-𝒰 Timelike
 
 ---------------------------------------------
 -- types
@@ -206,7 +215,11 @@ data Ctx where
   -- assignment
   _,[_] : ∀ (Γ : Ctx L) -> Γ ⊢Type -> Ctx L
 
-  ⟨_⦙_ : K ⇌ L -> Ctx L -> Ctx K
+  -- ⟨_⦙_ : K ⇌ L -> Ctx L -> Ctx K
+
+  _[_≔_] : ∀(Γ : Ctx (+- , τ)) {X} -> Γ ⊢Var X -> Γ ⊢ X -> Ctx (+- , τ)
+
+  Dull : Ctx (+- , τ) -> Ctx (◌ , τ)
 
   --------------
   -- Normalizable
@@ -215,15 +228,25 @@ data Ctx where
 
 
 infixl 40 _,[_]
-infixl 60 ⟨_⦙_
+-- infixl 60 ⟨_⦙_
 
 
 data _⊢Type where
-  gen : (ϕ : K ⇌ L) -> ⟨ ϕ ⦙ Γ ⊢Type -> Γ ⊢Type
+  -- gen : (ϕ : K ⇌ L) -> ⟨ ϕ ⦙ Γ ⊢Type -> Γ ⊢Type
+  D⁻ : ∀{Γ : Ctx (+- , τ)} -> Dull Γ ⊢Type -> Γ ⊢Type
+  D⁺ : ∀{Γ : Ctx (+- , τ)} -> Dull Γ ⊢Type -> Γ ⊢Type
   -_ : Γ ⊢Type -> Γ ⊢Type
   ⨇ : (X : Γ ⊢Type) -> (Γ ,[ X ] ⊢Type) -> Γ ⊢Type
   ⨈ : (X : Γ ⊢Type) -> (Γ ,[ X ] ⊢Type) -> Γ ⊢Type
+  NN : ∀{Γ : Ctx (◌ , τ)} -> Γ ⊢Type
+  End : ∀{Γ : Ctx (◌ , τ)} -> Γ ⊢Type
 
+wk-Type : ∀{Γ : Ctx K} {A} -> Γ ⊢Type -> Γ ,[ A ] ⊢Type
+wk-Type x = {!!}
+
+
+inj : {X : Γ ⊢Type} -> {v : Γ ⊢Var X} -> ∀{x} -> Γ [ v ≔ x ] ⊢Type -> Γ ⊢Type
+inj = {!!}
 
 
 
@@ -232,22 +255,31 @@ data _⊢TypeOp where
   Inv : Γ ⊢TypeOp
 
 
-pattern _⦙_⟩ A ϕ = gen ϕ A
+-- pattern _⦙_⟩ A ϕ = gen ϕ A
 
-infixr 60 _⦙_⟩
+-- infixr 60 _⦙_⟩
 
 Id ↷ T = T
 Inv ↷ T = - T
 
+data _⊢Var_ where
+  zero : ∀{A} -> Γ ,[ A ] ⊢Var wk-Type A
+  suc : ∀{A B} -> Γ ⊢Var A -> Γ ,[ B ] ⊢Var wk-Type A
+
 data _⊢_ where
-  γ_,_ : ∀(ϕ : K ⇌ L) {A}
-      -> ⟨ ϕ ⦙ Γ ⊢ A
-      -> Γ ⊢ A ⦙ ϕ ⟩
+  var : ∀{A} -> Γ ⊢Var A -> Γ ⊢ A
+  -- γ_,_ : ∀(ϕ : K ⇌ L) {A}
+  --     -> ⟨ ϕ ⦙ Γ ⊢ A
+  --     -> Γ ⊢ A ⦙ ϕ ⟩
   Λ_ : ∀{X A} -> Γ ,[ X ] ⊢ A -> Γ ⊢ ⨇ X A
   _,_ : ∀{A B} -> Γ ⊢ A -> Γ ,[ A ] ⊢ B -> Γ ⊢ ⨈ A B
+  inv : ∀{X} -> Γ ⊢ D⁺ X -> Γ ⊢ D⁻ X
+  [_≔_]_ : ∀{Γ} {X : Dull Γ ⊢Type} -> (v : Γ ⊢Var D⁻ X) -> (x : Γ ⊢ D⁺ X ) -> ∀{Y} -> (Γ [ v ≔ inv x ]) ⊢ Y -> Γ ⊢ inj Y
+  end : Γ ⊢ D⁺ End
 
-
-module Examples where
+-- module Examples where
+--   F1 : [] ⊢ ⨇ (D⁺ NN) (⨇ (D⁻ NN) (D⁺ End))
+--   F1 = Λ (Λ ([ zero ≔ var (suc zero) ] end))
 
 
 
