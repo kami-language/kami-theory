@@ -59,3 +59,4 @@ good-normalize : ∀ (t : Γ ⊢ A) -> ⟦ t ⟧ ≣ ⟦ normalize t ⟧
 good-normalize = {!!}
 
 
+
