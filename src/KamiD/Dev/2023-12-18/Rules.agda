@@ -448,10 +448,6 @@ _[_≔_] (Γ ,[ B ]) {A} (suc v) x = (Γ [ v ≔ x ]) ,[ B [ ♮-⇛ σ-subst-Ct
 
 
 
-filter-Ctx₊ : Γ ,[ A ] ⊢Ctx₊ -> Γ ⊢Ctx₊
-filter-Type : ∀ E -> Γ ,[ A ] ⋆-Ctx₊ E ⊢Type -> (Γ ⋆-Ctx₊ filter-Ctx₊ E ⊢Type)
-filter-Term : ∀ E -> {A : Γ ,[ A ] ⋆-Ctx₊ E ⊢Type} -> (_ ⊢ A) -> Maybe (_ ⊢ filter-Type E A)
-filter-Var : ∀ E -> {A : Γ ,[ A ] ⋆-Ctx₊ E ⊢Type} -> (_ ⊢Var A) -> Maybe (_ ⊢ filter-Type E A)
 
 
 data _⊢_ where
@@ -551,17 +547,80 @@ wk-Term X t = wk-Term-ind [] X t
 
 wk-⇛♮-ind : ∀{A} -> ∀ E -> (Γ ⋆-Ctx₊ E) ⇛♮ Δ -> (Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E) ⇛♮ Δ
 
+-- weakening over a whole context
+wks-Type : (E : Γ ⊢Ctx₊) -> (A : Γ ⊢Type) -> Γ ⋆-Ctx₊ E ⊢Type
+wks-Type [] A = A
+wks-Type (E ,[ x ]) A = wk-Type (wks-Type E A)
+
+
+
 -- End weakening
+------------------------------------------------------------------------
+
+
+------------------------------------------------------------------------
+-- Un-Weakening
+
+-- unwk-Term : Γ ,
+
+-- End Un-Weakening
 ------------------------------------------------------------------------
 
 
 
 
+------------------------------------------------------------------------
+-- Splitting
+
+_+∧_ : ∀(A : 𝒰 𝑖) (B : 𝒰 𝑗) -> 𝒰 (𝑖 ､ 𝑗)
+_+∧_ A B = A +-𝒰 (A ×-𝒰 B)
+
+
+split-Ctx₊ : Γ ,[ A ] ⊢Ctx₊ -> ∑ λ (E₀ : Γ ⊢Ctx₊) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E₀ ⊢Ctx₊
+split-Type : ∀ E -> Γ ,[ A ] ⋆-Ctx₊ E ⊢Type -> (_ ⋆-Ctx₊ snd (split-Ctx₊ E) ⊢Type) +∧ (Γ ⋆-Ctx₊ fst (split-Ctx₊ E) ⊢Type)
+
+relax : ∀ (E : Γ ,[ A ] ⊢Ctx₊) -> (Γ ⋆-Ctx₊ fst (split-Ctx₊ E) ⊢Type) -> (_ ⋆-Ctx₊ snd (split-Ctx₊ E) ⊢Type)
+relax E X = {!!}
+
+split-Ctx₊ [] = [] , []
+split-Ctx₊ (E ,[ x ]) = let (E₀ , E₁) = split-Ctx₊ E in case (split-Type E x) of
+                                                        (λ Z -> E₀        , (E₁ ,[ Z ])) -- not successful (contains A)
+                                                        (λ (Z , Y) -> E₀ ,[ Y ] , wk-Ctx₊ E₁)  -- successfull (does not contain A)
+
+split-Type E (Base x) = {!!}
+split-Type E (⨉ x A B) = {!!} -- with split-Type E A | split-Type (E ,[ A ]) B
+-- ... | just (A₀ , A') | just (B₀ , B') = just (⨉ x A₀ {!!} , ⨉ x A' B')
+-- ... | just A' | left B' = left (⨉ x {!!} {!!})
+-- ... | left x₁ | Y = {!!}
+
+-- case split-Type E A of
+--                                 (λ A' -> case split-Type (E ,[ A ]) B of (λ B' -> left (⨉ x A' {!!})) {!!})
+--                                 (λ A' -> {!!})
+split-Type E (D x X) = {!!}
+split-Type E (Fam x) = {!!}
+split-Type E ℍ = {!!}
+
+-- filter-Type : ∀ E -> Γ ,[ A ] ⋆-Ctx₊ E ⊢Type -> (Γ ⋆-Ctx₊ filter-Ctx₊ E ⊢Type)
+-- filter-Term : ∀ E -> {A : Γ ,[ A ] ⋆-Ctx₊ E ⊢Type} -> (_ ⊢ A) -> Maybe (_ ⊢ filter-Type E A)
+-- filter-Var : ∀ E -> {A : Γ ,[ A ] ⋆-Ctx₊ E ⊢Type} -> (_ ⊢Var A) -> Maybe (_ ⊢ filter-Type E A)
+
+-- End Splitting
+------------------------------------------------------------------------
 
 
 
 ------------------------------------------------------------------------
 -- Filtering
+
+
+
+
+
+
+filter-Ctx₊ : Γ ,[ A ] ⊢Ctx₊ -> Γ ⊢Ctx₊
+filter-Type : ∀ E -> Γ ,[ A ] ⋆-Ctx₊ E ⊢Type -> (Γ ⋆-Ctx₊ filter-Ctx₊ E ⊢Type)
+filter-Term : ∀ E -> {A : Γ ,[ A ] ⋆-Ctx₊ E ⊢Type} -> (_ ⊢ A) -> Maybe (_ ⊢ filter-Type E A)
+filter-Var : ∀ E -> {A : Γ ,[ A ] ⋆-Ctx₊ E ⊢Type} -> (_ ⊢Var A) -> Maybe (_ ⊢ filter-Type E A)
 
 filter-Ctx₊ [] = []
 filter-Ctx₊ (E ,[ x ]) = filter-Ctx₊ E ,[ filter-Type E x ]
@@ -720,23 +779,27 @@ split-front-Ctx₊ = {!!}
 ------------------------------------------------------------------------
 -- Substitution
 
-Ctx⦅_⦆_ : (x : Γ ⊢ A) -> (Γ ,[ A ]) ⊢Ctx₊ -> Γ ⊢Ctx₊
+-- Ctx⦅_∣_⦆ : {Γ : Ctx L} -> ∀{A} -> (E : (Γ ,[ A ]) ⊢Ctx₊) -> (x : Γ ⋆-Ctx₊ filter-Ctx₊ E ⊢ wks-Type _ A) -> Γ ⊢Ctx₊
 
-β-comp-Ctx₊₂ : {E : Δ ,[ A ] ⊢Ctx₊} -> {σ : Γ ⇛♮ Δ} {x : Γ ⊢ (A [ σ ]-Type)} -> Ctx⦅ x ⦆ (E [ lift-sub σ ]-Ctx₊) ≣ E [ σ , x ]-Ctx₊
+-- β-comp-Ctx₊₂ : {E : Δ ,[ A ] ⊢Ctx₊} -> {σ : Γ ⇛♮ Δ} {x : Γ ⊢ (A [ σ ]-Type)} -> Ctx⦅ x ⦆ (E [ lift-sub σ ]-Ctx₊) ≣ E [ σ , x ]-Ctx₊
 
-Type⦅_∣_⦆_ : (x : Γ ⊢ A) -> ∀ E -> (Γ ,[ A ]) ⋆-Ctx₊ E ⊢Type -> (Γ ⋆-Ctx₊ (Ctx⦅ x ⦆ E)) ⊢Type
+-- Type⦅_∣_⦆_ : ∀ E x -> (Γ ,[ A ]) ⋆-Ctx₊ E ⊢Type -> (Γ ⋆-Ctx₊ (Ctx⦅ E ∣ x ⦆)) ⊢Type
 
-su-Type₂ : ∀{E} -> (x : Γ ⊢ A) -> (Γ ,[ A ]) ⋆-Ctx₊ E ⊢Type -> (Γ ⋆-Ctx₊ Ctx⦅ x ⦆ E) ⊢Type
-su-Type₂ {E = E} x T = Type⦅_∣_⦆_ x E T
+-- su-Type₂ : ∀{E} -> (x : Γ ⊢ A) -> (Γ ,[ A ]) ⋆-Ctx₊ E ⊢Type -> (Γ ⋆-Ctx₊ Ctx⦅ x ⦆ E) ⊢Type
+-- su-Type₂ {E = E} x T = Type⦅_∣_⦆_ x E T
 
 
-infixr 90 Type⦅_∣_⦆_ Type⦅_∣_⦆_ Ctx⦅_⦆_
+-- infixr 90 Type⦅_∣_⦆_ Term⦅_∣_⦆_ Ctx⦅_∣_⦆
 
-Term⦅_∣_⦆_ : (x : Γ ⊢ A) -> ∀ E -> {A : (Γ ,[ A ]) ⋆-Ctx₊ E ⊢Type} -> (t : _ ⊢ A) -> _ ⊢ Type⦅ x ∣ E ⦆ A
+-- Term⦅_∣_⦆_ : ∀ E x -> {A : (Γ ,[ A ]) ⋆-Ctx₊ E ⊢Type} -> (t : _ ⊢ A) -> _ ⊢ Type⦅ E ∣ x ⦆ A
 
-Ctx⦅ x ⦆ [] = []
-Ctx⦅ x ⦆ (E ,[ A ]) = Ctx⦅ x ⦆ E ,[ Type⦅ x ∣ E ⦆ A ]
+-- Ctx⦅ [] ∣ x ⦆ = []
+-- Ctx⦅ E ,[ A ] ∣ x ⦆ = Ctx⦅ E ∣ {!!} ⦆ ,[ {!!} ]
 
+-- Ctx⦅ x ⦆ [] = []
+-- Ctx⦅ x ⦆ (E ,[ A ]) = Ctx⦅ x ⦆ E ,[ Type⦅ x ∣ E ⦆ A ]
+
+{-
 β-Dull-Ctx₊ : ∀{x : Γ ⊢ A} {E} -> Dull-Ctx₊ (Ctx⦅ x ⦆ E) ≣ Ctx⦅ Dull-Term x ⦆ (Dull-Ctx₊ E)
 β-Dull-Ctx₊ {E = []} = refl-≣
 β-Dull-Ctx₊ {E = E ,[ x ]} = {!!}
@@ -816,4 +879,5 @@ module Examples where
 
 
 
+-}
 
