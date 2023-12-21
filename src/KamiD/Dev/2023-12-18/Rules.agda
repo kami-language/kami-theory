@@ -329,6 +329,9 @@ data _⊢Type where
   D : Charge -> ∀{Γ : Ctx (+- , τ)} -> Dull Γ ⊢Type -> Γ ⊢Type
   Fam : Γ ⊢ Base NN -> Γ ⊢Type
 
+  -- the hidden type
+  ℍ : Γ ⊢Type
+
 pattern ⨇ X Y = ⨉ + X Y
 pattern ⨈ X Y = ⨉ - X Y
 pattern D⁺ A = D + A
@@ -336,6 +339,7 @@ pattern D⁻ A = D - A
 
 Dull-Type {Γ = Γ} (D c X) = X
 Dull-Type {Γ = Γ} (⨉ c X Y) = ⨉ c (Dull-Type X) (Dull-Type Y)
+Dull-Type ℍ = ℍ
 
 
 wk-Type : ∀{A} -> Γ ⊢Type -> Γ ,[ A ] ⊢Type
@@ -443,8 +447,11 @@ _[_≔_] (Γ ,[ A ]) (zero {A = A}) x = Γ
 _[_≔_] (Γ ,[ B ]) {A} (suc v) x = (Γ [ v ≔ x ]) ,[ B [ ♮-⇛ σ-subst-Ctx ]-Type ]
 
 
-  -- Dull-Var : ∀{A : Dull Γ ⊢Type} -> Γ ⊢Var (D⁻ A) -> Dull Γ ⊢Var A
--- Dull-Var v = {!!}
+
+filter-Ctx₊ : Γ ,[ A ] ⊢Ctx₊ -> Γ ⊢Ctx₊
+filter-Type : ∀ E -> Γ ,[ A ] ⋆-Ctx₊ E ⊢Type -> (Γ ⋆-Ctx₊ filter-Ctx₊ E ⊢Type)
+filter-Term : ∀ E -> {A : Γ ,[ A ] ⋆-Ctx₊ E ⊢Type} -> (_ ⊢ A) -> Maybe (_ ⊢ filter-Type E A)
+filter-Var : ∀ E -> {A : Γ ,[ A ] ⋆-Ctx₊ E ⊢Type} -> (_ ⊢Var A) -> Maybe (_ ⊢ filter-Type E A)
 
 
 data _⊢_ where
@@ -516,6 +523,9 @@ wk-Term-ind = {!!}
 -}
 
 
+------------------------------------------------------------------------
+-- Weakening
+
 {-# TERMINATING #-}
 wk-Ctx₊ : (E : Γ ⊢Ctx₊) -> Γ ,[ A ] ⊢Ctx₊
 
@@ -528,6 +538,7 @@ wk-Type-ind E (Base x) = Base x
 wk-Type-ind E (⨉ c A B) = ⨉ c (wk-Type-ind E A ) (wk-Type-ind (E ,[ A ]) B)
 wk-Type-ind E (D x X) = {!!}
 wk-Type-ind E (Fam x) = {!!}
+wk-Type-ind E ℍ = ℍ
 
 wk-Type X = wk-Type-ind [] X -- [ wk-⇛♮ id-⇛♮ ]-Type
 
@@ -538,12 +549,59 @@ wk-Term : (X : Γ ⊢Type) -> Γ ⊢ X -> Γ ,[ A ] ⊢ wk-Type X
 wk-Term X t = wk-Term-ind [] X t
 
 
-
-
 wk-⇛♮-ind : ∀{A} -> ∀ E -> (Γ ⋆-Ctx₊ E) ⇛♮ Δ -> (Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E) ⇛♮ Δ
 
+-- End weakening
+------------------------------------------------------------------------
 
 
+
+
+
+
+
+------------------------------------------------------------------------
+-- Filtering
+
+filter-Ctx₊ [] = []
+filter-Ctx₊ (E ,[ x ]) = filter-Ctx₊ E ,[ filter-Type E x ]
+
+β-Dull-filter-Ctx₊ : ∀{E : Γ ,[ A ] ⊢Ctx₊} -> Dull-Ctx₊ (filter-Ctx₊ E) ≣ filter-Ctx₊ (Dull-Ctx₊ E)
+β-Dull-filter-Ctx₊ = {!!}
+
+{-# REWRITE β-Dull-filter-Ctx₊ #-}
+
+β-filter-wk-Type : filter-Type {A = A} [] (wk-Type B) ≣ B
+β-filter-wk-Type = {!!}
+
+σ-filter-wk-Type : ∀{E : Γ ,[ A ] ⊢Ctx₊} -> ∀{B C} -> filter-Type (E ,[ C ]) (wk-Type B) ≣ wk-Type (filter-Type E B)
+σ-filter-wk-Type = {!!}
+
+{-# REWRITE β-filter-wk-Type σ-filter-wk-Type #-}
+
+filter-Var [] zero = nothing -- if the zero'th var is used, we have to delete this term
+filter-Var [] (suc v) = just (var v)
+filter-Var (E ,[ x ]) zero = just (var zero)
+filter-Var (E ,[ x ]) (suc v) = map-Maybe (wk-Term _) (filter-Var E v)
+
+filter-Type E (Base x) = (Base x)
+filter-Type E (⨉ x A B) = ⨉ x (filter-Type E A) (filter-Type (E ,[ A ]) B)
+filter-Type E (D x X) = D x (filter-Type (Dull-Ctx₊ E) X)
+filter-Type E (Fam x) with (filter-Term E x)
+... | left x' = ℍ
+... | just x' = Fam x'
+filter-Type E ℍ = ℍ
+
+filter-Term E (var x) = filter-Var E x
+filter-Term E (Λ t) = map-Maybe Λ_ (filter-Term (E ,[ _ ]) t) -- Λ filter-Term (E ,[ _ ]) t
+filter-Term E (inv t) = map-Maybe inv (filter-Term E t) -- inv (filter-Term E t)
+filter-Term E end = just end
+filter-Term E n0 = just n0
+filter-Term E (d⁺ t) = {!map-Maybe d⁺ (filter-Term (Dull-Ctx₊ E) t)!}
+
+
+-- End Filtering
+------------------------------------------------------------------------
 
 
 
@@ -659,6 +717,9 @@ split-front-Ctx₊ = {!!}
 -- 2Type⦅_∣_⦆_ : ∀ E -> (x : Γ ⋆-Ctx₊ wk-Ctx₊ A E ⊢ ?) -> (Γ ,[ A ]) ⋆-Ctx₊ E ⊢Type -> (Γ ⋆-Ctx₊ (Ctx⦅ x ⦆ E)) ⊢Type
 
 
+------------------------------------------------------------------------
+-- Substitution
+
 Ctx⦅_⦆_ : (x : Γ ⊢ A) -> (Γ ,[ A ]) ⊢Ctx₊ -> Γ ⊢Ctx₊
 
 β-comp-Ctx₊₂ : {E : Δ ,[ A ] ⊢Ctx₊} -> {σ : Γ ⇛♮ Δ} {x : Γ ⊢ (A [ σ ]-Type)} -> Ctx⦅ x ⦆ (E [ lift-sub σ ]-Ctx₊) ≣ E [ σ , x ]-Ctx₊
@@ -687,6 +748,7 @@ Type⦅_∣_⦆_ x E (Base x₁) = Base x₁
 Type⦅_∣_⦆_ x E (⨉ c A B) = ⨉ c (su-Type₂ {E = E} x A) let B' = su-Type₂ {E = E ,[ A ]} x B in B'
 Type⦅_∣_⦆_ x E (D c A) = D c (Type⦅ Dull-Term x ∣ Dull-Ctx₊ E ⦆ A)
 Type⦅_∣_⦆_ x E (Fam n) = Fam (Term⦅ x ∣ E ⦆ n)
+Type⦅_∣_⦆_ x E (ℍ) = ℍ
 
 
 β-comp-Ctx₊₂ = {!!}
