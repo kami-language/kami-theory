@@ -538,11 +538,11 @@ wk-Type-ind E ℍ = ℍ
 
 wk-Type X = wk-Type-ind [] X -- [ wk-⇛♮ id-⇛♮ ]-Type
 
-wk-Term-ind : ∀ E -> (X : Γ ⋆-Ctx₊ E ⊢Type) -> Γ ⋆-Ctx₊ E ⊢ X -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢ wk-Type-ind E X
+wk-Term-ind : ∀ E -> {X : Γ ⋆-Ctx₊ E ⊢Type} -> Γ ⋆-Ctx₊ E ⊢ X -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢ wk-Type-ind E X
 wk-Term-ind = {!!}
 
-wk-Term : (X : Γ ⊢Type) -> Γ ⊢ X -> Γ ,[ A ] ⊢ wk-Type X
-wk-Term X t = wk-Term-ind [] X t
+wk-Term : {X : Γ ⊢Type} -> Γ ⊢ X -> Γ ,[ A ] ⊢ wk-Type X
+wk-Term t = wk-Term-ind [] t
 
 
 wk-⇛♮-ind : ∀{A} -> ∀ E -> (Γ ⋆-Ctx₊ E) ⇛♮ Δ -> (Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E) ⇛♮ Δ
@@ -556,7 +556,19 @@ wks-Type (E ,[ x ]) A = wk-Type (wks-Type E A)
 β-wks-Type-Base {E = []} = refl-≣
 β-wks-Type-Base {E = E ,[ x ]} = cong-≣ (wk-Type-ind []) (β-wks-Type-Base {E = E})
 
-{-# REWRITE β-wks-Type-Base #-}
+-- σ-wk-wks : ∀{A B : Γ ⊢Type} {E : Γ ⊢Ctx₊} -> wk-Type-ind {A = A} E (wks-Type E B) ≣ wks-Type (wk-Ctx₊ E) ((wk-Type B))
+-- σ-wk-wks = {!!}
+
+σ-wks-wk : ∀{A B : Γ ⊢Type} {E : Γ ⊢Ctx₊} -> wks-Type (wk-Ctx₊ E) (wk-Type B) ≣ wk-Type-ind {A = A} E (wks-Type E B)
+σ-wks-wk = {!!}
+
+σ-wks-wk-, : ∀{A : Γ ⊢Type} -> ∀{E2 x B E} -> wks-Type (wk-Ctx₊ E) (wk-Type-ind (E2 ,[ x ]) (wk-Type B)) ≣ wk-Type-ind E (wks-Type E (wk-Type-ind {A = A} E2 B))
+σ-wks-wk-, = {!!}
+
+{-# REWRITE β-wks-Type-Base σ-wks-wk σ-wks-wk-, #-}
+
+wks-Term : (E : Γ ⊢Ctx₊) -> {A : Γ ⊢Type} -> Γ ⊢ A -> Γ ⋆-Ctx₊ E ⊢ wks-Type E A
+wks-Term = {!!}
 
 
 -- End weakening
@@ -663,7 +675,7 @@ restore-Term (var v) = {!!}
 𝓕-Ctx (_,[_] γ {acc} T) = 𝓕-Ctx γ
 𝓕-Ctx (_,[_] γ {noacc} T) = 𝓕-Ctx γ ,[ 𝓕-Type T ]
 
-𝓕-Type (Base x) = {!!}
+𝓕-Type {γ = γ} (Base x) = wks-Type (𝓕-Ctx γ) x
 𝓕-Type (⨉nn x T T₁) = ⨉ x (𝓕-Type T) (𝓕-Type T₁)
 𝓕-Type (Fam x) = Fam (𝓕-Term x)
 𝓕-Type (wk-⟨⟩⊢Type {β = acc} x) = 𝓕-Type x
@@ -675,12 +687,44 @@ restore-Term (var v) = {!!}
 
 𝓕-Var zero = var zero
 𝓕-Var (suc {β = acc} x) = 𝓕-Var x
-𝓕-Var (suc {β = noacc} x) = wk-Term _ (𝓕-Var x)
+𝓕-Var (suc {β = noacc} x) = wk-Term (𝓕-Var x)
 
 𝓖-Ctx : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> (γ : ⟨ E ⟩⊢Ctx) -> Γ ,[ A ] ⋆-Ctx₊ (wk-Ctx₊ (𝓕-Ctx γ)) ⊢Ctx₊
+𝓖-Type : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> {γ : ⟨ E ⟩⊢Ctx} -> (T : ⟨ γ ⟩⊢Type acc) -> [ 𝓖-Ctx γ ]⊢Type
+
+_,𝓕[_] : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> (γ : ⟨ E ⟩⊢Ctx) -> [ 𝓕-Ctx γ ]⊢Type -> Γ ,[ A ] ⊢Ctx₊
+_,𝓕[_] γ A' = wk-Ctx₊ (𝓕-Ctx γ) ,[ wk-Type-ind (𝓕-Ctx γ) A' ] ⋆-Ctx₊₂ (wk-Ctx₊ (𝓖-Ctx γ))
+
+
+real : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> (γ : ⟨ E ⟩⊢Ctx) -> [ 𝓕-Ctx γ ]⊢Type -> [ 𝓖-Ctx γ ]⊢Type
+real γ A = wks-Type (𝓖-Ctx γ) (wk-Type-ind (𝓕-Ctx γ) A)
+
+real₂ : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> (γ : ⟨ E ⟩⊢Ctx) -> (A : [ 𝓕-Ctx γ ]⊢Type) -> [ γ ,𝓕[ A ] ]⊢Type -> [ 𝓖-Ctx γ ,[ real γ A ] ]⊢Type
+real₂ = {!!}
+
+𝓖-Term-aa : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> {γ : ⟨ E ⟩⊢Ctx} -> {T : ⟨ γ ⟩⊢Type acc} -> ⟨ γ ⟩⊢ T , acc -> [ 𝓖-Ctx γ ]⊢ 𝓖-Type T
+𝓖-Term-na : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> {γ : ⟨ E ⟩⊢Ctx} -> {T : ⟨ γ ⟩⊢Type noacc} -> ⟨ γ ⟩⊢ T , acc -> [ 𝓖-Ctx γ ]⊢ real γ (𝓕-Type T)
+
+𝓖-Var-na : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> {γ : ⟨ E ⟩⊢Ctx} -> {T : ⟨ γ ⟩⊢Type noacc} -> ⟨ γ ⟩⊢Var T , acc -> [ 𝓖-Ctx γ ]⊢ real γ (𝓕-Type T)
+
 𝓖-Ctx [] = []
-𝓖-Ctx (_,[_] γ {acc} T) = {!!}
-𝓖-Ctx (_,[_] γ {noacc} T) = {!!}
+𝓖-Ctx (_,[_] γ {acc} T) = 𝓖-Ctx γ ,[ 𝓖-Type T ]
+𝓖-Ctx (_,[_] γ {noacc} T) = wk-Ctx₊ (𝓖-Ctx γ)
+
+𝓖-Type {γ = γ} (⨉na x A B) =
+  let A' = (real γ (𝓕-Type A))
+      B' = real₂ γ (𝓕-Type A) (𝓖-Type B)
+  in ⨉ x A' B'
+𝓖-Type {γ = γ} (Fam x) = Fam (𝓖-Term-na {γ = γ} x)
+𝓖-Type (wk-⟨⟩⊢Type {β = acc} T) = let T' = 𝓖-Type T in wk-Type T'
+𝓖-Type {γ = γ ,[ _ ]} (wk-⟨⟩⊢Type {β = noacc} T) = let T' = 𝓖-Type T in wk-Type-ind (𝓖-Ctx γ) T'
+
+𝓖-Term-na {γ = γ} (var x) = 𝓖-Var-na x
+𝓖-Term-na {γ = γ} (Λ t) = {!!}
+
+𝓖-Var-na {γ = γ} hidden = wks-Term (𝓖-Ctx γ) (wks-Term (wk-Ctx₊ (𝓕-Ctx γ)) (var zero))
+𝓖-Var-na {γ = (γ ,[ _ ])} (suc {β = acc} x) = let t = 𝓖-Var-na {γ = γ} x in wk-Term t
+𝓖-Var-na {γ = (γ ,[ _ ])} (suc {β = noacc} x) = let t = 𝓖-Var-na {γ = γ} x in let t' = wk-Term-ind (𝓖-Ctx γ) t in t'
 
 
 -- Filtering for splitting
