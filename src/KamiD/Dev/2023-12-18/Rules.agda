@@ -552,6 +552,11 @@ wks-Type : (E : Γ ⊢Ctx₊) -> (A : Γ ⊢Type) -> Γ ⋆-Ctx₊ E ⊢Type
 wks-Type [] A = A
 wks-Type (E ,[ x ]) A = wk-Type (wks-Type E A)
 
+β-wks-Type-Base : ∀{X} {E : Γ ⊢Ctx₊} -> wks-Type E (Base X) ≣ Base X
+β-wks-Type-Base {E = []} = refl-≣
+β-wks-Type-Base {E = E ,[ x ]} = cong-≣ (wk-Type-ind []) (β-wks-Type-Base {E = E})
+
+{-# REWRITE β-wks-Type-Base #-}
 
 
 -- End weakening
@@ -572,26 +577,183 @@ wks-Type (E ,[ x ]) A = wk-Type (wks-Type E A)
 ------------------------------------------------------------------------
 -- Splitting
 
-_+∧_ : ∀(A : 𝒰 𝑖) (B : 𝒰 𝑗) -> 𝒰 (𝑖 ､ 𝑗)
-_+∧_ A B = A +-𝒰 (A ×-𝒰 B)
+[_]⊢Type : (E : Γ ⊢Ctx₊) -> 𝒰₀
+[_]⊢Type E = _ ⋆-Ctx₊ E ⊢Type
+
+[_]⊢_ : (E : Γ ⊢Ctx₊) -> [ E ]⊢Type -> 𝒰₀
+[_]⊢_ E T = _ ⋆-Ctx₊ E ⊢ T
+
+data Access : 𝒰₀ where
+  acc noacc : Access
+
+data ⟨_⟩⊢Ctx : (E : Γ ,[ A ] ⊢Ctx₊) -> 𝒰₀
+data ⟨_⟩⊢Type_ : {E : Γ ,[ A ] ⊢Ctx₊} -> ⟨ E ⟩⊢Ctx -> Access -> 𝒰₀
+data ⟨_⟩⊢_,_ : {E : Γ ,[ A ] ⊢Ctx₊} -> (γ : ⟨ E ⟩⊢Ctx) -> {a : Access} -> ⟨ γ ⟩⊢Type a -> Access -> 𝒰₀
+data ⟨_⟩⊢Var_,_ : {E : Γ ,[ A ] ⊢Ctx₊} -> (γ : ⟨ E ⟩⊢Ctx) -> {a : Access} -> ⟨ γ ⟩⊢Type a -> Access -> 𝒰₀
+
+private variable
+  E : Γ ⊢Ctx₊
+  γ : ⟨ E ⟩⊢Ctx
+  α : Access
+  T S : ⟨ γ ⟩⊢Type α
+
+⟪_⟫ : ∀{E : Γ ,[ A ] ⊢Ctx₊} -> ⟨ E ⟩⊢Ctx -> Ctx _
+⟪_⟫ {Γ = Γ} {E = E} γ = Γ ,[ _ ] ⋆-Ctx₊ E
+
+restore-Type : ⟨ γ ⟩⊢Type α -> ⟪ γ ⟫ ⊢Type
+
+restore-Term : ⟨ γ ⟩⊢ T , α -> ⟪ γ ⟫ ⊢ restore-Type T
+
+data ⟨_⟩⊢Ctx where
+  [] : ⟨_⟩⊢Ctx {Γ = Γ} {A = A} []
+  _,[_] : ∀{E : Γ ,[ A ] ⊢Ctx₊} -> (γ : ⟨ E ⟩⊢Ctx) -> {a : Access} -> (T : ⟨ γ ⟩⊢Type a) -> ⟨ E ,[ restore-Type T ] ⟩⊢Ctx
+
+data ⟨_⟩⊢Type_ where
+  -- Base : ∀{Γ : Ctx (◌ , τ)} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> {γ : ⟨ E ⟩⊢Ctx} -> BaseType -> ⟨ γ ⟩⊢Type noacc
+  Base : {E : Γ ,[ A ] ⊢Ctx₊} -> {γ : ⟨ E ⟩⊢Ctx} -> Γ ⊢Type -> ⟨ γ ⟩⊢Type noacc
+
+  ⨉nn : Charge -> (X : ⟨ γ ⟩⊢Type noacc) -> (⟨ γ ,[ X ] ⟩⊢Type noacc) -> ⟨ γ ⟩⊢Type noacc
+  ⨉na : Charge -> (X : ⟨ γ ⟩⊢Type noacc) -> (⟨ γ ,[ X ] ⟩⊢Type acc) -> ⟨ γ ⟩⊢Type acc
+  -- D : Charge -> ∀{Γ : Ctx (+- , τ)} -> Dull Γ ⊢Type -> Γ ⊢Type
+  Fam : ⟨ γ ⟩⊢ Base (Base NN) , α -> ⟨ γ ⟩⊢Type α
+
+  wk-⟨⟩⊢Type : ∀{β} -> {T : ⟨ γ ⟩⊢Type β} -> ⟨ γ ⟩⊢Type α -> ⟨ γ ,[ T ] ⟩⊢Type α
+
+data ⟨_⟩⊢Var_,_ where
+  hidden : {E : Γ ,[ A ] ⊢Ctx₊} -> {γ : ⟨ E ⟩⊢Ctx} -> ⟨ γ ⟩⊢Var Base A , acc
+  zero : ⟨ γ ,[ T ] ⟩⊢Var wk-⟨⟩⊢Type T , noacc
+  suc : ∀{β} -> {S : ⟨ γ ⟩⊢Type β} -> ⟨ γ ⟩⊢Var T , α -> ⟨ γ ,[ S ] ⟩⊢Var wk-⟨⟩⊢Type T , α
+
+data ⟨_⟩⊢_,_ where
+  var : ⟨ γ ⟩⊢Var T , α -> ⟨ γ ⟩⊢ T , α
+  Λ_ : ∀{T A} -> ⟨ γ ,[ T ] ⟩⊢ A , α -> ⟨ γ ⟩⊢ (⨉nn (+) T A) , α
+  -- _,_ : ∀{A B} -> Γ ⊢ A -> Γ ,[ A ] ⊢ B -> Γ ⊢ ⨈ A B
+  -- inv : ∀{X} -> Γ ⊢ (D⁺ X) -> Γ ⊢ (D⁻ X)
+  -- [_≔_]_ : ∀{E} -> (X : Dull Γ ⊢Type) -> (v : Γ ⋆-Ctx₊ E ⊢ D⁻ )
+
+  -- [_≔_]_ : ∀{τ Γ} {X : Dull {τ = τ} Γ ⊢Type} -> (v : Γ ⊢Var (D⁻ X)) -> (x : Γ ⊢ (D⁺ X)) -> ∀{Y}
+  --   -> (Γ [ v ≔ inv x ]) ⊢ Y
+  --   -> Γ ⊢ (Y [ ι-subst-Ctx ])
+  -- end : Γ ⊢ (D⁺ (Base End))
+  -- n0 : ⟨ γ ⟩⊢ Base NN , noacc
+  base : {E : Γ ,[ A ] ⊢Ctx₊} -> {γ : ⟨ E ⟩⊢Ctx} -> Γ ⊢ B -> ⟨ γ ⟩⊢ Base B , noacc
+
+  -- WARNING: this is probably wrong because
+  -- this means that we can use all negative
+  -- things in Γ
+  -- d⁺ : ∀{Γ : Ctx (+- , τ)} -> ∀{A} -> Dull Γ ⊢ A -> Γ ⊢ (D⁺ A)
+
+restore-Type (Base x) = wks-Type _ (wk-Type x)
+restore-Type (⨉nn x X Y) = ⨉ x (restore-Type X) (restore-Type Y)
+restore-Type (⨉na x X Y) = ⨉ x (restore-Type X) (restore-Type Y)
+restore-Type (Fam x) = Fam (restore-Term x)
+restore-Type (wk-⟨⟩⊢Type x) = wk-Type (restore-Type x)
+
+restore-Term (Λ t) = Λ (restore-Term t)
+restore-Term (base t) = {!!}
+restore-Term (var v) = {!!}
+
+𝓕-Ctx : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> (γ : ⟨ E ⟩⊢Ctx) -> Γ ⊢Ctx₊
+
+𝓕-Type : ⟨ γ ⟩⊢Type noacc -> [ 𝓕-Ctx γ ]⊢Type
+𝓕-Term : ⟨ γ ⟩⊢ T , noacc -> [ 𝓕-Ctx γ ]⊢ 𝓕-Type T
+𝓕-Var : ⟨ γ ⟩⊢Var T , noacc -> [ 𝓕-Ctx γ ]⊢ 𝓕-Type T
+
+𝓕-Ctx {Γ = Γ} [] = [] -- when we arrive at the bottom, we skip the A, but take the Γ
+𝓕-Ctx (_,[_] γ {acc} T) = 𝓕-Ctx γ
+𝓕-Ctx (_,[_] γ {noacc} T) = 𝓕-Ctx γ ,[ 𝓕-Type T ]
+
+𝓕-Type (Base x) = {!!}
+𝓕-Type (⨉nn x T T₁) = ⨉ x (𝓕-Type T) (𝓕-Type T₁)
+𝓕-Type (Fam x) = Fam (𝓕-Term x)
+𝓕-Type (wk-⟨⟩⊢Type {β = acc} x) = 𝓕-Type x
+𝓕-Type (wk-⟨⟩⊢Type {β = noacc} x) = wk-Type (𝓕-Type x)
+
+𝓕-Term (Λ t) = Λ 𝓕-Term t
+𝓕-Term (base t) = {!!}
+𝓕-Term (var v) = 𝓕-Var v
+
+𝓕-Var zero = var zero
+𝓕-Var (suc {β = acc} x) = 𝓕-Var x
+𝓕-Var (suc {β = noacc} x) = wk-Term _ (𝓕-Var x)
+
+𝓖-Ctx : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> (γ : ⟨ E ⟩⊢Ctx) -> Γ ,[ A ] ⋆-Ctx₊ (wk-Ctx₊ (𝓕-Ctx γ)) ⊢Ctx₊
+𝓖-Ctx [] = []
+𝓖-Ctx (_,[_] γ {acc} T) = {!!}
+𝓖-Ctx (_,[_] γ {noacc} T) = {!!}
 
 
+-- Filtering for splitting
+{-
+filter-Ctx₊ : (E : Γ ,[ A ] ⊢Ctx₊) -> ⟨ E ⟩⊢Ctx
+filter-Type : ∀ E -> (Γ ,[ A ] ⋆-Ctx₊ E ⊢Type) -> ∑ λ α -> (⟨ filter-Ctx₊ E ⟩⊢Type α)
+filter-Term : ∀ E -> {A : Γ ,[ A ] ⋆-Ctx₊ E ⊢Type} -> (_ ⊢ A) -> ∑ λ β -> (⟨ filter-Ctx₊ E ⟩⊢ snd (filter-Type E A) , β)
+
+filter-Ctx₊ [] = []
+filter-Ctx₊ (E ,[ x ]) = filter-Ctx₊ E ,[ {!snd (filter-Type E x)!} ]
+
+
+
+filter-Var : ∀ E -> {A : Γ ,[ A ] ⋆-Ctx₊ E ⊢Type} -> (_ ⊢Var A) -> ∑ λ β -> (⟨ filter-Ctx₊ E ⟩⊢Var snd (filter-Type E A) , β)
+filter-Var [] zero = acc , {!hidden!}
+filter-Var [] (suc x) = {!!}
+filter-Var (E ,[ x₁ ]) zero = {!!}
+filter-Var (E ,[ x₁ ]) (suc x) = {!!}
+-}
+
+
+
+
+-- Splitting end
+------------------------------------------------------------------------
+
+
+{-
 split-Ctx₊ : Γ ,[ A ] ⊢Ctx₊ -> ∑ λ (E₀ : Γ ⊢Ctx₊) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E₀ ⊢Ctx₊
-split-Type : ∀ E -> Γ ,[ A ] ⋆-Ctx₊ E ⊢Type -> (_ ⋆-Ctx₊ snd (split-Ctx₊ E) ⊢Type) +∧ (Γ ⋆-Ctx₊ fst (split-Ctx₊ E) ⊢Type)
 
-relax : ∀ (E : Γ ,[ A ] ⊢Ctx₊) -> (Γ ⋆-Ctx₊ fst (split-Ctx₊ E) ⊢Type) -> (_ ⋆-Ctx₊ snd (split-Ctx₊ E) ⊢Type)
-relax E X = {!!}
+[_]⊢Type : (E : Γ ⊢Ctx₊) -> 𝒰₀
+[_]⊢Type E = _ ⋆-Ctx₊ E ⊢Type
+
+-- Same principle as in weakening
+{-# TERMINATING #-}
+𝓕 : (E : Γ ,[ A ] ⊢Ctx₊) -> Γ ⊢Ctx₊
+𝓕 E = fst (split-Ctx₊ E)
+
+∥_∥ : Γ ,[ A ] ⊢Ctx₊ -> Γ ,[ A ] ⊢Ctx₊
+∥_∥ E =  wk-Ctx₊ (𝓕 E) ⋆-Ctx₊₂ snd (split-Ctx₊ E)
+
+_,𝓕[_] : (E : Γ ,[ A ] ⊢Ctx₊) -> [ 𝓕 E ]⊢Type -> Γ ,[ A ] ⊢Ctx₊
+_,𝓕[_] E A' = wk-Ctx₊ (𝓕 E) ,[ wk-Type-ind (𝓕 E) A' ] ⋆-Ctx₊₂ (wk-Ctx₊ (snd (split-Ctx₊ E)))
+
+-}
+
+{-
+-- split-Type : ∀ E -> Γ ,[ A ] ⋆-Ctx₊ E ⊢Type -> (_ ⋆-Ctx₊ snd (split-Ctx₊ E) ⊢Type) +-𝒰 (Γ ⋆-Ctx₊ fst (split-Ctx₊ E) ⊢Type)
+split-Type : ∀ (E : Γ ,[ A ] ⊢Ctx₊) -> [ E ]⊢Type -> [ ∥ E ∥ ]⊢Type +-𝒰 [ 𝓕 E ]⊢Type
+
+real : ∀ (E : Γ ,[ A ] ⊢Ctx₊) -> [ 𝓕 E ]⊢Type -> [ ∥ E ∥ ]⊢Type
+real E X = {!!}
+
+real₂ : (E : Γ ,[ A ] ⊢Ctx₊) -> (A : [ 𝓕 E ]⊢Type) -> [ E ,𝓕[ A ] ]⊢Type -> [ ∥ E ∥ ,[ real E A ] ]⊢Type
+real₂ = {!!}
+
+[_]⊢_ : ∀ (E : Γ ,[ A ] ⊢Ctx₊) -> [ E ]⊢Type -> 𝒰₀
+[ E ]⊢ X = case split-Type E X of (λ X -> _ ⊢ X) (λ Y -> (_ ⊢ real E Y) +-𝒰 (_ ⊢ Y))
+
+
+
 
 split-Ctx₊ [] = [] , []
 split-Ctx₊ (E ,[ x ]) = let (E₀ , E₁) = split-Ctx₊ E in case (split-Type E x) of
                                                         (λ Z -> E₀        , (E₁ ,[ Z ])) -- not successful (contains A)
-                                                        (λ (Z , Y) -> E₀ ,[ Y ] , wk-Ctx₊ E₁)  -- successfull (does not contain A)
+                                                        (λ Y -> E₀ ,[ Y ] , wk-Ctx₊ E₁)  -- successfull (does not contain A)
 
-split-Type E (Base x) = {!!}
-split-Type E (⨉ x A B) = {!!} -- with split-Type E A | split-Type (E ,[ A ]) B
--- ... | just (A₀ , A') | just (B₀ , B') = just (⨉ x A₀ {!!} , ⨉ x A' B')
--- ... | just A' | left B' = left (⨉ x {!!} {!!})
--- ... | left x₁ | Y = {!!}
+split-Type E (Base x) = just (Base x)
+split-Type E (⨉ x A B) with split-Type E A | split-Type (E ,[ A ]) B
+... | just (A') | just (B') = just (⨉ x A' B')
+... | just (A') | left B' = left (⨉ x (real E A') (real₂ E A' B'))
+... | left A | just B = left (⨉ x A (wk-Type (real E B)))
+... | left A | left B = left (⨉ x A B)
 
 -- case split-Type E A of
 --                                 (λ A' -> case split-Type (E ,[ A ]) B of (λ B' -> left (⨉ x A' {!!})) {!!})
@@ -599,6 +761,20 @@ split-Type E (⨉ x A B) = {!!} -- with split-Type E A | split-Type (E ,[ A ]) B
 split-Type E (D x X) = {!!}
 split-Type E (Fam x) = {!!}
 split-Type E ℍ = {!!}
+
+split-Term : ∀ (E : Γ ,[ A ] ⊢Ctx₊) -> {X : [ E ]⊢Type} -> (x : _ ⊢ X) -> [ E ]⊢ X
+split-Term E (var x) = {!!}
+split-Term E {X = ⨉ c A B} (Λ x) with split-Type E A | split-Type (E ,[ _ ]) B -- | split-Term (E ,[ _ ]) x
+... | left A' | B' = {!!}
+... | just A' | left B' = {!!}
+... | just A' | just B' with split-Term (E ,[ _ ]) x
+... | t = {!!}
+split-Term E (inv x) = {!!}
+split-Term E end = {!!}
+split-Term E n0 = {!!}
+split-Term E (d⁺ x) = {!!}
+
+-}
 
 -- filter-Type : ∀ E -> Γ ,[ A ] ⋆-Ctx₊ E ⊢Type -> (Γ ⋆-Ctx₊ filter-Ctx₊ E ⊢Type)
 -- filter-Term : ∀ E -> {A : Γ ,[ A ] ⋆-Ctx₊ E ⊢Type} -> (_ ⊢ A) -> Maybe (_ ⊢ filter-Type E A)
@@ -608,6 +784,7 @@ split-Type E ℍ = {!!}
 ------------------------------------------------------------------------
 
 
+{-
 
 ------------------------------------------------------------------------
 -- Filtering
@@ -880,4 +1057,4 @@ module Examples where
 
 
 -}
-
+-}
