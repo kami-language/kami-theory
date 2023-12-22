@@ -556,6 +556,12 @@ wks-Type (E ,[ x ]) A = wk-Type (wks-Type E A)
 β-wks-Type-Base {E = []} = refl-≣
 β-wks-Type-Base {E = E ,[ x ]} = cong-≣ (wk-Type-ind []) (β-wks-Type-Base {E = E})
 
+wks-Type₂ : (E : Γ ⊢Ctx₊) -> (A : Γ ⊢Type) -> (B : Γ ,[ A ] ⊢Type) -> (Γ ⋆-Ctx₊ E ,[ wks-Type E A ]) ⊢Type
+wks-Type₂ E A B = {!!}
+
+β-wks-Type-⨉ : {E : Γ ⊢Ctx₊} -> ∀{x A B} -> wks-Type E (⨉ x A B) ≣ ⨉ x (wks-Type E A) (wks-Type₂ E A B)
+β-wks-Type-⨉ = {!!}
+
 -- σ-wk-wks : ∀{A B : Γ ⊢Type} {E : Γ ⊢Ctx₊} -> wk-Type-ind {A = A} E (wks-Type E B) ≣ wks-Type (wk-Ctx₊ E) ((wk-Type B))
 -- σ-wk-wks = {!!}
 
@@ -565,7 +571,7 @@ wks-Type (E ,[ x ]) A = wk-Type (wks-Type E A)
 σ-wks-wk-, : ∀{A : Γ ⊢Type} -> ∀{E2 x B E} -> wks-Type (wk-Ctx₊ E) (wk-Type-ind (E2 ,[ x ]) (wk-Type B)) ≣ wk-Type-ind E (wks-Type E (wk-Type-ind {A = A} E2 B))
 σ-wks-wk-, = {!!}
 
-{-# REWRITE β-wks-Type-Base σ-wks-wk σ-wks-wk-, #-}
+{-# REWRITE β-wks-Type-Base β-wks-Type-⨉ σ-wks-wk σ-wks-wk-, #-}
 
 wks-Term : (E : Γ ⊢Ctx₊) -> {A : Γ ⊢Type} -> Γ ⊢ A -> Γ ⋆-Ctx₊ E ⊢ wks-Type E A
 wks-Term = {!!}
@@ -638,7 +644,7 @@ data ⟨_⟩⊢Var_,_ where
 
 data ⟨_⟩⊢_,_ where
   var : ⟨ γ ⟩⊢Var T , α -> ⟨ γ ⟩⊢ T , α
-  Λ_ : ∀{T A} -> ⟨ γ ,[ T ] ⟩⊢ A , α -> ⟨ γ ⟩⊢ (⨉nn (+) T A) , α
+  Λnn_ : ∀{T A} -> ⟨ γ ,[ T ] ⟩⊢ A , α -> ⟨ γ ⟩⊢ (⨉nn (+) T A) , α
   -- _,_ : ∀{A B} -> Γ ⊢ A -> Γ ,[ A ] ⊢ B -> Γ ⊢ ⨈ A B
   -- inv : ∀{X} -> Γ ⊢ (D⁺ X) -> Γ ⊢ (D⁻ X)
   -- [_≔_]_ : ∀{E} -> (X : Dull Γ ⊢Type) -> (v : Γ ⋆-Ctx₊ E ⊢ D⁻ )
@@ -661,7 +667,7 @@ restore-Type (⨉na x X Y) = ⨉ x (restore-Type X) (restore-Type Y)
 restore-Type (Fam x) = Fam (restore-Term x)
 restore-Type (wk-⟨⟩⊢Type x) = wk-Type (restore-Type x)
 
-restore-Term (Λ t) = Λ (restore-Term t)
+restore-Term (Λnn t) = Λ (restore-Term t)
 restore-Term (base t) = {!!}
 restore-Term (var v) = {!!}
 
@@ -681,7 +687,7 @@ restore-Term (var v) = {!!}
 𝓕-Type (wk-⟨⟩⊢Type {β = acc} x) = 𝓕-Type x
 𝓕-Type (wk-⟨⟩⊢Type {β = noacc} x) = wk-Type (𝓕-Type x)
 
-𝓕-Term (Λ t) = Λ 𝓕-Term t
+𝓕-Term (Λnn t) = Λ 𝓕-Term t
 𝓕-Term (base t) = {!!}
 𝓕-Term (var v) = 𝓕-Var v
 
@@ -720,7 +726,7 @@ real₂ = {!!}
 𝓖-Type {γ = γ ,[ _ ]} (wk-⟨⟩⊢Type {β = noacc} T) = let T' = 𝓖-Type T in wk-Type-ind (𝓖-Ctx γ) T'
 
 𝓖-Term-na {γ = γ} (var x) = 𝓖-Var-na x
-𝓖-Term-na {γ = γ} (Λ t) = {!!}
+𝓖-Term-na {γ = γ} (Λnn t) = let t' = 𝓖-Term-na t in Λ {!!} -- NOTE: TODO: Here we probably have to reorder the variables (we need ... ⋆ 𝓖-Ctx γ ,[ wks-Type (𝓖-Ctx γ) ZZ] -- and we have ... ,[ ZZ ] ⋆ wk-Ctx₊ (𝓖-Ctx γ))
 
 𝓖-Var-na {γ = γ} hidden = wks-Term (𝓖-Ctx γ) (wks-Term (wk-Ctx₊ (𝓕-Ctx γ)) (var zero))
 𝓖-Var-na {γ = (γ ,[ _ ])} (suc {β = acc} x) = let t = 𝓖-Var-na {γ = γ} x in wk-Term t
