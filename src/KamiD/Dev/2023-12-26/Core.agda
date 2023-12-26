@@ -30,6 +30,11 @@ record hasNotation-wk (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗
 
 open hasNotation-wk {{...}} public
 
+record hasNotation-𝕠 (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
+  field 𝕠 : (a : A) -> B a
+
+open hasNotation-𝕠 {{...}} public
+
 record hasNotation-＠ (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) (C : ∀(a : A) -> B a -> 𝒰 𝑘) : 𝒰 (𝑖 ､ 𝑗 ､ 𝑘) where
   field _＠_ : (a : A) -> (b : B a) -> C a b
 

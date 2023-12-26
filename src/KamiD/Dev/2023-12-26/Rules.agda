@@ -8,7 +8,7 @@ open import Data.Fin
 open import Data.Nat hiding (_!)
 open import Relation.Nullary.Decidable.Core
 
-open import KamiD.Dev.2023-12-18.Core
+open import KamiD.Dev.2023-12-26.Core
 
 {-# BUILTIN REWRITE _≣_ #-}
 
@@ -58,10 +58,35 @@ J1 refl-≣ F f x = refl-≣
 -- private variable
 --   Τ : Time
 
+
+---------------------------------------------
+-- parameters for basic types
+
+data Chargelike : 𝒰₀ where
+  ◌ +- : Chargelike
+
+private variable
+  c : Chargelike
+
+data Timelike : 𝒰₀ where
+  𝟙 : Timelike
+
+private variable
+  τ : Timelike
+
+data Charge : 𝒰₀ where
+  + - : Charge
+
+-- data _⇌_ : Layer -> Layer -> 𝒰₀ where
+--   ⁺ ⁻ : 𝟙 ⇌ ℂ
+
+Layer : 𝒰₀
+Layer = Chargelike ×-𝒰 Timelike
+
+
 -------------------
 -- we have a layer system for the context argument
 
-Layer : 𝒰₀
 
 private variable
   K L : Layer
@@ -76,11 +101,6 @@ private variable
 data _⇛_ : Ctx L -> Ctx L -> 𝒰₀
 data _⇛♮_ : Ctx L -> Ctx L -> 𝒰₀
 
-data _⊢Type : ∀ (Γ : Ctx L) -> 𝒰₀
-
-private variable
-  A : Γ ⊢Type
-  B : Γ ⊢Type
 -- -- data _⊢VType_,_ : ∀ Σ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> ℕ -> 𝒰₀
 -- data _⊢PtType_ : ∀ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> 𝒰₀
 -- data _⊢PtBase_ : ∀ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> 𝒰₀
@@ -89,47 +109,41 @@ private variable
 -- data _⊢TypeOp : (Γ : Ctx L) -> 𝒰₀
 
 -- terms
-data _⊢Var_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₀
-data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₀
 
--- private variable
---   U V : Σ ⊢Subspace
---   x y : Σ ⊢Pt
-
--- _↷_ : Γ ⊢TypeOp -> Γ ⊢Type -> Γ ⊢Type
+𝕠-Ctx : ∀{c} -> Ctx (c , τ) -> Ctx (◌ , τ)
 
 
+data _⊢◌Type_ : ∀ (Γ : Ctx (◌ , τ)) -> Chargelike -> 𝒰₀
+_⊢Type : ∀ (Γ : Ctx L) -> 𝒰₀
+_⊢Type {L = L} Γ = 𝕠-Ctx Γ ⊢◌Type (fst L)
 
----------------------------------------------
--- parameters for basic types
-
-data Chargelike : 𝒰₀ where
-  ◌ +- : Chargelike
-
-data Timelike : 𝒰₀ where
-  𝟙 : Timelike
+𝕠-Type : ∀{c} -> {Γ : Ctx (◌ , τ)} -> Γ ⊢◌Type c -> Γ ⊢◌Type ◌
 
 private variable
-  τ : Timelike
+  A : Γ ⊢Type
+  B : Γ ⊢Type
 
-data Charge : 𝒰₀ where
-  + - : Charge
-
--- data _⇌_ : Layer -> Layer -> 𝒰₀ where
---   ⁺ ⁻ : 𝟙 ⇌ ℂ
-
-Layer = Chargelike ×-𝒰 Timelike
+data _⊢Var_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₀
+data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₀
 
 ---------------------------------------------
 -- types
 
 
+
 data Ctx where
   [] : Ctx L
+  _,[_] : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> Ctx L
 
-  _,[_] : ∀ (Γ : Ctx L) -> Γ ⊢Type -> Ctx L
+𝕠-Ctx {c = ◌} Γ = Γ
+𝕠-Ctx {c = +- } [] = []
+𝕠-Ctx {c = +- } (Γ ,[ A ]) = 𝕠-Ctx Γ ,[ 𝕠-Type A ]
 
+instance
+  hasNotation-𝕠:Ctx : ∀{c} -> hasNotation-𝕠 (Ctx (c , τ)) (const $ Ctx (◌ , τ))
+  hasNotation-𝕠:Ctx = record { 𝕠 = 𝕠-Ctx }
 
+{-
 
 data _⊢Ctx : Ctx L -> 𝒰₀ where
   [] : Γ ⊢Ctx
@@ -194,49 +208,54 @@ _⋆⁻¹-Ctx_ : (Γ : Ctx L) -> Γ ⊢Ctx -> Ctx L
 [] ⋆⁻¹-Ctx Δ = [] ⋆-Ctx Δ
 (Γ ,[ x ]) ⋆⁻¹-Ctx Δ = Γ ⋆⁻¹-Ctx [ x ]∷ Δ
 
-
-Dull-Ctx : Ctx (+- , τ) -> Ctx (◌ , τ)
-Dull-Type : ∀{Γ : Ctx (+- , τ)} -> Γ ⊢Type -> Dull-Ctx Γ ⊢Type
-
-record hasNotation-Dull (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
-  field Dull : (a : A) -> B a
-
-open hasNotation-Dull {{...}} public
-
-instance
-  hasNotation-Dull:Ctx : hasNotation-Dull (Ctx (+- , τ)) (const (Ctx (◌ , τ)))
-  hasNotation-Dull:Ctx = record { Dull = Dull-Ctx }
-
-instance
-  hasNotation-Dull:Type : ∀{Γ : Ctx (+- , τ)} -> hasNotation-Dull (Γ ⊢Type) (const (Dull Γ ⊢Type))
-  hasNotation-Dull:Type = record { Dull = Dull-Type }
-
-Dull-Ctx [] = []
-Dull-Ctx (Γ ,[ A ]) = Dull-Ctx Γ ,[ Dull-Type A ]
-
-Dull-Ctx₊ : Γ ⊢Ctx₊ -> Dull-Ctx Γ ⊢Ctx₊
-
-β-Dull-⋆ : ∀{E} -> Dull-Ctx (Γ ⋆-Ctx₊ E) ≣ Dull-Ctx Γ ⋆-Ctx₊ Dull-Ctx₊ E
-
-Dull-Ctx₊ [] = []
-Dull-Ctx₊ (E ,[ x ]) = Dull-Ctx₊ E ,[ transp-≣ (cong-≣ _⊢Type (β-Dull-⋆ {E = E})) (Dull-Type x) ]
-
-β-Dull-⋆ {E = []} = refl-≣
-β-Dull-⋆ {E = E ,[ x ]} =
-  let X = J1 (β-Dull-⋆ {E = E}) _⊢Type _,[_] (Dull-Type x)
-  in sym-≣ X
-
-{-# REWRITE β-Dull-⋆ #-}
+-}
 
 
 
 
-Restr-Ctx : (Γ : Ctx L) -> ∀{X} -> Γ ⊢Var X -> Ctx L
-Restr-Type : {Γ : Ctx L} -> ∀(X : Γ ⊢Type) -> (v : Γ ⊢Var X) -> Restr-Ctx Γ v ⊢Type
+-- Dull-Ctx : Ctx (+- , τ) -> Ctx (◌ , τ)
+-- Dull-Type : ∀{Γ : Ctx (+- , τ)} -> Γ ⊢Type -> Dull-Ctx Γ ⊢Type
+
+-- record hasNotation-Dull (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
+--   field Dull : (a : A) -> B a
+
+-- open hasNotation-Dull {{...}} public
+
+-- instance
+--   hasNotation-Dull:Ctx : hasNotation-Dull (Ctx (+- , τ)) (const (Ctx (◌ , τ)))
+--   hasNotation-Dull:Ctx = record { Dull = Dull-Ctx }
+
+-- instance
+--   hasNotation-Dull:Type : ∀{Γ : Ctx (+- , τ)} -> hasNotation-Dull (Γ ⊢Type) (const (Dull Γ ⊢Type))
+--   hasNotation-Dull:Type = record { Dull = Dull-Type }
+
+-- Dull-Ctx [] = []
+-- Dull-Ctx (Γ ,[ A ]) = Dull-Ctx Γ ,[ Dull-Type A ]
+
+-- Dull-Ctx₊ : Γ ⊢Ctx₊ -> Dull-Ctx Γ ⊢Ctx₊
+
+β-𝕠-Ctx-, : (A : Γ ⊢Type) -> 𝕠-Ctx (Γ ,[ A ]) ≣ 𝕠-Ctx Γ ,[ 𝕠-Type A ]
+β-𝕠-Ctx-, = {!!}
+
+-- β-Dull-⋆ : ∀{E} -> Dull-Ctx (Γ ⋆-Ctx₊ E) ≣ Dull-Ctx Γ ⋆-Ctx₊ Dull-Ctx₊ E
+
+-- Dull-Ctx₊ [] = []
+-- Dull-Ctx₊ (E ,[ x ]) = Dull-Ctx₊ E ,[ transp-≣ (cong-≣ _⊢Type (β-Dull-⋆ {E = E})) (Dull-Type x) ]
+
+-- β-Dull-⋆ {E = []} = refl-≣
+-- β-Dull-⋆ {E = E ,[ x ]} =
+--   let X = J1 (β-Dull-⋆ {E = E}) _⊢Type _,[_] (Dull-Type x)
+--   in sym-≣ X
+
+{-# REWRITE β-𝕠-Ctx-, #-}
 
 
 
-_[_≔_] : ∀(Γ : Ctx (+- , τ)) {X} -> (v : Γ ⊢Var X) -> Restr-Ctx Γ v ⊢ Restr-Type X v -> Ctx (+- , τ)
+
+-- Restr-Ctx : (Γ : Ctx L) -> ∀{X} -> Γ ⊢Var X -> Ctx L
+-- Restr-Type : {Γ : Ctx L} -> ∀(X : Γ ⊢Type) -> (v : Γ ⊢Var X) -> Restr-Ctx Γ v ⊢Type
+
+-- _[_≔_] : ∀(Γ : Ctx (+- , τ)) {X} -> (v : Γ ⊢Var X) -> Restr-Ctx Γ v ⊢ Restr-Type X v -> Ctx (+- , τ)
 
 
 
@@ -264,79 +283,78 @@ data _⇛♮_ where
 
 
 
-Dull-⇛ : (Γ ⇛ Δ) -> Dull-Ctx Γ ⇛ Dull-Ctx Δ
-Dull-⇛ = {!!}
+-- Dull-⇛ : (Γ ⇛ Δ) -> Dull-Ctx Γ ⇛ Dull-Ctx Δ
+-- Dull-⇛ = {!!}
 
 
 
-σ-subst-Ctx : ∀{A : Γ ⊢Type} {v : Γ ⊢Var A} {x} -> (Γ [ v ≔ x ]) ⇛ Γ
+
+-- σ-subst-Ctx : ∀{A : Γ ⊢Type} {v : Γ ⊢Var A} {x} -> (Γ [ v ≔ x ]) ⇛ Γ
 
 
 
 data BaseType : 𝒰₀ where
   NN End : BaseType
 
-data _⊢Type where
-  -- gen : (ϕ : K ⇌ L) -> ⟨ ϕ ⦙ Γ ⊢Type -> Γ ⊢Type
-  -- D⁻ : ∀{Γ : Ctx (+- , τ)} -> Dull Γ ⊢Type -> Γ ⊢Type
-  -- D⁺ : ∀{Γ : Ctx (+- , τ)} -> Dull Γ ⊢Type -> Γ ⊢Type
-  -- ⨇ : (X : Γ ⊢Type) -> (Γ ,[ X ] ⊢Type) -> Γ ⊢Type
-  -- ⨈ : (X : Γ ⊢Type) -> (Γ ,[ X ] ⊢Type) -> Γ ⊢Type
-  Base : ∀{Γ : Ctx (◌ , τ)} -> BaseType -> Γ ⊢Type
-  ⨉ : Charge -> (X : Γ ⊢Type) -> (Γ ,[ X ] ⊢Type) -> Γ ⊢Type
-  D : Charge -> ∀{Γ : Ctx (+- , τ)} -> Dull Γ ⊢Type -> Γ ⊢Type
-  Fam : Γ ⊢ Base NN -> Γ ⊢Type
+data _⊢◌Type_ where
+  Base : ∀{Γ : Ctx (◌ , τ)} -> BaseType -> Γ ⊢◌Type ◌
+  ⨉ : ∀{c} -> Charge -> (A : Γ ⊢◌Type c) -> (B : Γ ,[ 𝕠-Type A ] ⊢◌Type c) -> Γ ⊢◌Type c
+  D : Charge -> Γ ⊢◌Type ◌ -> Γ ⊢◌Type +-
+  Fam : Γ ⊢ Base NN -> Γ ⊢◌Type ◌
+  _⊗_ : Γ ⊢◌Type c -> Γ ⊢◌Type c -> Γ ⊢◌Type c
 
-  -- the hidden type
-  ℍ : Γ ⊢Type
+infixl 40 _⊗_
+
+𝕠-Type {c = ◌} X = X
+𝕠-Type {c = +- } (⨉ x A B) = ⨉ x (𝕠-Type A) (𝕠-Type B)
+𝕠-Type {c = +- } (D x X) = X
+𝕠-Type {c = +- } (A ⊗ B) = 𝕠-Type A ⊗ 𝕠-Type B
+
 
 pattern ⨇ X Y = ⨉ + X Y
 pattern ⨈ X Y = ⨉ - X Y
 pattern D⁺ A = D + A
 pattern D⁻ A = D - A
+pattern BN = Base NN
 
-Dull-Type {Γ = Γ} (D c X) = X
-Dull-Type {Γ = Γ} (⨉ c X Y) = ⨉ c (Dull-Type X) (Dull-Type Y)
-Dull-Type ℍ = ℍ
-
-
-wk-Type : ∀{A} -> Γ ⊢Type -> Γ ,[ A ] ⊢Type
+-- Dull-Type {Γ = Γ} (D c X) = X
+-- Dull-Type {Γ = Γ} (⨉ c X Y) = ⨉ c (Dull-Type X) (Dull-Type Y)
+-- Dull-Type ℍ = ℍ
 
 
+wk-Type : ∀{A} -> Γ ⊢◌Type c -> Γ ,[ A ] ⊢◌Type c
 
-Dull-Var : {Γ : Ctx (+- , τ)} -> {A : Dull Γ ⊢Type} -> Γ ⊢Var (D⁻ A) -> Dull Γ ⊢Var A
-Dull-Var = {!!}
+
+
+-- Dull-Var : {Γ : Ctx (+- , τ)} -> {A : Dull Γ ⊢Type} -> Γ ⊢Var (D⁻ A) -> Dull Γ ⊢Var A
+-- Dull-Var = {!!}
 
 
 
 data _⊢Var_ where
-  zero : ∀{A} -> Γ ,[ A ] ⊢Var (wk-Type A)
-  suc : ∀{A B} -> Γ ⊢Var A -> Γ ,[ B ] ⊢Var (wk-Type A)
+  zero : {Γ : Ctx L} -> ∀{A} -> Γ ,[ A ] ⊢Var (wk-Type A)
+  suc : {Γ : Ctx L} -> ∀{A B} -> Γ ⊢Var A -> Γ ,[ B ] ⊢Var (wk-Type A)
 
-data _⊢Var : Ctx L -> 𝒰₀ where
-  zero : Γ ,[ A ] ⊢Var
-  suc : Γ ⊢Var -> Γ ,[ A ] ⊢Var
+-- data _⊢Var : Ctx L -> 𝒰₀ where
+--   zero : Γ ,[ A ] ⊢Var
+--   suc : Γ ⊢Var -> Γ ,[ A ] ⊢Var
 
-_⇂_ : (Γ : Ctx L) -> Γ ⊢Var -> Ctx L
-(Γ ,[ A ]) ⇂ zero = Γ
-(Γ ,[ A ]) ⇂ suc i = Γ ⇂ i
+-- _⇂_ : (Γ : Ctx L) -> Γ ⊢Var -> Ctx L
+-- (Γ ,[ A ]) ⇂ zero = Γ
+-- (Γ ,[ A ]) ⇂ suc i = Γ ⇂ i
 
-infixl 70 _⇂_
-
-
+-- infixl 70 _⇂_
 
 
 
+-- Restr-Ctx (Γ ,[ A ]) zero = Γ
+-- Restr-Ctx (Γ ,[ A ]) (suc v) = Restr-Ctx Γ v
 
+-- Restr-Type .(wk-Type A) (zero {A = A}) = A
+-- Restr-Type .(wk-Type A) (suc {A = A} v) = Restr-Type A v
 
-Restr-Ctx (Γ ,[ A ]) zero = Γ
-Restr-Ctx (Γ ,[ A ]) (suc v) = Restr-Ctx Γ v
-
-Restr-Type .(wk-Type A) (zero {A = A}) = A
-Restr-Type .(wk-Type A) (suc {A = A} v) = Restr-Type A v
-
-_[_≔_] (Γ ,[ A ]) (zero {A = A}) x = Γ
-_[_≔_] (Γ ,[ B ]) {A} (suc v) x = (Γ [ v ≔ x ]) ,[ B [ ♮-⇛ σ-subst-Ctx ]-Type ]
+-- _[_≔_] (Γ ,[ A ]) (zero {A = A}) x = Γ
+-- _[_≔_] (Γ ,[ B ]) {A} (suc v) x = (Γ [ v ≔ x ]) ,[ B [ ♮-⇛ σ-subst-Ctx ]-Type ]
 
 
 
@@ -344,45 +362,73 @@ _[_≔_] (Γ ,[ B ]) {A} (suc v) x = (Γ [ v ≔ x ]) ,[ B [ ♮-⇛ σ-subst-Ct
 
 data _⊢_ where
   var : ∀{A} -> Γ ⊢Var A -> Γ ⊢ A
-  -- γ_,_ : ∀(ϕ : K ⇌ L) {A}
-  --     -> ⟨ ϕ ⦙ Γ ⊢ A
-  --     -> Γ ⊢ A ⦙ ϕ ⟩
-  Λ_ : ∀{X A} -> Γ ,[ X ] ⊢ A -> Γ ⊢ (⨇ X A)
-  -- _,_ : ∀{A B} -> Γ ⊢ A -> Γ ,[ A ] ⊢ B -> Γ ⊢ ⨈ A B
-  inv : ∀{X} -> Γ ⊢ (D⁺ X) -> Γ ⊢ (D⁻ X)
-  -- [_≔_]_ : ∀{E} -> (X : Dull Γ ⊢Type) -> (v : Γ ⋆-Ctx₊ E ⊢ D⁻ )
+  η : {Γ : Ctx (+- , τ)} -> (A : 𝕠 Γ ⊢◌Type ◌) -> {B : Γ ⊢Type} -> Γ ,[ D⁻ A ] ⊢ wk-Type B -> Γ ⊢ B
 
-  -- [_≔_]_ : ∀{τ Γ} {X : Dull {τ = τ} Γ ⊢Type} -> (v : Γ ⊢Var (D⁻ X)) -> (x : Γ ⊢ (D⁺ X)) -> ∀{Y}
-  --   -> (Γ [ v ≔ inv x ]) ⊢ Y
-  --   -> Γ ⊢ (Y [ ι-subst-Ctx ])
-  end : Γ ⊢ (D⁺ (Base End))
-  n0 : Γ ⊢ Base NN
-
-  -- WARNING: this is probably wrong because
-  -- this means that we can use all negative
-  -- things in Γ
-  d⁺ : ∀{Γ : Ctx (+- , τ)} -> ∀{A} -> Dull Γ ⊢ A -> Γ ⊢ (D⁺ A)
-
-Dull-Term : Γ ⊢ A -> Dull-Ctx Γ ⊢ Dull-Type A
-Dull-Term = {!!}
+  _,_ : {A B : Γ ⊢Type} -> Γ ⊢ A -> Γ ⊢ B -> Γ ⊢ (A ⊗ B)
 
 
-⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx L) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
-⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≣ (cong-≣ (Γ ⊢_) p) x
+  -- Λ_ : ∀{X A} -> Γ ,[ X ] ⊢ A -> Γ ⊢ (⨇ X A)
+  -- -- _,_ : ∀{A B} -> Γ ⊢ A -> Γ ,[ A ] ⊢ B -> Γ ⊢ ⨈ A B
+  -- inv : ∀{X} -> Γ ⊢ (D⁺ X) -> Γ ⊢ (D⁻ X)
+  -- -- [_≔_]_ : ∀{E} -> (X : Dull Γ ⊢Type) -> (v : Γ ⋆-Ctx₊ E ⊢ D⁻ )
 
-id-⇛♮ : Γ ⇛♮ Γ
+  -- -- [_≔_]_ : ∀{τ Γ} {X : Dull {τ = τ} Γ ⊢Type} -> (v : Γ ⊢Var (D⁻ X)) -> (x : Γ ⊢ (D⁺ X)) -> ∀{Y}
+  -- --   -> (Γ [ v ≔ inv x ]) ⊢ Y
+  -- --   -> Γ ⊢ (Y [ ι-subst-Ctx ])
+  -- end : Γ ⊢ (D⁺ (Base End))
+  -- n0 : Γ ⊢ Base NN
+
+  -- -- WARNING: this is probably wrong because
+  -- -- this means that we can use all negative
+  -- -- things in Γ
+  -- d⁺ : ∀{Γ : Ctx (+- , τ)} -> ∀{A} -> Dull Γ ⊢ A -> Γ ⊢ (D⁺ A)
+
+
+
+-- Dull-Term : Γ ⊢ A -> Dull-Ctx Γ ⊢ Dull-Type A
+-- Dull-Term = {!!}
+
+
+-- ⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx L) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
+-- ⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≣ (cong-≣ (Γ ⊢_) p) x
+
+-- id-⇛♮ : Γ ⇛♮ Γ
 
 -- {-# REWRITE β-id-Type #-}
 
-_[_]-Ctx₊ : Δ ⊢Ctx₊ -> Γ ⇛♮ Δ -> Γ ⊢Ctx₊
+-- _[_]-Ctx₊ : Δ ⊢Ctx₊ -> Γ ⇛♮ Δ -> Γ ⊢Ctx₊
 
-under_by_[_]-Type : ∀ E -> ((Δ ⋆-Ctx₊ E) ⊢Type) -> (σ : Γ ⇛♮ Δ) -> (Γ ⋆-Ctx₊ (E [ σ ]-Ctx₊)) ⊢Type
+-- under_by_[_]-Type : ∀ E -> ((Δ ⋆-Ctx₊ E) ⊢Type) -> (σ : Γ ⇛♮ Δ) -> (Γ ⋆-Ctx₊ (E [ σ ]-Ctx₊)) ⊢Type
+
+
+module Examples where
+  emp : Ctx (+- , 𝟙)
+  emp = []
+
+  F1 : emp ⊢ (D⁻ BN) ⊗ (D⁺ BN)
+  F1 = η BN {!? , ?!}
+
+  -- F1 : ε ⊢ (⨇ ((D⁺ (NN))) (⨇ ((D⁻ (NN))) (D⁺ (End))))
+  -- F1 = Λ (Λ ([ zero ≔ var (suc zero) ] end) )
+
+{-
+  -- T1 : (ε ,[ (D⁻ (NN)) ]) [ zero ≔ inv (d⁺ n0) ] ≣ ε
+  -- T1 = {!refl-≣!}
+
+-}
+
+  -- F2 : ε ⊢ (⨇ ((D⁻ (NN))) (⨇ ((D⁺ ((Fam (var zero))))) (D⁺ ((Fam (n0))))))
+  -- F2 = Λ (Λ ([ suc zero ≔ d⁺ n0 ] {!var zero!}) )
+
+  -- Λ (Λ ([ zero ≔ var (suc zero) ] end))
 
 
 
 
 ------------------------------------------------------------------------
 -- Weakening
+
+{-
 
 {-# TERMINATING #-}
 wk-Ctx₊ : (E : Γ ⊢Ctx₊) -> Γ ,[ A ] ⊢Ctx₊
@@ -438,6 +484,7 @@ wks-Type₂ E A B = {!!}
 wks-Term : (E : Γ ⊢Ctx₊) -> {A : Γ ⊢Type} -> Γ ⊢ A -> Γ ⋆-Ctx₊ E ⊢ wks-Type E A
 wks-Term = {!!}
 
+{-
 
 -- End weakening
 ------------------------------------------------------------------------
@@ -947,26 +994,10 @@ under_by_[_]-Type {Γ = Γ} E X (_,_ {A = A} σ x) =
 
 
 
-module Examples where
-  emp : Ctx (+- , 𝟙)
-  emp = []
 
-  -- F1 : ε ⊢ (⨇ ((D⁺ (NN))) (⨇ ((D⁻ (NN))) (D⁺ (End))))
-  -- F1 = Λ (Λ ([ zero ≔ var (suc zero) ] end) )
 
-{-
-  -- T1 : (ε ,[ (D⁻ (NN)) ]) [ zero ≔ inv (d⁺ n0) ] ≣ ε
-  -- T1 = {!refl-≣!}
 
 -}
-
-  -- F2 : ε ⊢ (⨇ ((D⁻ (NN))) (⨇ ((D⁺ ((Fam (var zero))))) (D⁺ ((Fam (n0))))))
-  -- F2 = Λ (Λ ([ suc zero ≔ d⁺ n0 ] {!var zero!}) )
-
-  -- Λ (Λ ([ zero ≔ var (suc zero) ] end))
-
-
-
-
+-}
 -}
 -}
