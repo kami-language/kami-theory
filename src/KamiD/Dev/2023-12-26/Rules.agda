@@ -143,23 +143,22 @@ instance
   hasNotation-𝕠:Ctx : ∀{c} -> hasNotation-𝕠 (Ctx (c , τ)) (const $ Ctx (◌ , τ))
   hasNotation-𝕠:Ctx = record { 𝕠 = 𝕠-Ctx }
 
-{-
 
-data _⊢Ctx : Ctx L -> 𝒰₀ where
-  [] : Γ ⊢Ctx
-  [_]∷_ :  (A : Γ ⊢Type) -> Γ ,[ A ] ⊢Ctx -> Γ ⊢Ctx
+-- data _⊢Ctx : Ctx L -> 𝒰₀ where
+--   [] : Γ ⊢Ctx
+--   [_]∷_ :  (A : Γ ⊢Type) -> Γ ,[ A ] ⊢Ctx -> Γ ⊢Ctx
 
-infixl 50 [_]∷_
-
+-- infixl 50 [_]∷_
 
 
-_⋆-Ctx_ : (Γ : Ctx L) -> Γ ⊢Ctx -> Ctx L
-Γ ⋆-Ctx [] = Γ
-Γ ⋆-Ctx ([ A ]∷ Δ) = Γ ,[ A ] ⋆-Ctx Δ
 
-_,[_]-⊢Ctx : (E : Γ ⊢Ctx) -> (Γ ⋆-Ctx E) ⊢Type -> Γ ⊢Ctx
-[] ,[ x ]-⊢Ctx = [ x ]∷ []
-([ A ]∷ E) ,[ x ]-⊢Ctx = [ A ]∷ (E ,[ x ]-⊢Ctx)
+-- _⋆-Ctx_ : (Γ : Ctx L) -> Γ ⊢Ctx -> Ctx L
+-- Γ ⋆-Ctx [] = Γ
+-- Γ ⋆-Ctx ([ A ]∷ Δ) = Γ ,[ A ] ⋆-Ctx Δ
+
+-- _,[_]-⊢Ctx : (E : Γ ⊢Ctx) -> (Γ ⋆-Ctx E) ⊢Type -> Γ ⊢Ctx
+-- [] ,[ x ]-⊢Ctx = [ x ]∷ []
+-- ([ A ]∷ E) ,[ x ]-⊢Ctx = [ A ]∷ (E ,[ x ]-⊢Ctx)
 
 
 data _⊢Ctx₊ : Ctx L -> 𝒰₀
@@ -204,50 +203,51 @@ infixl 30 _⋆-Ctx₊_ _⋆-Ctx₊₂_ _⋆-Ctx_ [_]Ctx₊∷_
 
 
 
-_⋆⁻¹-Ctx_ : (Γ : Ctx L) -> Γ ⊢Ctx -> Ctx L
-[] ⋆⁻¹-Ctx Δ = [] ⋆-Ctx Δ
-(Γ ,[ x ]) ⋆⁻¹-Ctx Δ = Γ ⋆⁻¹-Ctx [ x ]∷ Δ
+-- _⋆⁻¹-Ctx_ : (Γ : Ctx L) -> Γ ⊢Ctx -> Ctx L
+-- [] ⋆⁻¹-Ctx Δ = [] ⋆-Ctx Δ
+-- (Γ ,[ x ]) ⋆⁻¹-Ctx Δ = Γ ⋆⁻¹-Ctx [ x ]∷ Δ
 
+{-
 -}
 
 
 
 
--- Dull-Ctx : Ctx (+- , τ) -> Ctx (◌ , τ)
--- Dull-Type : ∀{Γ : Ctx (+- , τ)} -> Γ ⊢Type -> Dull-Ctx Γ ⊢Type
+-- 𝕠-Ctx : Ctx (+- , τ) -> Ctx (◌ , τ)
+-- 𝕠-Type : ∀{Γ : Ctx (+- , τ)} -> Γ ⊢Type -> 𝕠-Ctx Γ ⊢Type
 
--- record hasNotation-Dull (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
---   field Dull : (a : A) -> B a
+-- record hasNotation-𝕠 (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
+--   field 𝕠 : (a : A) -> B a
 
--- open hasNotation-Dull {{...}} public
-
--- instance
---   hasNotation-Dull:Ctx : hasNotation-Dull (Ctx (+- , τ)) (const (Ctx (◌ , τ)))
---   hasNotation-Dull:Ctx = record { Dull = Dull-Ctx }
+-- open hasNotation-𝕠 {{...}} public
 
 -- instance
---   hasNotation-Dull:Type : ∀{Γ : Ctx (+- , τ)} -> hasNotation-Dull (Γ ⊢Type) (const (Dull Γ ⊢Type))
---   hasNotation-Dull:Type = record { Dull = Dull-Type }
+--   hasNotation-𝕠:Ctx : hasNotation-𝕠 (Ctx (+- , τ)) (const (Ctx (◌ , τ)))
+--   hasNotation-𝕠:Ctx = record { 𝕠 = 𝕠-Ctx }
 
--- Dull-Ctx [] = []
--- Dull-Ctx (Γ ,[ A ]) = Dull-Ctx Γ ,[ Dull-Type A ]
+-- instance
+--   hasNotation-𝕠:Type : ∀{Γ : Ctx (+- , τ)} -> hasNotation-𝕠 (Γ ⊢Type) (const (𝕠 Γ ⊢Type))
+--   hasNotation-𝕠:Type = record { 𝕠 = 𝕠-Type }
 
--- Dull-Ctx₊ : Γ ⊢Ctx₊ -> Dull-Ctx Γ ⊢Ctx₊
+-- 𝕠-Ctx [] = []
+-- 𝕠-Ctx (Γ ,[ A ]) = 𝕠-Ctx Γ ,[ 𝕠-Type A ]
+
+𝕠-Ctx₊ : Γ ⊢Ctx₊ -> 𝕠-Ctx Γ ⊢Ctx₊
 
 β-𝕠-Ctx-, : (A : Γ ⊢Type) -> 𝕠-Ctx (Γ ,[ A ]) ≣ 𝕠-Ctx Γ ,[ 𝕠-Type A ]
 β-𝕠-Ctx-, = {!!}
 
--- β-Dull-⋆ : ∀{E} -> Dull-Ctx (Γ ⋆-Ctx₊ E) ≣ Dull-Ctx Γ ⋆-Ctx₊ Dull-Ctx₊ E
+β-𝕠-Ctx-⋆ : ∀{E} -> 𝕠-Ctx (Γ ⋆-Ctx₊ E) ≣ 𝕠-Ctx Γ ⋆-Ctx₊ 𝕠-Ctx₊ E
 
--- Dull-Ctx₊ [] = []
--- Dull-Ctx₊ (E ,[ x ]) = Dull-Ctx₊ E ,[ transp-≣ (cong-≣ _⊢Type (β-Dull-⋆ {E = E})) (Dull-Type x) ]
+𝕠-Ctx₊ [] = []
+𝕠-Ctx₊ (E ,[ x ]) = 𝕠-Ctx₊ E ,[ transp-≣ (cong-≣ _⊢Type (β-𝕠-Ctx-⋆ {E = E})) (𝕠-Type x) ]
 
--- β-Dull-⋆ {E = []} = refl-≣
--- β-Dull-⋆ {E = E ,[ x ]} =
---   let X = J1 (β-Dull-⋆ {E = E}) _⊢Type _,[_] (Dull-Type x)
---   in sym-≣ X
+β-𝕠-Ctx-⋆ {E = []} = refl-≣
+β-𝕠-Ctx-⋆ {E = E ,[ x ]} = {!!}
+  -- let X = J1 (β-𝕠-Ctx-⋆ {E = E}) _⊢Type _,[_] (𝕠-Type x)
+  -- in {!!} -- sym-≣ X
 
-{-# REWRITE β-𝕠-Ctx-, #-}
+{-# REWRITE β-𝕠-Ctx-, β-𝕠-Ctx-⋆ #-}
 
 
 
@@ -283,8 +283,8 @@ data _⇛♮_ where
 
 
 
--- Dull-⇛ : (Γ ⇛ Δ) -> Dull-Ctx Γ ⇛ Dull-Ctx Δ
--- Dull-⇛ = {!!}
+-- 𝕠-⇛ : (Γ ⇛ Δ) -> 𝕠-Ctx Γ ⇛ 𝕠-Ctx Δ
+-- 𝕠-⇛ = {!!}
 
 
 
@@ -317,17 +317,17 @@ pattern D⁺ A = D + A
 pattern D⁻ A = D - A
 pattern BN = Base NN
 
--- Dull-Type {Γ = Γ} (D c X) = X
--- Dull-Type {Γ = Γ} (⨉ c X Y) = ⨉ c (Dull-Type X) (Dull-Type Y)
--- Dull-Type ℍ = ℍ
+-- 𝕠-Type {Γ = Γ} (D c X) = X
+-- 𝕠-Type {Γ = Γ} (⨉ c X Y) = ⨉ c (𝕠-Type X) (𝕠-Type Y)
+-- 𝕠-Type ℍ = ℍ
 
 
 wk-Type : ∀{A} -> Γ ⊢◌Type c -> Γ ,[ A ] ⊢◌Type c
 
 
 
--- Dull-Var : {Γ : Ctx (+- , τ)} -> {A : Dull Γ ⊢Type} -> Γ ⊢Var (D⁻ A) -> Dull Γ ⊢Var A
--- Dull-Var = {!!}
+-- 𝕠-Var : {Γ : Ctx (+- , τ)} -> {A : 𝕠 Γ ⊢Type} -> Γ ⊢Var (D⁻ A) -> 𝕠 Γ ⊢Var A
+-- 𝕠-Var = {!!}
 
 
 
@@ -370,9 +370,9 @@ data _⊢_ where
   -- Λ_ : ∀{X A} -> Γ ,[ X ] ⊢ A -> Γ ⊢ (⨇ X A)
   -- -- _,_ : ∀{A B} -> Γ ⊢ A -> Γ ,[ A ] ⊢ B -> Γ ⊢ ⨈ A B
   -- inv : ∀{X} -> Γ ⊢ (D⁺ X) -> Γ ⊢ (D⁻ X)
-  -- -- [_≔_]_ : ∀{E} -> (X : Dull Γ ⊢Type) -> (v : Γ ⋆-Ctx₊ E ⊢ D⁻ )
+  -- -- [_≔_]_ : ∀{E} -> (X : 𝕠 Γ ⊢Type) -> (v : Γ ⋆-Ctx₊ E ⊢ D⁻ )
 
-  -- -- [_≔_]_ : ∀{τ Γ} {X : Dull {τ = τ} Γ ⊢Type} -> (v : Γ ⊢Var (D⁻ X)) -> (x : Γ ⊢ (D⁺ X)) -> ∀{Y}
+  -- -- [_≔_]_ : ∀{τ Γ} {X : 𝕠 {τ = τ} Γ ⊢Type} -> (v : Γ ⊢Var (D⁻ X)) -> (x : Γ ⊢ (D⁺ X)) -> ∀{Y}
   -- --   -> (Γ [ v ≔ inv x ]) ⊢ Y
   -- --   -> Γ ⊢ (Y [ ι-subst-Ctx ])
   -- end : Γ ⊢ (D⁺ (Base End))
@@ -381,12 +381,12 @@ data _⊢_ where
   -- -- WARNING: this is probably wrong because
   -- -- this means that we can use all negative
   -- -- things in Γ
-  -- d⁺ : ∀{Γ : Ctx (+- , τ)} -> ∀{A} -> Dull Γ ⊢ A -> Γ ⊢ (D⁺ A)
+  -- d⁺ : ∀{Γ : Ctx (+- , τ)} -> ∀{A} -> 𝕠 Γ ⊢ A -> Γ ⊢ (D⁺ A)
 
 
 
--- Dull-Term : Γ ⊢ A -> Dull-Ctx Γ ⊢ Dull-Type A
--- Dull-Term = {!!}
+-- 𝕠-Term : Γ ⊢ A -> 𝕠-Ctx Γ ⊢ 𝕠-Type A
+-- 𝕠-Term = {!!}
 
 
 -- ⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx L) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
@@ -428,23 +428,33 @@ module Examples where
 ------------------------------------------------------------------------
 -- Weakening
 
-{-
 
 {-# TERMINATING #-}
-wk-Ctx₊ : (E : Γ ⊢Ctx₊) -> Γ ,[ A ] ⊢Ctx₊
+wk-Ctx₊ : ∀{Γ : Ctx L} {A : Γ ⊢Type} -> (E : Γ ⊢Ctx₊) -> Γ ,[ A ] ⊢Ctx₊
 
-wk-Type-ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Type) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Type
+σ-wk-𝕠 : ∀{A : Γ ⊢Type} {E : Γ ⊢Ctx₊} -> wk-Ctx₊ (𝕠-Ctx₊ E) ≣ 𝕠-Ctx₊ (wk-Ctx₊ {A = A} E)
+σ-wk-𝕠 = {!!}
+
+{-# REWRITE σ-wk-𝕠 #-} -- TODO: Should come after definition!!
+
+wk-Type-ind : ∀{Γ : Ctx (◌ , τ)} -> ∀{A} -> ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢◌Type c) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢◌Type c
+
+σ-wk-𝕠-Type-ind : {E : Γ ⊢Ctx₊} -> ∀{A} -> wk-Type-ind (𝕠-Ctx₊ E) (𝕠-Type A) ≣ 𝕠-Type (wk-Type-ind E ?)
+σ-wk-𝕠-Type-ind = ?
+
+{-# REWRITE σ-wk-𝕠-Type-ind #-} -- TODO: Should come after definition!!
 
 wk-Ctx₊ [] = []
-wk-Ctx₊ (E ,[ x ]) = wk-Ctx₊ E ,[ wk-Type-ind E x ]
+wk-Ctx₊ (E ,[ x ]) = wk-Ctx₊ E ,[ wk-Type-ind (𝕠-Ctx₊ E) x ]
+
 
 wk-Type-ind E (Base x) = Base x
-wk-Type-ind E (⨉ c A B) = ⨉ c (wk-Type-ind E A ) (wk-Type-ind (E ,[ A ]) B)
+wk-Type-ind E (⨉ c A B) = ⨉ c (wk-Type-ind E A ) (wk-Type-ind (E ,[ 𝕠-Type A ]) B)
 wk-Type-ind E (D x X) = {!!}
 wk-Type-ind E (Fam x) = {!!}
-wk-Type-ind E ℍ = ℍ
 
-wk-Type X = wk-Type-ind [] X -- [ wk-⇛♮ id-⇛♮ ]-Type
+{-
+wk-Type X = let XX = wk-Type-ind [] X in {!!} -- [ wk-⇛♮ id-⇛♮ ]-Type
 
 wk-Term-ind : ∀ E -> {X : Γ ⋆-Ctx₊ E ⊢Type} -> Γ ⋆-Ctx₊ E ⊢ X -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢ wk-Type-ind E X
 wk-Term-ind = {!!}
@@ -479,11 +489,13 @@ wks-Type₂ E A B = {!!}
 σ-wks-wk-, : ∀{A : Γ ⊢Type} -> ∀{E2 x B E} -> wks-Type (wk-Ctx₊ E) (wk-Type-ind (E2 ,[ x ]) (wk-Type B)) ≣ wk-Type-ind E (wks-Type E (wk-Type-ind {A = A} E2 B))
 σ-wks-wk-, = {!!}
 
-{-# REWRITE β-wks-Type-Base β-wks-Type-⨉ σ-wks-wk σ-wks-wk-, #-}
+-- {-# REWRITE β-wks-Type-Base β-wks-Type-⨉ σ-wks-wk σ-wks-wk-, #-}
 
 wks-Term : (E : Γ ⊢Ctx₊) -> {A : Γ ⊢Type} -> Γ ⊢ A -> Γ ⋆-Ctx₊ E ⊢ wks-Type E A
 wks-Term = {!!}
+-}
 
+{-
 {-
 
 -- End weakening
@@ -541,7 +553,7 @@ data ⟨_⟩⊢Type_ where
 
   ⨉nn : Charge -> (X : ⟨ γ ⟩⊢Type noacc) -> (⟨ γ ,[ X ] ⟩⊢Type noacc) -> ⟨ γ ⟩⊢Type noacc
   ⨉na : Charge -> (X : ⟨ γ ⟩⊢Type noacc) -> (⟨ γ ,[ X ] ⟩⊢Type acc) -> ⟨ γ ⟩⊢Type acc
-  -- D : Charge -> ∀{Γ : Ctx (+- , τ)} -> Dull Γ ⊢Type -> Γ ⊢Type
+  -- D : Charge -> ∀{Γ : Ctx (+- , τ)} -> 𝕠 Γ ⊢Type -> Γ ⊢Type
   Fam : ⟨ γ ⟩⊢ Base (Base NN) , α -> ⟨ γ ⟩⊢Type α
 
   wk-⟨⟩⊢Type : ∀{β} -> {T : ⟨ γ ⟩⊢Type β} -> ⟨ γ ⟩⊢Type α -> ⟨ γ ,[ T ] ⟩⊢Type α
@@ -556,9 +568,9 @@ data ⟨_⟩⊢_,_ where
   Λnn_ : ∀{T A} -> ⟨ γ ,[ T ] ⟩⊢ A , α -> ⟨ γ ⟩⊢ (⨉nn (+) T A) , α
   -- _,_ : ∀{A B} -> Γ ⊢ A -> Γ ,[ A ] ⊢ B -> Γ ⊢ ⨈ A B
   -- inv : ∀{X} -> Γ ⊢ (D⁺ X) -> Γ ⊢ (D⁻ X)
-  -- [_≔_]_ : ∀{E} -> (X : Dull Γ ⊢Type) -> (v : Γ ⋆-Ctx₊ E ⊢ D⁻ )
+  -- [_≔_]_ : ∀{E} -> (X : 𝕠 Γ ⊢Type) -> (v : Γ ⋆-Ctx₊ E ⊢ D⁻ )
 
-  -- [_≔_]_ : ∀{τ Γ} {X : Dull {τ = τ} Γ ⊢Type} -> (v : Γ ⊢Var (D⁻ X)) -> (x : Γ ⊢ (D⁺ X)) -> ∀{Y}
+  -- [_≔_]_ : ∀{τ Γ} {X : 𝕠 {τ = τ} Γ ⊢Type} -> (v : Γ ⊢Var (D⁻ X)) -> (x : Γ ⊢ (D⁺ X)) -> ∀{Y}
   --   -> (Γ [ v ≔ inv x ]) ⊢ Y
   --   -> Γ ⊢ (Y [ ι-subst-Ctx ])
   -- end : Γ ⊢ (D⁺ (Base End))
@@ -568,7 +580,7 @@ data ⟨_⟩⊢_,_ where
   -- WARNING: this is probably wrong because
   -- this means that we can use all negative
   -- things in Γ
-  -- d⁺ : ∀{Γ : Ctx (+- , τ)} -> ∀{A} -> Dull Γ ⊢ A -> Γ ⊢ (D⁺ A)
+  -- d⁺ : ∀{Γ : Ctx (+- , τ)} -> ∀{A} -> 𝕠 Γ ⊢ A -> Γ ⊢ (D⁺ A)
 
 restore-Type (Base x) = wks-Type _ (wk-Type x)
 restore-Type (⨉nn x X Y) = ⨉ x (restore-Type X) (restore-Type Y)
@@ -761,10 +773,10 @@ filter-Var : ∀ E -> {A : Γ ,[ A ] ⋆-Ctx₊ E ⊢Type} -> (_ ⊢Var A) -> Ma
 filter-Ctx₊ [] = []
 filter-Ctx₊ (E ,[ x ]) = filter-Ctx₊ E ,[ filter-Type E x ]
 
-β-Dull-filter-Ctx₊ : ∀{E : Γ ,[ A ] ⊢Ctx₊} -> Dull-Ctx₊ (filter-Ctx₊ E) ≣ filter-Ctx₊ (Dull-Ctx₊ E)
-β-Dull-filter-Ctx₊ = {!!}
+β-𝕠-filter-Ctx₊ : ∀{E : Γ ,[ A ] ⊢Ctx₊} -> 𝕠-Ctx₊ (filter-Ctx₊ E) ≣ filter-Ctx₊ (𝕠-Ctx₊ E)
+β-𝕠-filter-Ctx₊ = {!!}
 
-{-# REWRITE β-Dull-filter-Ctx₊ #-}
+{-# REWRITE β-𝕠-filter-Ctx₊ #-}
 
 β-filter-wk-Type : filter-Type {A = A} [] (wk-Type B) ≣ B
 β-filter-wk-Type = {!!}
@@ -781,7 +793,7 @@ filter-Var (E ,[ x ]) (suc v) = map-Maybe (wk-Term _) (filter-Var E v)
 
 filter-Type E (Base x) = (Base x)
 filter-Type E (⨉ x A B) = ⨉ x (filter-Type E A) (filter-Type (E ,[ A ]) B)
-filter-Type E (D x X) = D x (filter-Type (Dull-Ctx₊ E) X)
+filter-Type E (D x X) = D x (filter-Type (𝕠-Ctx₊ E) X)
 filter-Type E (Fam x) with (filter-Term E x)
 ... | left x' = ℍ
 ... | just x' = Fam x'
@@ -792,7 +804,7 @@ filter-Term E (Λ t) = map-Maybe Λ_ (filter-Term (E ,[ _ ]) t) -- Λ filter-Ter
 filter-Term E (inv t) = map-Maybe inv (filter-Term E t) -- inv (filter-Term E t)
 filter-Term E end = just end
 filter-Term E n0 = just n0
-filter-Term E (d⁺ t) = {!map-Maybe d⁺ (filter-Term (Dull-Ctx₊ E) t)!}
+filter-Term E (d⁺ t) = {!map-Maybe d⁺ (filter-Term (𝕠-Ctx₊ E) t)!}
 
 
 -- End Filtering
@@ -936,16 +948,16 @@ split-front-Ctx₊ = {!!}
 -- Ctx⦅ x ⦆ (E ,[ A ]) = Ctx⦅ x ⦆ E ,[ Type⦅ x ∣ E ⦆ A ]
 
 {-
-β-Dull-Ctx₊ : ∀{x : Γ ⊢ A} {E} -> Dull-Ctx₊ (Ctx⦅ x ⦆ E) ≣ Ctx⦅ Dull-Term x ⦆ (Dull-Ctx₊ E)
-β-Dull-Ctx₊ {E = []} = refl-≣
-β-Dull-Ctx₊ {E = E ,[ x ]} = {!!}
+β-𝕠-Ctx₊ : ∀{x : Γ ⊢ A} {E} -> 𝕠-Ctx₊ (Ctx⦅ x ⦆ E) ≣ Ctx⦅ 𝕠-Term x ⦆ (𝕠-Ctx₊ E)
+β-𝕠-Ctx₊ {E = []} = refl-≣
+β-𝕠-Ctx₊ {E = E ,[ x ]} = {!!}
 
-{-# REWRITE β-Dull-Ctx₊ #-}
+{-# REWRITE β-𝕠-Ctx₊ #-}
 
 
 Type⦅_∣_⦆_ x E (Base x₁) = Base x₁
 Type⦅_∣_⦆_ x E (⨉ c A B) = ⨉ c (su-Type₂ {E = E} x A) let B' = su-Type₂ {E = E ,[ A ]} x B in B'
-Type⦅_∣_⦆_ x E (D c A) = D c (Type⦅ Dull-Term x ∣ Dull-Ctx₊ E ⦆ A)
+Type⦅_∣_⦆_ x E (D c A) = D c (Type⦅ 𝕠-Term x ∣ 𝕠-Ctx₊ E ⦆ A)
 Type⦅_∣_⦆_ x E (Fam n) = Fam (Term⦅ x ∣ E ⦆ n)
 Type⦅_∣_⦆_ x E (ℍ) = ℍ
 
