@@ -266,5 +266,131 @@ J1 refl-≣ F f x = refl-≣
 --
 -- ex : ∀(n ＠ 0) -> ∀(v : Vec ℕ n ＠ 0) -[ Ex n ]-> ℕ ＠ 0
 -- ex n v = (n＠1 ⇜ n＠0) , ex₊ n v 0
+--
+----------------------------------------------------------------
+-- Example: indirect information: https://link.springer.com/article/10.1007/s10270-022-01040-x (example 3.1, page 4)
+--
+-- Idea: (quote)
+-- ```
+--    As a running example, let us consider three par-
+--    ticipants p, q, r. p chooses whether to send a message to r or
+--    not; this choice is communicated to r through an intermediate
+--    participant q.
+-- ```
+--
+-- Note: renaming processes [p,q,r] ↦ [0,1,2]
+--
+-- Ex : (b : Bool ＠ 0) -> CommType{0,1,2}
+-- Ex b = [ Val b ](0 → 1) ⊗ [ Val b ](1 → 2) ⊗ If b ([ A ](0 → 2))
+--
+-- ex : (b ＠ 0) -> (a : A ＠ 0) -> If b A ＠ 2
+-- ex b a = (b＠2 ⇜ b＠1 ⇜ b＠0) , case b { true ↦ (a＠2 ⇜ a＠0) &↑ a | false ↦ tt}
+--
+----------------------------------------------------------------
+-- Example: two-buyers problem: https://link.springer.com/article/10.1007/s10270-022-01040-x (example 3.2, page 5)
+--
+-- Idea: (quote)
+-- ```
+--    A second running example is the well-known
+--    two-buyers problem, as in [17]. First Buyer 1 sends a book
+--    title to Seller, then Seller sends back a quote to both Buyer 1
+--    and Buyer 2, then Buyer 1 tells Buyer 2 how much she wants
+--    to contribute, and Buyer 2 tells Seller if she accepts the quote
+--    or not. If the deal is drawn, Seller tells Buyer 2 the expected
+--    delivery date at her address.
+-- ```
+--
+-- ...
+--
+----------------------------------------------------------------
+-- Example: dining philosophers
+--
+-- We have three processes which are locally correct, but where
+-- combining all of them produces a deadlock.
+--
+-- The local types look like this:
+--
+-- P0 : CommType{0,1,2}
+-- P0 = [ ℕ ](2 → 0) ⊗ [ ℕ ](0 → 1)
+--
+-- P1 : CommType{0,1,2}
+-- P1 = [ ℕ ](0 → 1) ⊗ [ ℕ ](1 → 2)
+--
+-- Interestingly enough, we currently have no way to specify
+-- invalid (deadlocking) "local" types. If we want to implement
+-- three processes, we have to give a global type for them.
+-- There is no way to "merge" three "partial" types to get a
+-- possibly invalid global type.
+--
+----------------------------------------------------------------
+-- Development/Thinking. Topic: Remote resources, channels
+--
+-- We have seen that it is nice in some sense that we don't have
+-- "local session types". But we still want to extract channels
+-- in the sense that we can have a server whose implementation
+-- we don't have access to, but who we can still talk to.
+--
+-- Let us try to use our global types + hyper-local types for that.
+--
+-- We have a situation where a server can be accessed by various
+-- clients... Because assuming we have fixed roles, implementing
+-- for only some of the roles is already possible in our theory.
+--
+-- Idea: we have a "global name service" which can connect us to
+-- a server we want to talk with.
+--
+-- We say that we want to speak with "test.determi.io", and we
+-- get a partially implemented term with the type of this program.
+-- This means that we need to at least be able to compare types
+-- to make sure that our partner behaves as we expect.
+--
+-- getRandom : ℕ ＠ 0
+-- getRandom =
+--   (T : CommType{0,Server}, t : T↓Server) <- getChannel "test.determi.io"
+--   assert T ≡ [ n : ℕ ](0 → Server) ⊗ [ Fin n ](Server → 0)
+--   let t₀ : (𝟙 -[ T ]-> ℕ ＠ 0)  ↓ 0
+--          = (n : ℕ) ⊗ (- Fin n) ⊗ ℕ
+--       t₀ = 100 , hole i , cast i
+--   in (pair t t0) tt : ℕ ＠ 0
+--
+-- Here we get `t`, a partial implementation of the `T` protocol.
+-- If we have a partial implementation in scope, we are obliged to
+-- discharge such an assumption. We do this by providing the rest
+-- of the implementation with `t₀`, and then we discharge by combining
+-- them with `pair`.
+--
+-- This suggests that there is some kind of scheduling operation
+-- which takes a partial implementation and runs it, but passes
+-- the "channel" (without I/O-state) somewhere else, such that
+-- another process can connect to this server.
+--
+-- t₁ :{1} ℕ＠1 -[ T ]-> ℕ＠1
+-- t₁ = ?
+--
+-- t : (∀ α. Channel T (0,α) {0}) -> ℕ＠1 -[ T ]-> ℕ＠1
+-- t c n = pair (c 1) t₁
+--
+-- Where `(∀ α. Channel T (0,α) {0})` means that this is a channel
+-- to an implementation of `T` where the type T is located at 0 and α,
+-- it is implemented only for 0, and we can choose ourselves what α
+-- should be.
 
-
+----------------------------------------------------------------
+-- Current questions:
+--  - How do we represent "no communication"? Is it enough if we say that
+--    the type 𝟙 does not require any communication? Do we need sth more
+--    formal?
+--  - Currently, the local implementations to do not retain the information
+--    with whom they communicate. This is not future-proof, in the sense
+--    that during compilation we are definitely going to need this information.
+--    Usually such information is kept in "local session types" which we currently
+--    do not represent. This has the effect that the dining philosopher deadlock
+--    cannot even be stated.
+--  - What is the relationship between partial implementations and channels?
+--    partial implementations have input and output types, and have to be "scheduled"
+--    in order to get a channel which can be communicated to other processes...
+--    In some sense, the scheduler owns the processes which it has scheduled...
+--    We might have a difference between "internal" and "external" locations:
+--    The scheduler in "Topic: Remote resources, channels" owns the location `0`,
+--    while the term `t` does not. It can still instantiate the protocol T to {0,1},
+--    but it cannot schedule anything to location 0.
