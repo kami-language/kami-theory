@@ -374,6 +374,72 @@ J1 refl-≣ F f x = refl-≣
 -- to an implementation of `T` where the type T is located at 0 and α,
 -- it is implemented only for 0, and we can choose ourselves what α
 -- should be.
+--
+----------------------------------------------------------------
+-- Remote resources & location ownership
+--
+-- Let us assume that we want proper channels. Then we have multiple
+-- concepts:
+--  1. The location (server) where the code is executed.
+--  2. The location (scheduler) which knows about the server and can
+--     provide us with a channel to it.
+--  3. The location (client) which accesses the server.
+--
+-- Communication types (channels) are implemented incrementally.
+-- Each location can schedule part of a communication, and gets
+-- an according channel as proof of scheduling. Channels with matching
+-- role implementations can be joined. A fully implemented channel can
+-- be consumed by whichever location. This location is playing the role
+-- of the connector, i.e., telling the individual participants their
+-- partners, and thus establishing the connection/protocol.
+--
+-- Assume I have `T : CommType{α,β}`.
+--
+-- T : CommType{α,β}
+-- T = [ ℕ ](α → β) ⊗ [ ℕ ](β → α)
+--
+-- t₀ : {0,(α)} -> ℕ＠0 -[ T ]-> ℕ＠0
+-- t₀ = ?
+--
+-- step : {S,0} -> ℕ＠0 -> (ℕ＠0 × Chan T {0,(α)} ＠S)
+-- step n = schedule t₀ n (0 under S)
+--
+-- scheduler :{S} -> ℕ＠S -> !(Chan T {0,(α)})
+-- scheduler = ?
+--
+-- Now assume I have two processes talking with the scheduler.
+--
+-- U : CommType{S,a,b}
+-- U = [Chan T {0,(α)}](S → a) ⊗ [Chan T {0,(β)}](S → b)
+--
+--
+-- u₁ :{(0),1} -[ T ]-> 𝟙
+-- u₁ = hole n , n + 1
+--
+-- u :{S,1,2} -> ℕ＠S -[ U ]-> 𝟙
+-- u＠0 = hole c₀ , connect＠1 {c₀ , schedule u₁}
+--             ~~                    ~~~~~~~~~~~
+--             ^                     ^ Chan T {(0), 1}
+--             | Chan T {0,(α)}
+--
+--                             ~~~~~~~~~~~~~~~~~
+--                             ^ Chan T {(0),(1)}
+--
+-- We see that if we have `f : {0,1} -> A -[ U ]-> B`, we can
+-- do `f↓0 : {0,(1)} -> A↓0 -[ U ]-> B↓0`.
+-- And we have:
+-- f ≡ λ a ↦ connect {schedule (f↓0 a↓0) , schedule (f↓1 a↓1)}
+--
+-- The idea is as follows:
+--  - partial implementations are copyable, but not proper terms,
+--    in that they cannot be executed stand-alone.
+--  - partial implementations can be scheduled, which creates a
+--    channel signifying the "implemented vs missing" information.
+--    This channel is not copyable.
+--  - Channels can be merged if they implement the different aspects
+--    of the same communication type
+--  - Once a channel is fully implemented, it can be discarded with `connect`.
+--
 
 ----------------------------------------------------------------
 -- Current questions:
