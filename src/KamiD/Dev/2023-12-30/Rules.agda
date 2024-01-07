@@ -440,6 +440,99 @@ J1 refl-≣ F f x = refl-≣
 --    of the same communication type
 --  - Once a channel is fully implemented, it can be discarded with `connect`.
 --
+-- Again:
+-- We see that if we have `f : {0,1} -[ U ]-> B`, we can
+-- do `f↓0 : {0,(1)} -[ U ]-> B↓0`.
+-- And we have:
+-- f ≡ (let (ca , va) = schedule (f↓0)
+--           (cb , vb) = schedule (f↓1)
+--      in connect {ca , cb} , (va , vb)
+--      )
+--
+----------------------------------------------------------------
+-- Schedule and related things
+--
+-- The current problem is that schedule acts on two locations.
+-- There is the hosts' location and the clients'. The question is,
+-- is this really required, or just accidental?
+-- What schedule has to do, is:
+--  - take a partial implementation of a Comm-Type and instantiate
+--    it once, providing us with the return type, and with the
+--    Channel for communicating with this instance.
+-- It seems like this behaviour does not require multiple locations.
+--
+-- On the other hand, such a scheduled computation has to run on
+-- a different thread than the scheduler because while the scheduler
+-- is free to act and send the channel, the scheduled task has to
+-- wait until it is connected...
+--
+-- This means that a choreography `f : {0,1} -[ T ]-> B` is itself
+-- not yet scheduled? We can schedule it, and what we get, is a scheduling
+-- of the parts on the locations `0` and `1`. But this means that
+-- there is also the (full) channel on the supervisor location which
+-- is dropped.
+--
+-- so we have to say:
+--
+-- t : {S,0,1} -> B＠{0,1}
+-- t = let (c , v) = schedule f in connect c , v
+--          ~   ~
+--          ^   ^ v : B ＠{0,1}
+--          | c : Chan T {(0),(1)} ＠S
+--
+-- Is a supervisor divisible from a scheduled process? That is,
+-- is there a term which describes "scheduling" individually for
+-- S and 0? Can I project to only S or only 0?
+--
+-- Apriori it seems like communication between supervisor and
+-- process is different than between various processes. This means
+-- that I cannot project onto every location.
+--
+--
+-- Locally, a choreography begins with:
+--  - Knowing my own code
+--  - Knowing the identity of my communication partners
+--
+-- This means: If I know the identity, I don't need any communications
+-- to start... Well not exactly. I still need to know that my partners
+-- are actually also doing the appropriate thing. This (virtual) information
+-- has to be delivered to me from my supervisor. Which again is only possible
+-- if my supervisor is behaving correctly and going to give me that information.
+-- Thus matching choreographies are not solvable from an "information"
+-- point of view.
+--
+-- Now assume that the type system can guarantee me that, if I know my partners,
+-- that they are doing the correct thing.
+--
+-- For that, we take choreographies as basis. Partial implementations are especially
+-- marked. The program is only well-written if it is a combined term (defined for
+-- all participants).
+--
+----------------------------------------------------------------
+-- About external participants
+--
+-- What we want to allow is: Defining a server which accepts connections
+-- from various clients and executes choreographies with them.
+--
+-- This is an asymetric situation: The choreographies themselves are
+-- for two participants, but the overall architecture is one where
+-- the server does not know the names and locations of its clients before-
+-- hand. This means that we are required to encode this somehow.
+--
+-- This means, we have a two-loc choreography T.
+--
+-- T : CommType{0,α}
+-- T = ?
+--
+-- Now we want to create a server which does not know its clients.
+--
+-- Server : {0} -[ ν α. T{0,(α)} ]-> 𝟙＠0
+--
+-- The interesting thing is that `ν α` is part of the CommType.
+-- Which makes sense since there has to happen a communication
+-- to connect a client with the server.
+--
+
 
 ----------------------------------------------------------------
 -- Current questions:
