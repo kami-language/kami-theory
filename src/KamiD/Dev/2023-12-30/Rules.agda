@@ -532,6 +532,143 @@ J1 refl-≣ F f x = refl-≣
 -- Which makes sense since there has to happen a communication
 -- to connect a client with the server.
 --
+----------------------------------------------------------------
+-- Indeterminacy
+--
+-- Assume I have three locations {0,1,2}. Now we want to write a
+-- CommType{0,1,2} which expresses the fact that 2 will receive a
+-- message from either 0 or 1, without knowing from whom - until
+-- it gets the message.
+--
+-- This means we have something like:
+--
+-- S : CommType{0,1,2}
+-- S = μ＠0 ∈ {1,2}. [ A ](μ → 0)
+--
+-- Now:
+-- s₁ : {(0),1,(2)} -> A＠1 -[ S ]-> 𝟙＠1
+-- s₁ a = (μ = 1) , a
+--
+-- s₂ : {(0),(1),2} -[ S ]-> 𝟙＠2
+-- s₂ = (μ = 1) , tt
+--
+-- s₀ : {0,(1),(2)} -[ S ]-> A＠0
+-- s₀ = (select-hole μ) , hole a , a
+--
+-- We need that both s₁ and s₂ decide on the same role to send,
+-- s₀ does not need to participate in the decision, only has to
+-- receive the outcome.
+--
+-- But this is like this because μ is in a contravariant position.
+-- If we had `μ∈{1,2}. [ A ](0 → μ)`, then we would send a message
+-- to either of {1,2} - but these processes don't know who is going
+-- to be the target. We might say that there has to be some `μ＠{0,1,2}`,
+-- though we don't care how it is decided. So we might say:
+--
+-- S : μ＠{0,1,2} ∈ {1,2} -> CommType{0,1,2}
+-- S μ = [ A ](μ → 0)
+--
+-- s₁ : (μ : {1,2} ＠{0,1,2}) -> A＠μ -[ S μ ]-> A＠0
+--
+-- So what we need is some communication which can create
+--
+-- f : {0,1,2} -> X -> {1,2}＠{0,1,2}
+-- f = ?
+--
+-- Then we can do
+-- g : {0,1,2} -> (x : X) -> A＠(f x) -[ S (f x) ]-> A＠0
+--
+-- The thing is that in this case, the participants are already clear.
+-- When we have a server and a random client though, the participants
+-- are potentially everyone on the internet.
+--
+-- This means that the procedure to choose who is going to connect to
+-- the server involves an arbiter. But that does not solve the underlying
+-- problem. Since there still needs to be some connection event where one
+-- client connects to the arbiter, who doesn't know where the connection
+-- might come from.
+--
+-- The solution that first, there has to be a communication which decides
+-- the source-role is not applicable since this would be a communication
+-- between all devices on the net.
+--
+-- This means that there is a CommType as follows:
+--
+-- T : CommType{0,1,2}
+-- T = (Open μ∈{1,2} → 0) ⊗ [ A ](μ → 0)
+--
+-- s₁ : {(0),1,(2)} -[ T ]-> 𝟙
+-- s₁ = open 0 , a₁ | tt
+--
+-- s₂ : {(0),1,(2)} -[ T ]-> 𝟙
+-- s₂ = open 0 , a₂ | tt
+--
+-- The interesting thing is that we don't know whether the connection
+-- will be successful. 
+--
+-- Also, this makes the 1 and 2 participants of T more optional.
+-- We don't know whether they will participate...
+--
+-- T : CommType{0,{1,2}}
+-- T = (Open μ∈{1,2} → 0) ⊗ [ A ](μ → 0)
+--                            ~~~~~~~~~~~~
+--                            ^ : CommType{0,μ} <- here μ is no longer optional,
+--                                                 because a decision has been made.
+--
+-- This means that T does not have to be implemented for the optional roles...
+-- But we need a "global name" for other processes to participate?
+-- Or we say that `Port 5000 : RoleSet`, and:
+--
+-- T : (R : Roleset) -> CommType{0,{R}}
+-- T = (Open μ∈R → 0) ⊗ [ A ](μ → 0)
+--
+-- Then we can:
+-- main =
+--   let R : Roleset
+--       R = newroleset
+--
+--       t : {0} -[ T R {0} ]-> 𝟙
+--       t = ?
+--
+--       s : {1 ∈ R} -[ T (1∈R) {1} ]-> 𝟙
+--       s = ?
+--
+-- Let's reiterate:
+-- T : (R : RoleSet) -> CommType{0,μ∈R,ν∈R}
+-- T R = Accept μ. [ A ](μ → 0) ⊗ Accept ν. [ A ](0 → ν)
+--
+-- t₀ : (R : RoleSet) -[ T R ＠ 0 ]-> 𝟙
+-- t₀ R = accept μ , hole a , accept ν , a
+--
+-- R : RoleSet
+-- R = Global
+--
+-- t₁ : {1} -> A＠1 -[ T R ＠ 1 ]-> A＠1
+-- t₁ a = connect μ { μ = 1 ↦ a , a                                               : T R ＠ 1 (μ ≔ 1)
+--                  | μ ≠ 1 ↦ connect ν { ν = 1 ↦ hole b , b | ν ≠ 1 ↦ a }     : T R ＠ 1 (μ ≠ 1)
+--                  }                      ~~~~~~~~~~~~~~~~~~~
+--                                         ^ : T R ＠ 1 (μ ≠ 1)(ν = 1)
+--
+-- Now to reduce these terms, we need to know the exact R, and we need to
+-- consider all possibilities for (μ ∈ R , ν ∈ R).
+--
+-- Can we extract the indeterministic source or do we have to apply it step-by-step?
+-- If things get dependently typed, step-by-step is the only way.
+--
+-- Given a T : CommType{...}, we get Trace T : TraceType{...}, the tracetype
+-- tells us which choices appear during execution.
+--
+-- If we have a term `t : {...} -[ T ]-> X`, then we can compute
+-- `t ⇝[ c ] : X` if we have `c : Trace T`. For choreographies
+-- this `Trace T` is a singleton type because the communication
+-- happens deterministically, once one knows all input data. For
+-- more advanced communication patterns this is not so. Thus, we can
+-- forget the -[ T ]-> annotation only if `Trace T` is trivial.
+--
+-- Adding open connections with `Accept μ. t` terms, the trace type
+-- is no longer deterministic (contractible). This means that the
+-- execution of such a term might (!) be nondeterministic, and can
+-- be only predicted if we know all choices beforehand (c : Trace T).
 
 
 ----------------------------------------------------------------
