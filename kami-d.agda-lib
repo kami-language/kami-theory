@@ -1,4 +1,4 @@
 name: kami-d
-depend: standard-library-2.0 agora cubical-0.5
+depend: standard-library-2.0 agora
 include: ./src
 flags: -WnoUnsupportedIndexedMatch
