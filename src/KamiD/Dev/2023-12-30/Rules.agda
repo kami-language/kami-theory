@@ -146,6 +146,11 @@ J1 refl-≣ F f x = refl-≣
 --  T zero [] = 𝟙
 --  T (suc n) (x ∷ xs) = [ Val x ](0 → 1) ⊗ T n xs
 --
+--
+--  T : {} ⊢ ∀ (n : ℕ ＠ {0 , 1}) -> CommType{0,1}
+--  T zero = 𝟙
+--  T (suc n) = [ A ](0 → 1) ⊗ T n
+--
 -- NOTES:
 --  The problematic part is letting "1" know which branch we take.
 --  The rule is that if we pattern match on a value which is available
@@ -669,6 +674,28 @@ J1 refl-≣ F f x = refl-≣
 -- is no longer deterministic (contractible). This means that the
 -- execution of such a term might (!) be nondeterministic, and can
 -- be only predicted if we know all choices beforehand (c : Trace T).
+--
+--
+----------------------------------------------------------------
+-- Variable forwarding
+--
+-- For channel types to be dependent, we need to have knowledge over a common
+-- Γ{0,1} context. Now assume I have [ a : A＠0 ], how do I get the knowledge
+-- accross to 1? 
+--
+-- If I have:
+--
+-- T : CommType{0,1}
+-- T = ⟮0 → 1⟯[ A ] ⊗ ⟮1 → 0⟯[ B ]
+--
+-- t₁ : (-A ⊗ +B) -> T↓1
+-- t₁ (a , b) = hole x , (a := x) b
+--
+-- or
+--
+-- t₁ (a , b) = a , b
+--
+--
 
 
 ----------------------------------------------------------------
