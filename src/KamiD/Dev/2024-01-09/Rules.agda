@@ -11,73 +11,16 @@ open import Relation.Nullary.Decidable.Core
 open import KamiD.Dev.2024-01-09.Core hiding (_＠_)
 open import KamiD.Dev.2024-01-09.Subset
 
--- T : CommType{0,1}
--- T = ⟮0 → 1⟯[ A ] ⊗ ⟮1 → 0⟯[ B ]
---
--- "t₀ : (f : (A -> B)＠1) -[ T ＠ 1 ]-> 𝟙"
---
--- "t₁ : (a : A＠0) -[ T ＠ 0 ]-> B＠0"
---
--- t₀ : (f : A -> B) -> ∏ (a : A). ∑ (b : B). 𝟙
--- t₁ : A -> ∑ (a : A). ∏ (b : B). B
---
---
 
-
-
--- spaces
--- data Space : 𝒰₀
--- data _⊢Subspace : Space -> 𝒰₀
--- data _⊢Pt : Space -> 𝒰₀
--- data _⊢Ln_⇾_ : (Σ : Space) -> (a b : Σ ⊢Pt) -> 𝒰₀
-
--- private variable
---   Σ : Space
-
--- times
--- data Time : 𝒰₀
--- data _⊢T : Time -> 𝒰₀
--- data _⊢TExt : Time -> 𝒰₀
--- data _⊢T_ : (Τ : Time) -> Τ ⊢TExt -> 𝒰₀
--- data _⊢_<T_ : (Τ : Time) -> ∀{X} -> (s t : Τ ⊢T X) -> 𝒰₀
-
--- private variable
---   Τ : Time
-
-
----------------------------------------------
--- parameters for basic types
-
-data Chargelike : 𝒰₀ where
-  ◌ +- : Chargelike
-
-private variable
-  c : Chargelike
-
-data Timelike : 𝒰₀ where
-  𝟙 : Timelike
-
-private variable
-  τ : Timelike
-
-data Charge : 𝒰₀ where
-  + - : Charge
-
--- data _⇌_ : Layer -> Layer -> 𝒰₀ where
---   ⁺ ⁻ : 𝟙 ⇌ ℂ
-
--- Layer : 𝒰₀
--- Layer = Chargelike ×-𝒰 Timelike
-
-data Layer : 𝒰₁ where
-  Local : Layer
-  Global : (A : 𝒰₀) -> Layer
 
 
 
 -------------------
 -- we have a layer system for the context argument
 
+data Layer : 𝒰₁ where
+  Local : Layer
+  Global : (A : 𝒰₀) -> Layer
 
 private variable
   K L : Layer
@@ -89,23 +32,18 @@ data Ctx : Layer -> 𝒰₁
 private variable
   Γ Δ : Ctx L
 
+---------------------------------------------
+-- context morphisms
+
 data _⇛_ : Ctx L -> Ctx L -> 𝒰₁
 data _⇛♮_ : Ctx L -> Ctx L -> 𝒰₁
 
--- -- data _⊢VType_,_ : ∀ Σ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> ℕ -> 𝒰₀
--- data _⊢PtType_ : ∀ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> 𝒰₀
--- data _⊢PtBase_ : ∀ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> 𝒰₀
--- data _⊢LnType_ : ∀ (Γ : Ctx Σ Τ) -> ∀{a b} -> Σ ⊢Ln a ⇾ b -> 𝒰₀
 
--- data _⊢TypeOp : (Γ : Ctx L) -> 𝒰₀
-
--- terms
-
--- 𝕠-Ctx : ∀{c} -> Ctx (c , τ) -> Ctx (◌ , τ)
+---------------------------------------------
+-- types
 
 private variable
   R S : 𝒰₀
-
 
 data _⊢Type : ∀ (Γ : Ctx L) -> 𝒰₁
 data _⊢CommType : (Γ : Ctx (Global R)) -> 𝒰₁
@@ -127,10 +65,6 @@ KindedType (Comm R) Γ = Γ ⊢CommType
 
 syntax KindedType L Γ = Γ ⊢ L Type
 
--- _⊢Type : ∀ (Γ : Ctx L) -> 𝒰₀
--- _⊢Type {L = L} Γ = 𝕠-Ctx Γ ⊢Type (fst L)
-
--- 𝕠-Type : ∀{c} -> {Γ : Ctx (◌ , τ)} -> Γ ⊢Type -> Γ ⊢Type
 
 private variable
   A : Γ ⊢Type
@@ -140,8 +74,6 @@ data _⊢Var_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₁
 data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₁
 
 
----------------------------------------------
--- types
 
 
 
@@ -151,21 +83,6 @@ data Ctx where
 
 
 
--- data _⊢Ctx : Ctx L -> 𝒰₀ where
---   [] : Γ ⊢Ctx
---   [_]∷_ :  (A : Γ ⊢Type) -> Γ ,[ A ] ⊢Ctx -> Γ ⊢Ctx
-
--- infixl 50 [_]∷_
-
-
-
--- _⋆-Ctx_ : (Γ : Ctx L) -> Γ ⊢Ctx -> Ctx L
--- Γ ⋆-Ctx [] = Γ
--- Γ ⋆-Ctx ([ A ]∷ Δ) = Γ ,[ A ] ⋆-Ctx Δ
-
--- _,[_]-⊢Ctx : (E : Γ ⊢Ctx) -> (Γ ⋆-Ctx E) ⊢Type -> Γ ⊢Ctx
--- [] ,[ x ]-⊢Ctx = [ x ]∷ []
--- ([ A ]∷ E) ,[ x ]-⊢Ctx = [ A ]∷ (E ,[ x ]-⊢Ctx)
 
 
 data _⊢Ctx₊ : Ctx L -> 𝒰₁
@@ -210,66 +127,19 @@ infixl 30 _⋆-Ctx₊_ _⋆-Ctx₊₂_ _⋆-Ctx_ [_]Ctx₊∷_
 
 
 
--- _⋆⁻¹-Ctx_ : (Γ : Ctx L) -> Γ ⊢Ctx -> Ctx L
--- [] ⋆⁻¹-Ctx Δ = [] ⋆-Ctx Δ
--- (Γ ,[ x ]) ⋆⁻¹-Ctx Δ = Γ ⋆⁻¹-Ctx [ x ]∷ Δ
-
-{-
--}
 
 
 
 
--- 𝕠-Ctx : Ctx (+- , τ) -> Ctx (◌ , τ)
--- 𝕠-Type : ∀{Γ : Ctx (+- , τ)} -> Γ ⊢Type -> 𝕠-Ctx Γ ⊢Type
-
--- record hasNotation-𝕠 (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
---   field 𝕠 : (a : A) -> B a
-
--- open hasNotation-𝕠 {{...}} public
-
--- instance
---   hasNotation-𝕠:Ctx : hasNotation-𝕠 (Ctx (+- , τ)) (const (Ctx (◌ , τ)))
---   hasNotation-𝕠:Ctx = record { 𝕠 = 𝕠-Ctx }
-
--- instance
---   hasNotation-𝕠:Type : ∀{Γ : Ctx (+- , τ)} -> hasNotation-𝕠 (Γ ⊢Type) (const (𝕠 Γ ⊢Type))
---   hasNotation-𝕠:Type = record { 𝕠 = 𝕠-Type }
-
--- 𝕠-Ctx [] = []
--- 𝕠-Ctx (Γ ,[ A ]) = 𝕠-Ctx Γ ,[ 𝕠-Type A ]
-
--- 𝕠-Ctx₊ : Γ ⊢Ctx₊ -> 𝕠-Ctx Γ ⊢Ctx₊
-
--- β-𝕠-Ctx-, : (A : Γ ⊢Type) -> 𝕠-Ctx (Γ ,[ A ]) ≣ 𝕠-Ctx Γ ,[ 𝕠-Type A ]
--- β-𝕠-Ctx-, = {!!}
-
--- β-𝕠-Ctx-⋆ : ∀{E} -> 𝕠-Ctx (Γ ⋆-Ctx₊ E) ≣ 𝕠-Ctx Γ ⋆-Ctx₊ 𝕠-Ctx₊ E
-
--- 𝕠-Ctx₊ [] = []
--- 𝕠-Ctx₊ (E ,[ x ]) = 𝕠-Ctx₊ E ,[ transp-≣ (cong-≣ _⊢Type (β-𝕠-Ctx-⋆ {E = E})) (𝕠-Type x) ]
-
--- β-𝕠-Ctx-⋆ {E = []} = refl-≣
--- β-𝕠-Ctx-⋆ {E = E ,[ x ]} = {!!}
---   -- let X = J1 (β-𝕠-Ctx-⋆ {E = E}) _⊢Type _,[_] (𝕠-Type x)
---   -- in {!!} -- sym-≣ X
-
--- {-# REWRITE β-𝕠-Ctx-, β-𝕠-Ctx-⋆ #-}
 
 
 
 
--- Restr-Ctx : (Γ : Ctx L) -> ∀{X} -> Γ ⊢Var X -> Ctx L
--- Restr-Type : {Γ : Ctx L} -> ∀(X : Γ ⊢Type) -> (v : Γ ⊢Var X) -> Restr-Ctx Γ v ⊢Type
-
--- _[_≔_] : ∀(Γ : Ctx (+- , τ)) {X} -> (v : Γ ⊢Var X) -> Restr-Ctx Γ v ⊢ Restr-Type X v -> Ctx (+- , τ)
 
 
 
 
 infixl 40 _,[_]
--- infixl 60 ⟨_⦙_
-
 
 _[_]-Type : Δ ⊢Type -> Γ ⇛♮ Δ -> Γ ⊢Type
 
@@ -286,17 +156,11 @@ data _⇛_ where
 data _⇛♮_ where
   ε : Γ ⇛♮ []
   _,_ : ∀{A} -> (σ : Γ ⇛♮ Δ) -> Γ ⊢ (A [ σ ]-Type) -> Γ ⇛♮ Δ ,[ A ]
-  -- _×-⇛♮_ : (σ : Γ ⇛♮ Δ) -> (A : Δ ⊢Type) -> Γ ,[ A [ σ ]-Type ] ⇛♮ Δ ,[ A ]
-
-
-
--- 𝕠-⇛ : (Γ ⇛ Δ) -> 𝕠-Ctx Γ ⇛ 𝕠-Ctx Δ
--- 𝕠-⇛ = {!!}
 
 
 
 
--- σ-subst-Ctx : ∀{A : Γ ⊢Type} {v : Γ ⊢Var A} {x} -> (Γ [ v ≔ x ]) ⇛ Γ
+
 
 
 
@@ -318,8 +182,6 @@ Flat : Γ ⊢ Comm R Type -> Γ ⊢ Global R Type
 Flat = {!!}
 
 
-
-
 data _⊢Type where
   located : (A : Subset R) -> Γ ⇂ A ⊢ Local Type -> Γ ⊢ Global R Type
 
@@ -331,12 +193,8 @@ data _⊢Type where
 
   ᶜᵒ_ : Γ ⊢ Local Type -> Γ ⊢ Local Type
 
-  -- ⨉ : ∀{c} -> Charge -> (A : Γ ⊢Type) -> (B : Γ ,[ 𝕠-Type A ] ⊢Type) -> Γ ⊢Type
-  -- D : Charge -> Γ ⊢Type -> Γ ⊢Type +-
-  -- Fam : Γ ⊢ Base NN -> Γ ⊢Type
-  -- _⊗_ : Γ ⊢Type -> Γ ⊢Type -> Γ ⊢Type
+  Val : {U V : Subset R} -> (A : Γ ⇂ (U ∪ V) ⊢ Local Type) -> Γ ⊢ located U A -> Γ ⇂ (U ∪ V) ⊢ Local Type
 
--- infixl 40 _⊗_
 
 syntax located A T = T ＠ A
 
@@ -346,7 +204,6 @@ data _⊢CommType where
   ⩒⟮_⟯[_]_ : (a : R) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
   ⩑⟮_⟯[_]_ : (a : R) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
   End : Γ ⊢ Comm R Type
-
 
 _↷-Ctx_ : (f : R -> S) -> Ctx (Global R) -> Ctx (Global S)
 _↷-Comm_ : (f : R -> S) -> Γ ⊢ Comm R Type -> f ↷-Ctx Γ ⊢ Comm S Type
@@ -386,23 +243,12 @@ reduce-Global T = {!!}
 infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Global_
 
 
--- pattern ⨇ X Y = ⨉ + X Y
--- pattern ⨈ X Y = ⨉ - X Y
--- pattern D⁺ A = D + A
--- pattern D⁻ A = D - A
--- pattern BN = Base NN
-
--- 𝕠-Type {Γ = Γ} (D c X) = X
--- 𝕠-Type {Γ = Γ} (⨉ c X Y) = ⨉ c (𝕠-Type X) (𝕠-Type Y)
--- 𝕠-Type ℍ = ℍ
 
 
 wk-Type : ∀{A} -> Γ ⊢Type -> Γ ,[ A ] ⊢Type
 
 
 
--- 𝕠-Var : {Γ : Ctx (+- , τ)} -> {A : 𝕠 Γ ⊢Type} -> Γ ⊢Var (D⁻ A) -> 𝕠 Γ ⊢Var A
--- 𝕠-Var = {!!}
 
 
 
@@ -414,71 +260,22 @@ data _⊢Var_ where
 --   zero : Γ ,[ A ] ⊢Var
 --   suc : Γ ⊢Var -> Γ ,[ A ] ⊢Var
 
--- _⇂_ : (Γ : Ctx L) -> Γ ⊢Var -> Ctx L
--- (Γ ,[ A ]) ⇂ zero = Γ
--- (Γ ,[ A ]) ⇂ suc i = Γ ⇂ i
-
--- infixl 70 _⇂_
 
 
 
--- Restr-Ctx (Γ ,[ A ]) zero = Γ
--- Restr-Ctx (Γ ,[ A ]) (suc v) = Restr-Ctx Γ v
-
--- Restr-Type .(wk-Type A) (zero {A = A}) = A
--- Restr-Type .(wk-Type A) (suc {A = A} v) = Restr-Type A v
-
--- _[_≔_] (Γ ,[ A ]) (zero {A = A}) x = Γ
--- _[_≔_] (Γ ,[ B ]) {A} (suc v) x = (Γ [ v ≔ x ]) ,[ B [ ♮-⇛ σ-subst-Ctx ]-Type ]
-
-
-
--- transp-Type : Γ ⇂ ⦗ i ⦘ ∪ ⦗ j ⦘ ⊢ Local Type -> 
 
 
 data _⊢_ where
-  var : ∀{A} -> Γ ⊢Var A -> Γ ⊢ A
+  var : Γ ⊢Var A -> Γ ⊢ A
+  loc : (U : Subset R) -> Γ ⇂ U ⊢ A -> Γ ⊢ located U A
 
   -- _↝_ : {i j : n ⊢Role} {A : Γ ⇂ ⦗ i ⦘ ∪ ⦗ j ⦘ ⊢ Local Type } -> (aᵢ : Γ ⇂ ⦗ i ⦘ ⊢ A) -> (aⱼ : Γ ⇂ ⦗ j ⦘ ⊢ (ᶜᵒ A)) -> Γ ⊢ ⟮ i ↝ j ⟯[ A ]
-
-
-  -- η : {Γ : Ctx (+- , τ)} -> (A : 𝕠 Γ ⊢Type) -> {B : Γ ⊢Type} -> Γ ,[ D⁻ A ] ⊢ wk-Type B -> Γ ⊢ B
-
   -- _,_ : {A B : Γ ⊢Type} -> Γ ⊢ A -> Γ ⊢ B -> Γ ⊢ (A ⊗ B)
 
 
-  -- Λ_ : ∀{X A} -> Γ ,[ X ] ⊢ A -> Γ ⊢ (⨇ X A)
-  -- -- _,_ : ∀{A B} -> Γ ⊢ A -> Γ ,[ A ] ⊢ B -> Γ ⊢ ⨈ A B
-  -- inv : ∀{X} -> Γ ⊢ (D⁺ X) -> Γ ⊢ (D⁻ X)
-  -- -- [_≔_]_ : ∀{E} -> (X : 𝕠 Γ ⊢Type) -> (v : Γ ⋆-Ctx₊ E ⊢ D⁻ )
-
-  -- -- [_≔_]_ : ∀{τ Γ} {X : 𝕠 {τ = τ} Γ ⊢Type} -> (v : Γ ⊢Var (D⁻ X)) -> (x : Γ ⊢ (D⁺ X)) -> ∀{Y}
-  -- --   -> (Γ [ v ≔ inv x ]) ⊢ Y
-  -- --   -> Γ ⊢ (Y [ ι-subst-Ctx ])
-  -- end : Γ ⊢ (D⁺ (Base End))
-  -- n0 : Γ ⊢ Base NN
-
-  -- -- WARNING: this is probably wrong because
-  -- -- this means that we can use all negative
-  -- -- things in Γ
-  -- d⁺ : ∀{Γ : Ctx (+- , τ)} -> ∀{A} -> 𝕠 Γ ⊢ A -> Γ ⊢ (D⁺ A)
 
 
 
--- 𝕠-Term : Γ ⊢ A -> 𝕠-Ctx Γ ⊢ 𝕠-Type A
--- 𝕠-Term = {!!}
-
-
--- ⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx L) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
--- ⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≣ (cong-≣ (Γ ⊢_) p) x
-
--- id-⇛♮ : Γ ⇛♮ Γ
-
--- {-# REWRITE β-id-Type #-}
-
--- _[_]-Ctx₊ : Δ ⊢Ctx₊ -> Γ ⇛♮ Δ -> Γ ⊢Ctx₊
-
--- under_by_[_]-Type : ∀ E -> ((Δ ⋆-Ctx₊ E) ⊢Type) -> (σ : Γ ⇛♮ Δ) -> (Γ ⋆-Ctx₊ (E [ σ ]-Ctx₊)) ⊢Type
 
 
 module Examples where
@@ -488,6 +285,8 @@ module Examples where
   T₀ : [] ⊢ Comm (Fin 3) Type
   T₀ = ⟮ # 0 ↝ # 1 ⟯[ Base NN ] ⟮ # 1 ↝ # 2 ⟯[ Base NN ] End
 
+  T₁ : [] ,[ Base NN ＠ ⦗ # 0 ⦘ ] ⊢ Comm (Fin 2) Type
+  T₁ = {!!} -- ⟮ # 0 ↝ # 1 ⟯[ Val {U = ⦗ # 0 ⦘} {V = ⦗ # 1 ⦘} (Base NN) (loc ⦗ # 0 ⦘ (var {!zero!})) ] {!!}
 
 
 
@@ -508,6 +307,15 @@ module Examples where
 
   -- Λ (Λ ([ zero ≔ var (suc zero) ] end))
 
+
+
+
+-- ⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx L) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
+-- ⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≣ (cong-≣ (Γ ⊢_) p) x
+
+-- id-⇛♮ : Γ ⇛♮ Γ
+
+-- {-# REWRITE β-id-Type #-}
 
 
 
