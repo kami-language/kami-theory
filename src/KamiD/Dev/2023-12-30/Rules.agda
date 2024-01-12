@@ -696,6 +696,59 @@ J1 refl-≣ F f x = refl-≣
 -- t₁ (a , b) = a , b
 --
 --
+----------------------------------------------------------------
+-- Examples for Olivia
+--
+-- T : CommType{0,1}
+-- T = (a : ⟮0 → 1⟯[ A ]) ⊗ ⟮1 → 0⟯[ B a ]
+--
+-- t₀ : (f : (A -> B)＠1) -[ T ＠ 1 ]-> 𝟙
+--
+-- t₁ : (a : A＠0) -[ T ＠ 0 ]-> B＠0
+--
+--
+--
+-- Also eine Frage an dich, angenommen wir haben
+--
+-- T : CommType{0,1}
+-- T = ⟮0 → 1⟯[ A ] ⊗ ⟮1 → 0⟯[ B ]
+--
+-- und dann wollen wir T fuer beide rollen einzeln implementieren. Die Idee ist, dass fuer die implementation *nur* die lokalen typen relevant sind und es ueberhaupt keine rollenannotationen gibt. Ich hab jetzt davor bei unseren Beispielen aber trotzdem immer so globale types (also mit @0 und @1 annotationen) fuer die lokalen implementationen t0 und t1 geschrieben... Wie wuerdest du die echten lokalen types fuer die beiden folgenden zueinander passenden implementationen von T aufschreiben? Ich hab die mal wieder mit so "fake local types" aufgeschrieben:
+--
+-- t₀ : (f : (A -> B)＠1) -[ T ＠ 1 ]-> 𝟙
+--
+-- t₁ : (a : A＠0) -[ T ＠ 0 ]-> B＠0
+--
+--
+----------------------------------------------------------------
+-- Without negative types
+--
+-- T : CommType{0,1}
+-- T = [ A ](0 → 1)
+--
+-- t₀ : A -> ∑ A -> 𝟙
+-- t₀ a = a , tt
+--
+-- t₁ : ∏ A -> A
+-- t₁ = λ a ↦ a
+--
+-- t : (a : A ＠ 0) -[ T ]-> A＠1
+-- t a = (b＠1 ⇜ a＠0) ▶ b
+--
+-- _⇜_▶_
+--
+----------------------------------------------------------------
+--
+-- T : CommType{0,1,2}
+-- T = ⟮0 → 1⟯[ A ] ⊗ ⟮1 → 2⟯[ B ] ⊗ ⟮2 → 0⟯[ B ]
+--
+-- T＠0 = ∑ 
+--
+-- h : (a : A＠0) -> (t : T) -> C a ?
+-- Γ ⊢ T CommType      Γ , ↓ T ⊢ C Type
+-- ------------------------------------
+--         Γ ⊢ -[ T ]-> C Type
+
 
 
 ----------------------------------------------------------------

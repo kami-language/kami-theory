@@ -11,7 +11,17 @@ open import Relation.Nullary.Decidable.Core
 open import KamiD.Dev.2024-01-09.Core
 open import KamiD.Dev.2024-01-09.Subset
 
-
+-- T : CommType{0,1}
+-- T = ⟮0 → 1⟯[ A ] ⊗ ⟮1 → 0⟯[ B ]
+--
+-- "t₀ : (f : (A -> B)＠1) -[ T ＠ 1 ]-> 𝟙"
+--
+-- "t₁ : (a : A＠0) -[ T ＠ 0 ]-> B＠0"
+--
+-- t₀ : (f : A -> B) -> ∏ (a : A). ∑ (b : B). 𝟙
+-- t₁ : A -> ∑ (a : A). ∏ (b : B). B
+--
+--
 
 
 
@@ -125,6 +135,7 @@ private variable
 
 data _⊢Var_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₀
 data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₀
+
 
 ---------------------------------------------
 -- types
@@ -327,6 +338,7 @@ data _⊢Type where
 infixl 40 _⊗_
 
 
+
 -- pattern ⨇ X Y = ⨉ + X Y
 -- pattern ⨈ X Y = ⨉ - X Y
 -- pattern D⁺ A = D + A
@@ -374,6 +386,7 @@ data _⊢Var_ where
 
 
 
+-- transp-Type : Γ ⇂ ⦗ i ⦘ ∪ ⦗ j ⦘ ⊢ Local Type -> 
 
 
 data _⊢_ where
