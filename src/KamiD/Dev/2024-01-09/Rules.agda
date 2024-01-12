@@ -8,7 +8,7 @@ open import Data.Fin hiding (_-_)
 open import Data.Nat hiding (_!)
 open import Relation.Nullary.Decidable.Core
 
-open import KamiD.Dev.2024-01-09.Core
+open import KamiD.Dev.2024-01-09.Core hiding (_＠_)
 open import KamiD.Dev.2024-01-09.Subset
 
 -- T : CommType{0,1}
@@ -69,9 +69,9 @@ data Charge : 𝒰₀ where
 -- Layer : 𝒰₀
 -- Layer = Chargelike ×-𝒰 Timelike
 
-data Layer : 𝒰₀ where
+data Layer : 𝒰₁ where
   Local : Layer
-  Global : ℕ -> Layer
+  Global : (A : 𝒰₀) -> Layer
 
 
 
@@ -84,13 +84,13 @@ private variable
 
 
 -- types
-data Ctx : Layer -> 𝒰₀
+data Ctx : Layer -> 𝒰₁
 
 private variable
   Γ Δ : Ctx L
 
-data _⇛_ : Ctx L -> Ctx L -> 𝒰₀
-data _⇛♮_ : Ctx L -> Ctx L -> 𝒰₀
+data _⇛_ : Ctx L -> Ctx L -> 𝒰₁
+data _⇛♮_ : Ctx L -> Ctx L -> 𝒰₁
 
 -- -- data _⊢VType_,_ : ∀ Σ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> ℕ -> 𝒰₀
 -- data _⊢PtType_ : ∀ (Γ : Ctx Σ Τ) -> Σ ⊢Pt -> 𝒰₀
@@ -103,24 +103,27 @@ data _⇛♮_ : Ctx L -> Ctx L -> 𝒰₀
 
 -- 𝕠-Ctx : ∀{c} -> Ctx (c , τ) -> Ctx (◌ , τ)
 
+private variable
+  R S : 𝒰₀
 
-data _⊢Type : ∀ (Γ : Ctx L) -> 𝒰₀
-data _⊢CommType : (Γ : Ctx (Global n)) -> 𝒰₀
 
-data Kind : 𝒰₀ where
+data _⊢Type : ∀ (Γ : Ctx L) -> 𝒰₁
+data _⊢CommType : (Γ : Ctx (Global R)) -> 𝒰₁
+
+data Kind : 𝒰₁ where
   Local : Kind
-  Global : (n : ℕ) -> Kind
-  Comm : (n : ℕ) -> Kind
+  Global : (A : 𝒰₀) -> Kind
+  Comm : (A : 𝒰₀) -> Kind
 
 toLayer : Kind -> Layer
 toLayer Local = Local
-toLayer (Global n) = Global n
-toLayer (Comm n) = Global n
+toLayer (Global R) = Global R
+toLayer (Comm R) = Global R
 
-KindedType : ∀ k -> (Γ : Ctx (toLayer k)) -> 𝒰₀
+KindedType : ∀ k -> (Γ : Ctx (toLayer k)) -> 𝒰₁
 KindedType Local Γ = Γ ⊢Type
-KindedType (Global n) Γ = Γ ⊢Type
-KindedType (Comm n) Γ = Γ ⊢CommType
+KindedType (Global R) Γ = Γ ⊢Type
+KindedType (Comm R) Γ = Γ ⊢CommType
 
 syntax KindedType L Γ = Γ ⊢ L Type
 
@@ -133,8 +136,8 @@ private variable
   A : Γ ⊢Type
   B : Γ ⊢Type
 
-data _⊢Var_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₀
-data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₀
+data _⊢Var_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₁
+data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₁
 
 
 ---------------------------------------------
@@ -165,7 +168,7 @@ data Ctx where
 -- ([ A ]∷ E) ,[ x ]-⊢Ctx = [ A ]∷ (E ,[ x ]-⊢Ctx)
 
 
-data _⊢Ctx₊ : Ctx L -> 𝒰₀
+data _⊢Ctx₊ : Ctx L -> 𝒰₁
 
 _⋆-Ctx₊_ : ∀ (Γ : Ctx L) -> Γ ⊢Ctx₊ -> Ctx L
 
@@ -303,28 +306,26 @@ data BaseType : 𝒰₀ where
 _⊢Role : ℕ -> 𝒰₀
 _⊢Role n = Fin n
 
-_⇂_ : Ctx (Global n) -> Subset (Fin n) -> Ctx Local
+_⇂_ : Ctx (Global R) -> Subset R -> Ctx Local
 _⇂_ = {!!}
 
-_⇂-Type_ : Γ ⊢ Global n Type -> (i : n ⊢Role) -> Γ ⇂ ⦗ i ⦘ ⊢ Local Type
-_⇂-Type_ = {!!}
+-- _⇂-Type_ : Γ ⊢ Global R Type -> (i : n ⊢Role) -> Γ ⇂ ⦗ i ⦘ ⊢ Local Type
+-- _⇂-Type_ = {!!}
 
-infixl 25 _⇂_ _⇂-Type_
+infixl 25 _⇂_ -- _⇂-Type_
 
-Flat : Γ ⊢ Comm n Type -> Γ ⊢ Global n Type
+Flat : Γ ⊢ Comm R Type -> Γ ⊢ Global R Type
 Flat = {!!}
 
-data _⊢CommType where
-  ⟮_↝_⟯[_] : (a b : n ⊢Role) -> Γ ⇂ ⦗ a ⦘ ∪ ⦗ b ⦘ ⊢ Local Type -> Γ ⊢ Comm n Type
+
+
 
 data _⊢Type where
-  located : (a : n ⊢Role) -> Γ ⇂ ⦗ a ⦘ ⊢ Local Type -> Γ ⊢ Global n Type
+  located : (A : Subset R) -> Γ ⇂ A ⊢ Local Type -> Γ ⊢ Global R Type
 
   Base : ∀{Γ : Ctx L} -> BaseType -> Γ ⊢Type
 
-  ⟮_↝_⟯[_] : (a b : n ⊢Role) -> Γ ⇂ ⦗ a ⦘ ∪ ⦗ b ⦘ ⊢ Local Type -> Γ ⊢ Global n Type
-
-  _⇒_ : (T : Γ ⊢ Global n Type) -> (B : Γ ,[ T ] ⊢ Global n Type) -> Γ ⊢ Global n Type
+  _⇒_ : (T : Γ ⊢ Global R Type) -> (B : Γ ,[ T ] ⊢ Global R Type) -> Γ ⊢ Global R Type
 
   𝟙 : Γ ⊢Type
 
@@ -335,8 +336,54 @@ data _⊢Type where
   -- Fam : Γ ⊢ Base NN -> Γ ⊢Type
   -- _⊗_ : Γ ⊢Type -> Γ ⊢Type -> Γ ⊢Type
 
-infixl 40 _⊗_
+-- infixl 40 _⊗_
 
+syntax located A T = T ＠ A
+
+
+data _⊢CommType where
+  ⟮_↝_⟯[_]_ : (a b : R) -> (A : Γ ⇂ ⦗ a ⦘ ∪ ⦗ b ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ∪ ⦗ b ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
+  ⩒⟮_⟯[_]_ : (a : R) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
+  ⩑⟮_⟯[_]_ : (a : R) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
+  End : Γ ⊢ Comm R Type
+
+
+_↷-Ctx_ : (f : R -> S) -> Ctx (Global R) -> Ctx (Global S)
+_↷-Comm_ : (f : R -> S) -> Γ ⊢ Comm R Type -> f ↷-Ctx Γ ⊢ Comm S Type
+_↷-Global_ : (f : R -> S) -> Γ ⊢ Global R Type -> f ↷-Ctx Γ ⊢ Global S Type
+
+f ↷-Ctx [] = []
+f ↷-Ctx (Γ ,[ A ]) = f ↷-Ctx Γ ,[ f ↷-Global A ]
+
+f ↷-Global located U x = located {!!} {!!}
+f ↷-Global Base x = {!!}
+f ↷-Global (T ⇒ B) = {!!}
+f ↷-Global 𝟙 = {!!}
+
+f ↷-Comm (⟮ a ↝ b ⟯[ A ] x) = ⟮ f a ↝ f b ⟯[ A ] ({! f ↷-Comm x !})
+f ↷-Comm (⩒⟮ a ⟯[ A ] x) = {!!}
+f ↷-Comm (⩑⟮ a ⟯[ A ] x) = {!!}
+f ↷-Comm End = End
+
+reduce-Ctx : Ctx (Global (Maybe R)) -> Ctx (Global R)
+reduce-Comm : Γ ⊢ Comm (Maybe R) Type -> reduce-Ctx Γ ⊢ Comm R Type
+reduce-Global : Γ ⊢ Global (Maybe R) Type -> reduce-Ctx Γ ⊢ Global R Type
+
+reduce-Ctx [] = []
+reduce-Ctx (Γ ,[ A ]) = reduce-Ctx Γ ,[ reduce-Global A ]
+
+reduce-Comm (⟮ just a ↝ just b ⟯[ A ] x) = ⟮ a ↝ b ⟯[ {!reduce-Global A!} ] {!!}
+reduce-Comm (⟮ just a ↝ left b ⟯[ A ] x) = {!!}
+reduce-Comm (⟮ left a ↝ just b ⟯[ A ] x) = {!!}
+reduce-Comm (⟮ left a ↝ left b ⟯[ A ] x) = {!!}
+reduce-Comm (⩒⟮ a ⟯[ A ] x) = {!!}
+reduce-Comm (⩑⟮ a ⟯[ A ] x) = {!!}
+reduce-Comm End = {!!}
+
+reduce-Global T = {!!}
+
+
+infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Global_
 
 
 -- pattern ⨇ X Y = ⨉ + X Y
@@ -392,7 +439,7 @@ data _⊢Var_ where
 data _⊢_ where
   var : ∀{A} -> Γ ⊢Var A -> Γ ⊢ A
 
-  _↝_ : {i j : n ⊢Role} {A : Γ ⇂ ⦗ i ⦘ ∪ ⦗ j ⦘ ⊢ Local Type } -> (aᵢ : Γ ⇂ ⦗ i ⦘ ⊢ A) -> (aⱼ : Γ ⇂ ⦗ j ⦘ ⊢ (ᶜᵒ A)) -> Γ ⊢ ⟮ i ↝ j ⟯[ A ]
+  -- _↝_ : {i j : n ⊢Role} {A : Γ ⇂ ⦗ i ⦘ ∪ ⦗ j ⦘ ⊢ Local Type } -> (aᵢ : Γ ⇂ ⦗ i ⦘ ⊢ A) -> (aⱼ : Γ ⇂ ⦗ j ⦘ ⊢ (ᶜᵒ A)) -> Γ ⊢ ⟮ i ↝ j ⟯[ A ]
 
 
   -- η : {Γ : Ctx (+- , τ)} -> (A : 𝕠 Γ ⊢Type) -> {B : Γ ⊢Type} -> Γ ,[ D⁻ A ] ⊢ wk-Type B -> Γ ⊢ B
@@ -438,8 +485,11 @@ module Examples where
   emp : Ctx L
   emp = []
 
-  T₀ : [] ⊢ Global 2 Type
-  T₀ = ⟮ # 0 ↝ # 1 ⟯[ Base NN ] ⇒ 𝟙
+  T₀ : [] ⊢ Comm (Fin 3) Type
+  T₀ = ⟮ # 0 ↝ # 1 ⟯[ Base NN ] ⟮ # 1 ↝ # 2 ⟯[ Base NN ] End
+
+
+
 
   -- F1 : emp ⊢ (D⁻ BN) ⊗ (D⁺ BN)
   -- F1 = η BN {!? , ?!}

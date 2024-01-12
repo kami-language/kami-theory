@@ -748,6 +748,17 @@ J1 refl-≣ F f x = refl-≣
 -- Γ ⊢ T CommType      Γ , ↓ T ⊢ C Type
 -- ------------------------------------
 --         Γ ⊢ -[ T ]-> C Type
+--
+----------------------------------------------------------------
+-- Variable forwarding, part 2
+--
+-- We are, in fact, forwarding arbitrary values. Mostly because
+-- variables are not stable under substitution. Now assume that
+-- we have `a : A ＠ 0`. We can form the type `Val{0} a ＠ 1`
+-- which says that we know the value of `a` at location 1.
+-- If we have `t : A ＠ i` and `s : Val{i} t ＠ j` we can build
+-- {t,s} : A ＠{i;j}
+
 
 
 
