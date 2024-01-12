@@ -8,7 +8,7 @@ open import Data.Sum.Base using (_⊎_)
 open import Data.List.Base using (List; []; _∷_)
 
 
-record isStrictOrder {𝑖} (A : Set 𝑖) : Set (lsuc 𝑖) where
+record StrictOrder {𝑖} (A : Set 𝑖) : Set (lsuc 𝑖) where
   field
     _<_ : A → A → Set 𝑖
     <irrefl : ∀ {a : A} → ¬ (a < a)
@@ -16,11 +16,11 @@ record isStrictOrder {𝑖} (A : Set 𝑖) : Set (lsuc 𝑖) where
     <trans : ∀ {a b c : A} → a < b → b < c → a < c
     <conn : ∀ {a b : A} → ¬ (a ≡ b) → (a < b) ⊎ (b < a)
 
-open isStrictOrder {{...}}
+open StrictOrder {{...}}
 
 
-data SUList {𝑖} {A : Set 𝑖} {{_ :  isStrictOrder A}} : List A → Set (lsuc 𝑖) where
-  [] : SUList []
-  [-] : ∀ {a} → SUList (a ∷ [])
-  _∷_ :  ∀ {a b as} → (a < b) → SUList (b ∷ as) → SUList (a ∷ b ∷ as)
+data UniqueSorted {𝑖} {A : Set 𝑖} {{_ :  StrictOrder A}} : List A → Set (lsuc 𝑖) where
+  [] : UniqueSorted []
+  [-] : ∀ {a} → UniqueSorted (a ∷ [])
+  _∷_ :  ∀ {a b as} → (a < b) → UniqueSorted (b ∷ as) → UniqueSorted (a ∷ b ∷ as)
 
