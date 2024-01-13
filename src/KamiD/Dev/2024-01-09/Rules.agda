@@ -4,13 +4,13 @@ module KamiD.Dev.2024-01-09.Rules where
 
 open import Agora.Conventions hiding (Σ ; Lift)
 open import Agora.Data.Power.Definition
-open import Data.Fin hiding (_-_)
-open import Data.Nat hiding (_!)
+open import Agora.Data.Sum.Definition
+open import Data.Fin hiding (_-_ ; _+_)
+open import Data.Nat hiding (_! ; _+_)
 open import Relation.Nullary.Decidable.Core
 
 open import KamiD.Dev.2024-01-09.Core hiding (_＠_)
-open import KamiD.Dev.2024-01-09.Subset
-
+open import KamiD.Dev.2024-01-09.UniqueSortedList
 
 
 
@@ -20,7 +20,7 @@ open import KamiD.Dev.2024-01-09.Subset
 
 data Layer : 𝒰₁ where
   Local : Layer
-  Global : (A : 𝒰₀) -> Layer
+  Global : (A : StrictOrder (ℓ₀ , ℓ₀)) -> Layer
 
 private variable
   K L : Layer
@@ -43,15 +43,15 @@ data _⇛♮_ : Ctx L -> Ctx L -> 𝒰₁
 -- types
 
 private variable
-  R S : 𝒰₀
+  R S : StrictOrder (ℓ₀ , ℓ₀)
 
 data _⊢Type : ∀ (Γ : Ctx L) -> 𝒰₁
 data _⊢CommType : (Γ : Ctx (Global R)) -> 𝒰₁
 
 data Kind : 𝒰₁ where
   Local : Kind
-  Global : (A : 𝒰₀) -> Kind
-  Comm : (A : 𝒰₀) -> Kind
+  Global : (A : StrictOrder (ℓ₀ , ℓ₀)) -> Kind
+  Comm : (A : StrictOrder (ℓ₀ , ℓ₀)) -> Kind
 
 toLayer : Kind -> Layer
 toLayer Local = Local
@@ -164,67 +164,108 @@ data _⇛♮_ where
 
 
 
-data BaseType : 𝒰₀ where
-  NN End : BaseType
 
 _⊢Role : ℕ -> 𝒰₀
 _⊢Role n = Fin n
 
-_⇂_ : Ctx (Global R) -> Subset R -> Ctx Local
-_⇂_ = {!!}
 
--- _⇂-Type_ : Γ ⊢ Global R Type -> (i : n ⊢Role) -> Γ ⇂ ⦗ i ⦘ ⊢ Local Type
--- _⇂-Type_ = {!!}
+------------------------------------------------------------------------
+-- Filtering (Definition)
 
-infixl 25 _⇂_ -- _⇂-Type_
+_⇂_ : Ctx (Global R) -> UniqueSortedList R -> Ctx Local
+_⇂-Type_ : Γ ⊢ Global R Type -> (U : UniqueSortedList R) -> Γ ⇂ U ⊢ Local Type
+
+[] ⇂ U = []
+Γ ,[ A ] ⇂ U = Γ ⇂ U ,[ A ⇂-Type U ]
+
+
+_⇂-Ctx₊_ : {Γ : Ctx (Global R)} -> Γ ⊢Ctx₊ -> (U : UniqueSortedList R) -> Γ ⇂ U ⊢Ctx₊
+[] ⇂-Ctx₊ U = []
+E ,[ x ] ⇂-Ctx₊ U = E ⇂-Ctx₊ U ,[ {!x ⇂-Type U!} ]
+
+infixl 40 _⇂_ _⇂-Type_ _⇂-Ctx₊_
+
+_⇂-Local_ : {U V : UniqueSortedList R} -> Γ ⇂ V ⊢ Local Type -> (U ⊆ V) -> Γ ⇂ U ⊢ Local Type
+_⇂-Local_ = {!!}
+
+filter-Local : (U V : UniqueSortedList R) -> Γ ⇂ V ⊢ Local Type -> Γ ⇂ U ⊢ Local Type
+filter-Local U V A = {!!}
+  -- we have to check that U ⊆ V, if that is the case,
+  -- we can restrict all things in the context properly. If that is not the case,
+  -- we can return 𝟙 because this means that our current type is not filterable
+  -- to U
+
+-- End Filtering (Definition)
+------------------------------------------------------------------------
 
 Flat : Γ ⊢ Comm R Type -> Γ ⊢ Global R Type
 Flat = {!!}
 
+data BaseType : 𝒰₀ where
+  NN End : BaseType
 
 data _⊢Type where
-  located : (A : Subset R) -> Γ ⇂ A ⊢ Local Type -> Γ ⊢ Global R Type
+  located : (U : UniqueSortedList R) -> (A : Γ ⇂ U ⊢ Local Type) -> Γ ⊢ Global R Type
 
-  Base : ∀{Γ : Ctx L} -> BaseType -> Γ ⊢Type
+  Base : BaseType -> Γ ⊢ Local Type
 
-  _⇒_ : (T : Γ ⊢ Global R Type) -> (B : Γ ,[ T ] ⊢ Global R Type) -> Γ ⊢ Global R Type
+  _⇒_ : (A : Γ ⊢Type) -> (B : Γ ,[ A ] ⊢Type) -> Γ ⊢Type
 
-  𝟙 : Γ ⊢Type
+  Unit : Γ ⊢Type
 
-  ᶜᵒ_ : Γ ⊢ Local Type -> Γ ⊢ Local Type
+  -- Val : {U V : UniqueSortedList R} -> (A : Γ ⇂ (U ∪ V) ⊢ Local Type) -> Γ ⊢ located U A -> Γ ⇂ (U ∪ V) ⊢ Local Type
 
-  Val : {U V : Subset R} -> (A : Γ ⇂ (U ∪ V) ⊢ Local Type) -> Γ ⊢ located U A -> Γ ⇂ (U ∪ V) ⊢ Local Type
+  -------------------
+  -- Normalizable:
+
+  -- [_]⇂_ : 
+
+
 
 
 syntax located A T = T ＠ A
 
 
 data _⊢CommType where
-  ⟮_↝_⟯[_]_ : (a b : R) -> (A : Γ ⇂ ⦗ a ⦘ ∪ ⦗ b ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ∪ ⦗ b ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
-  ⩒⟮_⟯[_]_ : (a : R) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
-  ⩑⟮_⟯[_]_ : (a : R) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
+  ⟮_↝_⟯[_]_ : (a b : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ∪ ⦗ b ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ∪ ⦗ b ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
+  ⩒⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
+  ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
   End : Γ ⊢ Comm R Type
 
-_↷-Ctx_ : (f : R -> S) -> Ctx (Global R) -> Ctx (Global S)
-_↷-Comm_ : (f : R -> S) -> Γ ⊢ Comm R Type -> f ↷-Ctx Γ ⊢ Comm S Type
-_↷-Global_ : (f : R -> S) -> Γ ⊢ Global R Type -> f ↷-Ctx Γ ⊢ Global S Type
+
+--------------------------------------------------------------
+-- Filtering (Impl types)
+located V A ⇂-Type U = filter-Local U V A
+(T ⇒ B) ⇂-Type U = (T ⇂-Type U) ⇒ (B ⇂-Type U)
+Unit ⇂-Type U = Unit
+
+
+-- End Filtering (Impl types)
+--------------------------------------------------------------
+
+
+--------------------------------------------------------------
+-- Projection
+
+_↷-Ctx_ : (f : ⟨ R ⟩ -> ⟨ S ⟩) -> Ctx (Global R) -> Ctx (Global S)
+_↷-Comm_ : (f : ⟨ R ⟩ -> ⟨ S ⟩) -> Γ ⊢ Comm R Type -> f ↷-Ctx Γ ⊢ Comm S Type
+_↷-Global_ : (f : ⟨ R ⟩ -> ⟨ S ⟩) -> Γ ⊢ Global R Type -> f ↷-Ctx Γ ⊢ Global S Type
 
 f ↷-Ctx [] = []
 f ↷-Ctx (Γ ,[ A ]) = f ↷-Ctx Γ ,[ f ↷-Global A ]
 
 f ↷-Global located U x = located {!!} {!!}
-f ↷-Global Base x = {!!}
 f ↷-Global (T ⇒ B) = {!!}
 f ↷-Global 𝟙 = {!!}
 
-f ↷-Comm (⟮ a ↝ b ⟯[ A ] x) = ⟮ f a ↝ f b ⟯[ A ] ({! f ↷-Comm x !})
+f ↷-Comm (⟮ a ↝ b ⟯[ A ] x) = ⟮ f a ↝ f b ⟯[ {!!} ] ({! f ↷-Comm x !})
 f ↷-Comm (⩒⟮ a ⟯[ A ] x) = {!!}
 f ↷-Comm (⩑⟮ a ⟯[ A ] x) = {!!}
 f ↷-Comm End = End
 
-reduce-Ctx : Ctx (Global (Maybe R)) -> Ctx (Global R)
-reduce-Comm : Γ ⊢ Comm (Maybe R) Type -> reduce-Ctx Γ ⊢ Comm R Type
-reduce-Global : Γ ⊢ Global (Maybe R) Type -> reduce-Ctx Γ ⊢ Global R Type
+reduce-Ctx : Ctx (Global (𝟙 + R)) -> Ctx (Global R)
+reduce-Comm : Γ ⊢ Comm (𝟙 + R) Type -> reduce-Ctx Γ ⊢ Comm R Type
+reduce-Global : Γ ⊢ Global (𝟙 + R) Type -> reduce-Ctx Γ ⊢ Global R Type
 
 reduce-Ctx [] = []
 reduce-Ctx (Γ ,[ A ]) = reduce-Ctx Γ ,[ reduce-Global A ]
@@ -243,9 +284,76 @@ reduce-Global T = {!!}
 infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Global_
 
 
+-- End Projection
+--------------------------------------------------------------
 
+
+
+
+------------------------------------------------------------------------
+-- Weakening
+
+
+{-# TERMINATING #-}
+wk-Ctx₊ : (E : Γ ⊢Ctx₊) -> Γ ,[ A ] ⊢Ctx₊
+
+wk-Type,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Type) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Type
+
+wk-Ctx₊ [] = []
+wk-Ctx₊ (E ,[ x ]) = wk-Ctx₊ E ,[ wk-Type,ind E x ]
+
+wk-Type,ind E (located U A) = located U {!!} -- (wk-Type,ind (E ⇂-Ctx₊ U) ?)
+wk-Type,ind E (Base x) = Base x
+wk-Type,ind E (T ⇒ B) = wk-Type,ind E T ⇒ wk-Type,ind (E ,[ T ]) B
+wk-Type,ind E Unit = Unit
 
 wk-Type : ∀{A} -> Γ ⊢Type -> Γ ,[ A ] ⊢Type
+wk-Type X = wk-Type,ind [] X -- [ wk-⇛♮ id-⇛♮ ]-Type
+
+wk-Term-ind : ∀ E -> {X : Γ ⋆-Ctx₊ E ⊢Type} -> Γ ⋆-Ctx₊ E ⊢ X -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢ wk-Type,ind E X
+wk-Term-ind = {!!}
+
+wk-Term : {X : Γ ⊢Type} -> Γ ⊢ X -> Γ ,[ A ] ⊢ wk-Type X
+wk-Term t = wk-Term-ind [] t
+
+
+-- wk-⇛♮-ind : ∀{A} -> ∀ E -> (Γ ⋆-Ctx₊ E) ⇛♮ Δ -> (Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E) ⇛♮ Δ
+
+-- weakening over a whole context
+wks-Type : (E : Γ ⊢Ctx₊) -> (A : Γ ⊢Type) -> Γ ⋆-Ctx₊ E ⊢Type
+wks-Type [] A = A
+wks-Type (E ,[ x ]) A = wk-Type (wks-Type E A)
+
+β-wks-Type-Base : ∀{X} {E : Γ ⊢Ctx₊} -> wks-Type E (Base X) ≣ Base X
+β-wks-Type-Base {E = []} = refl-≣
+β-wks-Type-Base {E = E ,[ x ]} = cong-≣ (wk-Type,ind []) (β-wks-Type-Base {E = E})
+
+wks-Type₂ : (E : Γ ⊢Ctx₊) -> (A : Γ ⊢Type) -> (B : Γ ,[ A ] ⊢Type) -> (Γ ⋆-Ctx₊ E ,[ wks-Type E A ]) ⊢Type
+wks-Type₂ E A B = {!!}
+
+-- β-wks-Type-⨉ : {E : Γ ⊢Ctx₊} -> ∀{x A B} -> wks-Type E (⨉ x A B) ≣ ⨉ x (wks-Type E A) (wks-Type₂ E A B)
+-- β-wks-Type-⨉ = {!!}
+
+-- σ-wk-wks : ∀{A B : Γ ⊢Type} {E : Γ ⊢Ctx₊} -> wk-Type,ind {A = A} E (wks-Type E B) ≣ wks-Type (wk-Ctx₊ E) ((wk-Type B))
+-- σ-wk-wks = {!!}
+
+σ-wks-wk : ∀{A B : Γ ⊢Type} {E : Γ ⊢Ctx₊} -> wks-Type (wk-Ctx₊ E) (wk-Type B) ≣ wk-Type,ind {A = A} E (wks-Type E B)
+σ-wks-wk = {!!}
+
+σ-wks-wk-, : ∀{A : Γ ⊢Type} -> ∀{E2 x B E} -> wks-Type (wk-Ctx₊ E) (wk-Type,ind (E2 ,[ x ]) (wk-Type B)) ≣ wk-Type,ind E (wks-Type E (wk-Type,ind {A = A} E2 B))
+σ-wks-wk-, = {!!}
+
+-- {-# REWRITE β-wks-Type-Base β-wks-Type-⨉ σ-wks-wk σ-wks-wk-, #-}
+
+wks-Term : (E : Γ ⊢Ctx₊) -> {A : Γ ⊢Type} -> Γ ⊢ A -> Γ ⋆-Ctx₊ E ⊢ wks-Type E A
+wks-Term = {!!}
+
+
+-- End weakening
+------------------------------------------------------------------------
+
+
+
 
 
 
@@ -267,10 +375,17 @@ data _⊢Var_ where
 
 data _⊢_ where
   var : Γ ⊢Var A -> Γ ⊢ A
-  loc : (U : Subset R) -> Γ ⇂ U ⊢ A -> Γ ⊢ located U A
+  loc : (U : UniqueSortedList R) -> Γ ⇂ U ⊢ {!!} -> Γ ⊢ located U {!!}
 
   -- _↝_ : {i j : n ⊢Role} {A : Γ ⇂ ⦗ i ⦘ ∪ ⦗ j ⦘ ⊢ Local Type } -> (aᵢ : Γ ⇂ ⦗ i ⦘ ⊢ A) -> (aⱼ : Γ ⇂ ⦗ j ⦘ ⊢ (ᶜᵒ A)) -> Γ ⊢ ⟮ i ↝ j ⟯[ A ]
   -- _,_ : {A B : Γ ⊢Type} -> Γ ⊢ A -> Γ ⊢ B -> Γ ⊢ (A ⊗ B)
+
+
+
+
+
+
+
 
 
 
@@ -282,11 +397,12 @@ module Examples where
   emp : Ctx L
   emp = []
 
-  T₀ : [] ⊢ Comm (Fin 3) Type
+  T₀ : [] ⊢ Comm (𝔽 3) Type
   T₀ = ⟮ # 0 ↝ # 1 ⟯[ Base NN ] ⟮ # 1 ↝ # 2 ⟯[ Base NN ] End
 
-  T₁ : [] ,[ Base NN ＠ ⦗ # 0 ⦘ ] ⊢ Comm (Fin 2) Type
+  T₁ : [] ,[ Base NN ＠ ⦗ # 0 ⦘ ] ⊢ Comm (𝔽 2) Type
   T₁ = {!!} -- ⟮ # 0 ↝ # 1 ⟯[ Val {U = ⦗ # 0 ⦘} {V = ⦗ # 1 ⦘} (Base NN) (loc ⦗ # 0 ⦘ (var {!zero!})) ] {!!}
+
 
 
 
@@ -332,27 +448,27 @@ wk-Ctx₊ : ∀{Γ : Ctx L} {A : Γ ⊢Type} -> (E : Γ ⊢Ctx₊) -> Γ ,[ A ] 
 
 {-# REWRITE σ-wk-𝕠 #-} -- TODO: Should come after definition!!
 
-wk-Type-ind : ∀{Γ : Ctx (◌ , τ)} -> ∀{A} -> ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Type) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Type
+wk-Type,ind : ∀{Γ : Ctx (◌ , τ)} -> ∀{A} -> ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Type) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Type
 
--- σ-wk-𝕠-Type-ind : {E : Γ ⊢Ctx₊} -> ∀{A} -> wk-Type-ind (𝕠-Ctx₊ E) (𝕠-Type A) ≣ 𝕠-Type (wk-Type-ind E ?)
+-- σ-wk-𝕠-Type-ind : {E : Γ ⊢Ctx₊} -> ∀{A} -> wk-Type,ind (𝕠-Ctx₊ E) (𝕠-Type A) ≣ 𝕠-Type (wk-Type,ind E ?)
 -- σ-wk-𝕠-Type-ind = ?
 
 -- {-# REWRITE σ-wk-𝕠-Type-ind #-} -- TODO: Should come after definition!!
 
 wk-Ctx₊ [] = []
-wk-Ctx₊ (E ,[ x ]) = wk-Ctx₊ E ,[ wk-Type-ind (𝕠-Ctx₊ E) x ]
+wk-Ctx₊ (E ,[ x ]) = wk-Ctx₊ E ,[ wk-Type,ind (𝕠-Ctx₊ E) x ]
 
 
-wk-Type-ind E (Base x) = Base x
-wk-Type-ind E (⨉ c A B) = ⨉ c (wk-Type-ind E A ) (wk-Type-ind (E ,[ 𝕠-Type A ]) B)
-wk-Type-ind E (D x X) = {!!}
-wk-Type-ind E (Fam x) = {!!}
+wk-Type,ind E (Base x) = Base x
+wk-Type,ind E (⨉ c A B) = ⨉ c (wk-Type,ind E A ) (wk-Type,ind (E ,[ 𝕠-Type A ]) B)
+wk-Type,ind E (D x X) = {!!}
+wk-Type,ind E (Fam x) = {!!}
 -}
 
 {-
-wk-Type X = let XX = wk-Type-ind [] X in {!!} -- [ wk-⇛♮ id-⇛♮ ]-Type
+wk-Type X = let XX = wk-Type,ind [] X in {!!} -- [ wk-⇛♮ id-⇛♮ ]-Type
 
-wk-Term-ind : ∀ E -> {X : Γ ⋆-Ctx₊ E ⊢Type} -> Γ ⋆-Ctx₊ E ⊢ X -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢ wk-Type-ind E X
+wk-Term-ind : ∀ E -> {X : Γ ⋆-Ctx₊ E ⊢Type} -> Γ ⋆-Ctx₊ E ⊢ X -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢ wk-Type,ind E X
 wk-Term-ind = {!!}
 
 wk-Term : {X : Γ ⊢Type} -> Γ ⊢ X -> Γ ,[ A ] ⊢ wk-Type X
@@ -368,7 +484,7 @@ wks-Type (E ,[ x ]) A = wk-Type (wks-Type E A)
 
 β-wks-Type-Base : ∀{X} {E : Γ ⊢Ctx₊} -> wks-Type E (Base X) ≣ Base X
 β-wks-Type-Base {E = []} = refl-≣
-β-wks-Type-Base {E = E ,[ x ]} = cong-≣ (wk-Type-ind []) (β-wks-Type-Base {E = E})
+β-wks-Type-Base {E = E ,[ x ]} = cong-≣ (wk-Type,ind []) (β-wks-Type-Base {E = E})
 
 wks-Type₂ : (E : Γ ⊢Ctx₊) -> (A : Γ ⊢Type) -> (B : Γ ,[ A ] ⊢Type) -> (Γ ⋆-Ctx₊ E ,[ wks-Type E A ]) ⊢Type
 wks-Type₂ E A B = {!!}
@@ -376,13 +492,13 @@ wks-Type₂ E A B = {!!}
 β-wks-Type-⨉ : {E : Γ ⊢Ctx₊} -> ∀{x A B} -> wks-Type E (⨉ x A B) ≣ ⨉ x (wks-Type E A) (wks-Type₂ E A B)
 β-wks-Type-⨉ = {!!}
 
--- σ-wk-wks : ∀{A B : Γ ⊢Type} {E : Γ ⊢Ctx₊} -> wk-Type-ind {A = A} E (wks-Type E B) ≣ wks-Type (wk-Ctx₊ E) ((wk-Type B))
+-- σ-wk-wks : ∀{A B : Γ ⊢Type} {E : Γ ⊢Ctx₊} -> wk-Type,ind {A = A} E (wks-Type E B) ≣ wks-Type (wk-Ctx₊ E) ((wk-Type B))
 -- σ-wk-wks = {!!}
 
-σ-wks-wk : ∀{A B : Γ ⊢Type} {E : Γ ⊢Ctx₊} -> wks-Type (wk-Ctx₊ E) (wk-Type B) ≣ wk-Type-ind {A = A} E (wks-Type E B)
+σ-wks-wk : ∀{A B : Γ ⊢Type} {E : Γ ⊢Ctx₊} -> wks-Type (wk-Ctx₊ E) (wk-Type B) ≣ wk-Type,ind {A = A} E (wks-Type E B)
 σ-wks-wk = {!!}
 
-σ-wks-wk-, : ∀{A : Γ ⊢Type} -> ∀{E2 x B E} -> wks-Type (wk-Ctx₊ E) (wk-Type-ind (E2 ,[ x ]) (wk-Type B)) ≣ wk-Type-ind E (wks-Type E (wk-Type-ind {A = A} E2 B))
+σ-wks-wk-, : ∀{A : Γ ⊢Type} -> ∀{E2 x B E} -> wks-Type (wk-Ctx₊ E) (wk-Type,ind (E2 ,[ x ]) (wk-Type B)) ≣ wk-Type,ind E (wks-Type E (wk-Type,ind {A = A} E2 B))
 σ-wks-wk-, = {!!}
 
 -- {-# REWRITE β-wks-Type-Base β-wks-Type-⨉ σ-wks-wk σ-wks-wk-, #-}
@@ -516,11 +632,11 @@ restore-Term (var v) = {!!}
 𝓖-Type : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> {γ : ⟨ E ⟩⊢Ctx} -> (T : ⟨ γ ⟩⊢Type acc) -> [ 𝓖-Ctx γ ]⊢Type
 
 _,𝓕[_] : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> (γ : ⟨ E ⟩⊢Ctx) -> [ 𝓕-Ctx γ ]⊢Type -> Γ ,[ A ] ⊢Ctx₊
-_,𝓕[_] γ A' = wk-Ctx₊ (𝓕-Ctx γ) ,[ wk-Type-ind (𝓕-Ctx γ) A' ] ⋆-Ctx₊₂ (wk-Ctx₊ (𝓖-Ctx γ))
+_,𝓕[_] γ A' = wk-Ctx₊ (𝓕-Ctx γ) ,[ wk-Type,ind (𝓕-Ctx γ) A' ] ⋆-Ctx₊₂ (wk-Ctx₊ (𝓖-Ctx γ))
 
 
 real : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> (γ : ⟨ E ⟩⊢Ctx) -> [ 𝓕-Ctx γ ]⊢Type -> [ 𝓖-Ctx γ ]⊢Type
-real γ A = wks-Type (𝓖-Ctx γ) (wk-Type-ind (𝓕-Ctx γ) A)
+real γ A = wks-Type (𝓖-Ctx γ) (wk-Type,ind (𝓕-Ctx γ) A)
 
 real₂ : {Γ : Ctx L} -> ∀{A} -> {E : Γ ,[ A ] ⊢Ctx₊} -> (γ : ⟨ E ⟩⊢Ctx) -> (A : [ 𝓕-Ctx γ ]⊢Type) -> [ γ ,𝓕[ A ] ]⊢Type -> [ 𝓖-Ctx γ ,[ real γ A ] ]⊢Type
 real₂ = {!!}
@@ -540,7 +656,7 @@ real₂ = {!!}
   in ⨉ x A' B'
 𝓖-Type {γ = γ} (Fam x) = Fam (𝓖-Term-na {γ = γ} x)
 𝓖-Type (wk-⟨⟩⊢Type {β = acc} T) = let T' = 𝓖-Type T in wk-Type T'
-𝓖-Type {γ = γ ,[ _ ]} (wk-⟨⟩⊢Type {β = noacc} T) = let T' = 𝓖-Type T in wk-Type-ind (𝓖-Ctx γ) T'
+𝓖-Type {γ = γ ,[ _ ]} (wk-⟨⟩⊢Type {β = noacc} T) = let T' = 𝓖-Type T in wk-Type,ind (𝓖-Ctx γ) T'
 
 𝓖-Term-na {γ = γ} (var x) = 𝓖-Var-na x
 𝓖-Term-na {γ = γ} (Λnn t) = let t' = 𝓖-Term-na t in Λ {!!} -- NOTE: TODO: Here we probably have to reorder the variables (we need ... ⋆ 𝓖-Ctx γ ,[ wks-Type (𝓖-Ctx γ) ZZ] -- and we have ... ,[ ZZ ] ⋆ wk-Ctx₊ (𝓖-Ctx γ))
@@ -590,7 +706,7 @@ split-Ctx₊ : Γ ,[ A ] ⊢Ctx₊ -> ∑ λ (E₀ : Γ ⊢Ctx₊) -> Γ ,[ A ] 
 ∥_∥ E =  wk-Ctx₊ (𝓕 E) ⋆-Ctx₊₂ snd (split-Ctx₊ E)
 
 _,𝓕[_] : (E : Γ ,[ A ] ⊢Ctx₊) -> [ 𝓕 E ]⊢Type -> Γ ,[ A ] ⊢Ctx₊
-_,𝓕[_] E A' = wk-Ctx₊ (𝓕 E) ,[ wk-Type-ind (𝓕 E) A' ] ⋆-Ctx₊₂ (wk-Ctx₊ (snd (split-Ctx₊ E)))
+_,𝓕[_] E A' = wk-Ctx₊ (𝓕 E) ,[ wk-Type,ind (𝓕 E) A' ] ⋆-Ctx₊₂ (wk-Ctx₊ (snd (split-Ctx₊ E)))
 
 -}
 
@@ -716,10 +832,10 @@ _[_]-Ctx₊ (E ,[ x ]) σ = (E [ σ ]-Ctx₊) ,[ under E by x [ σ ]-Type ]
 _[_]-Type X σ = under [] by X [ σ ]-Type
 
 
-β-wk-σ : ∀{Γ Δ : Ctx L} -> {A : Δ ⊢Type} -> (E : Γ ⊢Ctx₊) -> {B : Γ ⊢Type} -> {σ : Γ ⋆-Ctx₊ E ⇛♮ Δ} -> under [] by A [ wk-⇛♮-ind {A = B} E σ ]-Type  ≣ wk-Type-ind E (A [ σ ]-Type)
+β-wk-σ : ∀{Γ Δ : Ctx L} -> {A : Δ ⊢Type} -> (E : Γ ⊢Ctx₊) -> {B : Γ ⊢Type} -> {σ : Γ ⋆-Ctx₊ E ⇛♮ Δ} -> under [] by A [ wk-⇛♮-ind {A = B} E σ ]-Type  ≣ wk-Type,ind E (A [ σ ]-Type)
 β-wk-σ = {!!}
 
-β-wk-σ-[] : {B : Γ ⊢Type} -> {σ : Γ ⇛♮ Δ} -> under [] by A [ wk-⇛♮-ind {A = B} [] σ ]-Type ≣ wk-Type-ind [] (A [ σ ]-Type)
+β-wk-σ-[] : {B : Γ ⊢Type} -> {σ : Γ ⇛♮ Δ} -> under [] by A [ wk-⇛♮-ind {A = B} [] σ ]-Type ≣ wk-Type,ind [] (A [ σ ]-Type)
 β-wk-σ-[] = β-wk-σ []
 
 {-# REWRITE β-wk-σ β-wk-σ-[] #-}
@@ -752,7 +868,7 @@ id-⇛♮ {Γ = []} = ε
 id-⇛♮ {Γ = Γ ,[ x ]} = wk-⇛♮ id-⇛♮ , var zero
 
 -- This one comes from β-id-Type (and others?)
-β-wk : ∀{B} -> A [ wk-⇛♮ {A = B} id-⇛♮ ]-Type ≣ wk-Type-ind [] A
+β-wk : ∀{B} -> A [ wk-⇛♮ {A = B} id-⇛♮ ]-Type ≣ wk-Type,ind [] A
 β-wk = refl-≣
 
 
