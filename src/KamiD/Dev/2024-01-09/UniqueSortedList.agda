@@ -17,10 +17,7 @@ record isStrictOrder {𝑖} (𝑗 : 𝔏) (A : Set 𝑖) : Set (𝑖 ､ 𝑗 �
     <trans : ∀ {a b c : A} → a < b → b < c → a < c
     <conn : ∀ {a b : A} → ¬ (a ≡ b) → (a < b) ⊎ (b < a)
 
-    bla : ℕ
-
-open isStrictOrder {{...}} hiding (bla)
-open isStrictOrder using (bla)
+open isStrictOrder {{...}}
 
 StrictOrder : ∀ (𝑖 : 𝔏 ^ 2) -> _
 StrictOrder 𝑖 = Set (𝑖 ⌄ 0) :& isStrictOrder (𝑖 ⌄ 1)
@@ -72,6 +69,5 @@ _⋆-StrictOrder_ A B = ′ ⟨ A ⟩ +-𝒰 ⟨ B ⟩ ′
 
 𝟙-StrictOrder : StrictOrder _
 𝟙-StrictOrder = ′ 𝟙-𝒰 ′
-
 
 
