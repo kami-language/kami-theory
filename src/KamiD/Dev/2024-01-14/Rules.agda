@@ -298,8 +298,10 @@ data _⊢CommType where
 -- Projection
 
 private
-  Img = image-UniqueSortedList
-  map-Img = map-image-UniqueSortedList
+  Img = Img-UniqueSortedList
+  map-Img = map-Img-UniqueSortedList
+  PreImg = PreImg-UniqueSortedList
+  map-PreImg = map-PreImg-UniqueSortedList
   _⟶_ = StrictOrderHom
 
 _↷-Ctx_ : (f : R ⟶ S) -> Ctx R -> Ctx S
@@ -307,7 +309,6 @@ _↷-Comm_ : (f : R ⟶ S) -> Γ ⊢Comm R Type -> f ↷-Ctx Γ ⊢Comm S Type
 _↷-Type_ : (f : R ⟶ S) -> Γ ⇂ U ⊢ R Type -> f ↷-Ctx Γ ⇂ Img f U ⊢ S Type
 _↷-Term_ : (f : R ⟶ S) -> ∀{A : Γ ⇂ U ⊢ R Type} -> Γ ⊢ A -> f ↷-Ctx Γ ⊢ f ↷-Type A
 
-infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Type_
 
 
 f ↷-Ctx [] = []
@@ -324,15 +325,14 @@ f ↷-Comm (⩒⟮ a ⟯[ A ] x) = {!!}
 f ↷-Comm (⩑⟮ a ⟯[ A ] x) = {!!}
 f ↷-Comm End = End
 
-{-
-reduce-Ctx : Ctx (Global (𝟙 + R)) -> Ctx R
+reduce-Ctx : Ctx (𝟙 + R) -> Ctx R
 reduce-Comm : Γ ⊢Comm (𝟙 + R) Type -> reduce-Ctx Γ ⊢Comm R Type
-reduce-Global : Γ ⊢ (𝟙 + R) Type -> reduce-Ctx Γ ⊢ R Type
+reduce-Type : Γ ⇂ U ⊢ (𝟙 + R) Type -> reduce-Ctx Γ ⇂ PreImg ′ just ′ U ⊢ R Type
 
 reduce-Ctx [] = []
-reduce-Ctx (Γ ,[ A ]) = reduce-Ctx Γ ,[ reduce-Global A ]
+reduce-Ctx (Γ ,[ A ]) = reduce-Ctx Γ ,[ reduce-Type A ]
 
-reduce-Comm (⟮ just a ↝ just b ⟯[ A ] x) = ⟮ a ↝ b ⟯[ {!reduce-Global A!} ] {!!}
+reduce-Comm (⟮ just a ↝ just b ⟯[ A ] x) = ⟮ a ↝ b ⟯[ {!reduce-Type A!} ] {!!}
 reduce-Comm (⟮ just a ↝ left b ⟯[ A ] x) = {!!}
 reduce-Comm (⟮ left a ↝ just b ⟯[ A ] x) = {!!}
 reduce-Comm (⟮ left a ↝ left b ⟯[ A ] x) = {!!}
@@ -340,7 +340,7 @@ reduce-Comm (⩒⟮ a ⟯[ A ] x) = {!!}
 reduce-Comm (⩑⟮ a ⟯[ A ] x) = {!!}
 reduce-Comm End = {!!}
 
-reduce-Global T = {!!}
+reduce-Type T = {!!}
 
 
 infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Type_
@@ -350,6 +350,7 @@ infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Type_
 --------------------------------------------------------------
 
 
+{-
 
 
 

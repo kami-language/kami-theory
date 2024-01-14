@@ -1,6 +1,8 @@
 module KamiD.Dev.2024-01-14.UniqueSortedList where
 
 open import Agora.Conventions -- using (¬_)
+open import Agora.Order.Preorder
+open import Agora.Order.Lattice
 
 open import Agda.Builtin.Equality using (_≡_)
 open import Agda.Primitive using (lsuc)
@@ -41,8 +43,14 @@ macro
 
 --------------------------------------------------
 
+-- TODO: This name is very cumbersome. Rename?!
 UniqueSortedList : (A : StrictOrder 𝑖) -> _
 UniqueSortedList A = List ⟨ A ⟩ :& isUniqueSortedList
+
+-- The fancy name for UniqueSortedList
+macro
+  𝒫ᶠⁱⁿ : StrictOrder 𝑖 -> _
+  𝒫ᶠⁱⁿ A = #structureOn (UniqueSortedList A)
 
 module _ {A : StrictOrder 𝑖} where
   ⦗_⦘ : ⟨ A ⟩ -> UniqueSortedList A
@@ -50,11 +58,29 @@ module _ {A : StrictOrder 𝑖} where
 
 module _ {A : StrictOrder 𝑖} where
   postulate
-    _⊆_ : (U V : UniqueSortedList A) -> 𝒰 𝑖
-    decide-⊆ : ∀{U V} -> ¬(U ⊆ V) ⊎ U ⊆ V
-    _∪_ : (U V : UniqueSortedList A) -> UniqueSortedList A
+    _≤-𝒫ᶠⁱⁿ_ : (U V : UniqueSortedList A) -> 𝒰 𝑖
+    decide-≤-𝒫ᶠⁱⁿ : ∀{U V} -> ¬(U ≤-𝒫ᶠⁱⁿ V) ⊎ U ≤-𝒫ᶠⁱⁿ V
+    _∨-𝒫ᶠⁱⁿ_ : (U V : UniqueSortedList A) -> UniqueSortedList A
 
-  infixl 50 _∪_
+  infixl 50 _∨-𝒫ᶠⁱⁿ_
+
+  instance
+    isSetoid:𝒫ᶠⁱⁿ : isSetoid (𝒫ᶠⁱⁿ A)
+    isSetoid:𝒫ᶠⁱⁿ = isSetoid:byId
+
+  instance
+    isPreorderData:≤-𝒫ᶠⁱⁿ : isPreorderData (𝒫ᶠⁱⁿ A) (_≤-𝒫ᶠⁱⁿ_)
+    isPreorderData:≤-𝒫ᶠⁱⁿ = record
+      { reflexive = {!!}
+      ; _⟡_ = {!!}
+      ; transp-≤ = {!!}
+      }
+
+  instance
+    isPreorder:UniqueSortedList : isPreorder _ (𝒫ᶠⁱⁿ A)
+    isPreorder:UniqueSortedList = isPreorder:byDef _≤-𝒫ᶠⁱⁿ_
+
+
 
 
 postulate
@@ -83,6 +109,19 @@ module _ (A : StrictOrder 𝑖) (B : StrictOrder 𝑗) where
 -- TODO Naming
 module _ {A B : StrictOrder 𝑖} where
   postulate
-    image-UniqueSortedList : (f : StrictOrderHom A B) -> UniqueSortedList A -> UniqueSortedList B
-    map-image-UniqueSortedList : ∀{f U V} -> U ⊆ V -> image-UniqueSortedList f U ⊆ image-UniqueSortedList f V
+    Img-UniqueSortedList : (f : StrictOrderHom A B) -> UniqueSortedList A -> UniqueSortedList B
+    map-Img-UniqueSortedList : ∀{f U V} -> U ≤-𝒫ᶠⁱⁿ V -> Img-UniqueSortedList f U ≤-𝒫ᶠⁱⁿ Img-UniqueSortedList f V
+
+  postulate
+    PreImg-UniqueSortedList : (f : StrictOrderHom A B) -> UniqueSortedList B -> UniqueSortedList A
+    map-PreImg-UniqueSortedList : ∀{f U V} -> U ≤-𝒫ᶠⁱⁿ V -> Img-UniqueSortedList f U ≤-𝒫ᶠⁱⁿ Img-UniqueSortedList f V
+
+
+postulate
+  instance isStrictOrderHom:right : {A B : StrictOrder 𝑖} -> isStrictOrderHom B (A ⋆-StrictOrder B) right
+
+
+
+
+
 
