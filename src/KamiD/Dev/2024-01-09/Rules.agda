@@ -169,6 +169,16 @@ _⊢Role : ℕ -> 𝒰₀
 _⊢Role n = Fin n
 
 
+⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx L) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
+⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≣ (cong-≣ (Γ ⊢_) p) x
+
+-- ⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx L) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
+-- ⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≣ (cong-≣ (Γ ⊢_) p) x
+
+_∥⊢Type↷_ : Γ ≣ Δ -> Γ ⊢Type -> Δ ⊢Type
+_∥⊢Type↷_ p A = transp-≣ (cong-≣ (_⊢Type) p) A
+
+
 ------------------------------------------------------------------------
 -- Filtering (Definition)
 
@@ -178,10 +188,26 @@ _⇂-Type_ : Γ ⊢ Global R Type -> (U : UniqueSortedList R) -> Γ ⇂ U ⊢ Lo
 [] ⇂ U = []
 Γ ,[ A ] ⇂ U = Γ ⇂ U ,[ A ⇂-Type U ]
 
-
 _⇂-Ctx₊_ : {Γ : Ctx (Global R)} -> Γ ⊢Ctx₊ -> (U : UniqueSortedList R) -> Γ ⇂ U ⊢Ctx₊
+filter-Type,Ctx₊ : {Γ : Ctx (Global R)} -> (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E ⊢Type) -> (U : UniqueSortedList R) -> (Γ ⇂ U) ⋆-Ctx₊ (E ⇂-Ctx₊ U) ⊢Type
+
 [] ⇂-Ctx₊ U = []
-E ,[ x ] ⇂-Ctx₊ U = E ⇂-Ctx₊ U ,[ {!x ⇂-Type U!} ]
+E ,[ x ] ⇂-Ctx₊ U = E ⇂-Ctx₊ U ,[ filter-Type,Ctx₊ E x U ]
+
+σ-⋆,⇂,Ctx : ∀ E U -> ((Γ ⋆-Ctx₊ E) ⇂ U) ≣ (Γ ⇂ U ⋆-Ctx₊ E ⇂-Ctx₊ U)
+filter-Type,Ctx₊ {Γ = Γ} E A U = σ-⋆,⇂,Ctx E U ∥⊢Type↷ (A ⇂-Type U)
+
+σ-⋆,⇂,Ctx [] U = refl-≣
+σ-⋆,⇂,Ctx (E ,[ x ]) U = sym-≣ $ J1 (σ-⋆,⇂,Ctx E U) _⊢Type _,[_] (x ⇂-Type U)
+
+{-# REWRITE σ-⋆,⇂,Ctx #-} -- we need this for `wk-Type,ind` and for `σ-wk-⇂-Ctx₊`
+
+-- we also need to reduce `σ-⋆,⇂,Ctx` to refl:
+isRefl:σ-⋆,⇂,Ctx : ∀ {E : Γ ⊢Ctx₊} {U} -> σ-⋆,⇂,Ctx E U ≣ refl-≣
+isRefl:σ-⋆,⇂,Ctx = K1 _
+
+{-# REWRITE isRefl:σ-⋆,⇂,Ctx #-}
+
 
 infixl 40 _⇂_ _⇂-Type_ _⇂-Ctx₊_
 
@@ -235,7 +261,7 @@ data _⊢CommType where
 
 --------------------------------------------------------------
 -- Filtering (Impl types)
-located V A ⇂-Type U = filter-Local U V A
+located V A ⇂-Type U = filter-Local U V {!!}
 (T ⇒ B) ⇂-Type U = (T ⇂-Type U) ⇒ (B ⇂-Type U)
 Unit ⇂-Type U = Unit
 
@@ -290,6 +316,7 @@ infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Global_
 
 
 
+
 ------------------------------------------------------------------------
 -- Weakening
 
@@ -302,7 +329,30 @@ wk-Type,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Type) -> Γ ,[ A ] ⋆-Ctx₊ wk-
 wk-Ctx₊ [] = []
 wk-Ctx₊ (E ,[ x ]) = wk-Ctx₊ E ,[ wk-Type,ind E x ]
 
-wk-Type,ind E (located U A) = located U {!!} -- (wk-Type,ind (E ⇂-Ctx₊ U) ?)
+-- σ-filter-wk-Ctx₊ : ∀{E : Γ ⊢Ctx₊} {U x} -> filter-Type,Ctx₊ (wk-Ctx₊ E) (wk-Type,ind E x) U ≣ wk-Type,ind (E ⇂-Ctx₊ U) (filter-Type,Ctx₊ E x U)
+-- σ-filter-wk-Ctx₊ = ?
+      -- filter-Type,Ctx₊ (wk-Ctx₊ E) (wk-Type,ind E x) U ]
+
+σ-wk-⇂-Ctx₊ : (E : Γ ⊢Ctx₊) (A : Γ ⊢Type) -> ∀{U} -> wk-Ctx₊ {A = A} E ⇂-Ctx₊ U ≣ wk-Ctx₊ (E ⇂-Ctx₊ U)
+
+σ-filter-wk-Ctx₊ : ∀(E : Γ ⊢Ctx₊) {A : Γ ⊢Type} {U x} ->
+
+                     filter-Type,Ctx₊ (wk-Ctx₊ {A = A} E) (wk-Type,ind E x) U
+
+                            ≣⟨ cong-≣ (λ ξ -> _ ⋆-Ctx₊ ξ ⊢Type) (σ-wk-⇂-Ctx₊ E A) ⟩≣
+
+                     wk-Type,ind {A = A ⇂-Type U} (E ⇂-Ctx₊ U) (filter-Type,Ctx₊ E x U)
+
+σ-wk-⇂-Ctx₊ [] A = refl-≣
+σ-wk-⇂-Ctx₊ (E ,[ x ]) A = {!!}
+
+σ-filter-wk-Ctx₊ [] = {!refl-≣!}
+σ-filter-wk-Ctx₊ (E ,[ x ]) = {!!}
+
+
+-- {-# REWRITE σ-wk-⇂-Ctx₊ #-} -- we need this for `wk-Type,ind`
+
+wk-Type,ind E (located U A) = let A' = (wk-Type,ind (E ⇂-Ctx₊ U) A) in located U {!!} -- located U (wk-Type,ind (E ⇂-Ctx₊ U) A) -- (wk-Type,ind (E ⇂-Ctx₊ U) ?)
 wk-Type,ind E (Base x) = Base x
 wk-Type,ind E (T ⇒ B) = wk-Type,ind E T ⇒ wk-Type,ind (E ,[ T ]) B
 wk-Type,ind E Unit = Unit
@@ -426,8 +476,6 @@ module Examples where
 
 
 
--- ⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx L) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
--- ⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≣ (cong-≣ (Γ ⊢_) p) x
 
 -- id-⇛♮ : Γ ⇛♮ Γ
 
