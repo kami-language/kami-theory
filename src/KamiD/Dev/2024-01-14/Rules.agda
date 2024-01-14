@@ -18,9 +18,11 @@ open import KamiD.Dev.2024-01-14.UniqueSortedList
 -------------------
 -- we have a layer system for the context argument
 
-data Layer : 𝒰₁ where
-  Local : Layer
-  Global : (A : StrictOrder (ℓ₀ , ℓ₀)) -> Layer
+-- data Layer : 𝒰₁ where
+--   Local : Layer
+--   Global : (A : StrictOrder (ℓ₀ , ℓ₀)) -> Layer
+
+Layer = StrictOrder (ℓ₀ , ℓ₀)
 
 private variable
   K L : Layer
@@ -45,33 +47,43 @@ data _⇛♮_ : Ctx L -> Ctx L -> 𝒰₁
 private variable
   R S : StrictOrder (ℓ₀ , ℓ₀)
 
-data _⊢Type : ∀ (Γ : Ctx L) -> 𝒰₁
-data _⊢CommType : (Γ : Ctx (Global R)) -> 𝒰₁
+private variable
+  U V : UniqueSortedList R
+
+data _⇂_⊢Type : ∀ (Γ : Ctx R) -> (U : UniqueSortedList R) -> 𝒰₁
+data _⊢CommType : (Γ : Ctx R) -> 𝒰₁
 
 data Kind : 𝒰₁ where
   Local : Kind
   Global : (A : StrictOrder (ℓ₀ , ℓ₀)) -> Kind
   Comm : (A : StrictOrder (ℓ₀ , ℓ₀)) -> Kind
 
-toLayer : Kind -> Layer
-toLayer Local = Local
-toLayer (Global R) = Global R
-toLayer (Comm R) = Global R
+-- toLayer : Kind -> Layer
+-- toLayer Local = Local
+-- toLayer R = Global R
+-- toLayer (Comm R) = Global R
 
-KindedType : ∀ k -> (Γ : Ctx (toLayer k)) -> 𝒰₁
-KindedType Local Γ = Γ ⊢Type
-KindedType (Global R) Γ = Γ ⊢Type
-KindedType (Comm R) Γ = Γ ⊢CommType
+KindedType : ∀ R -> (Γ : Ctx R) -> (U : UniqueSortedList R) -> 𝒰₁
+KindedType R Γ U = Γ ⇂ U ⊢Type
+-- KindedType Local Γ = Γ ⊢Type
+-- KindedType R Γ = Γ ⊢Type
+-- KindedType (Comm R) Γ = Γ ⊢CommType
 
-syntax KindedType L Γ = Γ ⊢ L Type
+syntax KindedType L Γ U = Γ ⇂ U ⊢ L Type
+
+
+KindedCommType : ∀ R -> (Γ : Ctx R) -> 𝒰₁
+KindedCommType R Γ = Γ ⊢CommType
+
+syntax KindedCommType L Γ = Γ ⊢Comm L Type
 
 
 private variable
-  A : Γ ⊢Type
-  B : Γ ⊢Type
+  A : Γ ⇂ U ⊢Type
+  B : Γ ⇂ U ⊢Type
 
-data _⊢Var_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₁
-data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₁
+data _⊢Var_ : ∀ (Γ : Ctx L) -> (A : Γ ⇂ U ⊢Type) -> 𝒰₁
+data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⇂ U ⊢Type) -> 𝒰₁
 
 
 
@@ -79,7 +91,7 @@ data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> 𝒰₁
 
 data Ctx where
   [] : Ctx L
-  _,[_] : ∀ (Γ : Ctx L) -> (A : Γ ⊢Type) -> Ctx L
+  _,[_] : ∀ (Γ : Ctx L) -> (A : Γ ⇂ U ⊢Type) -> Ctx L
 
 
 
@@ -91,14 +103,15 @@ _⋆-Ctx₊_ : ∀ (Γ : Ctx L) -> Γ ⊢Ctx₊ -> Ctx L
 
 data _⊢Ctx₊ where
   [] : Γ ⊢Ctx₊
-  _,[_] : (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E) ⊢Type -> Γ ⊢Ctx₊
+  _,[_] : (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E) ⇂ U ⊢Type -> Γ ⊢Ctx₊
 
 _⋆-Ctx₊₂_ : (Δ : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ Δ) ⊢Ctx₊ -> Γ ⊢Ctx₊
 
 assoc-⋆-Ctx₊ : ∀{Δ E} -> Γ ⋆-Ctx₊ (Δ ⋆-Ctx₊₂ E) ≣ Γ ⋆-Ctx₊ Δ ⋆-Ctx₊ E
 
+{-
 Δ ⋆-Ctx₊₂ [] = Δ
-Δ ⋆-Ctx₊₂ (E ,[ x ]) = (Δ ⋆-Ctx₊₂ E) ,[ transp-≣ (cong-≣ _⊢Type (sym-≣ assoc-⋆-Ctx₊)) x ]
+Δ ⋆-Ctx₊₂ (E ,[ x ]) = (Δ ⋆-Ctx₊₂ E) ,[ transp-≣ (cong-≣ _⇂_⊢Type (sym-≣ assoc-⋆-Ctx₊)) x ]
 
 Γ ⋆-Ctx₊ [] = Γ
 Γ ⋆-Ctx₊ (E ,[ x ]) = (Γ ⋆-Ctx₊ E) ,[ x ]
@@ -114,16 +127,19 @@ assoc-⋆-Ctx₊ {Γ = Γ} {Δ = Δ} {E = E ,[ x ]} =
   in J1 p _⊢Type _,[_] x
 
 {-# REWRITE assoc-⋆-Ctx₊ #-}
+-}
 
 
 
 infixl 30 _⋆-Ctx₊_ _⋆-Ctx₊₂_ _⋆-Ctx_ [_]Ctx₊∷_
 
+{-
 [_]Ctx₊∷_ : ∀ A -> Δ ,[ A ] ⊢Ctx₊ -> Δ ⊢Ctx₊
 [_]Ctx₊∷_ {Δ = Δ} A E =
   let X : Δ ⊢Ctx₊
       X = [] ,[ A ]
   in X ⋆-Ctx₊₂ E
+-}
 
 
 
@@ -141,21 +157,21 @@ infixl 30 _⋆-Ctx₊_ _⋆-Ctx₊₂_ _⋆-Ctx_ [_]Ctx₊∷_
 
 infixl 40 _,[_]
 
-_[_]-Type : Δ ⊢Type -> Γ ⇛♮ Δ -> Γ ⊢Type
+_[_]-Type : Δ ⇂ U ⊢Type -> Γ ⇛♮ Δ -> Γ ⇂ {!!} ⊢Type
 
 ♮-⇛ : Γ ⇛ Δ -> Γ ⇛♮ Δ
 ♮-⇛ = {!!}
 
-data _⇛_ where
-  id : ∀{Γ : Ctx L} -> Γ ⇛ Γ
-  π₁ : ∀{Γ Δ : Ctx L} -> ∀{A} -> Γ ⇛ (Δ ,[ A ]) -> Γ ⇛ Δ
-  _,_ : ∀{Γ Δ : Ctx L} -> (δ : Γ ⇛ Δ) -> ∀{A} -> Γ ⊢ (A [ ♮-⇛ δ ]-Type) -> Γ ⇛ Δ ,[ A ]
-  _◆-⇛_ : ∀{Γ Δ Ε : Ctx L} -> Γ ⇛ Δ -> Δ ⇛ Ε -> Γ ⇛ Ε
-  ε : Γ ⇛ []
+-- data _⇛_ where
+--   id : ∀{Γ : Ctx L} -> Γ ⇛ Γ
+--   π₁ : ∀{Γ Δ : Ctx L} -> ∀{A} -> Γ ⇛ (Δ ,[ A ]) -> Γ ⇛ Δ
+--   _,_ : ∀{Γ Δ : Ctx L} -> (δ : Γ ⇛ Δ) -> ∀{A} -> Γ ⊢ (A [ ♮-⇛ δ ]-Type) -> Γ ⇛ Δ ,[ A ]
+--   _◆-⇛_ : ∀{Γ Δ Ε : Ctx L} -> Γ ⇛ Δ -> Δ ⇛ Ε -> Γ ⇛ Ε
+--   ε : Γ ⇛ []
 
-data _⇛♮_ where
-  ε : Γ ⇛♮ []
-  _,_ : ∀{A} -> (σ : Γ ⇛♮ Δ) -> Γ ⊢ (A [ σ ]-Type) -> Γ ⇛♮ Δ ,[ A ]
+-- data _⇛♮_ where
+--   ε : Γ ⇛♮ []
+--   _,_ : ∀{A} -> (σ : Γ ⇛♮ Δ) -> Γ ⊢ (A [ σ ]-Type) -> Γ ⇛♮ Δ ,[ A ]
 
 
 
@@ -169,27 +185,28 @@ _⊢Role : ℕ -> 𝒰₀
 _⊢Role n = Fin n
 
 
-⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx L) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
-⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≣ (cong-≣ (Γ ⊢_) p) x
+-- ⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx L) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
+-- ⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≣ (cong-≣ (Γ ⊢_) p) x
 
 -- ⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx L) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
 -- ⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≣ (cong-≣ (Γ ⊢_) p) x
 
-_∥⊢Type↷_ : Γ ≣ Δ -> Γ ⊢Type -> Δ ⊢Type
-_∥⊢Type↷_ p A = transp-≣ (cong-≣ (_⊢Type) p) A
+-- _∥⊢Type↷_ : Γ ≣ Δ -> Γ ⊢Type -> Δ ⊢Type
+-- _∥⊢Type↷_ p A = transp-≣ (cong-≣ (_⊢Type) p) A
 
 
 ------------------------------------------------------------------------
 -- Filtering (Definition)
 
-_⇂_ : Ctx (Global R) -> UniqueSortedList R -> Ctx Local
-_⇂-Type_ : Γ ⊢ Global R Type -> (U : UniqueSortedList R) -> Γ ⇂ U ⊢ Local Type
+{-
+_⇂_ : Ctx R -> UniqueSortedList R -> Ctx Local
+_⇂-Type_ : Γ ⊢ R Type -> (U : UniqueSortedList R) -> Γ ⇂ U ⊢ Local Type
 
 [] ⇂ U = []
 Γ ,[ A ] ⇂ U = Γ ⇂ U ,[ A ⇂-Type U ]
 
-_⇂-Ctx₊_ : {Γ : Ctx (Global R)} -> Γ ⊢Ctx₊ -> (U : UniqueSortedList R) -> Γ ⇂ U ⊢Ctx₊
-filter-Type,Ctx₊ : {Γ : Ctx (Global R)} -> (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E ⊢Type) -> (U : UniqueSortedList R) -> (Γ ⇂ U) ⋆-Ctx₊ (E ⇂-Ctx₊ U) ⊢Type
+_⇂-Ctx₊_ : {Γ : Ctx R} -> Γ ⊢Ctx₊ -> (U : UniqueSortedList R) -> Γ ⇂ U ⊢Ctx₊
+filter-Type,Ctx₊ : {Γ : Ctx R} -> (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E ⊢Type) -> (U : UniqueSortedList R) -> (Γ ⇂ U) ⋆-Ctx₊ (E ⇂-Ctx₊ U) ⊢Type
 
 [] ⇂-Ctx₊ U = []
 E ,[ x ] ⇂-Ctx₊ U = E ⇂-Ctx₊ U ,[ filter-Type,Ctx₊ E x U ]
@@ -221,25 +238,26 @@ filter-Local U V A = {!!}
   -- we can return 𝟙 because this means that our current type is not filterable
   -- to U
 
+-}
 -- End Filtering (Definition)
 ------------------------------------------------------------------------
 
-Flat : Γ ⊢ Comm R Type -> Γ ⊢ Global R Type
-Flat = {!!}
+-- Flat : Γ ⊢Comm R Type -> Γ ⊢ R Type
+-- Flat = {!!}
 
 data BaseType : 𝒰₀ where
   NN End : BaseType
 
-data _⊢Type where
-  located : (U : UniqueSortedList R) -> (A : Γ ⇂ U ⊢ Local Type) -> Γ ⊢ Global R Type
+data _⇂_⊢Type where
+  located : (V ⊆ U) -> (A : Γ ⇂ U ⊢Type) -> Γ ⇂ V ⊢ R Type
 
-  Base : BaseType -> Γ ⊢ Local Type
+  Base : BaseType -> Γ ⇂ U ⊢ R Type
 
-  _⇒_ : (A : Γ ⊢Type) -> (B : Γ ,[ A ] ⊢Type) -> Γ ⊢Type
+  _⇒_ : (A : Γ ⇂ U ⊢ R Type) -> (B : Γ ,[ A ] ⇂ U ⊢ R Type) -> Γ ⇂ U ⊢ R Type
 
-  Unit : Γ ⊢Type
+  Unit : Γ ⇂ U ⊢Type
 
-  -- Val : {U V : UniqueSortedList R} -> (A : Γ ⇂ (U ∪ V) ⊢ Local Type) -> Γ ⊢ located U A -> Γ ⇂ (U ∪ V) ⊢ Local Type
+  Val : (ϕ : V ⊆ U) -> (A : Γ ⇂ U ⊢ R Type) -> Γ ⊢ located ϕ A -> Γ ⇂ U ⊢ R Type
 
   -------------------
   -- Normalizable:
@@ -253,17 +271,23 @@ syntax located A T = T ＠ A
 
 
 data _⊢CommType where
-  ⟮_↝_⟯[_]_ : (a b : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ∪ ⦗ b ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ∪ ⦗ b ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
-  ⩒⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
-  ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢ Comm R Type -> Γ ⊢ Comm R Type
-  End : Γ ⊢ Comm R Type
+  ⟮_↝_⟯[_]_ : (a b : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ∪ ⦗ b ⦘ ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
+  ⩒⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
+  ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
+  End : Γ ⊢CommType
+
+-- data _⊢CommType where
+--   ⟮_↝_⟯[_]_ : (a b : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ∪ ⦗ b ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ∪ ⦗ b ⦘ ] ⊢Comm R Type -> Γ ⊢Comm R Type
+--   ⩒⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢Comm R Type -> Γ ⊢Comm R Type
+--   ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢Comm R Type -> Γ ⊢Comm R Type
+--   End : Γ ⊢Comm R Type
 
 
 --------------------------------------------------------------
 -- Filtering (Impl types)
-located V A ⇂-Type U = filter-Local U V {!!}
-(T ⇒ B) ⇂-Type U = (T ⇂-Type U) ⇒ (B ⇂-Type U)
-Unit ⇂-Type U = Unit
+-- located V A ⇂-Type U = filter-Local U V {!!}
+-- (T ⇒ B) ⇂-Type U = (T ⇂-Type U) ⇒ (B ⇂-Type U)
+-- Unit ⇂-Type U = Unit
 
 
 -- End Filtering (Impl types)
@@ -273,25 +297,37 @@ Unit ⇂-Type U = Unit
 --------------------------------------------------------------
 -- Projection
 
-_↷-Ctx_ : (f : ⟨ R ⟩ -> ⟨ S ⟩) -> Ctx (Global R) -> Ctx (Global S)
-_↷-Comm_ : (f : ⟨ R ⟩ -> ⟨ S ⟩) -> Γ ⊢ Comm R Type -> f ↷-Ctx Γ ⊢ Comm S Type
-_↷-Global_ : (f : ⟨ R ⟩ -> ⟨ S ⟩) -> Γ ⊢ Global R Type -> f ↷-Ctx Γ ⊢ Global S Type
+private
+  Img = image-UniqueSortedList
+  map-Img = map-image-UniqueSortedList
+  _⟶_ = StrictOrderHom
+
+_↷-Ctx_ : (f : R ⟶ S) -> Ctx R -> Ctx S
+_↷-Comm_ : (f : R ⟶ S) -> Γ ⊢Comm R Type -> f ↷-Ctx Γ ⊢Comm S Type
+_↷-Type_ : (f : R ⟶ S) -> Γ ⇂ U ⊢ R Type -> f ↷-Ctx Γ ⇂ Img f U ⊢ S Type
+_↷-Term_ : (f : R ⟶ S) -> ∀{A : Γ ⇂ U ⊢ R Type} -> Γ ⊢ A -> f ↷-Ctx Γ ⊢ f ↷-Type A
+
+infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Type_
+
 
 f ↷-Ctx [] = []
-f ↷-Ctx (Γ ,[ A ]) = f ↷-Ctx Γ ,[ f ↷-Global A ]
+f ↷-Ctx (Γ ,[ A ]) = f ↷-Ctx Γ ,[ f ↷-Type A ]
 
-f ↷-Global located U x = located {!!} {!!}
-f ↷-Global (T ⇒ B) = {!!}
-f ↷-Global 𝟙 = {!!}
+f ↷-Type located ϕ x = located (map-Img ϕ) (f ↷-Type x)
+f ↷-Type (T ⇒ B) = (f ↷-Type T) ⇒ (f ↷-Type B)
+f ↷-Type Unit = Unit
+f ↷-Type Base x = Base x
+f ↷-Type Val ϕ A x = Val (map-Img ϕ) (f ↷-Type A) (f ↷-Term x)
 
-f ↷-Comm (⟮ a ↝ b ⟯[ A ] x) = ⟮ f a ↝ f b ⟯[ {!!} ] ({! f ↷-Comm x !})
+f ↷-Comm (⟮ a ↝ b ⟯[ A ] x) = ⟮ ⟨ f ⟩ a ↝ ⟨ f ⟩ b ⟯[ {!!} ] ({! f ↷-Comm x !})
 f ↷-Comm (⩒⟮ a ⟯[ A ] x) = {!!}
 f ↷-Comm (⩑⟮ a ⟯[ A ] x) = {!!}
 f ↷-Comm End = End
 
-reduce-Ctx : Ctx (Global (𝟙 + R)) -> Ctx (Global R)
-reduce-Comm : Γ ⊢ Comm (𝟙 + R) Type -> reduce-Ctx Γ ⊢ Comm R Type
-reduce-Global : Γ ⊢ Global (𝟙 + R) Type -> reduce-Ctx Γ ⊢ Global R Type
+{-
+reduce-Ctx : Ctx (Global (𝟙 + R)) -> Ctx R
+reduce-Comm : Γ ⊢Comm (𝟙 + R) Type -> reduce-Ctx Γ ⊢Comm R Type
+reduce-Global : Γ ⊢ (𝟙 + R) Type -> reduce-Ctx Γ ⊢ R Type
 
 reduce-Ctx [] = []
 reduce-Ctx (Γ ,[ A ]) = reduce-Ctx Γ ,[ reduce-Global A ]
@@ -307,7 +343,7 @@ reduce-Comm End = {!!}
 reduce-Global T = {!!}
 
 
-infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Global_
+infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Type_
 
 
 -- End Projection
@@ -447,10 +483,10 @@ module Examples where
   emp : Ctx L
   emp = []
 
-  T₀ : [] ⊢ Comm (𝔽 3) Type
+  T₀ : [] ⊢Comm (𝔽 3) Type
   T₀ = ⟮ # 0 ↝ # 1 ⟯[ Base NN ] ⟮ # 1 ↝ # 2 ⟯[ Base NN ] End
 
-  T₁ : [] ,[ Base NN ＠ ⦗ # 0 ⦘ ] ⊢ Comm (𝔽 2) Type
+  T₁ : [] ,[ Base NN ＠ ⦗ # 0 ⦘ ] ⊢Comm (𝔽 2) Type
   T₁ = {!!} -- ⟮ # 0 ↝ # 1 ⟯[ Val {U = ⦗ # 0 ⦘} {V = ⦗ # 1 ⦘} (Base NN) (loc ⦗ # 0 ⦘ (var {!zero!})) ] {!!}
 
 
@@ -1073,4 +1109,4 @@ under_by_[_]-Type {Γ = Γ} E X (_,_ {A = A} σ x) =
 -}
 -}
 -}
-
+-}

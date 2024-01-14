@@ -56,6 +56,7 @@ module _ {A : StrictOrder 𝑖} where
 
   infixl 50 _∪_
 
+
 postulate
   -- TODO: Naming unclear
   instance isStrictOrder:⋆ : ∀{A B} -> {{_ : StrictOrder 𝑖 on A}} -> {{_ : StrictOrder 𝑗 on B}} -> isStrictOrder (𝑖 ⌄ 1 ⊔ 𝑗 ⌄ 1) (A +-𝒰 B)
@@ -69,4 +70,19 @@ _⋆-StrictOrder_ A B = ′ ⟨ A ⟩ +-𝒰 ⟨ B ⟩ ′
 
 𝟙-StrictOrder : StrictOrder _
 𝟙-StrictOrder = ′ 𝟙-𝒰 ′
+
+
+
+module _ (A : StrictOrder 𝑖) (B : StrictOrder 𝑗) where
+  postulate
+    isStrictOrderHom : (f : ⟨ A ⟩ -> ⟨ B ⟩) -> 𝒰 (𝑖 ､ 𝑗)
+
+  StrictOrderHom = _ :& isStrictOrderHom
+
+
+-- TODO Naming
+module _ {A B : StrictOrder 𝑖} where
+  postulate
+    image-UniqueSortedList : (f : StrictOrderHom A B) -> UniqueSortedList A -> UniqueSortedList B
+    map-image-UniqueSortedList : ∀{f U V} -> U ⊆ V -> image-UniqueSortedList f U ⊆ image-UniqueSortedList f V
 
