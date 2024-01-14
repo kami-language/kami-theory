@@ -3,10 +3,12 @@
 module KamiD.Dev.2024-01-14.Rules where
 
 open import Agora.Conventions hiding (Σ ; Lift)
+open import Agora.Order.Preorder
+open import Agora.Order.Lattice
 open import Agora.Data.Power.Definition
 open import Agora.Data.Sum.Definition
-open import Data.Fin hiding (_-_ ; _+_)
-open import Data.Nat hiding (_! ; _+_)
+open import Data.Fin hiding (_-_ ; _+_ ; _≤_)
+open import Data.Nat hiding (_! ; _+_ ; _≤_)
 open import Relation.Nullary.Decidable.Core
 
 open import KamiD.Dev.2024-01-14.Core hiding (_＠_)
@@ -109,17 +111,17 @@ _⋆-Ctx₊₂_ : (Δ : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ Δ) ⊢Ctx₊ -> Γ ⊢C
 
 assoc-⋆-Ctx₊ : ∀{Δ E} -> Γ ⋆-Ctx₊ (Δ ⋆-Ctx₊₂ E) ≣ Γ ⋆-Ctx₊ Δ ⋆-Ctx₊ E
 
-{-
-Δ ⋆-Ctx₊₂ [] = Δ
-Δ ⋆-Ctx₊₂ (E ,[ x ]) = (Δ ⋆-Ctx₊₂ E) ,[ transp-≣ (cong-≣ _⇂_⊢Type (sym-≣ assoc-⋆-Ctx₊)) x ]
+-- Δ ⋆-Ctx₊₂ [] = Δ
+-- Δ ⋆-Ctx₊₂ (E ,[ x ]) = (Δ ⋆-Ctx₊₂ E) ,[ transp-≣ (cong-≣ _⇂_⊢Type (sym-≣ assoc-⋆-Ctx₊)) x ]
 
 Γ ⋆-Ctx₊ [] = Γ
 Γ ⋆-Ctx₊ (E ,[ x ]) = (Γ ⋆-Ctx₊ E) ,[ x ]
 
-instance
-  hasNotation-⋆:Ctx₊ : hasNotation-⋆ (Ctx L) (_⊢Ctx₊) (λ _ _ -> Ctx L)
-  hasNotation-⋆:Ctx₊ = record { _⋆_ = λ Γ E -> Γ ⋆-Ctx₊ E }
+-- instance
+--   hasNotation-⋆:Ctx₊ : hasNotation-⋆ (Ctx L) (_⊢Ctx₊) (λ _ _ -> Ctx L)
+--   hasNotation-⋆:Ctx₊ = record { _⋆_ = λ Γ E -> Γ ⋆-Ctx₊ E }
 
+{-
 
 assoc-⋆-Ctx₊ {E = []} = refl-≣
 assoc-⋆-Ctx₊ {Γ = Γ} {Δ = Δ} {E = E ,[ x ]} =
@@ -228,12 +230,12 @@ isRefl:σ-⋆,⇂,Ctx = K1 _
 
 infixl 40 _⇂_ _⇂-Type_ _⇂-Ctx₊_
 
-_⇂-Local_ : {U V : UniqueSortedList R} -> Γ ⇂ V ⊢ Local Type -> (U ⊆ V) -> Γ ⇂ U ⊢ Local Type
+_⇂-Local_ : {U V : UniqueSortedList R} -> Γ ⇂ V ⊢ Local Type -> (U ≤ V) -> Γ ⇂ U ⊢ Local Type
 _⇂-Local_ = {!!}
 
 filter-Local : (U V : UniqueSortedList R) -> Γ ⇂ V ⊢ Local Type -> Γ ⇂ U ⊢ Local Type
 filter-Local U V A = {!!}
-  -- we have to check that U ⊆ V, if that is the case,
+  -- we have to check that U ≤ V, if that is the case,
   -- we can restrict all things in the context properly. If that is not the case,
   -- we can return 𝟙 because this means that our current type is not filterable
   -- to U
@@ -249,7 +251,7 @@ data BaseType : 𝒰₀ where
   NN End : BaseType
 
 data _⇂_⊢Type where
-  located : (V ⊆ U) -> (A : Γ ⇂ U ⊢Type) -> Γ ⇂ V ⊢ R Type
+  located : (V ≤ U) -> (A : Γ ⇂ U ⊢Type) -> Γ ⇂ V ⊢ R Type
 
   Base : BaseType -> Γ ⇂ U ⊢ R Type
 
@@ -257,7 +259,7 @@ data _⇂_⊢Type where
 
   Unit : Γ ⇂ U ⊢Type
 
-  Val : (ϕ : V ⊆ U) -> (A : Γ ⇂ U ⊢ R Type) -> Γ ⊢ located ϕ A -> Γ ⇂ U ⊢ R Type
+  Val : (ϕ : V ≤ U) -> (A : Γ ⇂ U ⊢ R Type) -> Γ ⊢ located ϕ A -> Γ ⇂ U ⊢ R Type
 
   -------------------
   -- Normalizable:
@@ -271,13 +273,13 @@ syntax located A T = T ＠ A
 
 
 data _⊢CommType where
-  ⟮_↝_⟯[_]_ : (a b : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ∪ ⦗ b ⦘ ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
+  ⟮_↝_⟯[_]_ : (a b : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ∨ ⦗ b ⦘ ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
   ⩒⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
   ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
   End : Γ ⊢CommType
 
 -- data _⊢CommType where
---   ⟮_↝_⟯[_]_ : (a b : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ∪ ⦗ b ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ∪ ⦗ b ⦘ ] ⊢Comm R Type -> Γ ⊢Comm R Type
+--   ⟮_↝_⟯[_]_ : (a b : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ∨ ⦗ b ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ∨ ⦗ b ⦘ ] ⊢Comm R Type -> Γ ⊢Comm R Type
 --   ⩒⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢Comm R Type -> Γ ⊢Comm R Type
 --   ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ Local Type) -> Γ ,[ A ＠ ⦗ a ⦘ ] ⊢Comm R Type -> Γ ⊢Comm R Type
 --   End : Γ ⊢Comm R Type
@@ -298,10 +300,10 @@ data _⊢CommType where
 -- Projection
 
 private
-  Img = Img-UniqueSortedList
-  map-Img = map-Img-UniqueSortedList
-  PreImg = PreImg-UniqueSortedList
-  map-PreImg = map-PreImg-UniqueSortedList
+  Img = Img-𝒫ᶠⁱⁿ
+  map-Img = map-Img-𝒫ᶠⁱⁿ
+  PreImg = PreImg-𝒫ᶠⁱⁿ
+  map-PreImg = map-PreImg-𝒫ᶠⁱⁿ
   _⟶_ = StrictOrderHom
 
 _↷-Ctx_ : (f : R ⟶ S) -> Ctx R -> Ctx S
@@ -350,7 +352,6 @@ infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Type_
 --------------------------------------------------------------
 
 
-{-
 
 
 
@@ -361,55 +362,36 @@ infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Type_
 {-# TERMINATING #-}
 wk-Ctx₊ : (E : Γ ⊢Ctx₊) -> Γ ,[ A ] ⊢Ctx₊
 
-wk-Type,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Type) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Type
+wk-Type,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⇂ U ⊢Type) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⇂ U ⊢Type
 
 wk-Ctx₊ [] = []
 wk-Ctx₊ (E ,[ x ]) = wk-Ctx₊ E ,[ wk-Type,ind E x ]
 
--- σ-filter-wk-Ctx₊ : ∀{E : Γ ⊢Ctx₊} {U x} -> filter-Type,Ctx₊ (wk-Ctx₊ E) (wk-Type,ind E x) U ≣ wk-Type,ind (E ⇂-Ctx₊ U) (filter-Type,Ctx₊ E x U)
--- σ-filter-wk-Ctx₊ = ?
-      -- filter-Type,Ctx₊ (wk-Ctx₊ E) (wk-Type,ind E x) U ]
 
-σ-wk-⇂-Ctx₊ : (E : Γ ⊢Ctx₊) (A : Γ ⊢Type) -> ∀{U} -> wk-Ctx₊ {A = A} E ⇂-Ctx₊ U ≣ wk-Ctx₊ (E ⇂-Ctx₊ U)
-
-σ-filter-wk-Ctx₊ : ∀(E : Γ ⊢Ctx₊) {A : Γ ⊢Type} {U x} ->
-
-                     filter-Type,Ctx₊ (wk-Ctx₊ {A = A} E) (wk-Type,ind E x) U
-
-                            ≣⟨ cong-≣ (λ ξ -> _ ⋆-Ctx₊ ξ ⊢Type) (σ-wk-⇂-Ctx₊ E A) ⟩≣
-
-                     wk-Type,ind {A = A ⇂-Type U} (E ⇂-Ctx₊ U) (filter-Type,Ctx₊ E x U)
-
-σ-wk-⇂-Ctx₊ [] A = refl-≣
-σ-wk-⇂-Ctx₊ (E ,[ x ]) A = {!!}
-
-σ-filter-wk-Ctx₊ [] = {!refl-≣!}
-σ-filter-wk-Ctx₊ (E ,[ x ]) = {!!}
-
-
--- {-# REWRITE σ-wk-⇂-Ctx₊ #-} -- we need this for `wk-Type,ind`
-
-wk-Type,ind E (located U A) = let A' = (wk-Type,ind (E ⇂-Ctx₊ U) A) in located U {!!} -- located U (wk-Type,ind (E ⇂-Ctx₊ U) A) -- (wk-Type,ind (E ⇂-Ctx₊ U) ?)
+wk-Type,ind E (located U A) = located U (wk-Type,ind E A) -- let A' = (wk-Type,ind (E ⇂-Ctx₊ U) A) in located U {!!} -- located U (wk-Type,ind (E ⇂-Ctx₊ U) A) -- (wk-Type,ind (E ⇂-Ctx₊ U) ?)
 wk-Type,ind E (Base x) = Base x
 wk-Type,ind E (T ⇒ B) = wk-Type,ind E T ⇒ wk-Type,ind (E ,[ T ]) B
 wk-Type,ind E Unit = Unit
+wk-Type,ind E (Val ϕ A x) = {!!}
 
-wk-Type : ∀{A} -> Γ ⊢Type -> Γ ,[ A ] ⊢Type
+wk-Type : Γ ⇂ U ⊢Type -> Γ ,[ A ] ⇂ U ⊢Type
 wk-Type X = wk-Type,ind [] X -- [ wk-⇛♮ id-⇛♮ ]-Type
 
-wk-Term-ind : ∀ E -> {X : Γ ⋆-Ctx₊ E ⊢Type} -> Γ ⋆-Ctx₊ E ⊢ X -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢ wk-Type,ind E X
+wk-Term-ind : ∀ E -> {X : Γ ⋆-Ctx₊ E ⇂ U ⊢Type} -> Γ ⋆-Ctx₊ E ⊢ X -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢ wk-Type,ind E X
 wk-Term-ind = {!!}
 
-wk-Term : {X : Γ ⊢Type} -> Γ ⊢ X -> Γ ,[ A ] ⊢ wk-Type X
+wk-Term : {X : Γ ⇂ U ⊢Type} -> Γ ⊢ X -> Γ ,[ A ] ⊢ wk-Type X
 wk-Term t = wk-Term-ind [] t
 
 
 -- wk-⇛♮-ind : ∀{A} -> ∀ E -> (Γ ⋆-Ctx₊ E) ⇛♮ Δ -> (Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E) ⇛♮ Δ
 
 -- weakening over a whole context
-wks-Type : (E : Γ ⊢Ctx₊) -> (A : Γ ⊢Type) -> Γ ⋆-Ctx₊ E ⊢Type
+wks-Type : (E : Γ ⊢Ctx₊) -> (A : Γ ⇂ U ⊢Type) -> Γ ⋆-Ctx₊ E ⇂ U ⊢Type
 wks-Type [] A = A
 wks-Type (E ,[ x ]) A = wk-Type (wks-Type E A)
+
+{-
 
 β-wks-Type-Base : ∀{X} {E : Γ ⊢Ctx₊} -> wks-Type E (Base X) ≣ Base X
 β-wks-Type-Base {E = []} = refl-≣
@@ -464,7 +446,7 @@ data _⊢_ where
   var : Γ ⊢Var A -> Γ ⊢ A
   loc : (U : UniqueSortedList R) -> Γ ⇂ U ⊢ {!!} -> Γ ⊢ located U {!!}
 
-  -- _↝_ : {i j : n ⊢Role} {A : Γ ⇂ ⦗ i ⦘ ∪ ⦗ j ⦘ ⊢ Local Type } -> (aᵢ : Γ ⇂ ⦗ i ⦘ ⊢ A) -> (aⱼ : Γ ⇂ ⦗ j ⦘ ⊢ (ᶜᵒ A)) -> Γ ⊢ ⟮ i ↝ j ⟯[ A ]
+  -- _↝_ : {i j : n ⊢Role} {A : Γ ⇂ ⦗ i ⦘ ∨ ⦗ j ⦘ ⊢ Local Type } -> (aᵢ : Γ ⇂ ⦗ i ⦘ ⊢ A) -> (aⱼ : Γ ⇂ ⦗ j ⦘ ⊢ (ᶜᵒ A)) -> Γ ⊢ ⟮ i ↝ j ⟯[ A ]
   -- _,_ : {A B : Γ ⊢Type} -> Γ ⊢ A -> Γ ⊢ B -> Γ ⊢ (A ⊗ B)
 
 

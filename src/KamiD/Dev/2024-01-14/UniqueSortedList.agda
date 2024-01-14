@@ -1,3 +1,5 @@
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module KamiD.Dev.2024-01-14.UniqueSortedList where
 
 open import Agora.Conventions -- using (¬_)
@@ -77,8 +79,19 @@ module _ {A : StrictOrder 𝑖} where
       }
 
   instance
-    isPreorder:UniqueSortedList : isPreorder _ (𝒫ᶠⁱⁿ A)
-    isPreorder:UniqueSortedList = isPreorder:byDef _≤-𝒫ᶠⁱⁿ_
+    isPreorder:𝒫ᶠⁱⁿ : isPreorder _ (𝒫ᶠⁱⁿ A)
+    isPreorder:𝒫ᶠⁱⁿ = isPreorder:byDef _≤-𝒫ᶠⁱⁿ_
+
+  instance
+    hasFiniteJoins:𝒫ᶠⁱⁿ : hasFiniteJoins (𝒫ᶠⁱⁿ A)
+    hasFiniteJoins:𝒫ᶠⁱⁿ = record
+                           { ⊥ = [] since []
+                           ; initial-⊥ = {!!}
+                           ; _∨_ = _∨-𝒫ᶠⁱⁿ_
+                           ; ι₀-∨ = {!!}
+                           ; ι₁-∨ = {!!}
+                           ; [_,_]-∨ = {!!}
+                           }
 
 
 
@@ -109,12 +122,12 @@ module _ (A : StrictOrder 𝑖) (B : StrictOrder 𝑗) where
 -- TODO Naming
 module _ {A B : StrictOrder 𝑖} where
   postulate
-    Img-UniqueSortedList : (f : StrictOrderHom A B) -> UniqueSortedList A -> UniqueSortedList B
-    map-Img-UniqueSortedList : ∀{f U V} -> U ≤-𝒫ᶠⁱⁿ V -> Img-UniqueSortedList f U ≤-𝒫ᶠⁱⁿ Img-UniqueSortedList f V
+    Img-𝒫ᶠⁱⁿ : (f : StrictOrderHom A B) -> 𝒫ᶠⁱⁿ A -> 𝒫ᶠⁱⁿ B
+    map-Img-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
 
   postulate
-    PreImg-UniqueSortedList : (f : StrictOrderHom A B) -> UniqueSortedList B -> UniqueSortedList A
-    map-PreImg-UniqueSortedList : ∀{f U V} -> U ≤-𝒫ᶠⁱⁿ V -> Img-UniqueSortedList f U ≤-𝒫ᶠⁱⁿ Img-UniqueSortedList f V
+    PreImg-𝒫ᶠⁱⁿ : (f : StrictOrderHom A B) -> 𝒫ᶠⁱⁿ B -> 𝒫ᶠⁱⁿ A
+    map-PreImg-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
 
 
 postulate
