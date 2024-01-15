@@ -99,3 +99,10 @@ _≣⟨_⟩≣_ a p b = transp-≣ p a ≣ b
 --   cong₂d-≣ : (f : (a : A) -> (b : B a) -> C a b) -> ∀{a₀ a₁ : A} -> (p : a₀ ≣ a₁) -> ∀{b₀ : B a₀} -> {b₁ : B a₁} -> transp-≣ (cong-≣ B p) b₀ ≣ b₁ -> J1 p B f b₀ ≣ f a₁ b₁
 --   cong₂d-≣ f = ?
   -- refl-≣ refl-≣ = refl-≣
+
+
+typed : (A : 𝒰 𝑖) -> A -> A
+typed A a = a
+
+syntax typed A a = a ∶ A
+

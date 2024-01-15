@@ -51,8 +51,9 @@ private variable
 
 private variable
   U V : UniqueSortedList R
+  ψ : U ≤-𝒫ᶠⁱⁿ V
 
-data _⇂_⊢Type : ∀ (Γ : Ctx R) -> (U : UniqueSortedList R) -> 𝒰₁
+data _⇂_⊢Type : ∀ (Γ : Ctx R) -> {U V : UniqueSortedList R} -> (ψ : U ≤ V) -> 𝒰₁
 data _⊢CommType : (Γ : Ctx R) -> 𝒰₁
 
 data Kind : 𝒰₁ where
@@ -65,13 +66,13 @@ data Kind : 𝒰₁ where
 -- toLayer R = Global R
 -- toLayer (Comm R) = Global R
 
-KindedType : ∀ R -> (Γ : Ctx R) -> (U : UniqueSortedList R) -> 𝒰₁
-KindedType R Γ U = Γ ⇂ U ⊢Type
+KindedType : ∀ R -> (Γ : Ctx R) -> {U V : UniqueSortedList R} -> (ψ : U ≤ V) -> 𝒰₁
+KindedType R Γ ψ = Γ ⇂ ψ ⊢Type
 -- KindedType Local Γ = Γ ⊢Type
 -- KindedType R Γ = Γ ⊢Type
 -- KindedType (Comm R) Γ = Γ ⊢CommType
 
-syntax KindedType L Γ U = Γ ⇂ U ⊢ L Type
+syntax KindedType L Γ ψ = Γ ⇂ ψ ⊢ L Type
 
 
 KindedCommType : ∀ R -> (Γ : Ctx R) -> 𝒰₁
@@ -81,11 +82,11 @@ syntax KindedCommType L Γ = Γ ⊢Comm L Type
 
 
 private variable
-  A : Γ ⇂ U ⊢Type
-  B : Γ ⇂ U ⊢Type
+  A : Γ ⇂ ψ ⊢Type
+  B : Γ ⇂ ψ ⊢Type
 
-data _⊢Var_ : ∀ (Γ : Ctx L) -> (A : Γ ⇂ U ⊢Type) -> 𝒰₁
-data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⇂ U ⊢Type) -> 𝒰₁
+data _⊢Var_ : ∀ (Γ : Ctx L) -> (A : Γ ⇂ ψ ⊢Type) -> 𝒰₁
+data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⇂ ψ ⊢Type) -> 𝒰₁
 
 
 
@@ -93,7 +94,7 @@ data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⇂ U ⊢Type) -> 𝒰₁
 
 data Ctx where
   [] : Ctx L
-  _,[_] : ∀ (Γ : Ctx L) -> (A : Γ ⇂ U ⊢Type) -> Ctx L
+  _,[_] : ∀ (Γ : Ctx L) -> (A : Γ ⇂ ψ ⊢Type) -> Ctx L
 
 
 
@@ -105,7 +106,7 @@ _⋆-Ctx₊_ : ∀ (Γ : Ctx L) -> Γ ⊢Ctx₊ -> Ctx L
 
 data _⊢Ctx₊ where
   [] : Γ ⊢Ctx₊
-  _,[_] : (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E) ⇂ U ⊢Type -> Γ ⊢Ctx₊
+  _,[_] : (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E) ⇂ ψ ⊢Type -> Γ ⊢Ctx₊
 
 _⋆-Ctx₊₂_ : (Δ : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ Δ) ⊢Ctx₊ -> Γ ⊢Ctx₊
 
@@ -159,7 +160,7 @@ infixl 30 _⋆-Ctx₊_ _⋆-Ctx₊₂_ _⋆-Ctx_ [_]Ctx₊∷_
 
 infixl 40 _,[_]
 
-_[_]-Type : Δ ⇂ U ⊢Type -> Γ ⇛♮ Δ -> Γ ⇂ {!!} ⊢Type
+_[_]-Type : Δ ⇂ ψ ⊢Type -> Γ ⇛♮ Δ -> Γ ⇂ {!!} ⊢Type
 
 ♮-⇛ : Γ ⇛ Δ -> Γ ⇛♮ Δ
 ♮-⇛ = {!!}
@@ -202,18 +203,18 @@ _⊢Role n = Fin n
 
 {-
 _⇂_ : Ctx R -> UniqueSortedList R -> Ctx Local
-_⇂-Type_ : Γ ⊢ R Type -> (U : UniqueSortedList R) -> Γ ⇂ U ⊢ Local Type
+_⇂-Type_ : Γ ⊢ R Type -> (U : UniqueSortedList R) -> Γ ⇂ ψ ⊢ Local Type
 
 [] ⇂ U = []
-Γ ,[ A ] ⇂ U = Γ ⇂ U ,[ A ⇂-Type U ]
+Γ ,[ A ] ⇂ U = Γ ⇂ ψ ,[ A ⇂-Type U ]
 
-_⇂-Ctx₊_ : {Γ : Ctx R} -> Γ ⊢Ctx₊ -> (U : UniqueSortedList R) -> Γ ⇂ U ⊢Ctx₊
-filter-Type,Ctx₊ : {Γ : Ctx R} -> (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E ⊢Type) -> (U : UniqueSortedList R) -> (Γ ⇂ U) ⋆-Ctx₊ (E ⇂-Ctx₊ U) ⊢Type
+_⇂-Ctx₊_ : {Γ : Ctx R} -> Γ ⊢Ctx₊ -> (U : UniqueSortedList R) -> Γ ⇂ ψ ⊢Ctx₊
+filter-Type,Ctx₊ : {Γ : Ctx R} -> (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E ⊢Type) -> (U : UniqueSortedList R) -> (Γ ⇂ ψ) ⋆-Ctx₊ (E ⇂-Ctx₊ U) ⊢Type
 
 [] ⇂-Ctx₊ U = []
 E ,[ x ] ⇂-Ctx₊ U = E ⇂-Ctx₊ U ,[ filter-Type,Ctx₊ E x U ]
 
-σ-⋆,⇂,Ctx : ∀ E U -> ((Γ ⋆-Ctx₊ E) ⇂ U) ≣ (Γ ⇂ U ⋆-Ctx₊ E ⇂-Ctx₊ U)
+σ-⋆,⇂,Ctx : ∀ E U -> ((Γ ⋆-Ctx₊ E) ⇂ U) ≣ (Γ ⇂ ψ ⋆-Ctx₊ E ⇂-Ctx₊ U)
 filter-Type,Ctx₊ {Γ = Γ} E A U = σ-⋆,⇂,Ctx E U ∥⊢Type↷ (A ⇂-Type U)
 
 σ-⋆,⇂,Ctx [] U = refl-≣
@@ -230,10 +231,10 @@ isRefl:σ-⋆,⇂,Ctx = K1 _
 
 infixl 40 _⇂_ _⇂-Type_ _⇂-Ctx₊_
 
-_⇂-Local_ : {U V : UniqueSortedList R} -> Γ ⇂ V ⊢ Local Type -> (U ≤ V) -> Γ ⇂ U ⊢ Local Type
+_⇂-Local_ : {U V : UniqueSortedList R} -> Γ ⇂ V ⊢ Local Type -> (U ≤ V) -> Γ ⇂ ψ ⊢ Local Type
 _⇂-Local_ = {!!}
 
-filter-Local : (U V : UniqueSortedList R) -> Γ ⇂ V ⊢ Local Type -> Γ ⇂ U ⊢ Local Type
+filter-Local : (U V : UniqueSortedList R) -> Γ ⇂ V ⊢ Local Type -> Γ ⇂ ψ ⊢ Local Type
 filter-Local U V A = {!!}
   -- we have to check that U ≤ V, if that is the case,
   -- we can restrict all things in the context properly. If that is not the case,
@@ -251,15 +252,15 @@ data BaseType : 𝒰₀ where
   NN End : BaseType
 
 data _⇂_⊢Type where
-  located : (V ≤ U) -> (A : Γ ⇂ U ⊢Type) -> Γ ⇂ V ⊢ R Type
+  located : (V ≤ U) -> (A : Γ ⇂ ψ ⊢Type) -> Γ ⇂ {!!} ⊢ R Type --V ≤ ?)
 
-  Base : BaseType -> Γ ⇂ U ⊢ R Type
+  Base : BaseType -> Γ ⇂ ψ ⊢ R Type
 
-  _⇒_ : (A : Γ ⇂ U ⊢ R Type) -> (B : Γ ,[ A ] ⇂ U ⊢ R Type) -> Γ ⇂ U ⊢ R Type
+  _⇒_ : (A : Γ ⇂ ψ ⊢ R Type) -> (B : Γ ,[ A ] ⇂ ψ ⊢ R Type) -> Γ ⇂ ψ ⊢ R Type
 
-  Unit : Γ ⇂ U ⊢Type
+  Unit : Γ ⇂ ψ ⊢Type
 
-  Val : (ϕ : U ≤ V) -> (A : Γ ⇂ V ⊢ R Type) -> Γ ⊢ located ϕ A -> Γ ⇂ V ⊢ R Type
+  Val : (ϕ : U ≤ V) -> (A : Γ ⇂ {!!} ⊢ R Type) -> Γ ⊢ located ϕ A -> Γ ⇂ {!!} ⊢ R Type
 
   -------------------
   -- Normalizable:
@@ -273,9 +274,9 @@ syntax located A T = T ＠ A
 
 
 data _⊢CommType where
-  ⟮_↝_⟯[_]_ : (a b : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ∨ ⦗ b ⦘ ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
-  ⩒⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
-  ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ ⦗ a ⦘ ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
+  ⟮_↝_⟯[_]_ : (a b : ⟨ R ⟩) -> (A : Γ ⇂ (ι₀-∨ ∶ ⦗ a ⦘ ≤ ⦗ a ⦘ ∨ ⦗ b ⦘) ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
+  ⩒⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ (reflexive ∶ ⦗ a ⦘ ≤ ⦗ a ⦘) ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
+  ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ (reflexive ∶ ⦗ a ⦘ ≤ ⦗ a ⦘) ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
   End : Γ ⊢CommType
 
 -- data _⊢CommType where
@@ -308,8 +309,8 @@ private
 
 _↷-Ctx_ : (f : R ⟶ S) -> Ctx R -> Ctx S
 _↷-Comm_ : (f : R ⟶ S) -> Γ ⊢Comm R Type -> f ↷-Ctx Γ ⊢Comm S Type
-_↷-Type_ : (f : R ⟶ S) -> Γ ⇂ U ⊢ R Type -> f ↷-Ctx Γ ⇂ Img f U ⊢ S Type
-_↷-Term_ : (f : R ⟶ S) -> ∀{A : Γ ⇂ U ⊢ R Type} -> Γ ⊢ A -> f ↷-Ctx Γ ⊢ f ↷-Type A
+_↷-Type_ : (f : R ⟶ S) -> Γ ⇂ ψ ⊢ R Type -> f ↷-Ctx Γ ⇂ map-Img {f = f} ψ ⊢ S Type
+_↷-Term_ : (f : R ⟶ S) -> ∀{A : Γ ⇂ ψ ⊢ R Type} -> Γ ⊢ A -> f ↷-Ctx Γ ⊢ f ↷-Type A
 
 
 
@@ -329,7 +330,7 @@ f ↷-Comm End = End
 
 reduce-Ctx : Ctx (𝟙 + R) -> Ctx R
 reduce-Comm : Γ ⊢Comm (𝟙 + R) Type -> reduce-Ctx Γ ⊢Comm R Type
-reduce-Type : Γ ⇂ U ⊢ (𝟙 + R) Type -> reduce-Ctx Γ ⇂ PreImg ′ just ′ U ⊢ R Type
+reduce-Type : Γ ⇂ ψ ⊢ (𝟙 + R) Type -> reduce-Ctx Γ ⇂ map-PreImg {f = ′ just ′} ψ  ⊢ R Type -- 
 
 reduce-Ctx [] = []
 reduce-Ctx (Γ ,[ A ]) = reduce-Ctx Γ ,[ reduce-Type A ]
@@ -362,7 +363,7 @@ infixl 60 _↷-Ctx_ _↷-Comm_ _↷-Type_
 {-# TERMINATING #-}
 wk-Ctx₊ : (E : Γ ⊢Ctx₊) -> Γ ,[ A ] ⊢Ctx₊
 
-wk-Type,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⇂ U ⊢Type) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⇂ U ⊢Type
+wk-Type,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⇂ ψ ⊢Type) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⇂ ψ ⊢Type
 
 wk-Ctx₊ [] = []
 wk-Ctx₊ (E ,[ x ]) = wk-Ctx₊ E ,[ wk-Type,ind E x ]
@@ -374,20 +375,20 @@ wk-Type,ind E (T ⇒ B) = wk-Type,ind E T ⇒ wk-Type,ind (E ,[ T ]) B
 wk-Type,ind E Unit = Unit
 wk-Type,ind E (Val ϕ A x) = {!!}
 
-wk-Type : Γ ⇂ U ⊢Type -> Γ ,[ A ] ⇂ U ⊢Type
+wk-Type : Γ ⇂ ψ ⊢Type -> Γ ,[ A ] ⇂ ψ ⊢Type
 wk-Type X = wk-Type,ind [] X -- [ wk-⇛♮ id-⇛♮ ]-Type
 
-wk-Term-ind : ∀ E -> {X : Γ ⋆-Ctx₊ E ⇂ U ⊢Type} -> Γ ⋆-Ctx₊ E ⊢ X -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢ wk-Type,ind E X
+wk-Term-ind : ∀ E -> {X : Γ ⋆-Ctx₊ E ⇂ ψ ⊢Type} -> Γ ⋆-Ctx₊ E ⊢ X -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢ wk-Type,ind E X
 wk-Term-ind = {!!}
 
-wk-Term : {X : Γ ⇂ U ⊢Type} -> Γ ⊢ X -> Γ ,[ A ] ⊢ wk-Type X
+wk-Term : {X : Γ ⇂ ψ ⊢Type} -> Γ ⊢ X -> Γ ,[ A ] ⊢ wk-Type X
 wk-Term t = wk-Term-ind [] t
 
 
 -- wk-⇛♮-ind : ∀{A} -> ∀ E -> (Γ ⋆-Ctx₊ E) ⇛♮ Δ -> (Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E) ⇛♮ Δ
 
 -- weakening over a whole context
-wks-Type : (E : Γ ⊢Ctx₊) -> (A : Γ ⇂ U ⊢Type) -> Γ ⋆-Ctx₊ E ⇂ U ⊢Type
+wks-Type : (E : Γ ⊢Ctx₊) -> (A : Γ ⇂ ψ ⊢Type) -> Γ ⋆-Ctx₊ E ⇂ ψ ⊢Type
 wks-Type [] A = A
 wks-Type (E ,[ x ]) A = wk-Type (wks-Type E A)
 
@@ -445,7 +446,7 @@ data _⊢Var_ where
 
 data _⊢_ where
   var : Γ ⊢Var A -> Γ ⊢ A
-  loc : ∀{ϕ : U ≤ V} {A : Γ ⇂ V ⊢Type} -> Γ ⊢ A -> Γ ⊢ located ϕ A
+  loc : ∀{ϕ : U ≤ V} {A : Γ ⇂ ψ ⊢Type} -> Γ ⊢ A -> Γ ⊢ located ϕ A
 
   -- _↝_ : {i j : n ⊢Role} {A : Γ ⇂ ⦗ i ⦘ ∨ ⦗ j ⦘ ⊢ Local Type } -> (aᵢ : Γ ⇂ ⦗ i ⦘ ⊢ A) -> (aⱼ : Γ ⇂ ⦗ j ⦘ ⊢ (ᶜᵒ A)) -> Γ ⊢ ⟮ i ↝ j ⟯[ A ]
 
@@ -473,8 +474,8 @@ module Examples where
   T₀ : [] ⊢Comm (𝔽 3) Type
   T₀ = ⟮ # 0 ↝ # 1 ⟯[ Base NN ] ⟮ # 1 ↝ # 2 ⟯[ Base NN ] End
 
-  T₁ : [] ,[ Base NN ＠ role(# 0) ] ⊢Comm (𝔽 2) Type
-  T₁ = ⟮ # 0 ↝ # 1 ⟯[ Val {!!} (Base NN) ({!var zero!}) ] {!!}
+  -- T₁ : [] ,[ Base NN ＠ role(# 0) ] ⊢Comm (𝔽 2) Type
+  -- T₁ = ⟮ # 0 ↝ # 1 ⟯[ Val {!!} (Base NN) ({!var zero!}) ] {!!}
 
   -- T₁ = ⟮ # 0 ↝ # 1 ⟯[ Val {U = ⦗ # 0 ⦘} {V = ⦗ # 1 ⦘} (Base NN) (loc ⦗ # 0 ⦘ (var {!zero!})) ] {!!}
 

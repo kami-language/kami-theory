@@ -142,7 +142,7 @@ module _ {A B : StrictOrder 𝑖} where
 
   postulate
     PreImg-𝒫ᶠⁱⁿ : (f : StrictOrderHom A B) -> 𝒫ᶠⁱⁿ B -> 𝒫ᶠⁱⁿ A
-    map-PreImg-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
+    map-PreImg-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> PreImg-𝒫ᶠⁱⁿ f U ≤ PreImg-𝒫ᶠⁱⁿ f V
 
 
 postulate
