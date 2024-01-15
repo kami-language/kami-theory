@@ -54,14 +54,30 @@ macro
   𝒫ᶠⁱⁿ : StrictOrder 𝑖 -> _
   𝒫ᶠⁱⁿ A = #structureOn (UniqueSortedList A)
 
-module _ {A : StrictOrder 𝑖} where
-  ⦗_⦘ : ⟨ A ⟩ -> UniqueSortedList A
+module _ {A : 𝒰 𝑖} {{_ : isStrictOrder 𝑗 A}} where
+  ⦗_⦘ : A -> UniqueSortedList ′ A ′
   ⦗_⦘ a = (a ∷ []) since [-]
 
 module _ {A : StrictOrder 𝑖} where
+
+  -- data _≤-𝒫ᶠⁱⁿ_ : (U V : UniqueSortedList A) -> 𝒰 (𝑖 ⌄ 0 ⊔ 𝑖 ⌄ 1 ⁺) where
+  -- -- data _≤-𝒫ᶠⁱⁿ_ : (U V : UniqueSortedList A) -> 𝒰 (𝑖 ⌄ 0 ⊔ 𝑖 ⌄ 1 ⁺) where
+  --   [] : {V : UniqueSortedList A} → ([] since []) ≤-𝒫ᶠⁱⁿ V
+
+  data _≤-𝒫ᶠⁱⁿ_ : (U V : UniqueSortedList A) -> 𝒰 (fst 𝑖 ⊔ snd 𝑖 ⁺) where
+      empty : {vs : UniqueSortedList A} → ([] since []) ≤-𝒫ᶠⁱⁿ vs
+      top : {v : ⟨ A ⟩} → {us vs : UniqueSortedList A} → us ≤-𝒫ᶠⁱⁿ vs → {pu : isUniqueSortedList (v ∷ ⟨ us ⟩)} → {pv : isUniqueSortedList (v ∷ ⟨ vs ⟩)} → ((v ∷ ⟨ us ⟩) since pu) ≤-𝒫ᶠⁱⁿ ((v ∷ ⟨ vs ⟩) since pv)
+      pop : {v : ⟨ A ⟩} → {us vs : UniqueSortedList A} → us ≤-𝒫ᶠⁱⁿ vs → {p : isUniqueSortedList (v ∷ ⟨ vs ⟩)} → vs ≤-𝒫ᶠⁱⁿ ((v ∷ ⟨ vs ⟩) since p)
+
+  decide-≤-𝒫ᶠⁱⁿ : ∀{U V} -> (¬(U ≤-𝒫ᶠⁱⁿ V)) +-𝒰 (U ≤-𝒫ᶠⁱⁿ V)
+  decide-≤-𝒫ᶠⁱⁿ {[] since []} {V} = right empty
+  decide-≤-𝒫ᶠⁱⁿ {′ x ∷ ⟨_⟩ ′} {V} = {!!}
+
+
+
   postulate
-    _≤-𝒫ᶠⁱⁿ_ : (U V : UniqueSortedList A) -> 𝒰 𝑖
-    decide-≤-𝒫ᶠⁱⁿ : ∀{U V} -> ¬(U ≤-𝒫ᶠⁱⁿ V) ⊎ U ≤-𝒫ᶠⁱⁿ V
+    -- _≤-𝒫ᶠⁱⁿ_ : (U V : UniqueSortedList A) -> 𝒰 𝑖
+    -- decide-≤-𝒫ᶠⁱⁿ : ∀{U V} -> ¬(U ≤-𝒫ᶠⁱⁿ V) ⊎ U ≤-𝒫ᶠⁱⁿ V
     _∨-𝒫ᶠⁱⁿ_ : (U V : UniqueSortedList A) -> UniqueSortedList A
 
   infixl 50 _∨-𝒫ᶠⁱⁿ_
@@ -92,7 +108,6 @@ module _ {A : StrictOrder 𝑖} where
                            ; ι₁-∨ = {!!}
                            ; [_,_]-∨ = {!!}
                            }
-
 
 
 

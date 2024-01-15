@@ -259,7 +259,7 @@ data _⇂_⊢Type where
 
   Unit : Γ ⇂ U ⊢Type
 
-  Val : (ϕ : V ≤ U) -> (A : Γ ⇂ U ⊢ R Type) -> Γ ⊢ located ϕ A -> Γ ⇂ U ⊢ R Type
+  Val : (ϕ : U ≤ V) -> (A : Γ ⇂ V ⊢ R Type) -> Γ ⊢ located ϕ A -> Γ ⇂ V ⊢ R Type
 
   -------------------
   -- Normalizable:
@@ -416,6 +416,7 @@ wks-Type₂ E A B = {!!}
 
 wks-Term : (E : Γ ⊢Ctx₊) -> {A : Γ ⊢Type} -> Γ ⊢ A -> Γ ⋆-Ctx₊ E ⊢ wks-Type E A
 wks-Term = {!!}
+-}
 
 
 -- End weakening
@@ -430,8 +431,8 @@ wks-Term = {!!}
 
 
 data _⊢Var_ where
-  zero : {Γ : Ctx L} -> ∀{A} -> Γ ,[ A ] ⊢Var (wk-Type A)
-  suc : {Γ : Ctx L} -> ∀{A B} -> Γ ⊢Var A -> Γ ,[ B ] ⊢Var (wk-Type A)
+  zero : Γ ,[ A ] ⊢Var (wk-Type A)
+  suc : Γ ⊢Var A -> Γ ,[ B ] ⊢Var (wk-Type A)
 
 -- data _⊢Var : Ctx L -> 𝒰₀ where
 --   zero : Γ ,[ A ] ⊢Var
@@ -444,9 +445,10 @@ data _⊢Var_ where
 
 data _⊢_ where
   var : Γ ⊢Var A -> Γ ⊢ A
-  loc : (U : UniqueSortedList R) -> Γ ⇂ U ⊢ {!!} -> Γ ⊢ located U {!!}
+  loc : ∀{ϕ : U ≤ V} {A : Γ ⇂ V ⊢Type} -> Γ ⊢ A -> Γ ⊢ located ϕ A
 
   -- _↝_ : {i j : n ⊢Role} {A : Γ ⇂ ⦗ i ⦘ ∨ ⦗ j ⦘ ⊢ Local Type } -> (aᵢ : Γ ⇂ ⦗ i ⦘ ⊢ A) -> (aⱼ : Γ ⇂ ⦗ j ⦘ ⊢ (ᶜᵒ A)) -> Γ ⊢ ⟮ i ↝ j ⟯[ A ]
+
   -- _,_ : {A B : Γ ⊢Type} -> Γ ⊢ A -> Γ ⊢ B -> Γ ⊢ (A ⊗ B)
 
 
@@ -460,6 +462,8 @@ data _⊢_ where
 
 
 
+role : (i : Fin n) -> ⊥ ≤ ⦗ i ⦘
+role i = initial-⊥
 
 
 module Examples where
@@ -469,9 +473,12 @@ module Examples where
   T₀ : [] ⊢Comm (𝔽 3) Type
   T₀ = ⟮ # 0 ↝ # 1 ⟯[ Base NN ] ⟮ # 1 ↝ # 2 ⟯[ Base NN ] End
 
-  T₁ : [] ,[ Base NN ＠ ⦗ # 0 ⦘ ] ⊢Comm (𝔽 2) Type
-  T₁ = {!!} -- ⟮ # 0 ↝ # 1 ⟯[ Val {U = ⦗ # 0 ⦘} {V = ⦗ # 1 ⦘} (Base NN) (loc ⦗ # 0 ⦘ (var {!zero!})) ] {!!}
+  T₁ : [] ,[ Base NN ＠ role(# 0) ] ⊢Comm (𝔽 2) Type
+  T₁ = ⟮ # 0 ↝ # 1 ⟯[ Val {!!} (Base NN) ({!var zero!}) ] {!!}
 
+  -- T₁ = ⟮ # 0 ↝ # 1 ⟯[ Val {U = ⦗ # 0 ⦘} {V = ⦗ # 1 ⦘} (Base NN) (loc ⦗ # 0 ⦘ (var {!zero!})) ] {!!}
+
+{-
 
 
 
