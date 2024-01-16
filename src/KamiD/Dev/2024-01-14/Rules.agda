@@ -274,6 +274,7 @@ local : {U V : 𝒫ᶠⁱⁿ R} .{ϕ : U ≤ V} -> Γ ⇂ ϕ ⊢Partial -> Γ �
 
 data BaseType : 𝒰₀ where
   NN End : BaseType
+  AA : BaseType
 
 data _⇂_⊢_≤-Local_ : ∀ Γ -> .(V ≤ U) -> (Γ ⇂ U ⊢Local) -> (Γ ⇂ V ⊢Local) -> 𝒰₁
 data _⇂_⊢_≤-Term_ : ∀ (Γ : Ctx R) -> .{ϕ : V ≤ U} -> {A : Γ ⇂ U ⊢Local} {B : Γ ⇂ V ⊢Local} -> (Γ ⇂ ϕ ⊢ A ≤-Local B) -> Γ ⊢ A -> (Γ ⊢ B) -> 𝒰₁
@@ -293,10 +294,15 @@ data _⇂_⊢Type where
 
   Fam : ∀ (U : 𝒫ᶠⁱⁿ R) -> Γ ⊢ (located U (Base NN)) -> Γ ⇂ U ⊢Local
 
+  U-Comm : Γ ⊢Global
+
+
   -------------------
   -- Normalizable:
 
   -- [_]⇂_ : 
+
+infixr 40 _⇒_
 
 data _⇂_⊢_≤-Term_ where
 
@@ -330,6 +336,8 @@ data _⊢CommType where
   -- ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ (reflexive ∶ ⦗ a ⦘ ≤ ⦗ a ⦘) ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
   End : Γ ⊢CommType
 
+  El-Comm : Γ ⊢ U-Comm -> Γ ⊢CommType
+
 
 
 
@@ -357,6 +365,12 @@ wk-Type,ind E Unit = Unit
 wk-Type,ind E (Val ϕ Φ x) = Val ϕ (wk-≤-Local,ind E Φ) (wk-Term-ind E x)
 wk-Type,ind E (Fill ϕ A) = Fill ϕ (wk-Type,ind E A)
 wk-Type,ind E (Fam U n) = Fam U (wk-Term-ind E n)
+wk-Type,ind E (U-Comm) = U-Comm
+
+wk-Comm,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢CommType) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢CommType
+wk-Comm,ind E (⟮ U ↝ V ⨾ ϕ ⟯[ A ] Z) = ⟮ U ↝ V ⨾ ϕ ⟯[ wk-Type,ind E A ] wk-Comm,ind (E ,[ Fill _ _ ]) Z
+wk-Comm,ind E End = End
+wk-Comm,ind E (El-Comm x) = El-Comm (wk-Term-ind E x)
 
 wk-Type : Γ ⇂ k ⊢Type -> Γ ,[ A ] ⇂ k ⊢Type
 wk-Type X = wk-Type,ind [] X -- [ wk-⇛♮ id-⇛♮ ]-Type
@@ -382,6 +396,41 @@ wks-Type (E ,[ x ]) A = wk-Type (wks-Type E A)
 ------------------------------------------------------------------------
 
 
+------------------------------------------------------------------------
+-- Substitution
+
+su-Ctx₊ : (Γ ⊢ A) -> Γ ,[ A ] ⊢Ctx₊ -> Γ ⊢Ctx₊
+
+su-Type,ind : (t : Γ ⊢ A) -> ∀ E -> (Z : Γ ,[ A ] ⋆-Ctx₊ E ⇂ k ⊢Type) -> Γ ⋆-Ctx₊ su-Ctx₊ t E ⇂ k ⊢Type
+-- su-≤-Local,ind : {Γ : Ctx R}{A : Γ ⇂ k ⊢Type} -> ∀ E -> {X : Γ ⋆-Ctx₊ E ⇂ U ⊢Local} {Y : Γ ⋆-Ctx₊ E ⇂ V ⊢Local} -> .{ϕ : V ≤ U} -> _ ⇂ ϕ ⊢ X ≤-Local Y -> _ ⇂ ϕ ⊢ su-Type,ind {A = A} E X ≤-Local su-Type,ind E Y
+-- su-Term-ind : ∀ E -> {X : Γ ⋆-Ctx₊ E ⇂ k ⊢Type} -> Γ ⋆-Ctx₊ E ⊢ X -> Γ ,[ A ] ⋆-Ctx₊ su-Ctx₊ E ⊢ su-Type,ind E X
+-- su-Var-ind : ∀ E -> {X : Γ ⋆-Ctx₊ E ⇂ k ⊢Type} -> Γ ⋆-Ctx₊ E ⊢Var X -> Γ ,[ A ] ⋆-Ctx₊ su-Ctx₊ E ⊢Var su-Type,ind E X
+
+su-Ctx₊ t [] = []
+su-Ctx₊ t (E ,[ x ]) = su-Ctx₊ t E ,[ su-Type,ind t _ x ]
+
+su-Type,ind t E (located U A) = located U (su-Type,ind t E A)
+su-Type,ind t E (Base x) = Base x
+su-Type,ind t E (A ⇒ B) = su-Type,ind t E A ⇒ su-Type,ind t _ B
+su-Type,ind t E Unit = Unit
+su-Type,ind t E (Val ϕ x x₁) = {!!}
+su-Type,ind t E (Fill ϕ x) = {!!}
+su-Type,ind t E (Fam U x) = {!!}
+su-Type,ind t E U-Comm = U-Comm
+
+su-Type : (t : Γ ⊢ A) -> Γ ,[ A ] ⇂ k ⊢Type -> Γ ⇂ k ⊢Type
+su-Type t T = su-Type,ind t [] T
+
+
+-- su-Ctx₊ : (E : Γ ,[ A ] ⊢Ctx₊) -> (t : Γ ⊢ A) -> Γ ⊢Ctx₊
+
+-- su₂-Type,ind : ∀ E -> {A : Γ ⇂ k ⊢Type} -> (t : Γ ⋆-Ctx₊ E ⊢ wks-Type E A) -> (Z : Γ ,[ A ] ⋆-Ctx₊ E ⇂ k ⊢Type) -> Γ ⋆-Ctx₊ su-Ctx₊ t E ⇂ k ⊢Type
+-- su₂-Type,ind E t T = ?
+
+
+-- End Substitution
+------------------------------------------------------------------------
+
 
 
 
@@ -394,6 +443,12 @@ data _⊢Var_ where
 --   zero : Γ ,[ A ] ⊢Var
 --   suc : Γ ⊢Var -> Γ ,[ A ] ⊢Var
 
+KindedLocalTerm : ∀ (Γ : Ctx R) -> ∀ U -> (A : Γ ⇂ U ⊢Local) -> 𝒰 _
+KindedLocalTerm Γ U A = Γ ⊢ A
+
+syntax KindedLocalTerm Γ U A = Γ ⇂ U ⊢ A
+
+
 
 data _⊢_ where
   var : Γ ⊢Var A -> Γ ⊢ A
@@ -401,12 +456,26 @@ data _⊢_ where
   _&_ : {U V : UniqueSortedList R} -> .{ϕ : U ≤ V} -> {A : Γ ⇂ ϕ ⊢Partial} {B : Γ ⇂ U ⊢Local} {Φ : Γ ⇂ ϕ ⊢ local A ≤-Local B} -> Γ ⊢ Fill ϕ A -> Γ ⊢ located U B -> Γ ⊢ located V (local {ϕ = ϕ} A)
   empty : {Γ : Ctx R} {A : Γ ⇂ ⊥ ⊢Local} -> Γ ⊢ located ⊥ A
 
-  coe : Γ ⊢ A -> (A ≣ B) -> Γ ⊢ B
+  u-comm : Γ ⊢CommType -> Γ ⊢ U-Comm
+
+  -- functions
+  lam : Γ ,[ A ] ⊢ B -> Γ ⊢ A ⇒ B
+  app : Γ ⊢ A ⇒ B -> (t : Γ ⊢ A) -> Γ ⊢ su-Type t B
+
+  -- natural numbers
+  zero : Γ ⊢ located U (Base NN)
+  suc : Γ ⊢ located U (Base NN) -> Γ ⊢ located U (Base NN)
+
+  elim-NN : (T : Γ ,[ located U (Base NN)] ⊢Global)
+            -> (t₀ : Γ ⊢ su-Type zero T)
+            -> (tₛ : Γ ⊢ located U (Base NN) ⇒ T ⇒ let T' = wk-Type,ind ([] ,[ located U (Base NN) ]) T in let T'' = wk-Type,ind ([] ,[ _ ]) T' in su-Type (suc (var (suc zero))) T'')
+-- letT T (suc (var (suc zero)))
+            -> (n : Γ ⊢ located U (Base NN)) -> Γ ⊢ su-Type n T
+
+
 
   -- loc : ∀{ϕ : U ≤ V} {A : Γ ⇂ k ⊢Type} -> Γ ⊢ A -> Γ ⊢ located ϕ A
-
   -- _↝_ : {i j : n ⊢Role} {A : Γ ⇂ ⦗ i ⦘ ∨ ⦗ j ⦘ ⊢ Partial Type } -> (aᵢ : Γ ⇂ ⦗ i ⦘ ⊢ A) -> (aⱼ : Γ ⇂ ⦗ j ⦘ ⊢ (ᶜᵒ A)) -> Γ ⊢ ⟮ i ↝ j ⟯[ A ]
-
   -- _,_ : {A B : Γ ⊢Type} -> Γ ⊢ A -> Γ ⊢ B -> Γ ⊢ (A ⊗ B)
 
 
@@ -414,8 +483,13 @@ data _⊢_ where
 
 wk-Term-ind E (var x) = var (wk-Var-ind E x)
 wk-Term-ind E (_&_ a b) = {!!}
-wk-Term-ind E empty = {!!}
-wk-Term-ind E (coe A p) = {!!}
+wk-Term-ind E empty = empty
+wk-Term-ind E (u-comm T) = u-comm (wk-Comm,ind E T)
+wk-Term-ind E (lam t) = lam (wk-Term-ind (E ,[ _ ]) t)
+wk-Term-ind E (app t s) = {!!}
+wk-Term-ind E (zero) = zero
+wk-Term-ind E (suc n) = suc (wk-Term-ind E n)
+wk-Term-ind E (elim-NN T t₀ tₛ n) = {!!}
 
 wk-Var-ind [] zero = suc zero
 wk-Var-ind [] (suc v) = suc (wk-Var-ind [] v)
@@ -440,22 +514,25 @@ postulate
 
 
 module Examples where
-  emp : Ctx L
-  emp = []
 
-  T₀ : [] ⊢Comm (𝔽 3) Type
-  T₀ = ⟮ ⦗ # 0 ⦘ ↝ ⦗ # 1 ⦘ ⨾ initial-⊥ ⟯[ Val _ (Base NN) empty ] ⟮ ⦗ # 1 ⦘ ↝ ⦗ # 2 ⦘ ⨾ initial-⊥ ⟯[ Val _ (Base NN) empty ] End
+  -- T₀ : [] ⊢Comm (𝔽 3) Type
+  -- T₀ = ⟮ ⦗ # 0 ⦘ ↝ ⦗ # 1 ⦘ ⨾ initial-⊥ ⟯[ Val _ (Base NN) empty ] ⟮ ⦗ # 1 ⦘ ↝ ⦗ # 2 ⦘ ⨾ initial-⊥ ⟯[ Val _ (Base NN) empty ] End
 
-  T₁ : [] ,[ Base NN ＠ ⦗ # 0 ⦘ ] ⊢Comm (𝔽 2) Type
+  T₁ : [] ,[ Base NN ＠ ⦗ # 0 ⦘ ] ⊢Comm (𝔽 3) Type
   T₁ = ⟮ ⦗ # 0 ⦘ ↝ ⦗ # 1 ⦘ ⨾ reflexive ⟯[ Val _ (Base NN) (var zero) ] End
 
   U01 : 𝒫ᶠⁱⁿ (𝔽 3)
   U01 = ⦗ zero ⦘ ∨ ⦗ suc zero ⦘
 
-  T₂ : [] ,[ Base NN ＠ ⦗ zero ⦘ ] ⊢Comm (𝔽 3) Type
-  T₂ = ⟮ ⦗ zero ⦘ ↝ ⦗ suc zero ⦘ ⨾ reflexive ⟯[ Val _ (Base NN) (var zero) ]
+  -- T₂ : [] ,[ Base NN ＠ ⦗ zero ⦘ ] ⊢Comm (𝔽 3) Type
+  -- T₂ = ⟮ ⦗ zero ⦘ ↝ ⦗ suc zero ⦘ ⨾ reflexive ⟯[ Val _ (Base NN) (var zero) ]
+  --      ⟮ ⦗ suc zero ⦘ ↝ ⦗ zero ⦘ ⨾ initial-⊥ ⟯[ Val _ {Fam (⦗ zero ⦘ ∨ ⦗ suc zero ⦘) (_&_ {Φ = Base NN} (var zero) (var (suc zero)))} {Fam ⊥ empty} (Fam _ _ _) empty ] End
 
-       ⟮ ⦗ suc zero ⦘ ↝ ⦗ zero ⦘ ⨾ initial-⊥ ⟯[ Val _ {Fam (⦗ zero ⦘ ∨ ⦗ suc zero ⦘) (_&_ {Φ = Base NN} (var zero) (var (suc zero)))} {Fam ⊥ empty} (Fam _ _ _) empty ] End
+  emp : ∀ R -> Ctx R
+  emp R = []
+
+  T₃ : emp (𝔽 3) ⊢ (Base NN ＠ ⦗ # 0 ⦘ ∨ ⦗ # 1 ⦘) ⇒ U-Comm
+  T₃ = lam (elim-NN U-Comm (u-comm End) (lam (lam (u-comm (⟮ ⦗ # 0 ⦘ ↝ ⦗ # 1 ⦘ ⨾ initial-⊥ ⟯[ Val _ (Base AA) empty ] (El-Comm (var (suc zero))))))) (var zero))
 
 -- (Fam _ (_&_ (Fill _ (Val _ (Base NN) {!!})) {!refl-≣!} (var zero) (var (suc zero))) empty)
 
@@ -464,8 +541,6 @@ module Examples where
   -- T₃ = ⟮ ⦗ zero ⦘ ↝ ⦗ suc zero ⦘ ⨾ initial-⊥ ⟯[ Val (initial-⊥ ⟡ ι₀-∨) {Fam U01 (var zero)} {Fam ⊥ empty} (Fam (initial-⊥ ⟡ ι₀-∨) (var zero) empty) empty ] End
 
 
-data TEST : 𝒰₀ where
-  myv : .Bool -> TEST
 
 
 
