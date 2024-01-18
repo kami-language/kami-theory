@@ -43,6 +43,31 @@ record hasStrictOrder {𝑖} (A : Set 𝑖) : Set (lsuc 𝑖) where
 
 open hasStrictOrder {{...}}
 
+
+--------------------------------------------------
+-- instances
+
+open import Data.Fin using (Fin)
+open import Data.Unit using (⊤)
+
+-- Fin n has a strict order
+instance
+  hasStrictOrder:𝔽 : ∀{n} -> hasStrictOrder (Fin n)
+  hasStrictOrder:𝔽 = {!!}
+
+-- The sum of two types has a strict order by "concatenating" them
+instance
+  hasStrictOrder:⊎ : ∀{𝑖 𝑗} -> ∀{A : Set 𝑖} {B : Set 𝑗}
+                     -> {{_ : hasStrictOrder A}} {{_ : hasStrictOrder B}}
+                     -> hasStrictOrder (A ⊎ B)
+  hasStrictOrder:⊎ = {!!}
+
+-- The unit type has a strict order
+instance
+  hasStrictOrder:Unit : hasStrictOrder ⊤
+  hasStrictOrder:Unit = {!!}
+
+
 --------------------------------------------------
 
 module _ {𝑖 : Level} {A : Set 𝑖} where
@@ -108,11 +133,10 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 --------------------------------------------------
 -- now here comes the weird stuff
 
-
 open import Agora.Conventions using (
   _:&_; ⟨_⟩; _since_; ′_′; _on_;
   #structureOn; isSetoid; isSetoid:byId; _isUniverseOf[_]_;  _isUniverseOf[_]_:byBase;
-  𝑖
+  𝑖 ; 𝑗
   )
 open import Agora.Order.Preorder using
   (isPreorderData; isPreorder; isPreorder:byDef;
@@ -140,6 +164,12 @@ macro
 
 module _ {A : StrictOrder 𝑖} where
 
+  -- `𝒫ᶠⁱⁿ A` forms a setoid with strict equality
+  instance
+    isSetoid:𝒫ᶠⁱⁿ : isSetoid (𝒫ᶠⁱⁿ A)
+    isSetoid:𝒫ᶠⁱⁿ = isSetoid:byId
+
+  -- `𝒫ᶠⁱⁿ A` forms a preorder with _⊆_ as relation
   record _≤-𝒫ᶠⁱⁿ_ (U V : 𝒫ᶠⁱⁿ A) : Set (lsuc 𝑖) where
     constructor incl
     field ⟨_⟩ : ⟨ U ⟩ ⊆ ⟨ V ⟩
@@ -150,11 +180,6 @@ module _ {A : StrictOrder 𝑖} where
   _⟡-𝒫ᶠⁱⁿ_ : ∀{U V W} -> U ≤-𝒫ᶠⁱⁿ V -> V ≤-𝒫ᶠⁱⁿ W -> U ≤-𝒫ᶠⁱⁿ W
   incl (allIn p) ⟡-𝒫ᶠⁱⁿ incl (allIn q) = incl (allIn (λ c x → q c (p c x)))
 
-
-  instance
-    isSetoid:𝒫ᶠⁱⁿ : isSetoid (𝒫ᶠⁱⁿ A)
-    isSetoid:𝒫ᶠⁱⁿ = isSetoid:byId
-
   instance
     isPreorderData:≤-𝒫ᶠⁱⁿ : isPreorderData (𝒫ᶠⁱⁿ A) _≤-𝒫ᶠⁱⁿ_
     isPreorderData:≤-𝒫ᶠⁱⁿ = record
@@ -163,6 +188,7 @@ module _ {A : StrictOrder 𝑖} where
       ; transp-≤ = λ {refl refl r -> r}
       }
 
+  -- `𝒫ᶠⁱⁿ A` has finite joins (least upper bounds / maximum / or)
   instance
     isPreorder:𝒫ᶠⁱⁿ : isPreorder _ (𝒫ᶠⁱⁿ A)
     isPreorder:𝒫ᶠⁱⁿ = isPreorder:byDef _≤-𝒫ᶠⁱⁿ_
@@ -193,33 +219,24 @@ module _ {A : StrictOrder 𝑖} where
                            ; [_,_]-∨ = [_,_]-∨-𝒫ᶠⁱⁿ
                            }
 
-{-
-postulate
-  -- TODO: Naming unclear
-  instance hasStrictOrder:⋆ : ∀{A B} -> {{_ : StrictOrder on A}} -> {{_ : StrictOrder on B}} -> hasStrictOrder (A ⊎ B)
-  -- instance hasStrictOrder:𝟙 : hasStrictOrder 𝟙
-
-  -- instance hasStrictOrder:𝔽 : hasStrictOrder ℓ₀ (𝔽 n)
 
 
-_⋆-StrictOrder_ : StrictOrder -> StrictOrder -> StrictOrder _
+_⋆-StrictOrder_ : StrictOrder 𝑖 -> StrictOrder 𝑗 -> StrictOrder _
 _⋆-StrictOrder_ A B = ′ ⟨ A ⟩ ⊎ ⟨ B ⟩ ′
 
-
 𝟙-StrictOrder : StrictOrder _
-𝟙-StrictOrder = ′ 𝟙-𝒰 ′
--
+𝟙-StrictOrder = ′ ⊤ ′
 
-
-module _ (A : StrictOrder) (B : StrictOrder) where
+module _ (A : StrictOrder 𝑖) (B : StrictOrder 𝑗) where
   postulate
-    hasStrictOrderHom : ∀ {𝑖} {A B : Set 𝑖} (f : ⟨ A ⟩ -> ⟨ B ⟩) -> Set 𝑖
+    hasStrictOrderHom : (f : ⟨ A ⟩ -> ⟨ B ⟩) -> Set 𝑖
 
   StrictOrderHom = _ :& hasStrictOrderHom
 
 
+
 -- TODO Naming
-module _ {A B : StrictOrder} where
+module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
   postulate
     Img-𝒫ᶠⁱⁿ : (f : StrictOrderHom A B) -> 𝒫ᶠⁱⁿ A -> 𝒫ᶠⁱⁿ B
     map-Img-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
@@ -229,7 +246,6 @@ module _ {A B : StrictOrder} where
     map-PreImg-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
 
 
--- postulate
---  instance hasStrictOrderHom:right : {A B : StrictOrder} -> hasStrictOrderHom B (A ⋆-StrictOrder B) right
--}
+  postulate
+    instance hasStrictOrderHom:inj₂ : hasStrictOrderHom B (A ⋆-StrictOrder B) inj₂
 
