@@ -63,7 +63,7 @@ private variable
   k l : Kind R
 
 data _⇂_⊢Type : ∀ (Γ : Ctx R) -> Kind R -> 𝒰₁
-data _⊢CommType : (Γ : Ctx R) -> 𝒰₁
+data _⊢Comm : (Γ : Ctx R) -> 𝒰₁
 
 
 
@@ -78,7 +78,7 @@ KindedPartialType Γ ψ = Γ ⇂ Partial ψ ⊢Type
 
 -- KindedType Partial Γ = Γ ⊢Type
 -- KindedType R Γ = Γ ⊢Type
--- KindedType (Comm R) Γ = Γ ⊢CommType
+-- KindedType (Comm R) Γ = Γ ⊢Comm 
 
 syntax KindedPartialType Γ ψ = Γ ⇂ ψ ⊢Partial
 
@@ -95,7 +95,7 @@ syntax KindedGlobalType Γ = Γ ⊢Global
 
 
 KindedCommType : ∀ R -> (Γ : Ctx R) -> 𝒰₁
-KindedCommType R Γ = Γ ⊢CommType
+KindedCommType R Γ = Γ ⊢Comm 
 
 syntax KindedCommType L Γ = Γ ⊢Comm L Type
 
@@ -266,8 +266,7 @@ filter-Partial U V A = {!!}
 -- End Filtering (Definition)
 ------------------------------------------------------------------------
 
--- Flat : Γ ⊢Comm R Type -> Γ ⊢ R Type
--- Flat = {!!}
+Flat : Γ ⊢Comm -> Γ ⊢Global
 
 Restrict-Local : (ϕ : U ≤ V) -> Γ ⇂ V ⊢Local -> Γ ⇂ U ⊢Local
 local : {U V : 𝒫ᶠⁱⁿ R} .{ϕ : U ≤ V} -> Γ ⇂ ϕ ⊢Partial -> Γ ⇂ V ⊢Local
@@ -285,6 +284,7 @@ data _⇂_⊢Type where
   Base : BaseType -> Γ ⇂ U ⊢Local
 
   _⇒_ : (A : Γ ⇂ k ⊢Type) -> (B : Γ ,[ A ] ⇂ k ⊢Type) -> Γ ⇂ k ⊢Type
+  _⊗_ : (A : Γ ⇂ k ⊢Type) -> (B : Γ ,[ A ] ⇂ k ⊢Type) -> Γ ⇂ k ⊢Type
 
   Unit : Γ ⇂ k ⊢Type
 
@@ -295,6 +295,8 @@ data _⇂_⊢Type where
   Fam : ∀ (U : 𝒫ᶠⁱⁿ R) -> Γ ⊢ (located U (Base NN)) -> Γ ⇂ U ⊢Local
 
   U-Comm : Γ ⊢Global
+
+  Comm : (T : Γ ⊢Comm ) -> Γ ,[ Flat T ] ⊢Global -> Γ ⊢Global
 
 
   -------------------
@@ -321,6 +323,7 @@ syntax located A T = T ＠ A
 
 Restrict-Local ϕ (Base x) = Base x
 Restrict-Local ϕ (A ⇒ A₁) = {!!}
+Restrict-Local ϕ (A ⊗ A₁) = {!!}
 Restrict-Local ϕ Unit = {!!}
 Restrict-Local ϕ (Fam _ x) = {!!}
 
@@ -330,14 +333,13 @@ local (Val ϕ {A = A} Φ x) = A
 
 
 
-data _⊢CommType where
-  ⟮_↝_⨾_⟯[_]_ : (U V : 𝒫ᶠⁱⁿ R) -> {W : 𝒫ᶠⁱⁿ R} -> .(ϕ : W ≤ U) -> (A : Γ ⇂ (ϕ ⟡ ι₀-∨ {b = V}) ⊢Partial) -> Γ ,[ Fill (ϕ ⟡ ι₀-∨ {b = V}) A ] ⊢CommType -> Γ ⊢CommType
-  -- ⩒⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ (reflexive ∶ ⦗ a ⦘ ≤ ⦗ a ⦘) ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
-  -- ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ (reflexive ∶ ⦗ a ⦘ ≤ ⦗ a ⦘) ⊢ R Type) -> Γ ,[ A ] ⊢CommType -> Γ ⊢CommType
-  End : Γ ⊢CommType
+data _⊢Comm where
+  ⟮_↝_⨾_⟯[_]_ : (U V : 𝒫ᶠⁱⁿ R) -> {W : 𝒫ᶠⁱⁿ R} -> .(ϕ : W ≤ U) -> (A : Γ ⇂ (ϕ ⟡ ι₀-∨ {b = V}) ⊢Partial) -> Γ ,[ Fill (ϕ ⟡ ι₀-∨ {b = V}) A ] ⊢Comm -> Γ ⊢Comm 
+  -- ⩒⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ (reflexive ∶ ⦗ a ⦘ ≤ ⦗ a ⦘) ⊢ R Type) -> Γ ,[ A ] ⊢Comm -> Γ ⊢Comm 
+  -- ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ (reflexive ∶ ⦗ a ⦘ ≤ ⦗ a ⦘) ⊢ R Type) -> Γ ,[ A ] ⊢Comm -> Γ ⊢Comm 
+  End : Γ ⊢Comm
 
-  El-Comm : Γ ⊢ U-Comm -> Γ ⊢CommType
-
+  El-Comm : Γ ⊢ U-Comm -> Γ ⊢Comm
 
 
 
@@ -361,13 +363,14 @@ wk-Ctx₊ (E ,[ x ]) = wk-Ctx₊ E ,[ wk-Type,ind E x ]
 wk-Type,ind E (located U A) = located U (wk-Type,ind E A) -- let A' = (wk-Type,ind (E ⇂-Ctx₊ U) A) in located U {!!} -- located U (wk-Type,ind (E ⇂-Ctx₊ U) A) -- (wk-Type,ind (E ⇂-Ctx₊ U) ?)
 wk-Type,ind E (Base x) = Base x
 wk-Type,ind E (T ⇒ B) = wk-Type,ind E T ⇒ wk-Type,ind (E ,[ T ]) B
+wk-Type,ind E (T ⊗ B) = wk-Type,ind E T ⊗ wk-Type,ind (E ,[ T ]) B
 wk-Type,ind E Unit = Unit
 wk-Type,ind E (Val ϕ Φ x) = Val ϕ (wk-≤-Local,ind E Φ) (wk-Term-ind E x)
 wk-Type,ind E (Fill ϕ A) = Fill ϕ (wk-Type,ind E A)
 wk-Type,ind E (Fam U n) = Fam U (wk-Term-ind E n)
 wk-Type,ind E (U-Comm) = U-Comm
 
-wk-Comm,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢CommType) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢CommType
+wk-Comm,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Comm ) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Comm 
 wk-Comm,ind E (⟮ U ↝ V ⨾ ϕ ⟯[ A ] Z) = ⟮ U ↝ V ⨾ ϕ ⟯[ wk-Type,ind E A ] wk-Comm,ind (E ,[ Fill _ _ ]) Z
 wk-Comm,ind E End = End
 wk-Comm,ind E (El-Comm x) = El-Comm (wk-Term-ind E x)
@@ -390,10 +393,15 @@ wks-Type : (E : Γ ⊢Ctx₊) -> (A : Γ ⇂ k ⊢Type) -> Γ ⋆-Ctx₊ E ⇂ k
 wks-Type [] A = A
 wks-Type (E ,[ x ]) A = wk-Type (wks-Type E A)
 
+-- β-wk-Type,ind,empty : ∀{A : Γ ,[ B ] ⇂ k ⊢Type} -> wk-Type,ind [] A ≣ A
+-- β-wk-Type,ind,empty = ?
+
 
 
 -- End weakening
 ------------------------------------------------------------------------
+
+
 
 
 ------------------------------------------------------------------------
@@ -427,6 +435,8 @@ su-Type t T = su-Type,ind t [] T
 -- su₂-Type,ind : ∀ E -> {A : Γ ⇂ k ⊢Type} -> (t : Γ ⋆-Ctx₊ E ⊢ wks-Type E A) -> (Z : Γ ,[ A ] ⋆-Ctx₊ E ⇂ k ⊢Type) -> Γ ⋆-Ctx₊ su-Ctx₊ t E ⇂ k ⊢Type
 -- su₂-Type,ind E t T = ?
 
+special-su-top : Γ ,[ B ] ⊢ wk-Type A ->  Γ ,[ A ] ⊢Global -> Γ ,[ B ] ⊢Global
+special-su-top t T = su-Type t (wk-Type,ind ([] ,[ _ ]) T)
 
 -- End Substitution
 ------------------------------------------------------------------------
@@ -456,7 +466,9 @@ data _⊢_ where
   _&_ : {U V : UniqueSortedList R} -> .{ϕ : U ≤ V} -> {A : Γ ⇂ ϕ ⊢Partial} {B : Γ ⇂ U ⊢Local} {Φ : Γ ⇂ ϕ ⊢ local A ≤-Local B} -> Γ ⊢ Fill ϕ A -> Γ ⊢ located U B -> Γ ⊢ located V (local {ϕ = ϕ} A)
   empty : {Γ : Ctx R} {A : Γ ⇂ ⊥ ⊢Local} -> Γ ⊢ located ⊥ A
 
-  u-comm : Γ ⊢CommType -> Γ ⊢ U-Comm
+  ext : {U V : 𝒫ᶠⁱⁿ R} -> .{ϕ : U ≤ V} -> {A : Γ ⇂ ϕ ⊢Partial} -> Γ ⊢ located V (local {ϕ = ϕ} A) -> Γ ⊢ Fill ϕ A
+
+  u-comm : Γ ⊢Comm -> Γ ⊢ U-Comm
 
   -- functions
   lam : Γ ,[ A ] ⊢ B -> Γ ⊢ A ⇒ B
@@ -469,14 +481,23 @@ data _⊢_ where
   elim-NN : (T : Γ ,[ located U (Base NN)] ⊢Global)
             -> (t₀ : Γ ⊢ su-Type zero T)
             -> (tₛ : Γ ⊢ located U (Base NN) ⇒ T ⇒ let T' = wk-Type,ind ([] ,[ located U (Base NN) ]) T in let T'' = wk-Type,ind ([] ,[ _ ]) T' in su-Type (suc (var (suc zero))) T'')
--- letT T (suc (var (suc zero)))
             -> (n : Γ ⊢ located U (Base NN)) -> Γ ⊢ su-Type n T
-
-
 
   -- loc : ∀{ϕ : U ≤ V} {A : Γ ⇂ k ⊢Type} -> Γ ⊢ A -> Γ ⊢ located ϕ A
   -- _↝_ : {i j : n ⊢Role} {A : Γ ⇂ ⦗ i ⦘ ∨ ⦗ j ⦘ ⊢ Partial Type } -> (aᵢ : Γ ⇂ ⦗ i ⦘ ⊢ A) -> (aⱼ : Γ ⇂ ⦗ j ⦘ ⊢ (ᶜᵒ A)) -> Γ ⊢ ⟮ i ↝ j ⟯[ A ]
   -- _,_ : {A B : Γ ⊢Type} -> Γ ⊢ A -> Γ ⊢ B -> Γ ⊢ (A ⊗ B)
+
+------------------------------------------------------------------------
+-- Flattening
+
+Flat (⟮ U ↝ V ⨾ ϕ ⟯[ A ] T) = located (U ∨ V) (local {ϕ = ϕ ⟡ ι₀-∨} A) ⊗ let X = Flat T in special-su-top (ext {!var zero!}) X
+Flat End = {!!}
+Flat (El-Comm x) = {!!}
+
+
+-- End Flattening
+------------------------------------------------------------------------
+
 
 
 
