@@ -45,6 +45,20 @@ open hasStrictOrder {{...}}
 
 --------------------------------------------------
 
+module _ {𝑖 : Level} {A : Set 𝑖} where
+
+  infix 4 _∈_
+
+  data _∈_ : (a : A) → (as : List A) → Set (lsuc 𝑖) where
+    here : ∀ {a : A} {as : List A} → a ∈ (a ∷ as)
+    there : ∀ {a b : A} {as : List A} → a ∈ as → a ∈ (b ∷ as)
+
+  ∉[] : ∀ {a : A} → ¬ (a ∈ [])
+  ∉[] {a} ()
+
+  data _⊆_ : (as bs : List A) → Set (lsuc 𝑖) where
+    allIn : ∀ {as bs : List A} → (all : ∀ (c : A) → c ∈ as → c ∈ bs) → as ⊆ bs
+
 module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   data UniqueSorted : List A → Set 𝑖 where
@@ -56,14 +70,6 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   popSort a .[] [ .a ] = []
   popSort a .(_ ∷ _) (x ∷ x₁) = x₁
 
-  infix 4 _∈_
-  
-  data _∈_ : (a : A) → (as : List A) → Set (lsuc 𝑖) where
-    here : ∀ {a : A} {as : List A} → a ∈ (a ∷ as)
-    there : ∀ {a b : A} {as : List A} → a ∈ as → a ∈ (b ∷ as)
-
-  ∉[] : ∀ {a : A} → ¬ (a ∈ [])
-  ∉[] {a} ()
 
 
   _∈?_ : {{_ : hasDecidableEquality A}} → (a : A) → (as : List A) → Dec (a ∈ as)
@@ -73,9 +79,6 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ...               | no _ | yes a∈as = yes (there a∈as)
   ...               | no a≠b | no a∉as = no λ { here → refl ↯ a≠b; (there a∈as) → a∈as ↯ a∉as}
 
-  data _⊆_ : (as bs : List A) → Set (lsuc 𝑖) where
-    allIn : ∀ {as bs : List A} → (all : ∀ (c : A) → c ∈ as → c ∈ bs) → as ⊆ bs
-    
   _⊆?_ : {{_ : hasDecidableEquality A}} → (as bs : List A) → Dec (as ⊆ bs)
   [] ⊆? bs = yes (allIn (λ c ()))
   (a ∷ as) ⊆? [] = no λ { (allIn x) → x a here ↯ ∉[]}
@@ -108,8 +111,14 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
 open import Agora.Conventions using (
   _:&_; ⟨_⟩; _since_; ′_′; _on_;
-  #structureOn; isSetoid; isSetoid:byId; _isUniverseOf[_]_;  _isUniverseOf[_]_:byBase)
-open import Agora.Order.Preorder using (isPreorderData; isPreorder; isPreorder:byDef)
+  #structureOn; isSetoid; isSetoid:byId; _isUniverseOf[_]_;  _isUniverseOf[_]_:byBase;
+  𝑖
+  )
+open import Agora.Order.Preorder using
+  (isPreorderData; isPreorder; isPreorder:byDef;
+  _≤_
+  )
+open import Agora.Order.Lattice using (hasFiniteJoins)
 
 
 instance
@@ -117,48 +126,74 @@ instance
   _isUniverseOf[_]_:List = _isUniverseOf[_]_:byBase
 
 
-module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
-  StrictOrder : Set (lsuc 𝑖)
-  StrictOrder = (Set 𝑖) :& hasStrictOrder
+StrictOrder : ∀ 𝑖 -> Set (lsuc 𝑖)
+StrictOrder 𝑖 = (Set 𝑖) :& hasStrictOrder
 
-  UniqueSortedList : (A : StrictOrder) -> Set 𝑖
-  UniqueSortedList A = List ⟨ A ⟩ :& UniqueSorted
+UniqueSortedList : (A : StrictOrder 𝑖) -> Set 𝑖
+UniqueSortedList A = List ⟨ A ⟩ :& UniqueSorted
 
-  -- The fancy name for UniqueSortedList: finite power set over A
-  macro
-    𝒫ᶠⁱⁿ : StrictOrder -> _
-    𝒫ᶠⁱⁿ A = #structureOn (UniqueSortedList A)
+-- The fancy name for UniqueSortedList: finite power set over A
+macro
+  𝒫ᶠⁱⁿ : StrictOrder 𝑖 -> _
+  𝒫ᶠⁱⁿ A = #structureOn (UniqueSortedList A)
+
+module _ {A : StrictOrder 𝑖} where
+
+  record _≤-𝒫ᶠⁱⁿ_ (U V : 𝒫ᶠⁱⁿ A) : Set (lsuc 𝑖) where
+    constructor incl
+    field ⟨_⟩ : ⟨ U ⟩ ⊆ ⟨ V ⟩
+
+  reflexive-≤-𝒫ᶠⁱⁿ : ∀{U} -> U ≤-𝒫ᶠⁱⁿ U
+  reflexive-≤-𝒫ᶠⁱⁿ = incl (allIn (λ c x → x))
+
+  _⟡-𝒫ᶠⁱⁿ_ : ∀{U V W} -> U ≤-𝒫ᶠⁱⁿ V -> V ≤-𝒫ᶠⁱⁿ W -> U ≤-𝒫ᶠⁱⁿ W
+  incl (allIn p) ⟡-𝒫ᶠⁱⁿ incl (allIn q) = incl (allIn (λ c x → q c (p c x)))
 
 
   instance
-    isSetoid:𝒫ᶠⁱⁿ : ∀ {A : StrictOrder} → isSetoid (𝒫ᶠⁱⁿ A)
+    isSetoid:𝒫ᶠⁱⁿ : isSetoid (𝒫ᶠⁱⁿ A)
     isSetoid:𝒫ᶠⁱⁿ = isSetoid:byId
 
   instance
-    isPreorderData:≤-𝒫ᶠⁱⁿ : ∀ {A : StrictOrder} → isPreorderData (𝒫ᶠⁱⁿ A) {!!}
+    isPreorderData:≤-𝒫ᶠⁱⁿ : isPreorderData (𝒫ᶠⁱⁿ A) _≤-𝒫ᶠⁱⁿ_
     isPreorderData:≤-𝒫ᶠⁱⁿ = record
-      { reflexive = {!!}
-      ; _⟡_ = {!!}
-      ; transp-≤ = {!!}
+      { reflexive = reflexive-≤-𝒫ᶠⁱⁿ
+      ; _⟡_ = _⟡-𝒫ᶠⁱⁿ_
+      ; transp-≤ = λ {refl refl r -> r}
       }
- 
-{-
+
   instance
     isPreorder:𝒫ᶠⁱⁿ : isPreorder _ (𝒫ᶠⁱⁿ A)
     isPreorder:𝒫ᶠⁱⁿ = isPreorder:byDef _≤-𝒫ᶠⁱⁿ_
+
+  _∨-𝒫ᶠⁱⁿ_ : (U V : 𝒫ᶠⁱⁿ A) -> 𝒫ᶠⁱⁿ A
+  _∨-𝒫ᶠⁱⁿ_ = {!!}
+
+  ⊥-𝒫ᶠⁱⁿ : 𝒫ᶠⁱⁿ A
+  ⊥-𝒫ᶠⁱⁿ = [] since []
+
+  initial-⊥-𝒫ᶠⁱⁿ : ∀{U : 𝒫ᶠⁱⁿ A} -> ⊥-𝒫ᶠⁱⁿ ≤ U
+  initial-⊥-𝒫ᶠⁱⁿ = incl (allIn (λ {c ()}))
+
+  ι₀-∨-𝒫ᶠⁱⁿ : ∀{U V} -> U ≤ (U ∨-𝒫ᶠⁱⁿ V)
+  ι₀-∨-𝒫ᶠⁱⁿ = {!!}
+
+  [_,_]-∨-𝒫ᶠⁱⁿ : ∀{U V W} -> U ≤ W -> V ≤ W -> (U ∨-𝒫ᶠⁱⁿ V) ≤ W
+  [_,_]-∨-𝒫ᶠⁱⁿ = {!!}
 
   instance
     hasFiniteJoins:𝒫ᶠⁱⁿ : hasFiniteJoins (𝒫ᶠⁱⁿ A)
     hasFiniteJoins:𝒫ᶠⁱⁿ = record
                            { ⊥ = [] since []
-                           ; initial-⊥ = {!!}
+                           ; initial-⊥ = initial-⊥-𝒫ᶠⁱⁿ
                            ; _∨_ = _∨-𝒫ᶠⁱⁿ_
-                           ; ι₀-∨ = {!!}
+                           ; ι₀-∨ = λ {U V} -> ι₀-∨-𝒫ᶠⁱⁿ {U} {V}
                            ; ι₁-∨ = {!!}
-                           ; [_,_]-∨ = {!!}
+                           ; [_,_]-∨ = [_,_]-∨-𝒫ᶠⁱⁿ
                            }
 
+{-
 postulate
   -- TODO: Naming unclear
   instance hasStrictOrder:⋆ : ∀{A B} -> {{_ : StrictOrder on A}} -> {{_ : StrictOrder on B}} -> hasStrictOrder (A ⊎ B)
