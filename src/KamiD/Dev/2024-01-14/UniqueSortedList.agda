@@ -246,12 +246,11 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   [_,_]-∪ {x₂ ∷ as} {[]} all x₁ = all x₂ here ↯ λ ()
   [_,_]-∪ {a ∷ as} {b ∷ bs} x x₁ = λ {x₂ x₃ → {!∈-∪ x₃!}}
 
-{-
 --------------------------------------------------
 -- now here comes the weird stuff
 
 open import Agora.Conventions using (
-  _:&_; ⟨_⟩; _since_; ′_′; _on_;
+  _:&_; ⟨_⟩; _since_; ′_′; _on_; of_ ;
   #structureOn; isSetoid; isSetoid:byId; _isUniverseOf[_]_;  _isUniverseOf[_]_:byBase;
   𝑖 ; 𝑗
   )
@@ -292,10 +291,10 @@ module _ {A : StrictOrder 𝑖} where
     field ⟨_⟩ : ⟨ U ⟩ ⊆ ⟨ V ⟩
 
   reflexive-≤-𝒫ᶠⁱⁿ : ∀{U} -> U ≤-𝒫ᶠⁱⁿ U
-  reflexive-≤-𝒫ᶠⁱⁿ = incl (allIn (λ c x → x))
+  reflexive-≤-𝒫ᶠⁱⁿ = incl (λ c x → x)
 
   _⟡-𝒫ᶠⁱⁿ_ : ∀{U V W} -> U ≤-𝒫ᶠⁱⁿ V -> V ≤-𝒫ᶠⁱⁿ W -> U ≤-𝒫ᶠⁱⁿ W
-  incl (allIn p) ⟡-𝒫ᶠⁱⁿ incl (allIn q) = incl (allIn (λ c x → q c (p c x)))
+  incl p ⟡-𝒫ᶠⁱⁿ incl q = incl (λ c x → q c (p c x))
 
   instance
     isPreorderData:≤-𝒫ᶠⁱⁿ : isPreorderData (𝒫ᶠⁱⁿ A) _≤-𝒫ᶠⁱⁿ_
@@ -311,13 +310,14 @@ module _ {A : StrictOrder 𝑖} where
     isPreorder:𝒫ᶠⁱⁿ = isPreorder:byDef _≤-𝒫ᶠⁱⁿ_
 
   _∨-𝒫ᶠⁱⁿ_ : (U V : 𝒫ᶠⁱⁿ A) -> 𝒫ᶠⁱⁿ A
-  U ∨-𝒫ᶠⁱⁿ V = let a , b = (⟨ U ⟩ ∪ ⟨ V ⟩) in a since b 
+  U ∨-𝒫ᶠⁱⁿ V = (⟨ U ⟩ ∪ ⟨ V ⟩) since ∪-sorted (of U) (of V)
+
 
   ⊥-𝒫ᶠⁱⁿ : 𝒫ᶠⁱⁿ A
   ⊥-𝒫ᶠⁱⁿ = [] since []
 
   initial-⊥-𝒫ᶠⁱⁿ : ∀{U : 𝒫ᶠⁱⁿ A} -> ⊥-𝒫ᶠⁱⁿ ≤ U
-  initial-⊥-𝒫ᶠⁱⁿ = incl (allIn (λ {c ()}))
+  initial-⊥-𝒫ᶠⁱⁿ = incl (λ {c ()})
 
   ι₀-∨-𝒫ᶠⁱⁿ : ∀{U V} -> U ≤ (U ∨-𝒫ᶠⁱⁿ V)
   ι₀-∨-𝒫ᶠⁱⁿ {′ [] ′} {V} = {!!}
@@ -366,4 +366,4 @@ module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
 
   postulate
     instance hasStrictOrderHom:inj₂ : hasStrictOrderHom B (A ⋆-StrictOrder B) inj₂
--}
+
