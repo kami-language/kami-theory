@@ -10,6 +10,7 @@ open import Relation.Nullary using (¬_)
 open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
 open import Agda.Builtin.Sigma using (Σ; _,_; fst)
 open import Data.List.Base using (List; []; _∷_)
+open import Relation.Binary.PropositionalEquality using (subst)
 
 --------------------------------------------------
 
@@ -72,6 +73,7 @@ instance
 
 
 --------------------------------------------------
+-- elements and subsets
 
 module _ {𝑖 : Level} {A : Set 𝑖} where
 
@@ -115,6 +117,9 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ... | yes a∈bs | yes all = yes (λ { c here → a∈bs ; c (there x) → all c x})
   ... | yes a∈bs | no as⊈bs = no (λ { all → (λ c c∈as → all c (there c∈as)) ↯ as⊈bs})
   ... | no a∉bs | _ = no λ { all → all a here ↯ a∉bs}
+  
+--------------------------------------------------
+-- insertion
 
   insert : (a : A) → (as : List A) → List A
   insert a [] = a ∷ []
@@ -165,58 +170,6 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
     in sortAll b<*y∷xs ins
 
 
-{-
-  insert : (a : A) → (as : List A) → UniqueSorted as → Σ _ UniqueSorted
-  insert a [] _ = (a ∷ []) , [ a ]
-  insert a (b ∷ []) _ with conn< a b
-  ... | tri< a<b _ _ = (a ∷ b ∷ []) , (a<b ∷ [ b ])
-  ... | tri≡ _ a≡b _ = (a ∷ []) , [ a ]
-  ... | tri> _ _ a>b = (b ∷ a ∷ []) , (a>b ∷ [ a ])
-  insert a (b ∷ c ∷ bs) (b<c ∷ pbs) with conn< a b
-  ... | tri< a<b a≢b a≯b = a ∷ b ∷ c ∷ bs , (a<b ∷ (b<c ∷ pbs))
-  ... | tri≡ a≮b a≡b a≯b = b ∷ c ∷ bs , (b<c ∷ pbs)
-  ... | tri> a≮b a≢b a>b with insert a (c ∷ bs) pbs
-  ... | [] , snd = (b ∷ [] , [ b ])
-  ... | x ∷ .[] , [ x ] = (b ∷ x ∷ [] , {!!} )
-  ... | x ∷ (y ∷ xs) , (x₁ ∷ snd) = (b ∷ x ∷ y ∷ xs , {!!})
-
--}
-
-
-  _∪_ : (as bs : List A) → {pa : UniqueSorted as} → {pb : UniqueSorted bs} → Σ _ UniqueSorted
-  ([] ∪ bs) {pb = pb} = bs , pb
-  (as ∪ []) {pa = pa} = as , pa
-  ((a ∷ as) ∪ bs) {pa = pa} {pb = pb} = let
-      abs = insert a bs
-    in (as ∪ abs) {pa = popSort pa} {pb = insertSorted pb}
-
---------------------------------------------------
-{-
-  ∈-∷ : ∀ (a : A) → (as : List A) → {{pa : UniqueSorted as}} → a ∈ insert a as
-  ∈-∷ a [] ⦃ [] ⦄ = here
-  ∈-∷ a (b ∷ []) ⦃ pa ⦄ with conn< a b
-  ... | tri< a<b _ _ = here
-  ... | tri≡ _ refl _ = here 
-  ... | tri> _ _ a>b = there here 
-  ∈-∷ a (b ∷ x ∷ as) ⦃ pb ∷ pbs ⦄ with conn< a b
-  ... | tri< a<b _ _ = here
-  ... | tri≡ _ refl _ = here
-  ... | tri> _ _ a>b = {!!} --∈-∷ a (x ∷ as) {{ pbs }}
-
-  ∺∈ : ∀ {a b : A} → {as : List A} → {{pa : UniqueSorted as}} → a ∈ as → a ∈ fst (insert b as pa)
-  ∺∈ {a} {b} {as = c ∷ []} ⦃ pa ⦄ a∈c∷[] with conn< b c
-  ... | tri< a<b _ _ = there a∈c∷[] 
-  ... | tri≡ _ refl _ = a∈c∷[]
-  ∺∈ {.c} {b} {c ∷ []} ⦃ pa ⦄ here | tri> _ _ a>b = here
-  ∺∈ {a} {b} {as = b₁ ∷ x₁ ∷ as} ⦃ x ∷ pa ⦄ a∈as with conn< b b₁
-  ... | tri< a<b _ _ = there a∈as
-  ... | tri≡ _ refl _ = a∈as
-  ∺∈ {.b₁} {b} {b₁ ∷ x₁ ∷ as} ⦃ x ∷ pa ⦄ here | tri> _ _ b>b₁ = {!!}
-  ∺∈ {a} {b} {b₁ ∷ x₁ ∷ as} ⦃ x ∷ pa ⦄ (there a∈as) | tri> _ _ b>b₁ = {!!} --∺∈ {{_}} a∈as
-
--- ∺∈ {a} {{!!}} {x₁ ∷ as} {{pa}} {!!}
--}
-
   ∈-∷ : ∀ (a : A) → (as : List A) → a ∈ insert a as
   ∈-∷ a [] = here
   ∈-∷ a (b ∷ as) with conn< a b
@@ -230,102 +183,75 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ... | tri≡ _ refl _ = x
   ∺∈ {b = b} {x₁ ∷ as} here | tri> _ _ _ = here
   ∺∈ {b = b} {x₁ ∷ as} (there a∈as) | tri> _ _ _ = there (∺∈ a∈as)
-
-
-  mutual
-    ∈-∪₁ : ∀ (a : A) → (as bs : List A) → {pa : UniqueSorted as} → {pb : UniqueSorted bs} → a ∈ as → a ∈ fst ((as ∪ bs) {pa} {pb})
-    ∈-∪₁ a (x₁ ∷ as) [] x = x
-    ∈-∪₁ a (.a ∷ as) (x₂ ∷ bs) here = ∈-∪₂ a as (insert a (x₂ ∷ bs)) (∈-∷ a (x₂ ∷ bs))
-    ∈-∪₁ a (x₁ ∷ as) (x₂ ∷ bs) (there x) = ∈-∪₁ a as _ x
-
-    ∈-∪₂ : ∀ (a : A) → (as bs : List A) → {pa : UniqueSorted as} → {pb : UniqueSorted bs} → a ∈ bs → a ∈ fst ((as ∪ bs) {pa} {pb})
-    ∈-∪₂ a [] (x₁ ∷ bs) x = x
-    ∈-∪₂ a (x₂ ∷ as) (x₁ ∷ bs) {pb = pb} a∈bs = ∈-∪₂ a as (insert x₂ (x₁ ∷ bs)) (∺∈ a∈bs)
-
-  ι₀-∪ : ∀ {as bs : List A} → {pa : UniqueSorted as} → {pb : UniqueSorted bs} → as ⊆ (fst ((as ∪ bs) {pa} {pb}))
-  ι₀-∪ {[]} = λ c ()
-  ι₀-∪ {x ∷ as} {[]} = λ c z → z
-  ι₀-∪ {x ∷ as} {x₁ ∷ bs} {pa} {pb} = λ { c here → ∈-∪₂ c as (insert x (x₁ ∷ bs)) (∈-∷ x (x₁ ∷ bs)) ;
-                                                    c (there c∈x∷as) → ∈-∪₁ c as _ {popSort pa} {_} c∈x∷as }
-
-  open import Agora.Conventions using (∑_ ; fst ; snd ; Maybe ; just ; nothing)
-
-  _∨_ : (as bs : ∑ UniqueSorted) -> ∑ UniqueSorted
-  _∨_ as bs = (fst as ∪ fst bs) {snd as} {snd bs}
-
-  head : (as : ∑ UniqueSorted) -> ∀{a} -> (a ∈ fst as) -> A
-  head (x ∷ as , snd₁) p = x
-
-  tail : (as : ∑ UniqueSorted) -> ∀{a} -> (a ∈ fst as) -> ∑ UniqueSorted
-  tail (x ∷ .[] , [ .x ]) p = [] , []
-  tail (x ∷ as@(_ ∷ _) , (x₁ ∷ asp)) p = as , asp
-
-  dec-insert : ∀ a -> (as : ∑ UniqueSorted) -> ∀{x} -> x ∈ insert a (fst as) -> x ≡ a ⊎ x ∈ fst as
-  dec-insert a ([] , []) {.a} here = inj₁ refl
-  dec-insert a (x₁ ∷ as , asp) {x} p with conn< a x₁
-  ... | tri< a<b a≢b a≯b = {!!}
+  
+  ∺∈∷ : ∀ {c a : A} → {as : List A} → c ∈ insert a as → (c ≡ a ⊎ c ∈ as)
+  ∺∈∷ {c} {.c} {[]} here = inj₁ refl
+  ∺∈∷ {c} {a} {b ∷ as} x with conn< a b
+  ∺∈∷ {.a} {a} {b ∷ as} here | tri< a<b a≢b a≯b = inj₂ {!!}
+  ∺∈∷ {c} {a} {b ∷ as} (there x) | tri< a<b a≢b a≯b = inj₂ {!!}
   ... | tri≡ a≮b a≡b a≯b = {!!}
   ... | tri> a≮b a≢b a>b = {!!}
 
-  either : ∀{x} -> ∀ as asp bs bsp -> (x ∈ fst ((as ∪ bs) {asp} {bsp})) -> x ∈ as ⊎ x ∈ bs
-  either {x} []  asp (b ∷ bs) bsp z = {!!}
-  either {x} (a ∷ as) asp [] bsp z = {!!}
-  either {x} (a ∷ .[]) [ .a ] (b ∷ bs) (bsp) z = {!!}
-  either {x} (a ∷ as@(_ ∷ _)) (x₂ ∷ asp) (x₁ ∷ bs) bsp z with either as asp (insert a (x₁ ∷ bs)) (insertSorted bsp) z
-  ... | inj₁ x₃ = inj₁ (there x₃)
-  ... | inj₂ y with dec-insert _ (_ , bsp) y
+
+--------------------------------------------------
+-- unions
+
+
+  _∪_ : List A → List A → List A
+  [] ∪ bs = bs
+  as@(_ ∷ _) ∪ [] = as
+  (a ∷ as) ∪ bs@(_ ∷ _) = as ∪ insert a bs
+
+  ∪-idₗ : ∀ {as : List A} → as ≡ [] ∪ as
+  ∪-idₗ {as} = refl
+
+  ∪-idᵣ : ∀ {as : List A} → as ≡ as ∪ []
+  ∪-idᵣ {[]} = refl
+  ∪-idᵣ {a ∷ as} = refl
+
+  ∪-sorted : ∀ {as bs} → UniqueSorted as → UniqueSorted bs → UniqueSorted (as ∪ bs)
+  ∪-sorted {[]} {bs} pas pbs = pbs
+  ∪-sorted {as@(_ ∷ _)} {[]} pas pbs = subst UniqueSorted ∪-idᵣ pas
+  ∪-sorted {a ∷ as} {bs@(_ ∷ _)} pas pbs = ∪-sorted (popSort pas) (insertSorted pbs)
+
+
+  mutual
+    ∪-∈ᵣ : ∀ (a : A) → (as bs : List A) → a ∈ as → a ∈ (as ∪ bs)
+    ∪-∈ᵣ a (x₁ ∷ as) [] x = x
+    ∪-∈ᵣ a (.a ∷ as) (x₂ ∷ bs) here = ∪-∈ₗ a as (insert a (x₂ ∷ bs)) (∈-∷ a (x₂ ∷ bs))
+    ∪-∈ᵣ a (x₁ ∷ as) (x₂ ∷ bs) (there x) = ∪-∈ᵣ a as _ x
+
+    ∪-∈ₗ : ∀ (a : A) → (as bs : List A) → a ∈ bs → a ∈ (as ∪ bs)
+    ∪-∈ₗ a [] (x₁ ∷ bs) x = x
+    ∪-∈ₗ a (x₂ ∷ as) (x₁ ∷ bs) a∈bs = ∪-∈ₗ a as (insert x₂ (x₁ ∷ bs)) (∺∈ a∈bs)
+
+  ∈-∪ : ∀ {c : A} → {as bs : List A} → c ∈ (as ∪ bs) → c ∈ as ⊎ c ∈ bs
+  ∈-∪ {c} {[]} {bs} x = inj₂ x
+  ∈-∪ {c} {x₁ ∷ as} {[]} x = inj₁ x
+  ∈-∪ {c} {a ∷ as} {b ∷ bs} x with ∈-∪ x
+  ... | inj₁ p = inj₁ (there p)
+  ... | inj₂ y with ∺∈∷ y
   ... | inj₁ refl = inj₁ here
   ... | inj₂ y₁ = inj₂ y₁
+  
+  ι₀-∪ : ∀ {as bs : List A} → as ⊆ (as ∪ bs)
+  ι₀-∪ {[]} = λ c ()
+  ι₀-∪ {a ∷ as} {[]} = λ c z → z
+  ι₀-∪ {a ∷ as} {b ∷ bs} with conn< a b
+  ... | tri< _ _ _ = λ { x here → ∪-∈ₗ a as (a ∷ b ∷ bs) here ; x (there x₁) → ∪-∈ᵣ x as (a ∷ b ∷ bs) x₁}
+  ... | tri≡ _ refl _ = λ { x here → ∪-∈ₗ a as (a ∷ bs) here ; x (there x₁) → ∪-∈ᵣ x as (a ∷ bs) x₁}
+  ... | tri> _ _ _ = λ { x here →  ∪-∈ₗ a as (b ∷ insert a bs) (there (∈-∷ a bs))  ; x (there x₁) → ∪-∈ᵣ x as (b ∷ insert a bs) x₁}
 
-  -- dec-∪-head : (as bs : ∑ UniqueSorted) -> ∀{a} -> (ap : a ∈ fst (as ∨ bs)) -> head (as ∨ bs) ap ∈ fst as ⊎ head (as ∨ bs) ap ∈ fst bs
-  -- dec-∪-head ([] , asp) (bs , bsp) {a} ap = {!!}
-  -- dec-∪-head (x ∷ as , asp) ([] , bsp) {a} ap = {!!}
-  -- dec-∪-head (x ∷ as@[] , [ .x ]) (x₁ ∷ bs , bsp) {a} ap = let Z = dec-∪-head (as , {!!}) _ {{!!}} {!!} in {!!}
-  -- dec-∪-head (x ∷ as@(_ ∷ _) , (x₂ ∷ asp)) (x₁ ∷ bs , bsp) {a} ap with dec-∪-head (as , asp) (insert x (x₁ ∷ bs) , {!!}) {{!!}} {!!}
-  -- ... | inj₁ X = inj₁ (there X)
-  -- ... | inj₂ X with dec-insert _ (_ , bsp) X
-  -- ... | inj₁ x₃ = inj₁ {!x₃!}
-  -- ... | inj₂ y = inj₂ (y)
-
-  -- dec-∪-head as bs {a} ap with as ∨ bs in eq
-  -- dec-∪-head ([] , asp) (bs , bsp) {a} ap | X = {!!}
-  -- dec-∪-head (x ∷ as , asp) ([] , bsp) {a} ap | X = {!!}
-  -- dec-∪-head (x ∷ as , asp) (x₁ ∷ bs , bsp) {a} ap | X = {!!}
-
-
-
-  [_,_]-∪ : ∀ {as bs cs : List A} → {pa : UniqueSorted as} → {pb : UniqueSorted bs} → {pc : UniqueSorted cs} → as ⊆ cs -> bs ⊆ cs -> fst ((as ∪ bs) {pa} {pb}) ⊆ cs
+  [_,_]-∪ : ∀ {as bs cs : List A} → {pa : UniqueSorted as} → {pb : UniqueSorted bs} → {pc : UniqueSorted cs} → as ⊆ bs -> bs ⊆ cs -> (as ∪ bs) ⊆ cs
   [_,_]-∪ {[]} {bs} x all = λ { c here → all c here ; c (there x₂) → all c (there x₂)}  
-  [_,_]-∪ {x₂ ∷ as} {[]} all x₁ = {!!} -- all x₂ here ↯ λ ()
-  [_,_]-∪ {a ∷ as} {b ∷ bs} {_} {pa} {pb} x x₁ = {!!}
-  -- with fst ((as ∪ (insert a (b ∷ bs))) {popSort {a} {as} pa} {insertSorted {a} {b ∷ bs} pb}) in eq
-  -- ...| A = {!!}
-  -- z1 z2 = {!!}
-  -- with conn< a b
-  -- ... | A = {!!}
-  -- with z2 | conn< a b
-  -- ... | A | Z = {!!}
- 
+  [_,_]-∪ {x₂ ∷ as} {[]} all x₁ = all x₂ here ↯ λ ()
+  [_,_]-∪ {a ∷ as} {b ∷ bs} x x₁ = λ {x₂ x₃ → {!∈-∪ x₃!}}
 
-
--- PP : 
---     {𝑖 : Level} {A : Set 𝑖} ⦃ _ = z : hasStrictOrder A ⦄ (a b : A)
---     (w
---     : Tri ((z hasStrictOrder.< a) b) (a ≡ b)
---       ((z hasStrictOrder.< b) a))
---     (as bs : List A) {cs : List A} {pa : UniqueSorted (a ∷ as)}
---     {pb : UniqueSorted (b ∷ bs)} {pc : UniqueSorted cs}
---     (x : (x₁ : A) → x₁ ∈ a ∷ as → x₁ ∈ b ∷ bs)
---     (x₁ : (x₂ : A) → x₂ ∈ b ∷ bs → x₂ ∈ cs) (z1 : A)
---     (z2 : z1 ∈ fst (as ∪ (insert a (b ∷ bs) | w))) →
---     z1 ∈ cs
--- PP = ?
-{-
 --------------------------------------------------
 -- now here comes the weird stuff
 
 open import Agora.Conventions using (
-  _:&_; ⟨_⟩; _since_; ′_′; _on_;
+  _:&_; ⟨_⟩; _since_; ′_′; _on_; of_ ;
   #structureOn; isSetoid; isSetoid:byId; _isUniverseOf[_]_;  _isUniverseOf[_]_:byBase;
   𝑖 ; 𝑗
   )
@@ -366,10 +292,10 @@ module _ {A : StrictOrder 𝑖} where
     field ⟨_⟩ : ⟨ U ⟩ ⊆ ⟨ V ⟩
 
   reflexive-≤-𝒫ᶠⁱⁿ : ∀{U} -> U ≤-𝒫ᶠⁱⁿ U
-  reflexive-≤-𝒫ᶠⁱⁿ = incl (allIn (λ c x → x))
+  reflexive-≤-𝒫ᶠⁱⁿ = incl (λ c x → x)
 
   _⟡-𝒫ᶠⁱⁿ_ : ∀{U V W} -> U ≤-𝒫ᶠⁱⁿ V -> V ≤-𝒫ᶠⁱⁿ W -> U ≤-𝒫ᶠⁱⁿ W
-  incl (allIn p) ⟡-𝒫ᶠⁱⁿ incl (allIn q) = incl (allIn (λ c x → q c (p c x)))
+  incl p ⟡-𝒫ᶠⁱⁿ incl q = incl (λ c x → q c (p c x))
 
   instance
     isPreorderData:≤-𝒫ᶠⁱⁿ : isPreorderData (𝒫ᶠⁱⁿ A) _≤-𝒫ᶠⁱⁿ_
@@ -385,13 +311,14 @@ module _ {A : StrictOrder 𝑖} where
     isPreorder:𝒫ᶠⁱⁿ = isPreorder:byDef _≤-𝒫ᶠⁱⁿ_
 
   _∨-𝒫ᶠⁱⁿ_ : (U V : 𝒫ᶠⁱⁿ A) -> 𝒫ᶠⁱⁿ A
-  U ∨-𝒫ᶠⁱⁿ V = let a , b = (⟨ U ⟩ ∪ ⟨ V ⟩) in a since b 
+  U ∨-𝒫ᶠⁱⁿ V = (⟨ U ⟩ ∪ ⟨ V ⟩) since ∪-sorted (of U) (of V)
+
 
   ⊥-𝒫ᶠⁱⁿ : 𝒫ᶠⁱⁿ A
   ⊥-𝒫ᶠⁱⁿ = [] since []
 
   initial-⊥-𝒫ᶠⁱⁿ : ∀{U : 𝒫ᶠⁱⁿ A} -> ⊥-𝒫ᶠⁱⁿ ≤ U
-  initial-⊥-𝒫ᶠⁱⁿ = incl (allIn (λ {c ()}))
+  initial-⊥-𝒫ᶠⁱⁿ = incl (λ {c ()})
 
   ι₀-∨-𝒫ᶠⁱⁿ : ∀{U V} -> U ≤ (U ∨-𝒫ᶠⁱⁿ V)
   ι₀-∨-𝒫ᶠⁱⁿ {′ [] ′} {V} = {!!}
@@ -440,4 +367,4 @@ module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
 
   postulate
     instance hasStrictOrderHom:inj₂ : hasStrictOrderHom B (A ⋆-StrictOrder B) inj₂
--}
+

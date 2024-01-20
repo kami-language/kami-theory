@@ -14,18 +14,24 @@ open import Relation.Nullary.Decidable.Core
 open import KamiD.Dev.2024-01-20.Core hiding (_＠_)
 open import KamiD.Dev.2024-01-20.UniqueSortedList
 
+module _ {A : StrictOrder 𝑖} where
+  ⦗_⦘ : ⟨ A ⟩ -> 𝒫ᶠⁱⁿ A
+  ⦗_⦘ a = {!!}
+
+macro
+  𝔽 : ∀ n -> _
+  𝔽 n = #structureOn (Fin n)
 
 
 
-{-
 -------------------
 -- we have a layer system for the context argument
 
 -- data Layer : 𝒰₁ where
 --   Partial : Layer
---   Global : (A : StrictOrder (ℓ₀ , ℓ₀)) -> Layer
+--   Global : (A : StrictOrder ℓ₀) -> Layer
 
-Layer = StrictOrder (ℓ₀ , ℓ₀)
+Layer = StrictOrder ℓ₀
 
 private variable
   K L : Layer
@@ -48,7 +54,7 @@ data _⇛♮_ : Ctx L -> Ctx L -> 𝒰₁
 -- types
 
 private variable
-  R S : StrictOrder (ℓ₀ , ℓ₀)
+  R S : StrictOrder ℓ₀
 
 private variable
   U V : UniqueSortedList R
@@ -58,7 +64,7 @@ data Kind (R : StrictOrder 𝑖) : 𝒰 (𝑖 ⁺) where
   Partial : {U V : UniqueSortedList R} -> .(ψ : U ≤ V) -> Kind R
   Local : (U : UniqueSortedList R) -> Kind R
   Global : Kind R
-  -- Comm : (A : StrictOrder (ℓ₀ , ℓ₀)) -> Kind
+  -- Comm : (A : StrictOrder ℓ₀) -> Kind
 
 private variable
   k l : Kind R
@@ -491,7 +497,7 @@ data _⊢_ where
 ------------------------------------------------------------------------
 -- Flattening
 
-Flat (⟮ U ↝ V ⨾ ϕ ⟯[ A ] T) = located (U ∨ V) (local {ϕ = ϕ ⟡ ι₀-∨} A) ⊗ let X = Flat T in special-su-top (ext {!var zero!}) X
+Flat (⟮ U ↝ V ⨾ ϕ ⟯[ A ] T) = {!!} -- located (U ∨ V) (local {ϕ = ϕ ⟡ ι₀-∨} A) ⊗ let X = Flat T in special-su-top (ext {!var zero!}) X
 Flat End = {!!}
 Flat (El-Comm x) = {!!}
 
@@ -529,10 +535,9 @@ role i = initial-⊥
 zn : ∀ n -> Fin (suc n)
 zn n = zero
 
-postulate
-  β-suc-Fin :  ⦗ suc (zero) ⦘ ∨-𝒫ᶠⁱⁿ ⦗ zero {n = 2} ⦘ ≣ ⦗ zero ⦘ ∨ ⦗ suc (zero) ⦘
-
-{-# REWRITE β-suc-Fin #-}
+-- postulate
+--   β-suc-Fin :  ⦗ suc (zero) ⦘ ∨-𝒫ᶠⁱⁿ ⦗ zero {n = 2} ⦘ ≣ ⦗ zero ⦘ ∨ ⦗ suc (zero) ⦘
+-- {-# REWRITE β-suc-Fin #-}
 
 
 module Examples where
@@ -563,6 +568,7 @@ module Examples where
   -- T₃ = ⟮ ⦗ zero ⦘ ↝ ⦗ suc zero ⦘ ⨾ initial-⊥ ⟯[ Val (initial-⊥ ⟡ ι₀-∨) {Fam U01 (var zero)} {Fam ⊥ empty} (Fam (initial-⊥ ⟡ ι₀-∨) (var zero) empty) empty ] End
 
 
+{-
 
 
 
