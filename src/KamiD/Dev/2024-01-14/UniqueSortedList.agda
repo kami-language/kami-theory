@@ -8,7 +8,8 @@ open import Agda.Builtin.Equality using (_≡_; refl)
 open import Agda.Primitive using (Level; lsuc; _⊔_)
 open import Data.Empty.Irrelevant using (⊥-elim)
 open import Relation.Nullary using (¬_)
-open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂; [_,_]′)
+open import Data.Product.Base using (_×_)
 open import Agda.Builtin.Sigma using (Σ; _,_; fst)
 open import Data.List.Base using (List; []; _∷_)
 open import Relation.Binary.PropositionalEquality using (subst; cong)
@@ -145,11 +146,7 @@ module _ {𝑖 𝑗 : Level} {A : Set 𝑖} {B : Set 𝑗} {{_ : hasStrictOrder 
     inj₁ : {a a₁ : A} → a < a₁ → inj₁ a <⊎ inj₁ a₁
     inj₂ : {b b₁ : B} → b < b₁ → inj₂ b <⊎ inj₂ b₁
     conc : {a : A} → {b : B} → inj₁ a <⊎ inj₂ b
-    
-  foo1 : (a0 a1 : A) → _⊎_.inj₁ {B = B} a0 ≡ inj₁ a1 → a0 ≡ a1
-  foo1 a0 a1 refl = refl
-  foo2 : (a0 a1 : B) → _⊎_.inj₂ {A = A} a0 ≡ inj₂ a1 → a0 ≡ a1
-  foo2 a0 a1 refl = refl
+
   
   instance
     hasStrictOrder:⊎ : hasStrictOrder (A ⊎ B)
@@ -159,13 +156,13 @@ module _ {𝑖 𝑗 : Level} {A : Set 𝑖} {B : Set 𝑗} {{_ : hasStrictOrder 
                                              (inj₂ x) (inj₂ x₁) → inj₂ (trans< {𝑗} x x₁) ;
                                                   (inj₁ x) conc → conc ;
                                                   conc (inj₂ x) → conc} ;
-                                conn< = λ { (inj₁ x) (inj₁ x₁) → map-Tri< {R = _<_} {S = _<⊎_} inj₁ (foo1 x x₁)
+                                conn< = λ { (inj₁ x) (inj₁ x₁) → map-Tri< {R = _<_} {S = _<⊎_} inj₁ (λ { refl → refl})
                                                                                                 (λ {a0 a1 x₂ → inj₁ x₂})
                                                                                                 (λ {a0 a1 (inj₁ x₂) → x₂})
                                                                                                 (conn< x x₁) ;
                                             (inj₁ x) (inj₂ y) → tri< conc (λ ()) λ () ;
                                             (inj₂ y) (inj₁ x) → tri> (λ ()) (λ ()) conc;
-                                            (inj₂ y) (inj₂ y₁) → map-Tri< {R = _<_} {S = _<⊎_} inj₂ (foo2 y y₁)
+                                            (inj₂ y) (inj₂ y₁) → map-Tri< {R = _<_} {S = _<⊎_} inj₂ (λ { refl → refl})
                                                                                                 (λ {a0 a1 y₂ → inj₂ y₂})
                                                                                                 (λ {a0 a1 (inj₂ y₂) → y₂})
                                                                                                 (conn< y y₁)  } }
@@ -199,16 +196,26 @@ module _ {𝑖 : Level} {A : Set 𝑖} where
   _⊆_ : List A → List A → Set (lsuc 𝑖)
   as ⊆ bs = ∀ x → x ∈ as → x ∈ bs
 
+  ⊈[] : ∀ {as : List A} → ¬ (as ≡ []) → ¬ (as ⊆ [])
+  ⊈[] {[]} as≢[] x = refl ↯ as≢[]
+  ⊈[] {x₁ ∷ as} as≢[] x = x x₁ here ↯ λ ()
+
+  ⊆∷ : ∀ {a : A} {as bs : List A} → (a ∷ as) ⊆ bs → as ⊆ bs
+  ⊆∷ sf = λ x x₁ → sf x (there x₁)
+
+--------------------------------------------------
+-- sortedness
+
 module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   data UniqueSorted : List A → Set 𝑖 where
     []  : UniqueSorted []
-    [_] : ∀ x → UniqueSorted (x ∷ [])
+    [-] : ∀ {x} → UniqueSorted (x ∷ [])
     _∷_ : ∀ {x y xs} → x < y → UniqueSorted (y ∷ xs) → UniqueSorted (x ∷ y ∷ xs)
 
   popSort : {a : A} → {as : List A} → UniqueSorted (a ∷ as) → UniqueSorted as
-  popSort {a} {.[]} [ .a ] = []
-  popSort {a} {.(_ ∷ _)} (x ∷ x₁) = x₁
+  popSort [-] = []
+  popSort (x ∷ x₁) = x₁
 
 
 
@@ -246,12 +253,12 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   all∷ a<b (a<b₁ ∷ a<*bs) = a<b ∷ a<b₁ ∷ a<*bs
 
   allSort : {a : A} → {as : List A} → UniqueSorted (a ∷ as) → a <* as
-  allSort [ _ ] = []
-  allSort (x ∷ [ _ ]) = all∷ x []
+  allSort [-] = []
+  allSort (x ∷ [-]) = all∷ x []
   allSort (a<z ∷ (z<y ∷ usyxs)) = all∷ a<z (allSort (trans< {𝑖} {A} a<z z<y ∷ usyxs))
   
   sortAll : {a : A} → {as : List A} → a <* as → UniqueSorted as → UniqueSorted (a ∷ as)
-  sortAll {a} [] x₁ = [ a ]
+  sortAll {a} [] x₁ = [-]
   sortAll (x ∷ x₂) x₁ = x ∷ x₁
   
   insertAll : {a c : A} → {as : List A} → c < a → c <* as → UniqueSorted as → c <* (insert a as)
@@ -264,11 +271,11 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
     in all∷ c<b c<*aas
 
   insertSorted : {a : A} → {as : List A} → UniqueSorted as → UniqueSorted (insert a as)
-  insertSorted {a} {[]} usas = [ a ]
-  insertSorted {a} {(b ∷ as)} ([ bb ]) with conn< a b
-  ... | tri< a<b a≢b a≯b = a<b ∷ [ b ]
-  ... | tri≡ a≮b a≡b a≯b = [ b ]
-  ... | tri> a≮b a≢b a>b = a>b ∷ [ a ]
+  insertSorted {a} {[]} usas = [-]
+  insertSorted {a} {(b ∷ as)} ([-]) with conn< a b
+  ... | tri< a<b a≢b a≯b = a<b ∷ [-]
+  ... | tri≡ a≮b a≡b a≯b = [-]
+  ... | tri> a≮b a≢b a>b = a>b ∷ [-]
   insertSorted {a} {(b ∷ as)} (b<y ∷ usas) with conn< a b
   ... | tri< a<b a≢b a≯b = a<b ∷ (b<y ∷ usas)
   ... | tri≡ a≮b a≡b a≯b = (b<y ∷ usas)
@@ -323,9 +330,9 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ∪-idᵣ {a ∷ as} = refl
 
   ∪-sorted : ∀ {as bs} → UniqueSorted as → UniqueSorted bs → UniqueSorted (as ∪ bs)
-  ∪-sorted {[]} {bs} pas pbs = pbs
-  ∪-sorted {as@(_ ∷ _)} {[]} pas pbs = subst UniqueSorted ∪-idᵣ pas
-  ∪-sorted {a ∷ as} {bs@(_ ∷ _)} pas pbs = ∪-sorted (popSort pas) (insertSorted pbs)
+  ∪-sorted {[]} _ pbs = pbs
+  ∪-sorted {_ ∷ _} {[]} pas _ = subst UniqueSorted ∪-idᵣ pas
+  ∪-sorted {_ ∷ _} {_ ∷ _} pas pbs = ∪-sorted (popSort pas) (insertSorted pbs)
 
 
   mutual
@@ -352,29 +359,27 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ι₀-∪ {[]} = λ c ()
   ι₀-∪ {a ∷ as} {[]} = λ c z → z
   ι₀-∪ {a ∷ as} {b ∷ bs} with conn< a b
-  ... | tri< _ _ _ = λ { x here → ∪-∈ₗ a as (a ∷ b ∷ bs) here ; x (there x₁) → ∪-∈ᵣ x as (a ∷ b ∷ bs) x₁}
-  ... | tri≡ _ refl _ = λ { x here → ∪-∈ₗ a as (a ∷ bs) here ; x (there x₁) → ∪-∈ᵣ x as (a ∷ bs) x₁}
-  ... | tri> _ _ _ = λ { x here →  ∪-∈ₗ a as (b ∷ insert a bs) (there (insertInserts a bs))  ; x (there x₁) → ∪-∈ᵣ x as (b ∷ insert a bs) x₁}
+  ... | tri< _ _ _ = λ { x here → ∪-∈ₗ a as (a ∷ b ∷ bs) here ;
+                         x (there x₁) → ∪-∈ᵣ x as (a ∷ b ∷ bs) x₁}
+  ... | tri≡ _ refl _ = λ { x here → ∪-∈ₗ a as (a ∷ bs) here ;
+                             x (there x₁) → ∪-∈ᵣ x as (a ∷ bs) x₁}
+  ... | tri> _ _ _ = λ { x here →  ∪-∈ₗ a as (b ∷ insert a bs) (there (insertInserts a bs)) ;
+                         x (there x₁) → ∪-∈ᵣ x as (b ∷ insert a bs) x₁}
 
   
   ι₁-∪ : ∀ {as bs : List A} → bs ⊆ (as ∪ bs)
   ι₁-∪ {[]} = λ x z → z
   ι₁-∪ {a ∷ as} {[]} = λ x ()
   ι₁-∪ {a ∷ as} {b ∷ bs} with conn< a b
-  ... | tri< _ _ _ = λ { x here → ∪-∈ₗ b as (a ∷ b ∷ bs) (there here) ; x (there x₁) → ∪-∈ₗ x as (a ∷ b ∷ bs) (there (there x₁))}
-  ... | tri≡ _ refl _ = λ { x here → ∪-∈ₗ a as (a ∷ bs) here ; x (there x₁) → ∪-∈ₗ x as (a ∷ bs) (there x₁)}
-  ... | tri> _ _ _ = λ { x here →  ∪-∈ₗ b as (b ∷ insert a bs) here  ; x (there x₁) → ∪-∈ₗ x as (b ∷ insert a bs) (there (insertKeeps x₁))}
+  ... | tri< _ _ _ = λ { x here → ∪-∈ₗ b as (a ∷ b ∷ bs) (there here) ;
+                         x (there x₁) → ∪-∈ₗ x as (a ∷ b ∷ bs) (there (there x₁))}
+  ... | tri≡ _ refl _ = λ { x here → ∪-∈ₗ a as (a ∷ bs) here ;
+                             x (there x₁) → ∪-∈ₗ x as (a ∷ bs) (there x₁)}
+  ... | tri> _ _ _ = λ { x here →  ∪-∈ₗ b as (b ∷ insert a bs) here ;
+                         x (there x₁) → ∪-∈ₗ x as (b ∷ insert a bs) (there (insertKeeps x₁))}
 
-
-  lem : {c : A} → {as bs cs : List A} → c ∈ as ⊎ c ∈ bs → as ⊆ bs → bs ⊆ cs → c ∈ cs
-  lem {c} (inj₁ x) as⊆bs bs⊆cs = bs⊆cs c (as⊆bs c x)
-  lem {c} (inj₂ y) as⊆bs bs⊆cs = bs⊆cs c y
-
-  [_,_]-∪ : ∀ {as bs cs : List A} → {pa : UniqueSorted as} → {pb : UniqueSorted bs} → {pc : UniqueSorted cs} → as ⊆ bs -> bs ⊆ cs -> (as ∪ bs) ⊆ cs
-  [_,_]-∪ {[]} {bs} x all = λ { c here → all c here ; c (there x₂) → all c (there x₂)}  
-  [_,_]-∪ {x₂ ∷ as} {[]} all x₁ = all x₂ here ↯ λ ()
-  [_,_]-∪ {as@(_ ∷ _)} {bs@(_ ∷ _)} as⊆bs bs⊆cs = λ { _ c∈∪ → lem (∈-∪ c∈∪) as⊆bs bs⊆cs }
-
+  [_,_]-∪ : ∀ {as bs cs : List A} → as ⊆ cs -> bs ⊆ cs -> (as ∪ bs) ⊆ cs
+  [_,_]-∪ {as} {bs} x y = λ a a∈as∪bs → [ x a , y a ]′ (∈-∪ a∈as∪bs)
 
 
 --------------------------------------------------
@@ -443,31 +448,18 @@ module _ {A : StrictOrder 𝑖} where
   _∨-𝒫ᶠⁱⁿ_ : (U V : 𝒫ᶠⁱⁿ A) -> 𝒫ᶠⁱⁿ A
   (U since Us) ∨-𝒫ᶠⁱⁿ (V since Vs) = let a = (U ∪ V) in a since ∪-sorted Us Vs 
 
-  ⊥-𝒫ᶠⁱⁿ : 𝒫ᶠⁱⁿ A
-  ⊥-𝒫ᶠⁱⁿ = [] since []
-
-  initial-⊥-𝒫ᶠⁱⁿ : ∀{U : 𝒫ᶠⁱⁿ A} -> ⊥-𝒫ᶠⁱⁿ ≤ U
-  initial-⊥-𝒫ᶠⁱⁿ = incl (λ {_ ()})
-
-  ι₀-∨-𝒫ᶠⁱⁿ : ∀{U V} -> U ≤ (U ∨-𝒫ᶠⁱⁿ V)
-  ι₀-∨-𝒫ᶠⁱⁿ {U since u} {V since v} = {! ι₀-∪ {as = U} {bs = V}!}
-
-  [_,_]-∨-𝒫ᶠⁱⁿ : ∀{U V W} -> U ≤ W -> V ≤ W -> (U ∨-𝒫ᶠⁱⁿ V) ≤ W
-  [_,_]-∨-𝒫ᶠⁱⁿ = {!!}
-
-
   instance
     hasFiniteJoins:𝒫ᶠⁱⁿ : hasFiniteJoins (𝒫ᶠⁱⁿ A)
     hasFiniteJoins:𝒫ᶠⁱⁿ = record
                            { ⊥ = [] since []
-                           ; initial-⊥ = initial-⊥-𝒫ᶠⁱⁿ
+                           ; initial-⊥ = incl (λ {_ ()})
                            ; _∨_ = _∨-𝒫ᶠⁱⁿ_
-                           ; ι₀-∨ = λ {U V} -> ι₀-∨-𝒫ᶠⁱⁿ {U} {V}
-                           ; ι₁-∨ = {!!}
-                           ; [_,_]-∨ = [_,_]-∨-𝒫ᶠⁱⁿ
+                           ; ι₀-∨ = incl ι₀-∪
+                           ; ι₁-∨ = λ {as} → incl (ι₁-∪ {as = ⟨ as ⟩} )
+                           ; [_,_]-∨ = λ { (incl u) (incl v) → incl [ u , v ]-∪}
                            }
 
-{-
+
 
 _⋆-StrictOrder_ : StrictOrder 𝑖 -> StrictOrder 𝑗 -> StrictOrder _
 _⋆-StrictOrder_ A B = ′ ⟨ A ⟩ ⊎ ⟨ B ⟩ ′
@@ -475,25 +467,56 @@ _⋆-StrictOrder_ A B = ′ ⟨ A ⟩ ⊎ ⟨ B ⟩ ′
 𝟙-StrictOrder : StrictOrder _
 𝟙-StrictOrder = ′ ⊤ ′
 
+record isStrictOrderHom {𝑖 𝑗} {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} (hom : ⟨ A ⟩ -> ⟨ B ⟩) : Set (𝑖 ⊔ 𝑗) where
+  field
+    homPreserves : ∀ {a b : ⟨ A ⟩} → a < b → hom a < hom b
+
+open isStrictOrderHom public
+
 module _ (A : StrictOrder 𝑖) (B : StrictOrder 𝑗) where
-  postulate
-    hasStrictOrderHom : (f : ⟨ A ⟩ -> ⟨ B ⟩) -> Set 𝑖
 
-  StrictOrderHom = _ :& hasStrictOrderHom
-
+  StrictOrderHom = (⟨ A ⟩ → ⟨ B ⟩) :& isStrictOrderHom {A = A} {B}
 
 
 -- TODO Naming
 module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
-  postulate
-    Img-𝒫ᶠⁱⁿ : (f : StrictOrderHom A B) -> 𝒫ᶠⁱⁿ A -> 𝒫ᶠⁱⁿ B
-    map-Img-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
 
+  img : ∀ {𝑖 𝑗} {A : Set 𝑖} {B : Set 𝑗} → (f : A → B) → List A → List B
+  img f [] = []
+  img f (x ∷ x₁) = f x ∷ img f x₁
+
+  img-soh : (f : StrictOrderHom A B) -> (as : List ⟨ A ⟩) → UniqueSorted as → UniqueSorted (img ⟨ f ⟩ as)
+  img-soh (f since pf) [] x = []
+  img-soh ff@(f since pf) (a ∷ .[]) [-] = [-]
+  img-soh ff@(f since pf) (a ∷ (a₁ ∷ as)) (x ∷ x₁) = homPreserves pf x ∷ (img-soh ff (a₁ ∷ as) (popSort (x ∷ x₁)))
+  
+  Img-𝒫ᶠⁱⁿ : (f : StrictOrderHom A B) -> 𝒫ᶠⁱⁿ A -> 𝒫ᶠⁱⁿ B
+  Img-𝒫ᶠⁱⁿ f (as since pas) = let pimg = img-soh f as pas in (img ⟨ f ⟩ as) since pimg
+
+  ∈img : ∀ {𝑖 𝑗} {A : Set 𝑖} {B : Set 𝑗} {a : A} {as : List A} → (f : A → B) → a ∈ as → f a ∈ img f as
+  ∈img f here = here
+  ∈img f (there x) = there (∈img f x)
+
+  map-img : ∀ {f : StrictOrderHom A B} {U V : List ⟨ A ⟩} -> U ⊆ V → img ⟨ f ⟩ U ⊆ img ⟨ f ⟩ V
+  map-img {f} {x₃ ∷ U} {[]} x x₁ x₂ = x ↯ ⊈[] {as = x₃ ∷ U} λ ()
+  map-img {f} {x₃ ∷ U} {x₄ ∷ V} x .(⟨ f ⟩ x₃) here with x x₃ here
+  ... | here = here
+  ... | there x₃∈V = ∈img ⟨ f ⟩ (there x₃∈V)
+  map-img {f} {x₃ ∷ U} {x₄ ∷ V} x x₁ (there x₂) = (map-img {f} (⊆∷ x)) x₁ x₂
+  
+  map-Img-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
+  map-Img-𝒫ᶠⁱⁿ {f} (incl a) = incl (map-img {f} a)
+
+  instance
+    hasStrictOrderHom:inj₁ : isStrictOrderHom {A = A} {A ⋆-StrictOrder B} inj₁
+    hasStrictOrderHom:inj₁ = record { homPreserves = λ x → inj₁ x }
+    
+    hasStrictOrderHom:inj₂ : isStrictOrderHom {A = B} {A ⋆-StrictOrder B} inj₂
+    hasStrictOrderHom:inj₂ = record { homPreserves = λ x → inj₂ x }
+
+
+{-
   postulate
     PreImg-𝒫ᶠⁱⁿ : (f : StrictOrderHom A B) -> 𝒫ᶠⁱⁿ B -> 𝒫ᶠⁱⁿ A
     map-PreImg-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
-
-
-  postulate
-    instance hasStrictOrderHom:inj₂ : hasStrictOrderHom B (A ⋆-StrictOrder B) inj₂
 -}
