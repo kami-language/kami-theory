@@ -401,8 +401,6 @@ instance
   _isUniverseOf[_]_:List : ∀ {𝑖} {A : Set 𝑖} -> (List A) isUniverseOf[ _ ] (List A)
   _isUniverseOf[_]_:List = _isUniverseOf[_]_:byBase
 
-
-
 StrictOrder : ∀ 𝑖 -> Set (lsuc 𝑖)
 StrictOrder 𝑖 = (Set 𝑖) :& hasStrictOrder
 
@@ -515,8 +513,7 @@ module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
     hasStrictOrderHom:inj₂ = record { homPreserves = λ x → inj₂ x }
 
 
-{-
   postulate
     PreImg-𝒫ᶠⁱⁿ : (f : StrictOrderHom A B) -> 𝒫ᶠⁱⁿ B -> 𝒫ᶠⁱⁿ A
     map-PreImg-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
--}
+
