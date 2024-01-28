@@ -19,13 +19,11 @@ open import KamiD.Dev.2024-01-20.Basics
 open import KamiD.Dev.2024-01-20.StrictOrder.Base
 
 
-it : ∀ {a} {A : Set a} {{_ : A}} → A
-it {{x}} = x
 
 data Dec {ℓ} (A : Set ℓ) : Set ℓ where
   yes : (p : A) → Dec A
   no : (¬p : ¬ A) → Dec A
-  
+
 --------------------------------------------------
 -- decidable equality
 
@@ -283,6 +281,8 @@ module _ {A : StrictOrder 𝑖} where
     constructor incl
     field ⟨_⟩ : ⟨ U ⟩ ⊆ ⟨ V ⟩
 
+  open _≤-𝒫ᶠⁱⁿ_ public
+
   reflexive-≤-𝒫ᶠⁱⁿ : ∀{U} -> U ≤-𝒫ᶠⁱⁿ U
   reflexive-≤-𝒫ᶠⁱⁿ = incl (λ c x → x)
 
@@ -391,4 +391,31 @@ module _ {𝑖} {A : Set 𝑖} {{_ : hasStrictOrder A}} {{_ : ∀{a b : A} -> is
     isProp:isUniqueSorted : ∀{xs : List A} -> isProp (isUniqueSorted xs)
     isProp:isUniqueSorted = record { force-≡ = force-≡-isUniqueSorted }
 
+module _ {A : StrictOrder 𝑖} where
+  ⦗_⦘ : ⟨ A ⟩ -> 𝒫ᶠⁱⁿ A
+  ⦗_⦘ a = (a ∷ []) since [-]
+
+module _ {A} {{_ : StrictOrder 𝑖 on A}} where
+  instance
+    hasDecidableEquality:byStrictOrder : hasDecidableEquality A
+    hasDecidableEquality:byStrictOrder = record { _≟_ = f }
+      where
+        f : (a b : A) -> _
+        f a b with conn-< a b
+        ... | tri< a<b a≢b a≯b = no λ {refl -> irrefl-< a<b}
+        ... | tri≡ a≮b a≡b a≯b = yes a≡b
+        ... | tri> a≮b a≢b a>b = no λ {refl -> irrefl-< a>b}
+
+module _ {A : StrictOrder 𝑖} where
+  open Agora.Order.Preorder
+  open Agora.Conventions hiding (¬_)
+
+  decide-≤-𝒫ᶠⁱⁿ : ∀(u v : 𝒫ᶠⁱⁿ A) -> (¬ (u ≤ v)) +-𝒰 (u ≤ v)
+  decide-≤-𝒫ᶠⁱⁿ u v with ⟨ u ⟩ ⊆? ⟨ v ⟩
+  ... | yes p = right (incl p)
+  ... | no ¬p = left (λ p -> ¬p ⟨ p ⟩)
+
+  instance
+    isDecidablePreorder:≤-𝒫ᶠⁱⁿ : isDecidablePreorder (𝒫ᶠⁱⁿ A)
+    isDecidablePreorder:≤-𝒫ᶠⁱⁿ = record { decide-≤ = decide-≤-𝒫ᶠⁱⁿ }
 

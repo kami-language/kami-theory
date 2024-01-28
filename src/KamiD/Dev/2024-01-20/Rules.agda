@@ -14,13 +14,6 @@ open import Relation.Nullary.Decidable.Core
 open import KamiD.Dev.2024-01-20.Core hiding (_＠_)
 open import KamiD.Dev.2024-01-20.UniqueSortedList hiding (it)
 
-module _ {A : StrictOrder 𝑖} where
-  ⦗_⦘ : ⟨ A ⟩ -> 𝒫ᶠⁱⁿ A
-  ⦗_⦘ a = (a ∷ []) since [ a ]
-
-macro
-  𝔽 : ∀ n -> _
-  𝔽 n = #structureOn (Fin n)
 
 module _ {A : 𝒰 𝑖} where
   _＋_ : List A -> List A -> List A

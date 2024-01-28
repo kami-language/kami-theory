@@ -15,6 +15,7 @@ open import Agda.Builtin.Sigma using (Σ; _,_; fst)
 open import Data.List.Base using (List; []; _∷_)
 open import Relation.Binary.PropositionalEquality using (subst; cong)
 open import KamiD.Dev.2024-01-20.Basics
+open import Data.Fin.Base using (Fin ; zero ; suc)
 
 
 --------------------------------------------------
@@ -68,9 +69,8 @@ open import Data.Unit using (⊤)
 
 module _ where
 
-  ≡suc : ∀ {m n} → suc m ≡ suc n → m ≡ n
+  ≡suc : ∀ {m n : Nat} → suc m ≡ suc n → m ≡ n
   ≡suc refl = refl
-
 
   data _<-ℕ_ : Nat → Nat → Set where
     z<n : ∀ {n} → zero <-ℕ suc n
@@ -101,10 +101,9 @@ module _ where
     hasStrictOrder:ℕ : hasStrictOrder Nat
     hasStrictOrder:ℕ = record { _<_ = _<-ℕ_ }
 
-
-  data Fin : Nat → Set where
-    zero : ∀ {n} → Fin (suc n)
-    suc  : ∀ {n} →  (i : Fin n) → Fin (suc n)
+  -- data Fin : Nat → Set where
+  --   zero : ∀ {n} → Fin (suc n)
+  --   suc  : ∀ {n} →  (i : Fin n) → Fin (suc n)
 
   toℕ : ∀ {n} → Fin n → Nat
   toℕ zero    = 0
