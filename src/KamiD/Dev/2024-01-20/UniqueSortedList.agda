@@ -62,6 +62,9 @@ record isStrictOrder {𝑖} {A : Set 𝑖} (_<_ : A -> A -> Set 𝑖) : Set 𝑖
     trans-< : ∀ {a b c : A} → a < b → b < c → a < c
     conn-< : ∀ (a b : A) → Tri (a < b) (a ≡ b) (b < a)
 
+  asym-< : ∀ {a b : A} → a < b → ¬ (b < a) -- follows from trans and iref
+  asym-< p q = irrefl-< (trans-< p q)
+
 open isStrictOrder {{...}} public
 
 record hasStrictOrder {𝑖} (A : Set 𝑖) : Set (lsuc 𝑖) where

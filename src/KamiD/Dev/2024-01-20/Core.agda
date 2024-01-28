@@ -105,3 +105,11 @@ typed : (A : 𝒰 𝑖) -> A -> A
 typed A a = a
 
 syntax typed A a = a ∶ A
+
+module _ {A : 𝒰 𝑖} where
+  head-≣ : {a b : A} {as bs : List A} -> (a ∷ as) ≣ (b ∷ bs) -> a ≣ b
+  head-≣ refl-≣ = refl-≣
+
+  tail-≣ : {a b : A} {as bs : List A} -> (a ∷ as) ≣ (b ∷ bs) -> as ≣ bs
+  tail-≣ refl-≣ = refl-≣
+
