@@ -58,12 +58,12 @@ map-Tri< {a = a} {b = b} f f-inj x y (tri> a≮b a≢b a>b) = tri> (λ x₁ → 
 record hasStrictOrder {𝑖} (A : Set 𝑖) : Set (lsuc 𝑖) where
   field
     _<_ : A → A → Set 𝑖
-    irrefl< : ∀ {a : A} → ¬ (a < a)
+    irrefl-< : ∀ {a : A} → ¬ (a < a)
     -- asym< : ∀ {a b : A} → a < b → ¬ (b < a) -- follows from trans and iref
-    trans< : ∀ {a b c : A} → a < b → b < c → a < c
-    conn< : ∀ (a b : A) → Tri (a < b) (a ≡ b) (b < a)
+    trans-< : ∀ {a b c : A} → a < b → b < c → a < c
+    conn-< : ∀ (a b : A) → Tri (a < b) (a ≡ b) (b < a)
 
-open hasStrictOrder {{...}}
+open hasStrictOrder {{...}} public
 {-# DISPLAY hasStrictOrder._<_ M a b = a < b #-}
 
 --------------------------------------------------
@@ -84,27 +84,27 @@ module _ where
     z<n : ∀ {n} → zero <ℕ suc n
     s<s : ∀ {m n} → (m<n : m <ℕ n) → suc m <ℕ suc n
 
-  irrefl<ℕ : ∀ {a : Nat} → ¬ (a <ℕ a)
-  irrefl<ℕ {zero} = λ ()
-  irrefl<ℕ {suc a} = λ { (s<s x) → x ↯ irrefl<ℕ}
+  irrefl-<-ℕ : ∀ {a : Nat} → ¬ (a <ℕ a)
+  irrefl-<-ℕ {zero} = λ ()
+  irrefl-<-ℕ {suc a} = λ { (s<s x) → x ↯ irrefl-<-ℕ}
   
-  trans<ℕ : ∀ {a b c : Nat} → a <ℕ b → b <ℕ c → a <ℕ c
-  trans<ℕ z<n (s<s b) = z<n
-  trans<ℕ (s<s a) (s<s b) = s<s (trans<ℕ a b)
+  trans-<-ℕ : ∀ {a b c : Nat} → a <ℕ b → b <ℕ c → a <ℕ c
+  trans-<-ℕ z<n (s<s b) = z<n
+  trans-<-ℕ (s<s a) (s<s b) = s<s (trans-<-ℕ a b)
   
-  conn<ℕ : ∀ (a b : Nat) → Tri (a <ℕ b) (a ≡ b) (b <ℕ a)
-  conn<ℕ zero zero = tri≡ (λ ()) refl (λ ())
-  conn<ℕ zero (suc b) = tri< z<n (λ ()) λ ()
-  conn<ℕ (suc a) zero = tri> (λ ()) (λ ()) z<n
-  conn<ℕ (suc a) (suc b) with conn<ℕ a b
+  conn-<-ℕ : ∀ (a b : Nat) → Tri (a <ℕ b) (a ≡ b) (b <ℕ a)
+  conn-<-ℕ zero zero = tri≡ (λ ()) refl (λ ())
+  conn-<-ℕ zero (suc b) = tri< z<n (λ ()) λ ()
+  conn-<-ℕ (suc a) zero = tri> (λ ()) (λ ()) z<n
+  conn-<-ℕ (suc a) (suc b) with conn-<-ℕ a b
   ... | tri< a<b a≢b a≯b = tri< (s<s a<b) (λ { x → ≡suc x ↯ a≢b}) λ { (s<s x) → x ↯ a≯b}
-  ... | tri≡ a≮b refl a≯b = tri≡ irrefl<ℕ refl irrefl<ℕ
+  ... | tri≡ a≮b refl a≯b = tri≡ irrefl-<-ℕ refl irrefl-<-ℕ
   ... | tri> a≮b a≢b a>b = tri> (λ { (s<s x) → x ↯ a≮b}) (λ x → ≡suc x ↯ a≢b) (s<s a>b)
 
   instance
     hasStrictOrder:ℕ : hasStrictOrder Nat
     hasStrictOrder:ℕ = record { _<_ = _<ℕ_ ;
-                                irrefl< = irrefl<ℕ ; trans< = trans<ℕ ; conn< = conn<ℕ }
+                                irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<-ℕ }
 
 
   data Fin : Nat → Set where
@@ -126,8 +126,8 @@ module _ where
   ≡𝔽 {m = zero} {zero} x = refl
   ≡𝔽 {m = suc m} {suc n} x = cong suc (≡𝔽 (≡suc x))
 
-  conn<𝔽 : ∀ {n} (a b : Fin n) → Tri (a <𝔽 b) (a ≡ b) (b <𝔽 a)
-  conn<𝔽 a b with conn<ℕ (toℕ a) (toℕ b)
+  conn-<𝔽 : ∀ {n} (a b : Fin n) → Tri (a <𝔽 b) (a ≡ b) (b <𝔽 a)
+  conn-<𝔽 a b with conn-<-ℕ (toℕ a) (toℕ b)
   ... | tri< a<b a≢b a≯b = tri< a<b (λ x → (cong toℕ x) ↯ a≢b) a≯b
   ... | tri≡ a≮b a≡b a≯b = tri≡ a≮b (≡𝔽 a≡b) a≯b
   ... | tri> a≮b a≢b a>b = tri> a≮b ((λ x → (cong toℕ x) ↯ a≢b)) a>b
@@ -136,7 +136,7 @@ module _ where
   instance
     hasStrictOrder:𝔽 : ∀{n} -> hasStrictOrder (Fin n)
     hasStrictOrder:𝔽 = record { _<_ = _<𝔽_ ;
-                                irrefl< = irrefl<ℕ ; trans< = trans<ℕ ; conn< = conn<𝔽 }
+                                irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<𝔽 }
                                 
 --------------------------------------------------
 -- The sum of two types has a strict order by "concatenating" them
@@ -152,21 +152,21 @@ module _ {𝑖 𝑗 : Level} {A : Set 𝑖} {B : Set 𝑗} {{_ : hasStrictOrder 
   instance
     hasStrictOrder:⊎ : hasStrictOrder (A ⊎ B)
     hasStrictOrder:⊎ = record { _<_ = _<⊎_ ;
-                                irrefl< = λ { (inj₁ x) → x ↯ irrefl< {𝑖} ; (inj₂ x) → x ↯ irrefl< {𝑗}} ;
-                                trans< = λ { (inj₁ x) (inj₁ x₁) → inj₁ (trans< {𝑖} x x₁) ; 
-                                             (inj₂ x) (inj₂ x₁) → inj₂ (trans< {𝑗} x x₁) ;
+                                irrefl-< = λ { (inj₁ x) → x ↯ irrefl-< {𝑖} ; (inj₂ x) → x ↯ irrefl-< {𝑗}} ;
+                                trans-< = λ { (inj₁ x) (inj₁ x₁) → inj₁ (trans-< {𝑖} x x₁) ; 
+                                             (inj₂ x) (inj₂ x₁) → inj₂ (trans-< {𝑗} x x₁) ;
                                                   (inj₁ x) conc → conc ;
                                                   conc (inj₂ x) → conc} ;
-                                conn< = λ { (inj₁ x) (inj₁ x₁) → map-Tri< {R = _<_} {S = _<⊎_} inj₁ (λ { refl → refl})
+                                conn-< = λ { (inj₁ x) (inj₁ x₁) → map-Tri< {R = _<_} {S = _<⊎_} inj₁ (λ { refl → refl})
                                                                                                 (λ {a0 a1 x₂ → inj₁ x₂})
                                                                                                 (λ {a0 a1 (inj₁ x₂) → x₂})
-                                                                                                (conn< x x₁) ;
+                                                                                                (conn-< x x₁) ;
                                             (inj₁ x) (inj₂ y) → tri< conc (λ ()) λ () ;
                                             (inj₂ y) (inj₁ x) → tri> (λ ()) (λ ()) conc;
                                             (inj₂ y) (inj₂ y₁) → map-Tri< {R = _<_} {S = _<⊎_} inj₂ (λ { refl → refl})
                                                                                                 (λ {a0 a1 y₂ → inj₂ y₂})
                                                                                                 (λ {a0 a1 (inj₂ y₂) → y₂})
-                                                                                                (conn< y y₁)  } }
+                                                                                                (conn-< y y₁)  } }
 
 
 -- The unit type has a strict order
@@ -174,9 +174,9 @@ module _ {𝑖 𝑗 : Level} {A : Set 𝑖} {B : Set 𝑗} {{_ : hasStrictOrder 
 instance
   hasStrictOrder:Unit : hasStrictOrder ⊤
   hasStrictOrder:Unit = record { _<_ = λ _ _ → ⊥ ;
-                                 irrefl< = λ ();
-                                 trans< = λ {() ()} ;
-                                 conn< = λ { tt tt → tri≡ (λ ()) refl (λ ()) } }
+                                 irrefl-< = λ ();
+                                 trans-< = λ {() ()} ;
+                                 conn-< = λ { tt tt → tri≡ (λ ()) refl (λ ()) } }
 
 
 --------------------------------------------------
@@ -240,7 +240,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   insert : (a : A) → (as : List A) → List A
   insert a [] = a ∷ []
-  insert a (b ∷ as) with conn< a b
+  insert a (b ∷ as) with conn-< a b
   ... | tri< a<b a≢b a≯b = a ∷ b ∷ as
   ... | tri≡ a≮b a≡b a≯b = b ∷ as
   ... | tri> a≮b a≢b a>b = b ∷ (insert a as)
@@ -256,7 +256,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   allSort : {a : A} → {as : List A} → UniqueSorted (a ∷ as) → a <* as
   allSort [-] = []
   allSort (x ∷ [-]) = all∷ x []
-  allSort (a<z ∷ (z<y ∷ usyxs)) = all∷ a<z (allSort (trans< {𝑖} {A} a<z z<y ∷ usyxs))
+  allSort (a<z ∷ (z<y ∷ usyxs)) = all∷ a<z (allSort (trans-< {𝑖} {A} a<z z<y ∷ usyxs))
   
   sortAll : {a : A} → {as : List A} → a <* as → UniqueSorted as → UniqueSorted (a ∷ as)
   sortAll {a} [] x₁ = [-]
@@ -264,7 +264,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   
   insertAll : {a c : A} → {as : List A} → c < a → c <* as → UniqueSorted as → c <* (insert a as)
   insertAll {as = []} x x₁ usas = x ∷ x₁
-  insertAll {a} {c} {b ∷ as} c<a (c<b ∷ c<*as) usas with conn< a b
+  insertAll {a} {c} {b ∷ as} c<a (c<b ∷ c<*as) usas with conn-< a b
   ... | tri< _ _ _ = c<a ∷ (c<b ∷ c<*as)
   ... | tri≡ _ _ _ = (c<b ∷ c<*as)
   ... | tri> a≮b a≢b a>b = let
@@ -273,11 +273,11 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   insertSorted : {a : A} → {as : List A} → UniqueSorted as → UniqueSorted (insert a as)
   insertSorted {a} {[]} usas = [-]
-  insertSorted {a} {(b ∷ as)} ([-]) with conn< a b
+  insertSorted {a} {(b ∷ as)} ([-]) with conn-< a b
   ... | tri< a<b a≢b a≯b = a<b ∷ [-]
   ... | tri≡ a≮b a≡b a≯b = [-]
   ... | tri> a≮b a≢b a>b = a>b ∷ [-]
-  insertSorted {a} {(b ∷ as)} (b<y ∷ usas) with conn< a b
+  insertSorted {a} {(b ∷ as)} (b<y ∷ usas) with conn-< a b
   ... | tri< a<b a≢b a≯b = a<b ∷ (b<y ∷ usas)
   ... | tri≡ a≮b a≡b a≯b = (b<y ∷ usas)
   ... | tri> a≮b a≢b a>b = let
@@ -289,13 +289,13 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   insertInserts : ∀ (a : A) → (as : List A) → a ∈ insert a as
   insertInserts a [] = here
-  insertInserts a (b ∷ as) with conn< a b
+  insertInserts a (b ∷ as) with conn-< a b
   ... | tri< _ _ _ = here
   ... | tri≡ _ refl _ = here
   ... | tri> _ _ _ = there (insertInserts a as)
 
   insertKeeps : ∀ {a b : A} → {as : List A} → a ∈ as → a ∈ insert b as
-  insertKeeps {b = b} {as = x₁ ∷ as} x with conn< b x₁
+  insertKeeps {b = b} {as = x₁ ∷ as} x with conn-< b x₁
   ... | tri< _ _ _ = there x
   ... | tri≡ _ refl _ = x
   insertKeeps {b = b} {x₁ ∷ as} here | tri> _ _ _ = here
@@ -303,7 +303,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   
   insertPreserves : ∀ {c a : A} → {as : List A} → c ∈ insert a as → (c ≡ a ⊎ c ∈ as)
   insertPreserves {c} {.c} {[]} here = inj₁ refl
-  insertPreserves {c} {a} {b ∷ as} x with conn< a b
+  insertPreserves {c} {a} {b ∷ as} x with conn-< a b
   insertPreserves {.a} {a} {b ∷ as} here | tri< a<b a≢b a≯b = inj₁ refl
   insertPreserves {c} {a} {b ∷ as} (there x) | tri< a<b a≢b a≯b = inj₂ x
   ... | tri≡ a≮b a≡b a≯b = inj₂ x
@@ -359,7 +359,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ι₀-∪ : ∀ {as bs : List A} → as ⊆ (as ∪ bs)
   ι₀-∪ {[]} = λ c ()
   ι₀-∪ {a ∷ as} {[]} = λ c z → z
-  ι₀-∪ {a ∷ as} {b ∷ bs} with conn< a b
+  ι₀-∪ {a ∷ as} {b ∷ bs} with conn-< a b
   ... | tri< _ _ _ = λ { x here → ∪-∈ₗ a as (a ∷ b ∷ bs) here ;
                          x (there x₁) → ∪-∈ᵣ x as (a ∷ b ∷ bs) x₁}
   ... | tri≡ _ refl _ = λ { x here → ∪-∈ₗ a as (a ∷ bs) here ;
@@ -371,7 +371,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ι₁-∪ : ∀ {as bs : List A} → bs ⊆ (as ∪ bs)
   ι₁-∪ {[]} = λ x z → z
   ι₁-∪ {a ∷ as} {[]} = λ x ()
-  ι₁-∪ {a ∷ as} {b ∷ bs} with conn< a b
+  ι₁-∪ {a ∷ as} {b ∷ bs} with conn-< a b
   ... | tri< _ _ _ = λ { x here → ∪-∈ₗ b as (a ∷ b ∷ bs) (there here) ;
                          x (there x₁) → ∪-∈ₗ x as (a ∷ b ∷ bs) (there (there x₁))}
   ... | tri≡ _ refl _ = λ { x here → ∪-∈ₗ a as (a ∷ bs) here ;
