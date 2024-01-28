@@ -1,22 +1,12 @@
 
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
-module KamiD.Dev.2024-01-20.UniqueSortedList2 where
+module KamiD.Dev.2024-01-20.StrictOrder.Instances.List where
 
 open import Agora.Conventions hiding (Σ ; Lift ; k)
-open import Agora.Order.Preorder
-open import Agora.Order.Lattice
-open import Agora.Data.Power.Definition
-open import Agora.Data.Sum.Definition
-open import Data.Fin hiding (_-_ ; _+_ ; _≤_ ; join ; _<_)
-open import Data.Nat hiding (_! ; _+_ ; _≤_ ; _≰_ ; _<_)
-open import Relation.Nullary.Decidable.Core
-open import Data.List.Base using ()
 
 open import KamiD.Dev.2024-01-20.Core hiding (_＠_)
-open import KamiD.Dev.2024-01-20.UniqueSortedList
-
-
+open import KamiD.Dev.2024-01-20.StrictOrder.Base
 
 
 -- We show that there is a strict (lexicographic) order on List A for a strict order A
@@ -70,7 +60,6 @@ module _ {A : 𝒰 𝑖} {{Ap : hasStrictOrder A}} where
   instance
     hasStrictOrder:List : hasStrictOrder (List A)
     hasStrictOrder:List = record { _<_ = _<-List_ }
-
 
 
 

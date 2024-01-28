@@ -10,7 +10,12 @@ open import Data.List using (List ; [] ; _∷_)
 open import Data.String
 open import Relation.Nullary.Decidable.Core
 
+----------------------------------------------------------
+--
 
+
+----------------------------------------------------------
+--
 record ∑ₕ {A : 𝒰 𝑖} (B : {{_ : A}} -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
   constructor make∑ₕ
   field {{fst}} : A
@@ -112,4 +117,6 @@ module _ {A : 𝒰 𝑖} where
 
   tail-≣ : {a b : A} {as bs : List A} -> (a ∷ as) ≣ (b ∷ bs) -> as ≣ bs
   tail-≣ refl-≣ = refl-≣
+
+
 
