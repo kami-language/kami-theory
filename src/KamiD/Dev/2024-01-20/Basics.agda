@@ -17,4 +17,8 @@ open import Relation.Binary.PropositionalEquality using (subst; cong)
 _↯_ : ∀ {𝒶 ℓ} {A : Set 𝒶} {W : Set ℓ} → A → ¬ A → W
 a ↯ ¬a = ⊥-elim (¬a a)
 
+record isProp {𝑖} (A : Set 𝑖) : Set (lsuc 𝑖) where
+  field force-≡ : ∀(a b : A) -> a ≡ b
+
+open isProp {{...}} public
 

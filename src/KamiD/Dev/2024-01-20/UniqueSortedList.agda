@@ -379,4 +379,16 @@ module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
 -- we show that isUniqueSorted is a proposition
 
 
+module _ {𝑖} {A : Set 𝑖} {{_ : hasStrictOrder A}} {{_ : ∀{a b : A} -> isProp (a < b)}} where
+
+  force-≡-isUniqueSorted : ∀{xs : List A} -> (p q : isUniqueSorted xs) -> p ≡ q
+  force-≡-isUniqueSorted [] [] = refl
+  force-≡-isUniqueSorted [-] [-] = refl
+  force-≡-isUniqueSorted (x ∷ p) (y ∷ q) with force-≡ x y | force-≡-isUniqueSorted p q
+  ... | refl | refl = refl
+
+  instance
+    isProp:isUniqueSorted : ∀{xs : List A} -> isProp (isUniqueSorted xs)
+    isProp:isUniqueSorted = record { force-≡ = force-≡-isUniqueSorted }
+
 
