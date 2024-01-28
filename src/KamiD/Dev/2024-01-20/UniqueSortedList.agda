@@ -55,13 +55,19 @@ map-Tri< {a = a} {b = b} f f-inj x y (tri≡ a≮b a≡b a≯b) = tri≡ (λ x�
 map-Tri< {a = a} {b = b} f f-inj x y (tri> a≮b a≢b a>b) = tri> (λ x₁ → y a b x₁ ↯ a≮b) (λ refl → f-inj refl ↯ a≢b) (x b a a>b)
 
 
-record hasStrictOrder {𝑖} (A : Set 𝑖) : Set (lsuc 𝑖) where
+record isStrictOrder {𝑖} {A : Set 𝑖} (_<_ : A -> A -> Set 𝑖) : Set 𝑖 where
   field
-    _<_ : A → A → Set 𝑖
     irrefl-< : ∀ {a : A} → ¬ (a < a)
     -- asym< : ∀ {a b : A} → a < b → ¬ (b < a) -- follows from trans and iref
     trans-< : ∀ {a b c : A} → a < b → b < c → a < c
     conn-< : ∀ (a b : A) → Tri (a < b) (a ≡ b) (b < a)
+
+open isStrictOrder {{...}} public
+
+record hasStrictOrder {𝑖} (A : Set 𝑖) : Set (lsuc 𝑖) where
+  field
+    _<_ : A → A → Set 𝑖
+    {{isStrictOrder:<}} : isStrictOrder _<_
 
 open hasStrictOrder {{...}} public
 {-# DISPLAY hasStrictOrder._<_ M a b = a < b #-}
@@ -80,19 +86,19 @@ module _ where
   ≡suc refl = refl
 
 
-  data _<ℕ_ : Nat → Nat → Set where
-    z<n : ∀ {n} → zero <ℕ suc n
-    s<s : ∀ {m n} → (m<n : m <ℕ n) → suc m <ℕ suc n
+  data _<-ℕ_ : Nat → Nat → Set where
+    z<n : ∀ {n} → zero <-ℕ suc n
+    s<s : ∀ {m n} → (m<n : m <-ℕ n) → suc m <-ℕ suc n
 
-  irrefl-<-ℕ : ∀ {a : Nat} → ¬ (a <ℕ a)
+  irrefl-<-ℕ : ∀ {a : Nat} → ¬ (a <-ℕ a)
   irrefl-<-ℕ {zero} = λ ()
   irrefl-<-ℕ {suc a} = λ { (s<s x) → x ↯ irrefl-<-ℕ}
   
-  trans-<-ℕ : ∀ {a b c : Nat} → a <ℕ b → b <ℕ c → a <ℕ c
+  trans-<-ℕ : ∀ {a b c : Nat} → a <-ℕ b → b <-ℕ c → a <-ℕ c
   trans-<-ℕ z<n (s<s b) = z<n
   trans-<-ℕ (s<s a) (s<s b) = s<s (trans-<-ℕ a b)
   
-  conn-<-ℕ : ∀ (a b : Nat) → Tri (a <ℕ b) (a ≡ b) (b <ℕ a)
+  conn-<-ℕ : ∀ (a b : Nat) → Tri (a <-ℕ b) (a ≡ b) (b <-ℕ a)
   conn-<-ℕ zero zero = tri≡ (λ ()) refl (λ ())
   conn-<-ℕ zero (suc b) = tri< z<n (λ ()) λ ()
   conn-<-ℕ (suc a) zero = tri> (λ ()) (λ ()) z<n
@@ -102,9 +108,12 @@ module _ where
   ... | tri> a≮b a≢b a>b = tri> (λ { (s<s x) → x ↯ a≮b}) (λ x → ≡suc x ↯ a≢b) (s<s a>b)
 
   instance
+    isStrictOrder:<-ℕ : isStrictOrder _<-ℕ_
+    isStrictOrder:<-ℕ = record { irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<-ℕ }
+
+  instance
     hasStrictOrder:ℕ : hasStrictOrder Nat
-    hasStrictOrder:ℕ = record { _<_ = _<ℕ_ ;
-                                irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<-ℕ }
+    hasStrictOrder:ℕ = record { _<_ = _<-ℕ_ }
 
 
   data Fin : Nat → Set where
@@ -119,64 +128,76 @@ module _ where
   fromℕ zero    = zero
   fromℕ (suc i) = suc (fromℕ i)
 
-  _<𝔽_ : ∀ {m n : Nat} → Fin m → Fin n → Set
-  a <𝔽 b = toℕ a <ℕ toℕ b
+  _<-𝔽_ : ∀ {m n : Nat} → Fin m → Fin n → Set
+  a <-𝔽 b = toℕ a <-ℕ toℕ b
 
   ≡𝔽 : ∀ {a} → {m n : Fin a} → toℕ m ≡ toℕ n → m ≡ n
   ≡𝔽 {m = zero} {zero} x = refl
   ≡𝔽 {m = suc m} {suc n} x = cong suc (≡𝔽 (≡suc x))
 
-  conn-<𝔽 : ∀ {n} (a b : Fin n) → Tri (a <𝔽 b) (a ≡ b) (b <𝔽 a)
-  conn-<𝔽 a b with conn-<-ℕ (toℕ a) (toℕ b)
+  conn-<-𝔽 : ∀ {n} (a b : Fin n) → Tri (a <-𝔽 b) (a ≡ b) (b <-𝔽 a)
+  conn-<-𝔽 a b with conn-<-ℕ (toℕ a) (toℕ b)
   ... | tri< a<b a≢b a≯b = tri< a<b (λ x → (cong toℕ x) ↯ a≢b) a≯b
   ... | tri≡ a≮b a≡b a≯b = tri≡ a≮b (≡𝔽 a≡b) a≯b
   ... | tri> a≮b a≢b a>b = tri> a≮b ((λ x → (cong toℕ x) ↯ a≢b)) a>b
   
+  instance
+    isStrictOrder:<-𝔽 : ∀{n} -> isStrictOrder (_<-𝔽_ {n = n})
+    isStrictOrder:<-𝔽 = record { irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<-𝔽 }
 
   instance
     hasStrictOrder:𝔽 : ∀{n} -> hasStrictOrder (Fin n)
-    hasStrictOrder:𝔽 = record { _<_ = _<𝔽_ ;
-                                irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<𝔽 }
-                                
+    hasStrictOrder:𝔽 = record { _<_ = _<-𝔽_ }
+
 --------------------------------------------------
 -- The sum of two types has a strict order by "concatenating" them
 
+
 module _ {𝑖 𝑗 : Level} {A : Set 𝑖} {B : Set 𝑗} {{_ : hasStrictOrder A}} {{_ : hasStrictOrder B}}  where
 
-  data _<⊎_ : A ⊎ B → A ⊎ B → Set (𝑖 ⊔ 𝑗) where
-    inj₁ : {a a₁ : A} → a < a₁ → inj₁ a <⊎ inj₁ a₁
-    inj₂ : {b b₁ : B} → b < b₁ → inj₂ b <⊎ inj₂ b₁
-    conc : {a : A} → {b : B} → inj₁ a <⊎ inj₂ b
+  data _<-⊎_ : A ⊎ B → A ⊎ B → Set (𝑖 ⊔ 𝑗) where
+    inj₁ : {a a₁ : A} → a < a₁ → inj₁ a <-⊎ inj₁ a₁
+    inj₂ : {b b₁ : B} → b < b₁ → inj₂ b <-⊎ inj₂ b₁
+    conc : {a : A} → {b : B} → inj₁ a <-⊎ inj₂ b
 
-  
   instance
-    hasStrictOrder:⊎ : hasStrictOrder (A ⊎ B)
-    hasStrictOrder:⊎ = record { _<_ = _<⊎_ ;
+    isStrictOrder:<-⊎ : isStrictOrder (_<-⊎_)
+    isStrictOrder:<-⊎ = record {
                                 irrefl-< = λ { (inj₁ x) → x ↯ irrefl-< {𝑖} ; (inj₂ x) → x ↯ irrefl-< {𝑗}} ;
                                 trans-< = λ { (inj₁ x) (inj₁ x₁) → inj₁ (trans-< {𝑖} x x₁) ; 
-                                             (inj₂ x) (inj₂ x₁) → inj₂ (trans-< {𝑗} x x₁) ;
+                                            (inj₂ x) (inj₂ x₁) → inj₂ (trans-< {𝑗} x x₁) ;
                                                   (inj₁ x) conc → conc ;
                                                   conc (inj₂ x) → conc} ;
-                                conn-< = λ { (inj₁ x) (inj₁ x₁) → map-Tri< {R = _<_} {S = _<⊎_} inj₁ (λ { refl → refl})
+                                conn-< = λ { (inj₁ x) (inj₁ x₁) → map-Tri< {R = _<_} {S = _<-⊎_} inj₁ (λ { refl → refl})
                                                                                                 (λ {a0 a1 x₂ → inj₁ x₂})
                                                                                                 (λ {a0 a1 (inj₁ x₂) → x₂})
                                                                                                 (conn-< x x₁) ;
                                             (inj₁ x) (inj₂ y) → tri< conc (λ ()) λ () ;
                                             (inj₂ y) (inj₁ x) → tri> (λ ()) (λ ()) conc;
-                                            (inj₂ y) (inj₂ y₁) → map-Tri< {R = _<_} {S = _<⊎_} inj₂ (λ { refl → refl})
+                                            (inj₂ y) (inj₂ y₁) → map-Tri< {R = _<_} {S = _<-⊎_} inj₂ (λ { refl → refl})
                                                                                                 (λ {a0 a1 y₂ → inj₂ y₂})
                                                                                                 (λ {a0 a1 (inj₂ y₂) → y₂})
                                                                                                 (conn-< y y₁)  } }
 
+  instance
+    hasStrictOrder:⊎ : hasStrictOrder (A ⊎ B)
+    hasStrictOrder:⊎ = record { _<_ = _<-⊎_ }
+
 
 -- The unit type has a strict order
 
+data _<-⊤_ : (a b : ⊤) -> Set where
+
+instance
+  isStrictOrder:<-⊤ : isStrictOrder _<-⊤_
+  isStrictOrder:<-⊤ = record {
+                                irrefl-< = λ ();
+                                trans-< = λ {() ()} ;
+                                conn-< = λ { tt tt → tri≡ (λ ()) refl (λ ()) } }
+
 instance
   hasStrictOrder:Unit : hasStrictOrder ⊤
-  hasStrictOrder:Unit = record { _<_ = λ _ _ → ⊥ ;
-                                 irrefl-< = λ ();
-                                 trans-< = λ {() ()} ;
-                                 conn-< = λ { tt tt → tri≡ (λ ()) refl (λ ()) } }
+  hasStrictOrder:Unit = record { _<_ = _<-⊤_ }
 
 
 --------------------------------------------------
