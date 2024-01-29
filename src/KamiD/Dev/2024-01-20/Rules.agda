@@ -15,10 +15,6 @@ open import KamiD.Dev.2024-01-20.Core hiding (_＠_)
 open import KamiD.Dev.2024-01-20.UniqueSortedList hiding (it)
 
 
-module _ {A : 𝒰 𝑖} where
-  _＋_ : List A -> List A -> List A
-  _＋_ = {!!}
-
 
 -------------------
 -- we have a layer system for the context argument
@@ -27,19 +23,19 @@ module _ {A : 𝒰 𝑖} where
 --   Partial : Layer
 --   Global : (A : StrictOrder ℓ₀) -> Layer
 
-Layer = Preorder (ℓ₀ , ℓ₀ , ℓ₁)
+Layer = Preorder (ℓ₁ , ℓ₁ , ℓ₁) :& hasFiniteJoins
 
 
 
 private variable
   K L : Layer
 
-Open : Layer -> 𝒰 _
-Open L = List ⟨ L ⟩
+-- Open : Layer -> 𝒰 _
+-- Open L = List ⟨ L ⟩
 
-macro
-  𝒪 : ∀ L -> _
-  𝒪 L = #structureOn (Open L)
+-- macro
+--   𝒪 : ∀ L -> _
+--   ⟨ L ⟩ = #structureOn (Open L)
 
 
 -- types
@@ -62,13 +58,13 @@ private variable
 --   R S : StrictOrder ℓ₀
 
 private variable
-  U V : Open L
+  U V : ⟨ L ⟩
   -- ψ : ∀{U V : Open L} -> U ≤-𝒪 V
 
 
-data Kind (L : Layer) : 𝒰 ℓ₀ where
+data Kind (L : Layer) : 𝒰 ℓ₁ where
   -- Partial : {U V : UniqueSortedList R} -> .(ψ : U ≤ V) -> Kind L
-  Local : (U : 𝒪 L) -> Kind L
+  Local : (U : ⟨ L ⟩) -> Kind L
   Global : Kind L
   -- Comm : (A : StrictOrder ℓ₀) -> Kind
 
@@ -88,7 +84,7 @@ data _⊢_Type : ∀ (Γ : Ctx L) -> Kind L -> 𝒰₂
 
 -- syntax KindedPartialType Γ ψ = Γ ⇂ ψ ⊢Partial
 
-KindedLocalType : (Γ : Ctx L) -> (U : 𝒪 L) -> 𝒰₂
+KindedLocalType : (Γ : Ctx L) -> (U : ⟨ L ⟩) -> 𝒰₂
 KindedLocalType Γ U = Γ ⊢ Local U Type
 
 syntax KindedLocalType Γ U = Γ ⊢Local U
@@ -276,9 +272,9 @@ data BaseType : 𝒰₀ where
 -- data _⇂_⊢_≤-Local_ : ∀ Γ -> .(V ≤ U) -> (Γ ⊢Local U) -> (Γ ⇂ V ⊢Local) -> 𝒰₁
 -- data _⇂_⊢_≤-Term_ : ∀ (Γ : Ctx L) -> .{ϕ : V ≤ U} -> {A : Γ ⊢Local U} {B : Γ ⇂ V ⊢Local} -> (Γ ⇂ ϕ ⊢ A ≤-Local B) -> Γ ⊢ A -> (Γ ⊢ B) -> 𝒰₁
 
-data _⊢_⇂_↦_ : ∀ (Γ : Ctx L) -> (X : Γ ⊢Global) -> (U : 𝒪 L) -> (A : Γ ⊢Local U) -> 𝒰₂ where
+data _⊢_⇂_↦_ : ∀ (Γ : Ctx L) -> (X : Γ ⊢Global) -> (U : ⟨ L ⟩) -> (A : Γ ⊢Local U) -> 𝒰₂ where
 
-data _⊢domain_↦_ : ∀ (Γ : Ctx L) -> (X : Γ ⊢Global) -> (U : 𝒪 L) -> 𝒰₂ where
+data _⊢domain_↦_ : ∀ (Γ : Ctx L) -> (X : Γ ⊢Global) -> (U : ⟨ L ⟩) -> 𝒰₂ where
 
 data _⊢_≡_Type : ∀(Γ : Ctx L) -> (X Y : Γ ⊢ k Type) -> 𝒰₂ where
 data _⊢_≡_∶_ : ∀(Γ : Ctx L) -> {X Y : Γ ⊢ k Type} (x : Γ ⊢ X) (y : Γ ⊢ Y) -> (Γ ⊢ X ≡ Y Type) -> 𝒰₂ where
@@ -291,7 +287,7 @@ data _⊢_Type where
   Loc : ∀ U -> Γ ⊢ Local U Type -> Γ ⊢ Global Type
 
   -- A global type can be restricted to an open set
-  _⇂_ : {Γ : Ctx L} -> Γ ⊢ Global Type -> (U : 𝒪 L) -> Γ ⊢Local U
+  _⇂_ : {Γ : Ctx L} -> Γ ⊢ Global Type -> (U : ⟨ L ⟩) -> Γ ⊢Local U
 
 
   _⊗_ : (X Y : Γ ⊢Global) -> Γ ⊢Global
@@ -495,16 +491,16 @@ data _⊢_ where
   var : Γ ⊢Var A -> Γ ⊢ A
 
   -- we can take a global computation and use it in a more local context
-  global : (U : 𝒪 L) -> (X : Γ ⊢Global) -> Γ ⊢ X -> Γ ⊢ X ⇂ U
+  global : (U : ⟨ L ⟩) -> (X : Γ ⊢Global) -> Γ ⊢ X -> Γ ⊢ X ⇂ U
 
   -- we can construct Loc terms
-  loc : (U : Open L) -> (Y : Γ ⊢ Local U Type) -> Γ ⊢ Y -> Γ ⊢ Loc U Y
-  local : {Γ : Ctx L} (U : 𝒪 L) -> (X : Γ ⊢Global) -> Γ ⊢domain X ↦ U -> (Y : Γ ⊢Local U)
+  loc : (U : ⟨ L ⟩) -> (Y : Γ ⊢ Local U Type) -> Γ ⊢ Y -> Γ ⊢ Loc U Y
+  local : {Γ : Ctx L} (U : ⟨ L ⟩) -> (X : Γ ⊢Global) -> Γ ⊢domain X ↦ U -> (Y : Γ ⊢Local U)
           -> Γ ⊢ X ⇂ U -> Γ ⊢ X
 
-  glue : {Γ : Ctx L} -> (X : Γ ⊢Global) -> {U V : 𝒪 L}
+  glue : {Γ : Ctx L} -> {X : Γ ⊢Global} -> (U V : ⟨ L ⟩)
           -> Γ ⊢ X ⇂ U -> Γ ⊢ X ⇂ V
-          -> Γ ⊢ X ⇂ (U ＋ V)
+          -> Γ ⊢ X ⇂ (U ∨ V)
 
   -- functions
   lam : Γ ,[ A ] ⊢ B -> Γ ⊢ A ⇒ B
@@ -513,25 +509,38 @@ data _⊢_ where
 
 
 module Examples where
-  ε : Ctx (𝒫ᶠⁱⁿ (𝔽 2))
+  open import KamiD.Dev.2024-01-20.Open
+  open import KamiD.Dev.2024-01-20.StrictOrder.Base
+
+  XX : hasFiniteJoins {𝑖 = ℓ₁ , ℓ₁ , ℓ₁} (𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 2)))
+  XX = it
+
+  LL : _ :& hasFiniteJoins {𝑖 = ℓ₁ , ℓ₁ , ℓ₁}
+  LL = (𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 2)))
+
+  ε : Ctx LL
   ε = []
 
-  u v uv : 𝒪 (𝒫ᶠⁱⁿ (𝔽 2))
-  u = ⦗ # 0 ⦘ ∷ []
-  v = ⦗ # 1 ⦘ ∷ []
-  uv = ⦗ # 0 ⦘ ∷ ⦗ # 1 ⦘ ∷ []
+  u v uv : 𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 2))
+  u = ⦗ # 0 ⦘ ∷ [] since ([] ∷ [])
+  v = ⦗ # 1 ⦘ ∷ [] since ([] ∷ [])
+  uv = u ∨ v
+  -- uv = ⦗ # 0 ⦘ ∷ ⦗ # 1 ⦘ ∷ []
 
-  Ni : ∀{Γ : Ctx (𝒫ᶠⁱⁿ (𝔽 2))} -> 𝒪 (𝒫ᶠⁱⁿ (𝔽 2)) -> Γ ⊢ Global Type
+  Ni : ∀{Γ : Ctx LL} -> 𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 2)) -> Γ ⊢ Global Type
   Ni w = Loc (w) (Base NN)
 
-  T1 : ∀{Γ : Ctx (𝒫ᶠⁱⁿ (𝔽 2))} -> Γ ⊢ Global Type
+  T1 : ∀{Γ : Ctx LL} -> Γ ⊢ Global Type
   T1 = Loc u (Base NN) ⊗ Loc v (Base NN)
 
-  T2 : ∀{Γ : Ctx (𝒫ᶠⁱⁿ (𝔽 2))} -> Γ ⊢ Global Type
+  T2 : ∀{Γ : Ctx LL} -> Γ ⊢ Global Type
   T2 = Ni u ⇒ wk-Type T1
 
   t2 : ε ,[ T2 ] ⊢ Ni u ⇒ Ni u ⇒ Ni v
-  t2 = lam (lam (local uv (Ni v) {!!} {!!} {!!}))
+  t2 = lam (lam (local uv (Ni v) {!!} {!!} (glue u v {!!} {!!})))
+
+{-
+-}
   -- lam (local uv (wk-Type T1) {!!} (Base NN ⊗ₗ Base NN) {!!} {!!})
 
 
