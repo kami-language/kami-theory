@@ -20,13 +20,17 @@ open import Agda.Builtin.List using (List; []; _∷_)
 open import Agda.Builtin.Sigma using (Σ; _,_; fst)
 open import Agda.Builtin.Equality using (_≡_; refl)
 
+open import Data.Fin using (Fin ; zero ; suc)
+open import KamiD.Dev.2024-01-20.Basics
+open import KamiD.Dev.2024-01-20.StrictOrder.Base
+
 
 
 -- open import Agora.Conventions using (′_′; ⟨_⟩; _since_)
 
 
 module _ {n : Nat} where
-  Roles = Σ (List (Fin n)) UniqueSorted
+  Roles = Σ (List (Fin n)) isUniqueSorted
 
   data LType : Set where
     tt : LType
@@ -35,7 +39,7 @@ module _ {n : Nat} where
   data Type : (R : Roles) → Set where
     ∅ : Type ([] , [])
     ⟦_⟧ : ∀ {r} → (t : LType) → Type ([ r ] , [-])
-    _◂_ : ∀ {r R} → (t : LType) → (ts : Type R) → (p : UniqueSorted (r ∷ (fst R))) → Type (r ∷ (fst R) , p)
+    _◂_ : ∀ {r R} → (t : LType) → (ts : Type R) → (p : isUniqueSorted (r ∷ (fst R))) → Type (r ∷ (fst R) , p)
     _⟶_ : ∀ {R} → Type R → Type R → Type R
 
   -- discard entries in R′ ∖ R
