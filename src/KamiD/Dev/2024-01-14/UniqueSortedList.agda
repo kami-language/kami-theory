@@ -11,7 +11,7 @@ open import Relation.Nullary using (¬_)
 open import Data.Sum.Base using (_⊎_; inj₁; inj₂; [_,_]′)
 open import Data.Product.Base using (_×_)
 open import Agda.Builtin.Sigma using (Σ; _,_; fst)
-open import Data.List.Base using (List; []; _∷_)
+open import Agda.Builtin.List using (List; []; _∷_)
 open import Relation.Binary.PropositionalEquality using (subst; cong)
 
 _↯_ : ∀ {𝒶 ℓ : Level} {A : Set 𝒶} {W : Set ℓ} → A → ¬ A → W
@@ -23,6 +23,9 @@ it {{x}} = x
 data Dec {ℓ} (A : Set ℓ) : Set ℓ where
   yes : (p : A) → Dec A
   no : (¬p : ¬ A) → Dec A
+
+[_] : ∀ {𝑖} {A : Set 𝑖} → A → List A
+[ a ] = a ∷ []
   
 --------------------------------------------------
 -- decidable equality
@@ -192,16 +195,32 @@ module _ {𝑖 : Level} {A : Set 𝑖} where
   ∉[] : ∀ {a : A} → ¬ (a ∈ [])
   ∉[] {a} ()
 
-  infix 4 _⊆_
-  _⊆_ : List A → List A → Set (lsuc 𝑖)
-  as ⊆ bs = ∀ x → x ∈ as → x ∈ bs
+  data _⊆_ : List A → List A → Set (lsuc 𝑖)  where
+    empty : ∀ {bs} → [] ⊆ bs 
+    succ : ∀ {a as bs} → as ⊆ bs → a ∈ bs → (a ∷ as) ⊆ bs
 
   ⊈[] : ∀ {as : List A} → ¬ (as ≡ []) → ¬ (as ⊆ [])
   ⊈[] {[]} as≢[] x = refl ↯ as≢[]
-  ⊈[] {x₁ ∷ as} as≢[] x = x x₁ here ↯ λ ()
+  ⊈[] {x₁ ∷ as} as≢[] (succ x ())
 
-  ⊆∷ : ∀ {a : A} {as bs : List A} → (a ∷ as) ⊆ bs → as ⊆ bs
-  ⊆∷ sf = λ x x₁ → sf x (there x₁)
+  ∷⊆ : ∀ {a : A} {as bs : List A} → (a ∷ as) ⊆ bs → as ⊆ bs
+  ∷⊆ (succ sf x) = sf
+  
+  ⊆∷ : ∀ {a : A} {as bs : List A} → as ⊆ bs → as ⊆ (a ∷ bs)
+  ⊆∷ empty = empty
+  ⊆∷ (succ x x₁) = succ (⊆∷ x) (there x₁)
+
+  refl⊆ : ∀ {as : List A} → as ⊆ as
+  refl⊆ {[]} = empty
+  refl⊆ {x ∷ as} = succ (⊆∷ {x} (refl⊆ {as})) here
+
+  ⊆∈ : ∀ {a : A} {as bs : List A} → a ∈ as → as ⊆ bs → a ∈ bs
+  ⊆∈ here (succ x₁ x₂) = x₂
+  ⊆∈ (there x) (succ x₁ x₂) = ⊆∈ x x₁
+
+  trans⊆ : ∀ {as bs cs : List A} → as ⊆ bs → bs ⊆ cs → as ⊆ cs
+  trans⊆ empty _ = empty
+  trans⊆ (succ x x₂) x₁ = succ (trans⊆ x x₁) (⊆∈ x₂ x₁)
 
 --------------------------------------------------
 -- sortedness
@@ -227,12 +246,12 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ...               | no a≠b | no a∉as = no λ { here → refl ↯ a≠b; (there a∈as) → a∈as ↯ a∉as}
 
   _⊆?_ : {{_ : hasDecidableEquality A}} → (as bs : List A) → Dec (as ⊆ bs)
-  [] ⊆? bs = yes (λ c ())
-  (a ∷ as) ⊆? [] = no λ { all → all a here ↯ ∉[]}
+  [] ⊆? bs = yes empty
+  (a ∷ as) ⊆? [] = no λ { (succ x x₁) → x₁ ↯ λ ()}
   (a ∷ as) ⊆? bs with a ∈? bs | as ⊆? bs
-  ... | yes a∈bs | yes all = yes (λ { c here → a∈bs ; c (there x) → all c x})
-  ... | yes a∈bs | no as⊈bs = no (λ { all → (λ c c∈as → all c (there c∈as)) ↯ as⊈bs})
-  ... | no a∉bs | _ = no λ { all → all a here ↯ a∉bs}
+  ... | yes a∈bs | yes all = yes (succ all a∈bs)
+  ... | yes a∈bs | no as⊈bs = no λ {(succ x x₁) → x ↯ as⊈bs}
+  ... | no a∉bs | _ = no λ {(succ x x₁) → x₁ ↯ a∉bs}
   
 --------------------------------------------------
 -- insertion
@@ -311,11 +330,24 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ... | inj₁ x₁ = inj₁ x₁
   ... | inj₂ y = inj₂ (there y)
 
+  insert⊆ : ∀ {a : A} {as bs : List A} → as ⊆ bs → as ⊆ insert a bs
+  insert⊆ empty = empty
+  insert⊆ (succ x x₁) = succ (insert⊆ x) (insertKeeps x₁)
+
+  insert⊆∷ : ∀ {a : A} { bs : List A} → insert a bs ⊆ (a ∷ bs)
+  insert⊆∷ {a} {[]} = succ empty here
+  insert⊆∷ {a} {b ∷ bs} with conn< a b
+  ... | tri< a<b a≢b a≯b = refl⊆
+  ... | tri≡ a≮b a≡b a≯b = ⊆∷ refl⊆
+  ... | tri> a≮b a≢b a>b = succ (trans⊆ (insert⊆∷ {a} {bs}) (succ (⊆∷ (⊆∷ refl⊆)) here)) (there here)
+
+  insert∈⊆ : ∀ {a : A} {as bs : List A} → a ∈ as → bs ⊆ as → insert a bs ⊆ as
+  insert∈⊆ a empty = succ empty a
+  insert∈⊆ a (succ b x) = trans⊆ insert⊆∷ (succ (succ b x ) a )
 
 
 --------------------------------------------------
--- unions
-
+-- onions
 
   _∪_ : List A → List A → List A
   [] ∪ bs = bs
@@ -356,30 +388,20 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   
   ι₀-∪ : ∀ {as bs : List A} → as ⊆ (as ∪ bs)
-  ι₀-∪ {[]} = λ c ()
-  ι₀-∪ {a ∷ as} {[]} = λ c z → z
-  ι₀-∪ {a ∷ as} {b ∷ bs} with conn< a b
-  ... | tri< _ _ _ = λ { x here → ∪-∈ₗ a as (a ∷ b ∷ bs) here ;
-                         x (there x₁) → ∪-∈ᵣ x as (a ∷ b ∷ bs) x₁}
-  ... | tri≡ _ refl _ = λ { x here → ∪-∈ₗ a as (a ∷ bs) here ;
-                             x (there x₁) → ∪-∈ᵣ x as (a ∷ bs) x₁}
-  ... | tri> _ _ _ = λ { x here →  ∪-∈ₗ a as (b ∷ insert a bs) (there (insertInserts a bs)) ;
-                         x (there x₁) → ∪-∈ᵣ x as (b ∷ insert a bs) x₁}
+  ι₀-∪ {[]} = empty
+  ι₀-∪ {a ∷ as} {[]} = succ (⊆∷ refl⊆) here
+  ι₀-∪ {a ∷ as} {b ∷ bs} = succ (ι₀-∪ {as} {insert a (b ∷ bs)}) (∪-∈ₗ a as (insert a (b ∷ bs)) (insertInserts a (b ∷ bs))) 
 
   
   ι₁-∪ : ∀ {as bs : List A} → bs ⊆ (as ∪ bs)
-  ι₁-∪ {[]} = λ x z → z
-  ι₁-∪ {a ∷ as} {[]} = λ x ()
-  ι₁-∪ {a ∷ as} {b ∷ bs} with conn< a b
-  ... | tri< _ _ _ = λ { x here → ∪-∈ₗ b as (a ∷ b ∷ bs) (there here) ;
-                         x (there x₁) → ∪-∈ₗ x as (a ∷ b ∷ bs) (there (there x₁))}
-  ... | tri≡ _ refl _ = λ { x here → ∪-∈ₗ a as (a ∷ bs) here ;
-                             x (there x₁) → ∪-∈ₗ x as (a ∷ bs) (there x₁)}
-  ... | tri> _ _ _ = λ { x here →  ∪-∈ₗ b as (b ∷ insert a bs) here ;
-                         x (there x₁) → ∪-∈ₗ x as (b ∷ insert a bs) (there (insertKeeps x₁))}
+  ι₁-∪ {[]} = refl⊆
+  ι₁-∪ {a ∷ as} {[]} = empty
+  ι₁-∪ {a ∷ as} {b ∷ bs} = succ (trans⊆ (insert⊆ (⊆∷ refl⊆)) (ι₁-∪ {as = (as)} {bs = insert a (b ∷ bs) })) ((∪-∈ₗ b as (insert a (b ∷ bs)) (insertKeeps here)))
 
   [_,_]-∪ : ∀ {as bs cs : List A} → as ⊆ cs -> bs ⊆ cs -> (as ∪ bs) ⊆ cs
-  [_,_]-∪ {as} {bs} x y = λ a a∈as∪bs → [ x a , y a ]′ (∈-∪ a∈as∪bs)
+  [_,_]-∪ {.[]} {bs} empty y = y
+  [_,_]-∪ {.(_ ∷ _)} {.[]} (succ x x₁) empty = succ x x₁
+  [_,_]-∪ {a ∷ as} {b ∷ bs} (succ x x₁) (succ y x₂) = [ x , insert∈⊆ x₁ (succ y x₂) ]-∪
 
 
 --------------------------------------------------
@@ -425,17 +447,17 @@ module _ {A : StrictOrder 𝑖} where
     field ⟨_⟩ : ⟨ U ⟩ ⊆ ⟨ V ⟩
 
   reflexive-≤-𝒫ᶠⁱⁿ : ∀{U} -> U ≤-𝒫ᶠⁱⁿ U
-  reflexive-≤-𝒫ᶠⁱⁿ = incl (λ c x → x)
+  reflexive-≤-𝒫ᶠⁱⁿ = incl refl⊆
 
   _⟡-𝒫ᶠⁱⁿ_ : ∀{U V W} -> U ≤-𝒫ᶠⁱⁿ V -> V ≤-𝒫ᶠⁱⁿ W -> U ≤-𝒫ᶠⁱⁿ W
-  incl p ⟡-𝒫ᶠⁱⁿ incl q = incl (λ c x → q c (p c x))
+  incl p ⟡-𝒫ᶠⁱⁿ incl q = incl (trans⊆ p q)
 
   instance
     isPreorderData:≤-𝒫ᶠⁱⁿ : isPreorderData (𝒫ᶠⁱⁿ A) _≤-𝒫ᶠⁱⁿ_
     isPreorderData:≤-𝒫ᶠⁱⁿ = record
       { reflexive = reflexive-≤-𝒫ᶠⁱⁿ
       ; _⟡_ = _⟡-𝒫ᶠⁱⁿ_
-      ; transp-≤ = λ {refl refl r -> r}
+      ; transp-≤ = λ {refl refl x₂ → x₂}
       }
 
   -- `𝒫ᶠⁱⁿ A` has finite joins (least upper bounds / maximum / or)
@@ -450,7 +472,7 @@ module _ {A : StrictOrder 𝑖} where
     hasFiniteJoins:𝒫ᶠⁱⁿ : hasFiniteJoins (𝒫ᶠⁱⁿ A)
     hasFiniteJoins:𝒫ᶠⁱⁿ = record
                            { ⊥ = [] since []
-                           ; initial-⊥ = incl (λ {_ ()})
+                           ; initial-⊥ = incl empty
                            ; _∨_ = _∨-𝒫ᶠⁱⁿ_
                            ; ι₀-∨ = incl ι₀-∪
                            ; ι₁-∨ = λ {as} → incl (ι₁-∪ {as = ⟨ as ⟩} )
@@ -496,12 +518,9 @@ module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
   ∈img f (there x) = there (∈img f x)
 
   map-img : ∀ {f : StrictOrderHom A B} {U V : List ⟨ A ⟩} -> U ⊆ V → img ⟨ f ⟩ U ⊆ img ⟨ f ⟩ V
-  map-img {f} {x₃ ∷ U} {[]} x x₁ x₂ = x ↯ ⊈[] {as = x₃ ∷ U} λ ()
-  map-img {f} {x₃ ∷ U} {x₄ ∷ V} x .(⟨ f ⟩ x₃) here with x x₃ here
-  ... | here = here
-  ... | there x₃∈V = ∈img ⟨ f ⟩ (there x₃∈V)
-  map-img {f} {x₃ ∷ U} {x₄ ∷ V} x x₁ (there x₂) = (map-img {f} (⊆∷ x)) x₁ x₂
-  
+  map-img empty = empty
+  map-img {f} (succ x x₁) = succ (map-img {f} x) (∈img ⟨ f ⟩ x₁)
+
   map-Img-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
   map-Img-𝒫ᶠⁱⁿ {f} (incl a) = incl (map-img {f} a)
 
@@ -511,7 +530,6 @@ module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
     
     hasStrictOrderHom:inj₂ : isStrictOrderHom {A = B} {A ⋆-StrictOrder B} inj₂
     hasStrictOrderHom:inj₂ = record { homPreserves = λ x → inj₂ x }
-
 
   postulate
     PreImg-𝒫ᶠⁱⁿ : (f : StrictOrderHom A B) -> 𝒫ᶠⁱⁿ B -> 𝒫ᶠⁱⁿ A
