@@ -13,9 +13,8 @@ open import Data.Product.Base using (_×_)
 open import Agda.Builtin.Sigma using (Σ; _,_; fst)
 open import Agda.Builtin.List using (List; []; _∷_)
 open import Relation.Binary.PropositionalEquality using (subst; cong)
-
-_↯_ : ∀ {𝒶 ℓ : Level} {A : Set 𝒶} {W : Set ℓ} → A → ¬ A → W
-a ↯ ¬a = ⊥-elim (¬a a)
+open import KamiD.Dev.2024-01-20.StrictOrder.Base
+open import KamiD.Dev.2024-01-20.Basics
 
 it : ∀ {a} {A : Set a} {{_ : A}} → A
 it {{x}} = x
@@ -35,151 +34,6 @@ record hasDecidableEquality {ℓ} (A : Set ℓ) : Set ℓ where
     _≟_ : ∀ (x y : A) → Dec (x ≡ y)
 
 open hasDecidableEquality {{...}} public
-
---------------------------------------------------
--- strict order
-
-data Tri {𝑖} (A : Set 𝑖) (B : Set 𝑖) (C : Set 𝑖) : Set 𝑖 where
-  tri< : (a<b :   A) (a≢b : ¬ B) (a≯b : ¬ C) → Tri A B C
-  tri≡ : (a≮b : ¬ A) (a≡b :   B) (a≯b : ¬ C) → Tri A B C
-  tri> : (a≮b : ¬ A) (a≢b : ¬ B) (a>b :   C) → Tri A B C
-
-Tri< : ∀ {𝑖} {A : Set 𝑖} → (_<_ : A → A → Set 𝑖) → (a b : A) -> Set 𝑖
-Tri< _<_ a b = Tri (a < b) (a ≡ b) (b < a)
-
-map-Tri< : ∀ {𝑖 𝑗} {A : Set 𝑖} {B : Set 𝑗} {R : A → A → Set 𝑖} {S : B → B → Set 𝑗} {a b : A}
-           → (f : A -> B) → (f a ≡ f b → a ≡ b)
-           → (∀ (a0 a1 : A) → R a0 a1 -> (S (f a0) (f a1)))
-           → (∀ (a0 a1 : A) → S (f a0) (f a1) -> R a0 a1)
-           → Tri< R a b → Tri< S (f a) (f b)
-map-Tri< {a = a} {b = b} f f-inj x y (tri< a<b a≢b a≯b) = tri< (x a b a<b) (λ refl → f-inj refl ↯ a≢b) λ x₁ → y b a x₁ ↯ a≯b
-map-Tri< {a = a} {b = b} f f-inj x y (tri≡ a≮b a≡b a≯b) = tri≡ (λ x₁ → y a b x₁ ↯ a≮b) (cong f a≡b) λ x₁ → y b a x₁ ↯ a≯b
-map-Tri< {a = a} {b = b} f f-inj x y (tri> a≮b a≢b a>b) = tri> (λ x₁ → y a b x₁ ↯ a≮b) (λ refl → f-inj refl ↯ a≢b) (x b a a>b)
-
-
-record hasStrictOrder {𝑖} (A : Set 𝑖) : Set (lsuc 𝑖) where
-  field
-    _<_ : A → A → Set 𝑖
-    irrefl< : ∀ {a : A} → ¬ (a < a)
-    -- asym< : ∀ {a b : A} → a < b → ¬ (b < a) -- follows from trans and iref
-    trans< : ∀ {a b c : A} → a < b → b < c → a < c
-    conn< : ∀ (a b : A) → Tri (a < b) (a ≡ b) (b < a)
-
-open hasStrictOrder {{...}}
-{-# DISPLAY hasStrictOrder._<_ M a b = a < b #-}
-
---------------------------------------------------
--- instances
-
-open import Agda.Builtin.Nat using (Nat; zero; suc)
-open import Data.Unit using (⊤)
-
--- Fin n has a strict order
-
-module _ where
-
-  ≡suc : ∀ {m n} → suc m ≡ suc n → m ≡ n
-  ≡suc refl = refl
-
-
-  data _<ℕ_ : Nat → Nat → Set where
-    z<n : ∀ {n} → zero <ℕ suc n
-    s<s : ∀ {m n} → (m<n : m <ℕ n) → suc m <ℕ suc n
-
-  irrefl<ℕ : ∀ {a : Nat} → ¬ (a <ℕ a)
-  irrefl<ℕ {zero} = λ ()
-  irrefl<ℕ {suc a} = λ { (s<s x) → x ↯ irrefl<ℕ}
-  
-  trans<ℕ : ∀ {a b c : Nat} → a <ℕ b → b <ℕ c → a <ℕ c
-  trans<ℕ z<n (s<s b) = z<n
-  trans<ℕ (s<s a) (s<s b) = s<s (trans<ℕ a b)
-  
-  conn<ℕ : ∀ (a b : Nat) → Tri (a <ℕ b) (a ≡ b) (b <ℕ a)
-  conn<ℕ zero zero = tri≡ (λ ()) refl (λ ())
-  conn<ℕ zero (suc b) = tri< z<n (λ ()) λ ()
-  conn<ℕ (suc a) zero = tri> (λ ()) (λ ()) z<n
-  conn<ℕ (suc a) (suc b) with conn<ℕ a b
-  ... | tri< a<b a≢b a≯b = tri< (s<s a<b) (λ { x → ≡suc x ↯ a≢b}) λ { (s<s x) → x ↯ a≯b}
-  ... | tri≡ a≮b refl a≯b = tri≡ irrefl<ℕ refl irrefl<ℕ
-  ... | tri> a≮b a≢b a>b = tri> (λ { (s<s x) → x ↯ a≮b}) (λ x → ≡suc x ↯ a≢b) (s<s a>b)
-
-  instance
-    hasStrictOrder:ℕ : hasStrictOrder Nat
-    hasStrictOrder:ℕ = record { _<_ = _<ℕ_ ;
-                                irrefl< = irrefl<ℕ ; trans< = trans<ℕ ; conn< = conn<ℕ }
-
-
-  data Fin : Nat → Set where
-    zero : ∀ {n} → Fin (suc n)
-    suc  : ∀ {n} →  (i : Fin n) → Fin (suc n)
-
-  toℕ : ∀ {n} → Fin n → Nat
-  toℕ zero    = 0
-  toℕ (suc i) = suc (toℕ i)
-  
-  fromℕ : (n : Nat) → Fin (suc n)
-  fromℕ zero    = zero
-  fromℕ (suc i) = suc (fromℕ i)
-
-  _<𝔽_ : ∀ {m n : Nat} → Fin m → Fin n → Set
-  a <𝔽 b = toℕ a <ℕ toℕ b
-
-  ≡𝔽 : ∀ {a} → {m n : Fin a} → toℕ m ≡ toℕ n → m ≡ n
-  ≡𝔽 {m = zero} {zero} x = refl
-  ≡𝔽 {m = suc m} {suc n} x = cong suc (≡𝔽 (≡suc x))
-
-  conn<𝔽 : ∀ {n} (a b : Fin n) → Tri (a <𝔽 b) (a ≡ b) (b <𝔽 a)
-  conn<𝔽 a b with conn<ℕ (toℕ a) (toℕ b)
-  ... | tri< a<b a≢b a≯b = tri< a<b (λ x → (cong toℕ x) ↯ a≢b) a≯b
-  ... | tri≡ a≮b a≡b a≯b = tri≡ a≮b (≡𝔽 a≡b) a≯b
-  ... | tri> a≮b a≢b a>b = tri> a≮b ((λ x → (cong toℕ x) ↯ a≢b)) a>b
-  
-
-  instance
-    hasStrictOrder:𝔽 : ∀{n} -> hasStrictOrder (Fin n)
-    hasStrictOrder:𝔽 = record { _<_ = _<𝔽_ ;
-                                irrefl< = irrefl<ℕ ; trans< = trans<ℕ ; conn< = conn<𝔽 }
-                                
---------------------------------------------------
--- The sum of two types has a strict order by "concatenating" them
-
-module _ {𝑖 𝑗 : Level} {A : Set 𝑖} {B : Set 𝑗} {{_ : hasStrictOrder A}} {{_ : hasStrictOrder B}}  where
-
-  data _<⊎_ : A ⊎ B → A ⊎ B → Set (𝑖 ⊔ 𝑗) where
-    inj₁ : {a a₁ : A} → a < a₁ → inj₁ a <⊎ inj₁ a₁
-    inj₂ : {b b₁ : B} → b < b₁ → inj₂ b <⊎ inj₂ b₁
-    conc : {a : A} → {b : B} → inj₁ a <⊎ inj₂ b
-
-  
-  instance
-    hasStrictOrder:⊎ : hasStrictOrder (A ⊎ B)
-    hasStrictOrder:⊎ = record { _<_ = _<⊎_ ;
-                                irrefl< = λ { (inj₁ x) → x ↯ irrefl< {𝑖} ; (inj₂ x) → x ↯ irrefl< {𝑗}} ;
-                                trans< = λ { (inj₁ x) (inj₁ x₁) → inj₁ (trans< {𝑖} x x₁) ; 
-                                             (inj₂ x) (inj₂ x₁) → inj₂ (trans< {𝑗} x x₁) ;
-                                                  (inj₁ x) conc → conc ;
-                                                  conc (inj₂ x) → conc} ;
-                                conn< = λ { (inj₁ x) (inj₁ x₁) → map-Tri< {R = _<_} {S = _<⊎_} inj₁ (λ { refl → refl})
-                                                                                                (λ {a0 a1 x₂ → inj₁ x₂})
-                                                                                                (λ {a0 a1 (inj₁ x₂) → x₂})
-                                                                                                (conn< x x₁) ;
-                                            (inj₁ x) (inj₂ y) → tri< conc (λ ()) λ () ;
-                                            (inj₂ y) (inj₁ x) → tri> (λ ()) (λ ()) conc;
-                                            (inj₂ y) (inj₂ y₁) → map-Tri< {R = _<_} {S = _<⊎_} inj₂ (λ { refl → refl})
-                                                                                                (λ {a0 a1 y₂ → inj₂ y₂})
-                                                                                                (λ {a0 a1 (inj₂ y₂) → y₂})
-                                                                                                (conn< y y₁)  } }
-
-
--- The unit type has a strict order
-
-instance
-  hasStrictOrder:Unit : hasStrictOrder ⊤
-  hasStrictOrder:Unit = record { _<_ = λ _ _ → ⊥ ;
-                                 irrefl< = λ ();
-                                 trans< = λ {() ()} ;
-                                 conn< = λ { tt tt → tri≡ (λ ()) refl (λ ()) } }
-
 
 --------------------------------------------------
 -- elements and subsets
@@ -227,12 +81,12 @@ module _ {𝑖 : Level} {A : Set 𝑖} where
 
 module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
-  data UniqueSorted : List A → Set 𝑖 where
-    []  : UniqueSorted []
-    [-] : ∀ {x} → UniqueSorted (x ∷ [])
-    _∷_ : ∀ {x y xs} → x < y → UniqueSorted (y ∷ xs) → UniqueSorted (x ∷ y ∷ xs)
+  data isUniqueSorted : List A → Set 𝑖 where
+    []  : isUniqueSorted []
+    [-] : ∀ {x} → isUniqueSorted (x ∷ [])
+    _∷_ : ∀ {x y xs} → x < y → isUniqueSorted (y ∷ xs) → isUniqueSorted (x ∷ y ∷ xs)
 
-  popSort : {a : A} → {as : List A} → UniqueSorted (a ∷ as) → UniqueSorted as
+  popSort : {a : A} → {as : List A} → isUniqueSorted (a ∷ as) → isUniqueSorted as
   popSort [-] = []
   popSort (x ∷ x₁) = x₁
 
@@ -258,7 +112,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   insert : (a : A) → (as : List A) → List A
   insert a [] = a ∷ []
-  insert a (b ∷ as) with conn< a b
+  insert a (b ∷ as) with conn-< a b
   ... | tri< a<b a≢b a≯b = a ∷ b ∷ as
   ... | tri≡ a≮b a≡b a≯b = b ∷ as
   ... | tri> a≮b a≢b a>b = b ∷ (insert a as)
@@ -271,31 +125,31 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   all∷ a<b [] = a<b ∷ []
   all∷ a<b (a<b₁ ∷ a<*bs) = a<b ∷ a<b₁ ∷ a<*bs
 
-  allSort : {a : A} → {as : List A} → UniqueSorted (a ∷ as) → a <* as
+  allSort : {a : A} → {as : List A} → isUniqueSorted (a ∷ as) → a <* as
   allSort [-] = []
   allSort (x ∷ [-]) = all∷ x []
-  allSort (a<z ∷ (z<y ∷ usyxs)) = all∷ a<z (allSort (trans< {𝑖} {A} a<z z<y ∷ usyxs))
+  allSort (a<z ∷ (z<y ∷ usyxs)) = all∷ a<z (allSort (trans-< {𝑖} {A} a<z z<y ∷ usyxs))
   
-  sortAll : {a : A} → {as : List A} → a <* as → UniqueSorted as → UniqueSorted (a ∷ as)
+  sortAll : {a : A} → {as : List A} → a <* as → isUniqueSorted as → isUniqueSorted (a ∷ as)
   sortAll {a} [] x₁ = [-]
   sortAll (x ∷ x₂) x₁ = x ∷ x₁
   
-  insertAll : {a c : A} → {as : List A} → c < a → c <* as → UniqueSorted as → c <* (insert a as)
+  insertAll : {a c : A} → {as : List A} → c < a → c <* as → isUniqueSorted as → c <* (insert a as)
   insertAll {as = []} x x₁ usas = x ∷ x₁
-  insertAll {a} {c} {b ∷ as} c<a (c<b ∷ c<*as) usas with conn< a b
+  insertAll {a} {c} {b ∷ as} c<a (c<b ∷ c<*as) usas with conn-< a b
   ... | tri< _ _ _ = c<a ∷ (c<b ∷ c<*as)
   ... | tri≡ _ _ _ = (c<b ∷ c<*as)
   ... | tri> a≮b a≢b a>b = let
       c<*aas = insertAll c<a c<*as (popSort usas)
     in all∷ c<b c<*aas
 
-  insertSorted : {a : A} → {as : List A} → UniqueSorted as → UniqueSorted (insert a as)
+  insertSorted : {a : A} → {as : List A} → isUniqueSorted as → isUniqueSorted (insert a as)
   insertSorted {a} {[]} usas = [-]
-  insertSorted {a} {(b ∷ as)} ([-]) with conn< a b
+  insertSorted {a} {(b ∷ as)} ([-]) with conn-< a b
   ... | tri< a<b a≢b a≯b = a<b ∷ [-]
   ... | tri≡ a≮b a≡b a≯b = [-]
   ... | tri> a≮b a≢b a>b = a>b ∷ [-]
-  insertSorted {a} {(b ∷ as)} (b<y ∷ usas) with conn< a b
+  insertSorted {a} {(b ∷ as)} (b<y ∷ usas) with conn-< a b
   ... | tri< a<b a≢b a≯b = a<b ∷ (b<y ∷ usas)
   ... | tri≡ a≮b a≡b a≯b = (b<y ∷ usas)
   ... | tri> a≮b a≢b a>b = let
@@ -307,13 +161,13 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   insertInserts : ∀ (a : A) → (as : List A) → a ∈ insert a as
   insertInserts a [] = here
-  insertInserts a (b ∷ as) with conn< a b
+  insertInserts a (b ∷ as) with conn-< a b
   ... | tri< _ _ _ = here
   ... | tri≡ _ refl _ = here
   ... | tri> _ _ _ = there (insertInserts a as)
 
   insertKeeps : ∀ {a b : A} → {as : List A} → a ∈ as → a ∈ insert b as
-  insertKeeps {b = b} {as = x₁ ∷ as} x with conn< b x₁
+  insertKeeps {b = b} {as = x₁ ∷ as} x with conn-< b x₁
   ... | tri< _ _ _ = there x
   ... | tri≡ _ refl _ = x
   insertKeeps {b = b} {x₁ ∷ as} here | tri> _ _ _ = here
@@ -321,7 +175,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   
   insertPreserves : ∀ {c a : A} → {as : List A} → c ∈ insert a as → (c ≡ a ⊎ c ∈ as)
   insertPreserves {c} {.c} {[]} here = inj₁ refl
-  insertPreserves {c} {a} {b ∷ as} x with conn< a b
+  insertPreserves {c} {a} {b ∷ as} x with conn-< a b
   insertPreserves {.a} {a} {b ∷ as} here | tri< a<b a≢b a≯b = inj₁ refl
   insertPreserves {c} {a} {b ∷ as} (there x) | tri< a<b a≢b a≯b = inj₂ x
   ... | tri≡ a≮b a≡b a≯b = inj₂ x
@@ -336,7 +190,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   insert⊆∷ : ∀ {a : A} { bs : List A} → insert a bs ⊆ (a ∷ bs)
   insert⊆∷ {a} {[]} = succ empty here
-  insert⊆∷ {a} {b ∷ bs} with conn< a b
+  insert⊆∷ {a} {b ∷ bs} with conn-< a b
   ... | tri< a<b a≢b a≯b = refl⊆
   ... | tri≡ a≮b a≡b a≯b = ⊆∷ refl⊆
   ... | tri> a≮b a≢b a>b = succ (trans⊆ (insert⊆∷ {a} {bs}) (succ (⊆∷ (⊆∷ refl⊆)) here)) (there here)
@@ -361,9 +215,9 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ∪-idᵣ {[]} = refl
   ∪-idᵣ {a ∷ as} = refl
 
-  ∪-sorted : ∀ {as bs} → UniqueSorted as → UniqueSorted bs → UniqueSorted (as ∪ bs)
+  ∪-sorted : ∀ {as bs} → isUniqueSorted as → isUniqueSorted bs → isUniqueSorted (as ∪ bs)
   ∪-sorted {[]} _ pbs = pbs
-  ∪-sorted {_ ∷ _} {[]} pas _ = subst UniqueSorted ∪-idᵣ pas
+  ∪-sorted {_ ∷ _} {[]} pas _ = subst isUniqueSorted ∪-idᵣ pas
   ∪-sorted {_ ∷ _} {_ ∷ _} pas pbs = ∪-sorted (popSort pas) (insertSorted pbs)
 
 
@@ -427,7 +281,7 @@ StrictOrder : ∀ 𝑖 -> Set (lsuc 𝑖)
 StrictOrder 𝑖 = (Set 𝑖) :& hasStrictOrder
 
 UniqueSortedList : (A : StrictOrder 𝑖) -> Set 𝑖
-UniqueSortedList A = List ⟨ A ⟩ :& UniqueSorted
+UniqueSortedList A = List ⟨ A ⟩ :& isUniqueSorted
 
 -- The fancy name for UniqueSortedList: finite power set over A
 macro
@@ -445,6 +299,8 @@ module _ {A : StrictOrder 𝑖} where
   record _≤-𝒫ᶠⁱⁿ_ (U V : 𝒫ᶠⁱⁿ A) : Set (lsuc 𝑖) where
     constructor incl
     field ⟨_⟩ : ⟨ U ⟩ ⊆ ⟨ V ⟩
+
+  open _≤-𝒫ᶠⁱⁿ_ {{...}} public
 
   reflexive-≤-𝒫ᶠⁱⁿ : ∀{U} -> U ≤-𝒫ᶠⁱⁿ U
   reflexive-≤-𝒫ᶠⁱⁿ = incl refl⊆
@@ -505,7 +361,7 @@ module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
   img f [] = []
   img f (x ∷ x₁) = f x ∷ img f x₁
 
-  img-soh : (f : StrictOrderHom A B) -> (as : List ⟨ A ⟩) → UniqueSorted as → UniqueSorted (img ⟨ f ⟩ as)
+  img-soh : (f : StrictOrderHom A B) -> (as : List ⟨ A ⟩) → isUniqueSorted as → isUniqueSorted (img ⟨ f ⟩ as)
   img-soh (f since pf) [] x = []
   img-soh ff@(f since pf) (a ∷ .[]) [-] = [-]
   img-soh ff@(f since pf) (a ∷ (a₁ ∷ as)) (x ∷ x₁) = homPreserves pf x ∷ (img-soh ff (a₁ ∷ as) (popSort (x ∷ x₁)))
@@ -535,3 +391,48 @@ module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
     PreImg-𝒫ᶠⁱⁿ : (f : StrictOrderHom A B) -> 𝒫ᶠⁱⁿ B -> 𝒫ᶠⁱⁿ A
     map-PreImg-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
 
+
+
+--------------------------------------------------
+-- we show that isUniqueSorted is a proposition
+
+
+module _ {𝑖} {A : Set 𝑖} {{_ : hasStrictOrder A}} {{_ : ∀{a b : A} -> isProp (a < b)}} where
+
+  force-≡-isUniqueSorted : ∀{xs : List A} -> (p q : isUniqueSorted xs) -> p ≡ q
+  force-≡-isUniqueSorted [] [] = refl
+  force-≡-isUniqueSorted [-] [-] = refl
+  force-≡-isUniqueSorted (x ∷ p) (y ∷ q) with force-≡ x y | force-≡-isUniqueSorted p q
+  ... | refl | refl = refl
+
+  instance
+    isProp:isUniqueSorted : ∀{xs : List A} -> isProp (isUniqueSorted xs)
+    isProp:isUniqueSorted = record { force-≡ = force-≡-isUniqueSorted }
+
+module _ {A : StrictOrder 𝑖} where
+  ⦗_⦘ : ⟨ A ⟩ -> 𝒫ᶠⁱⁿ A
+  ⦗_⦘ a = (a ∷ []) since [-]
+
+module _ {A} {{_ : StrictOrder 𝑖 on A}} where
+  instance
+    hasDecidableEquality:byStrictOrder : hasDecidableEquality A
+    hasDecidableEquality:byStrictOrder = record { _≟_ = f }
+      where
+        f : (a b : A) -> _
+        f a b with conn-< a b
+        ... | tri< a<b a≢b a≯b = no λ {refl -> irrefl-< a<b}
+        ... | tri≡ a≮b a≡b a≯b = yes a≡b
+        ... | tri> a≮b a≢b a>b = no λ {refl -> irrefl-< a>b}
+
+module _ {A : StrictOrder 𝑖} where
+  open Agora.Order.Preorder
+  open Agora.Conventions hiding (¬_)
+
+  decide-≤-𝒫ᶠⁱⁿ : ∀(u v : 𝒫ᶠⁱⁿ A) -> (¬ (u ≤ v)) +-𝒰 (u ≤ v)
+  decide-≤-𝒫ᶠⁱⁿ u v with ⟨ u ⟩ ⊆? ⟨ v ⟩
+  ... | yes p = right (incl p)
+  ... | no ¬p = left (λ p -> ¬p ⟨ p ⟩)
+
+  instance
+    isDecidablePreorder:≤-𝒫ᶠⁱⁿ : isDecidablePreorder (𝒫ᶠⁱⁿ A)
+    isDecidablePreorder:≤-𝒫ᶠⁱⁿ = record { decide-≤ = decide-≤-𝒫ᶠⁱⁿ }
