@@ -107,6 +107,9 @@ private variable
   A : Γ ⊢ k Type
   B : Γ ⊢ k Type
 
+  X : Γ ⊢ k Type
+  Y : Γ ⊢ k Type
+
 data _⊢Var_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢ k Type) -> 𝒰₂
 data _⊢_ : ∀ (Γ : Ctx L) -> (A : Γ ⊢ k Type) -> 𝒰₂
 
@@ -290,11 +293,14 @@ data _⊢_Type where
   _⇂_ : {Γ : Ctx L} -> Γ ⊢ Global Type -> (U : ⟨ L ⟩) -> Γ ⊢Local U
 
 
-  _⊗_ : (X Y : Γ ⊢Global) -> Γ ⊢Global
-  _⊗ₗ_ : (X Y : Γ ⊢Local U) -> Γ ⊢Local U
+  _⊗_ : (X Y : Γ ⊢ k Type) -> Γ ⊢ k Type
+  -- _⊗_ : (X Y : Γ ⊢Global) -> Γ ⊢Global
+  -- _⊠_ : (X : Γ ⊢Local U) (Y : Γ ⊢Local V) -> Γ ⊢Local (U ∨ V)
   _⇒_ : (X : Γ ⊢Global) -> (Y : Γ ,[ X ] ⊢Global) -> Γ ⊢Global
 
 
+
+infixr 50 _⊗_
 infixr 40 _⇒_
 infixl 35 _⇂_
 
@@ -491,7 +497,7 @@ data _⊢_ where
   var : Γ ⊢Var A -> Γ ⊢ A
 
   -- we can take a global computation and use it in a more local context
-  global : (U : ⟨ L ⟩) -> (X : Γ ⊢Global) -> Γ ⊢ X -> Γ ⊢ X ⇂ U
+  global : {U : ⟨ L ⟩} -> {X : Γ ⊢Global} -> Γ ⊢ X -> Γ ⊢ X ⇂ U
 
   -- we can construct Loc terms
   loc : (U : ⟨ L ⟩) -> (Y : Γ ⊢ Local U Type) -> Γ ⊢ Y -> Γ ⊢ Loc U Y
@@ -501,6 +507,10 @@ data _⊢_ where
   glue : {Γ : Ctx L} -> {X : Γ ⊢Global} -> (U V : ⟨ L ⟩)
           -> Γ ⊢ X ⇂ U -> Γ ⊢ X ⇂ V
           -> Γ ⊢ X ⇂ (U ∨ V)
+
+  ev-⊗ : Γ ⊢ (X ⊗ Y) ⇂ U -> Γ ⊢ (X ⇂ U) ⊗ (Y ⇂ U)
+  ve-⊗ : ∀{Γ : Ctx L} -> {X Y : Γ ⊢Global} -> {U : ⟨ L ⟩}
+         -> Γ ⊢ (X ⇂ U) ⊗ (Y ⇂ U) -> Γ ⊢ (X ⊗ Y) ⇂ U
 
   -- functions
   lam : Γ ,[ A ] ⊢ B -> Γ ⊢ A ⇒ B
@@ -537,7 +547,7 @@ module Examples where
   T2 = Ni u ⇒ wk-Type T1
 
   t2 : ε ,[ T2 ] ⊢ Ni u ⇒ Ni u ⇒ Ni v
-  t2 = lam (lam (local uv (Ni v) {!!} {!!} (glue u v {!!} {!!})))
+  t2 = lam (lam (local uv (Ni v) {!!} {!!} (glue u v (global {!!}) {!!})))
 
 {-
 -}
