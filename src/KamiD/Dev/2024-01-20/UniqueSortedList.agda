@@ -16,9 +16,6 @@ open import Relation.Binary.PropositionalEquality using (subst; cong)
 open import KamiD.Dev.2024-01-20.StrictOrder.Base
 open import KamiD.Dev.2024-01-20.Basics
 
-it : ∀ {a} {A : Set a} {{_ : A}} → A
-it {{x}} = x
-
 data Dec {ℓ} (A : Set ℓ) : Set ℓ where
   yes : (p : A) → Dec A
   no : (¬p : ¬ A) → Dec A
