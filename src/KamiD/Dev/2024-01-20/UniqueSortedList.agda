@@ -65,8 +65,8 @@ module _ {𝑖 : Level} {A : Set 𝑖} where
   ⊈[] {x₁ ∷ as} as≢[] ()
   
   ∷⊆ : ∀ {a : A} {as bs : List A} → (a ∷ as) ⊆ bs → as ⊆ bs
-  ∷⊆ (succ p) = ?
-  ∷⊆ (app p) = ?
+  ∷⊆ (succ p) = {!!}
+  ∷⊆ (app p) = {!!}
   
 {-
 
@@ -117,8 +117,8 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   _⊆?_ : {{_ : hasDecidableEquality A}} → (as bs : List A) → Dec (as ⊆ bs)
   [] ⊆? bs = yes empty
-  (a ∷ as) ⊆? [] = no ?
-  (a ∷ as) ⊆? bs = ?
+  (a ∷ as) ⊆? [] = no {!!}
+  (a ∷ as) ⊆? bs = {!!}
 
 {-with a ∈? bs | as ⊆? bs
   ... | yes a∈bs | yes all = yes (succ all a∈bs)
@@ -424,7 +424,7 @@ module _ {A : StrictOrder 𝑖} where
   ⦗_⦘ : ⟨ A ⟩ -> 𝒫ᶠⁱⁿ A
   ⦗_⦘ a = (a ∷ []) since [-]
 
-module _ {A} {{_ : StrictOrder 𝑖 on A}} where
+module _ {𝑖} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   instance
     hasDecidableEquality:byStrictOrder : hasDecidableEquality A
     hasDecidableEquality:byStrictOrder = record { _≟_ = f }
