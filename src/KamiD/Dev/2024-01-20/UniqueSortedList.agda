@@ -443,8 +443,8 @@ module _ {A : StrictOrder 𝑖} where
   decide-≤-𝒫ᶠⁱⁿ u v with ⟨ u ⟩ ⊆? ⟨ v ⟩
   ... | yes p = right (incl p)
   ... | no ¬p = left (λ p -> ¬p ⟨ p ⟩)
-{-
+
   instance
     isDecidablePreorder:≤-𝒫ᶠⁱⁿ : isDecidablePreorder (𝒫ᶠⁱⁿ A)
     isDecidablePreorder:≤-𝒫ᶠⁱⁿ = record { decide-≤ = decide-≤-𝒫ᶠⁱⁿ }
--}
+

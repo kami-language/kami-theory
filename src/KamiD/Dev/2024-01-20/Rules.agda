@@ -298,6 +298,8 @@ data _⊢_Type where
   -- _⊠_ : (X : Γ ⊢Local U) (Y : Γ ⊢Local V) -> Γ ⊢Local (U ∨ V)
   _⇒_ : (X : Γ ⊢Global) -> (Y : Γ ,[ X ] ⊢Global) -> Γ ⊢Global
 
+  _⇒ₗ_ : (X : Γ ⊢Local U) -> (Y : Γ ,[ Loc U X ] ⊢Local U) -> Γ ⊢Local U
+
 
 
 infixr 50 _⊗_
