@@ -303,7 +303,7 @@ data _⊢_Type where
 
 
 infixr 50 _⊗_
-infixr 40 _⇒_
+infixr 40 _⇒_ _⇒ₗ_
 infixl 35 _⇂_
 
 {-
@@ -469,7 +469,7 @@ su-Type t T = su-Type,ind t [] T
 -- su₂-Type,ind : ∀ E -> {A : Γ ⊢ k Type} -> (t : Γ ⋆-Ctx₊ E ⊢ wks-Type E A) -> (Z : Γ ,[ A ] ⋆-Ctx₊ E ⊢ k Type) -> Γ ⋆-Ctx₊ su-Ctx₊ t E ⊢ k Type
 -- su₂-Type,ind E t T = ?
 
-special-su-top : Γ ,[ B ] ⊢ wk-Type A ->  Γ ,[ A ] ⊢Global -> Γ ,[ B ] ⊢Global
+special-su-top : Γ ,[ B ] ⊢ wk-Type A ->  Γ ,[ A ] ⊢ k Type -> Γ ,[ B ] ⊢ k Type
 special-su-top t T = su-Type t (wk-Type,ind ([] ,[ _ ]) T)
 
 -- End Substitution
@@ -513,6 +513,8 @@ data _⊢_ where
   ev-⊗ : Γ ⊢ (X ⊗ Y) ⇂ U -> Γ ⊢ (X ⇂ U) ⊗ (Y ⇂ U)
   ve-⊗ : ∀{Γ : Ctx L} -> {X Y : Γ ⊢Global} -> {U : ⟨ L ⟩}
          -> Γ ⊢ (X ⇂ U) ⊗ (Y ⇂ U) -> Γ ⊢ (X ⊗ Y) ⇂ U
+
+  ev-⇒ : Γ ⊢ (X ⇒ Y) ⇂ U -> Γ ⊢ (X ⇂ U) ⇒ₗ (special-su-top {!!} Y ⇂ U)
 
   -- functions
   lam : Γ ,[ A ] ⊢ B -> Γ ⊢ A ⇒ B
