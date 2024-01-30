@@ -277,7 +277,7 @@ open import Agora.Conventions using (
   𝑖 ; 𝑗
   )
 open import Agora.Order.Preorder using
-  (isPreorderData; isPreorder; isPreorder:byDef;
+  (isPreorderData; isPreorder;
   _≤_
   )
 open import Agora.Order.Lattice using (hasFiniteJoins)
@@ -329,7 +329,7 @@ module _ {A : StrictOrder 𝑖} where
   -- `𝒫ᶠⁱⁿ A` has finite joins (least upper bounds / maximum / or)
   instance
     isPreorder:𝒫ᶠⁱⁿ : isPreorder _ (𝒫ᶠⁱⁿ A)
-    isPreorder:𝒫ᶠⁱⁿ = isPreorder:byDef _≤-𝒫ᶠⁱⁿ_
+    isPreorder:𝒫ᶠⁱⁿ = record { _≤_ = _≤-𝒫ᶠⁱⁿ_ }
 
   _∨-𝒫ᶠⁱⁿ_ : (U V : 𝒫ᶠⁱⁿ A) -> 𝒫ᶠⁱⁿ A
   (U since Us) ∨-𝒫ᶠⁱⁿ (V since Vs) = let a = (U ∪ V) in a since ∪-sorted Us Vs 

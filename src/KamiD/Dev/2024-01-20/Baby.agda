@@ -27,8 +27,42 @@ open import KamiD.Dev.2024-01-20.StrictOrder.Base
 
 
 -- open import Agora.Conventions using (′_′; ⟨_⟩; _since_)
+module _ where
+  Roles : ∀ {n : Nat} → Set
+  Roles {n} = Σ (List (Fin n)) isUniqueSorted
+
+  -- data LType {n} : Fin n → Set where
+  --   tt＠ : (r : Fin n) → LType r
+  --   ℕ＠ : (r : Fin n) → LType r
+
+  -- data Type (n : Nat) : (R : Roles {n}) → Set where
+  --   ∅ : Type n ([] , [])
+  --   <_◂_>as_ : ∀ {r rs p} (t : LType r) (ts : Type n (rs , p)) (p′ : isUniqueSorted (r ∷ rs)) → Type n (r ∷ rs , p′)
+  --   _⟶_ : ∀ {R} → Type n R → Type n R → Type n R
+
+  data LType : Set where
+    tt : LType
+    N : LType
+
+  data Type (n : Nat) : Set where
+    located : Fin n -> LType -> Type n
+    _×_ : Type n -> Type n -> Type n
+    _⇒_ : Type n -> Type n -> Type n
+
+  gsync : ∀{n} -> (f : Fin n -> Fin n) -> Type n -> Type n
+  gsync f (located n T) = located (f n) T
+  gsync f (T × S) = gsync f T × gsync f S
+  gsync f (T ⇒ S) = gsync f T ⇒ gsync f S
+
+  -- gsync : ∀ {n R p} → (f : Fin n → (Σ (Fin n) (_∈  R))) → Type n (R , p) → Type n (R , p)
+  -- gsync f ∅ = ∅
+  -- gsync f (<_◂_>as_ {r} t x _) = {!f r!}
+  -- gsync f (x ⟶ x₁) = gsync f x ⟶ gsync f x₁
 
 
+
+
+{-
 module _ {n : Nat} where
   Roles = Σ (List (Fin n)) isUniqueSorted
 
@@ -89,4 +123,4 @@ module _ {n : Nat} where
                -----------------
              → Γ , p ∷ Δ ⊢ (π R R⊆R′ C)
 
-
+-}

@@ -256,7 +256,7 @@ module _ {X : DecidablePreorder 𝑖} where
 
   instance
     isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ : isPreorder _ (𝒪ᶠⁱⁿ⁻ʷᵏ X)
-    isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ = isPreorder:byDef _≤-𝒪ᶠⁱⁿ⁻ʷᵏ_
+    isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ = record { _≤_ = _≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ }
 
   instance
     hasFiniteJoins:𝒪ᶠⁱⁿ⁻ʷᵏ : hasFiniteJoins (𝒪ᶠⁱⁿ⁻ʷᵏ X)
@@ -268,6 +268,10 @@ module _ {X : DecidablePreorder 𝑖} where
                               ; ι₁-∨ = λ {u} {v} -> incl (ι₁-IndependentBase {u = ⟨ u ⟩} it)
                               ; [_,_]-∨ = {!!}
                               }
+
+  instance
+    hasFiniteMeets:𝒪ᶠⁱⁿ⁻ʷᵏ : hasFiniteMeets (𝒪ᶠⁱⁿ⁻ʷᵏ X)
+    hasFiniteMeets:𝒪ᶠⁱⁿ⁻ʷᵏ = {!!}
 
 
 {-
