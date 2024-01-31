@@ -134,7 +134,9 @@ data _⊢Atom_ where
   app : Σ ⊢Atom X ⇒ Y -> (a : Γ ⊢ A) -> (x : Σ ⊢Atom X) -> Σ ⊢Atom su-Atom-Space a x Y
   appi : Σ ⊢Atom (X ⇒i Y) -> (x : Σ ⊢Atom X) -> Σ ⊢Atom Y
 
-  free : ⟨ Γ ,[ A ] ⨾ Σ ,[ Free A ] ⊢Open X ⟩ -> Σ ,[ Free A ] ⊢Atom X
+  liftfree : Γ ⊢ A ⇒ wk-Type B -> Σ ⊢Atom (Free A ⇒i Free B)
+
+  -- free : ⟨ Γ ,[ A ] ⨾ Σ ,[ Free A ] ⊢Open X ⟩ -> Σ ,[ Free A ] ⊢Atom X
 
 
 Σ ⊢Open X = 𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ ((Σ ⊢Atom X) since hasStrictOrder:Atom))
@@ -173,9 +175,14 @@ data _⨾_⊢_＠_ : (Γ : TCtx) -> (Σ : SCtx Γ) -> Γ ⊢Type -> Γ ⨾ Σ �
 
 -- bind-Open : ⟨ Σ ⊢Open X ⟩ -> 
 
+map-loc2 : Γ ⨾ Σ ⊢ A ＠ X -> Σ ⊢Atom (Y ⇒i X) -> Γ ⨾ Σ ⊢ A ＠ Y
+map-loc2 = {!!}
+
 map-loc : Γ ⨾ Σ ⊢ A ＠ X -> Σ ⊢Atom (X ⇒i Y) -> Γ ⨾ Σ ⊢ A ＠ Y
-map-loc (L , L₁) f = {!!}
-map-loc (loc x) f = {!!}
+map-loc (L , M) f = map-loc L f , map-loc M f
+map-loc (loc x) f = loc (bind-Space (λ x -> ⦗ appi f x ⦘ ∷ [] since (IB.[] IB.∷ IB.[])) x)
+
+
 
 -- restr : Γ ⨾ Σ ⊢ A ＠ X -> ⟨ Σ ,[ X ] ⊢Open Y ⟩ -> Γ ⨾ Σ ⊢ A ＠ su-Space {!!} {!!} Y
 -- restr = {!!}

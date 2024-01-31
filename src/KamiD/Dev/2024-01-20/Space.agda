@@ -17,7 +17,7 @@ open import Agora.Order.Lattice
 open import Agora.Data.Sum.Definition
 open import Agora.Data.Product.Definition
 
-open import Data.List using (_++_)
+open import Data.List using (_++_ ; concatMap)
 
 
 Space = Lattice (ℓ₀ , ℓ₀ , ℓ₀)
@@ -40,6 +40,14 @@ Space = Lattice (ℓ₀ , ℓ₀ , ℓ₀)
 --     hasFiniteJoins.ι₁-∨      hasFiniteJoins:Family = λ a -> ι₁-∨
 --     hasFiniteJoins.[_,_]-∨   hasFiniteJoins:Family = λ f g a -> [ f a , g a ]-∨
 
+-- module _ {A : 𝒰 _} {B : 𝒰 _} {{_ : StrictOrder 𝑖 on A}} {{_ : StrictOrder 𝑗 on B}} where
+module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
+
+  bind-𝒫ᶠⁱⁿ : (⟨ A ⟩ -> 𝒫ᶠⁱⁿ B) -> 𝒫ᶠⁱⁿ A -> 𝒫ᶠⁱⁿ B
+  bind-𝒫ᶠⁱⁿ f x = concatMap (λ x -> ⟨ f x ⟩) ⟨ x ⟩ since {!!}
+
+  bind-Space : (⟨ A ⟩ -> 𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ B)) -> (𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ A) -> 𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ B))
+  bind-Space = {!!}
 
 _×-Space_ : Space -> Space -> Space
 _×-Space_ A B = ⟨ A ⟩ × ⟨ B ⟩
