@@ -20,7 +20,8 @@ open import Agora.Data.Product.Definition
 open import Data.List using (_++_)
 
 
-Space = Lattice (ℓ₁ , ℓ₁ , ℓ₁)
+Space = Lattice (ℓ₀ , ℓ₀ , ℓ₀)
+
 
 ----------------------------------------------------------
 -- Instances for products

@@ -15,7 +15,7 @@ open import Agora.Order.Preorder
 open import Agora.Order.Lattice
 open import Agora.Data.Sum.Definition
 
-open import Data.List using (_++_)
+open import Data.List using (_++_ ; concatMap)
 
 
 -- we define lists of preorder elements which represent open subsets
@@ -23,19 +23,27 @@ open import Data.List using (_++_)
 
 
 
-module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑗 on X}} where
+-- module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑗 on X}} where
+module IB {X : 𝒰 𝑖} (independent : X -> X -> 𝒰 𝑗) where
 
-  independent : X -> X -> 𝒰 _
-  independent a b = ¬ (a ≤ b) ×-𝒰 ¬ (b ≤ a)
+  -- independent a b = (a ≰ b) ×-𝒰 (b ≰ a)
 
-  data isIndependent : X -> List X  -> 𝒰 𝑗 where
+  data isIndependent : X -> List X  -> 𝒰 (𝑖 , 𝑗) where
     [] : ∀{x} -> isIndependent x []
     _∷_ : ∀{x a as} -> independent x a -> isIndependent x as -> isIndependent x (a ∷ as)
 
-  data isIndependentBase : List X -> 𝒰 𝑗 where
+  data isIndependentBase : List X -> 𝒰 (𝑖 , 𝑗) where
     [] : isIndependentBase []
     _∷_ : ∀ {x xs} -> isIndependent x xs -> isIndependentBase xs -> isIndependentBase (x ∷ xs)
 
+
+module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X ′}} {{_ : isDecidablePreorder ′ X ′}} where
+  -- {{_ : DecidablePreorder 𝑗 on X}} where
+
+  independent : X -> X -> 𝒰 _
+  independent a b = (a ≰ b) ×-𝒰 (b ≰ a)
+
+  open IB independent public
 
   private
     clearIB : X -> List X -> List X
@@ -98,21 +106,21 @@ module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑗 on X}} where
   mergeIB [] ys = ys
   mergeIB (x ∷ xs) ys = mergeIB xs (insertIB x ys)
 
-  isIndependentBase:mergeIB : ∀{xs ys} -> isIndependentBase xs -> isIndependentBase ys -> isIndependentBase (mergeIB xs ys)
+  isIndependentBase:mergeIB : ∀ xs -> ∀{ys} -> isIndependentBase ys -> isIndependentBase (mergeIB xs ys)
   isIndependentBase:mergeIB [] ysp = ysp
-  isIndependentBase:mergeIB (x ∷ xsp) ysp = isIndependentBase:mergeIB xsp (isIndependentBase:insertIB _ _ ysp)
+  isIndependentBase:mergeIB (x ∷ xs) ysp = isIndependentBase:mergeIB xs (isIndependentBase:insertIB _ _ ysp)
 
   --------------------------------------------------------------
   -- Preorder structure
 
-  data _∈-IndependentBase_ : (x : X) -> (u : List X) -> 𝒰 𝑗 where
+  data _∈-IndependentBase_ : (x : X) -> (u : List X) -> 𝒰 (𝑘 , 𝑖) where
     take : ∀ {x y ys} -> y ≤ x -> x ∈-IndependentBase (y ∷ ys)
     next : ∀{x y ys} -> x ∈-IndependentBase ys -> x ∈-IndependentBase (y ∷ ys)
 
   private
     _∈-IB_ = _∈-IndependentBase_
 
-  data _≤-IndependentBase_ : (u : List X) -> (v : List X) -> 𝒰 𝑗 where
+  data _≤-IndependentBase_ : (u : List X) -> (v : List X) -> 𝒰 (𝑘 , 𝑖) where
     [] : ∀{vs} -> [] ≤-IndependentBase vs
     _∷_ : ∀{u us vs} -> u ∈-IndependentBase vs -> us ≤-IndependentBase vs -> (u ∷ us) ≤-IndependentBase vs
 
@@ -166,11 +174,11 @@ module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑗 on X}} where
     ... | just y≤x = take y≤x
     ... | left y≰x = next (insert-∈ x ys)
 
-    preserves-∈:clear : ∀ z x ys -> z ∈-IB ys -> ¬(x ≤ z) -> ∀ x' -> x ≤ x' -> isIndependent x' ys -> z ∈-IB (clearIB x ys)
+    preserves-∈:clear : ∀ z x ys -> z ∈-IB ys -> (x ≰ z) -> ∀ x' -> x ≤ x' -> isIndependent x' ys -> z ∈-IB (clearIB x ys)
     preserves-∈:clear z x (y ∷ ys) (take y≤z) x≰z x' x≤x' (yp ∷ ysp) with decide-≤ x y
-    ... | just x≤y = ⊥-elim (x≰z (x≤y ⟡ y≤z))
+    ... | just x≤y = ⊥-elim (impossible-≤ x≰z (x≤y ⟡ y≤z))
     ... | left x≰y with decide-≤ y x
-    ... | just y≤x = ⊥-elim (snd yp (y≤x ⟡ x≤x'))
+    ... | just y≤x = ⊥-elim (impossible-≤ (snd yp) (y≤x ⟡ x≤x'))
     ... | left y≰x = take y≤z
     preserves-∈:clear z x (y ∷ ys) (next p) x≰z x' x≤x' (yp ∷ ysp) with decide-≤ x y
     ... | just x≤y = preserves-∈:clear z x ys p x≰z _ x≤x' ysp
@@ -183,7 +191,7 @@ module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑗 on X}} where
     ... | just x≤y with decide-≤ x z
     ... | just x≤z = take x≤z
     ... | left x≰z with p
-    ... | take y≤z = ⊥-elim (x≰z (x≤y ⟡ y≤z))
+    ... | take y≤z = ⊥-elim (impossible-≤ x≰z (x≤y ⟡ y≤z))
     ... | next p = next (preserves-∈:clear z x ys p x≰z y x≤y yp)
     preserves-∈:insert z x (y ∷ ys) p (yp ∷ ysp)| left x≰y with decide-≤ y x
     ... | just y≤x = p
@@ -214,6 +222,10 @@ module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑗 on X}} where
   ι₁-IndependentBase {u = u} vp = ≤:byAllElements (λ p -> merge-ι₁ _ vp _ u (map-∈-IndependentBase p))
 
 
+  intoIB : (u : List X) -> List X :& isIndependentBase -- (𝒪ᶠⁱⁿ⁻ʷᵏ X)
+  intoIB u = mergeIB u [] since isIndependentBase:mergeIB u IB.[]
+
+
 IndependentBase : (X : DecidablePreorder 𝑖) -> 𝒰 _
 IndependentBase X = List ⟨ X ⟩ :& isIndependentBase
 
@@ -221,7 +233,11 @@ macro
   𝒪ᶠⁱⁿ⁻ʷᵏ : DecidablePreorder 𝑖 -> _
   𝒪ᶠⁱⁿ⁻ʷᵏ X = #structureOn (IndependentBase X)
 
-module _ {X : DecidablePreorder 𝑖} where
+module _ {X' : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X'}} where
+
+  private
+    X : DecidablePreorder 𝑖
+    X = ′ X' ′
 
   record _≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ (u v : 𝒪ᶠⁱⁿ⁻ʷᵏ X) : 𝒰 𝑖 where
     constructor incl
@@ -263,7 +279,7 @@ module _ {X : DecidablePreorder 𝑖} where
     hasFiniteJoins:𝒪ᶠⁱⁿ⁻ʷᵏ = record
                               { ⊥ = [] since []
                               ; initial-⊥ = incl []
-                              ; _∨_ = λ u v -> (mergeIB ⟨ u ⟩ ⟨ v ⟩ since isIndependentBase:mergeIB (of u) (of v))
+                              ; _∨_ = λ u v -> (mergeIB ⟨ u ⟩ ⟨ v ⟩ since isIndependentBase:mergeIB ⟨ u ⟩ (of v))
                               ; ι₀-∨ = incl (ι₀-IndependentBase it)
                               ; ι₁-∨ = λ {u} {v} -> incl (ι₁-IndependentBase {u = ⟨ u ⟩} it)
                               ; [_,_]-∨ = {!!}
@@ -272,6 +288,24 @@ module _ {X : DecidablePreorder 𝑖} where
   instance
     hasFiniteMeets:𝒪ᶠⁱⁿ⁻ʷᵏ : hasFiniteMeets (𝒪ᶠⁱⁿ⁻ʷᵏ X)
     hasFiniteMeets:𝒪ᶠⁱⁿ⁻ʷᵏ = {!!}
+
+
+
+
+
+module _ {X' : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X'}}
+          {Y' : 𝒰 _} {{_ : DecidablePreorder 𝑗 on Y'}} where
+
+  private
+    X : DecidablePreorder 𝑖
+    X = ′ X' ′
+
+  private
+    Y : DecidablePreorder 𝑗
+    Y = ′ Y' ′
+
+  bind-𝒪ᶠⁱⁿ⁻ʷᵏ : (⟨ X ⟩ -> 𝒪ᶠⁱⁿ⁻ʷᵏ Y) -> 𝒪ᶠⁱⁿ⁻ʷᵏ X -> 𝒪ᶠⁱⁿ⁻ʷᵏ Y
+  bind-𝒪ᶠⁱⁿ⁻ʷᵏ f x = intoIB (concatMap (λ x -> ⟨ f x ⟩) ⟨ x ⟩)
 
 
 {-

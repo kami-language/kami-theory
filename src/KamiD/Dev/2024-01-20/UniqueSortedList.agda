@@ -39,14 +39,14 @@ module _ {𝑖 : Level} {A : Set 𝑖} where
 
   infix 4 _∈_
 
-  data _∈_ : (a : A) → (as : List A) → Set (lsuc 𝑖) where
+  data _∈_ : (a : A) → (as : List A) → Set 𝑖 where
     here : ∀ {a : A} {as : List A} → a ∈ (a ∷ as)
     there : ∀ {a b : A} {as : List A} → a ∈ as → a ∈ (b ∷ as)
 
   ∉[] : ∀ {a : A} → ¬ (a ∈ [])
   ∉[] {a} ()
 
-  data _⊆_ : List A → List A → Set (lsuc 𝑖)  where
+  data _⊆_ : List A → List A → Set 𝑖  where
     empty : ∀ {bs} → [] ⊆ bs 
     succ : ∀ {a as bs} → as ⊆ bs → (a ∷ as) ⊆ (a ∷ bs)
     app : ∀ {a as bs} → as ⊆ bs → as ⊆ (a ∷ bs)
@@ -306,7 +306,7 @@ module _ {A : StrictOrder 𝑖} where
     isSetoid:𝒫ᶠⁱⁿ = isSetoid:byId
 
   -- `𝒫ᶠⁱⁿ A` forms a preorder with _⊆_ as relation
-  record _≤-𝒫ᶠⁱⁿ_ (U V : 𝒫ᶠⁱⁿ A) : Set (lsuc 𝑖) where
+  record _≤-𝒫ᶠⁱⁿ_ (U V : 𝒫ᶠⁱⁿ A) : Set 𝑖 where
     constructor incl
     field ⟨_⟩ : ⟨ U ⟩ ⊆ ⟨ V ⟩
 
@@ -435,16 +435,26 @@ module _ {𝑖} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
         ... | tri≡ a≮b a≡b a≯b = yes a≡b
         ... | tri> a≮b a≢b a>b = no λ {refl -> irrefl-< a>b}
 
+open Agora.Conventions hiding (¬_)
+
+module _ {A : 𝒰 𝑖} where
+  data _∉_ : A -> List A -> 𝒰 𝑖 where
+
 module _ {A : StrictOrder 𝑖} where
   open Agora.Order.Preorder
-  open Agora.Conventions hiding (¬_)
 
   decide-≤-𝒫ᶠⁱⁿ : ∀(u v : 𝒫ᶠⁱⁿ A) -> (¬ (u ≤ v)) +-𝒰 (u ≤ v)
   decide-≤-𝒫ᶠⁱⁿ u v with ⟨ u ⟩ ⊆? ⟨ v ⟩
   ... | yes p = right (incl p)
   ... | no ¬p = left (λ p -> ¬p ⟨ p ⟩)
 
+
   instance
     isDecidablePreorder:≤-𝒫ᶠⁱⁿ : isDecidablePreorder (𝒫ᶠⁱⁿ A)
-    isDecidablePreorder:≤-𝒫ᶠⁱⁿ = record { decide-≤ = decide-≤-𝒫ᶠⁱⁿ }
+    isDecidablePreorder:≤-𝒫ᶠⁱⁿ = record
+      { _≰_ = λ xs ys -> ∑ λ x -> x ∈ ⟨ xs ⟩ ×-𝒰 (x ∉ ⟨ ys ⟩)
+      ; impossible-≤ = {!!}
+      ; decide-≤ = {!!}
+      }
+    -- record { decide-≤ = decide-≤-𝒫ᶠⁱⁿ }
 

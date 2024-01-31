@@ -9,7 +9,7 @@ open import Agora.Data.Power.Definition
 open import Agora.Data.Sum.Definition
 open import Agora.Data.Product.Definition
 open import Data.Fin hiding (_-_ ; _+_ ; _≤_)
-open import Data.Nat hiding (_! ; _+_ ; _≤_)
+open import Data.Nat hiding (_! ; _+_ ; _≤_ ; _≰_)
 open import Relation.Nullary.Decidable.Core
 
 open import KamiD.Dev.2024-01-20.Core hiding (_＠_)
@@ -60,6 +60,7 @@ data _⊢Type where
   Base : BaseType -> Γ ⊢Type
   _⇒_ : (A : Γ ⊢Type) -> (B : Γ ,[ A ] ⊢Type) -> Γ ⊢Type
   _⊗_ : (A : Γ ⊢Type) -> (B : Γ ,[ A ] ⊢Type) -> Γ ⊢Type
+  _∥_ : (A B : Γ ⊢Type) -> Γ ⊢Type
   One : Γ ⊢Type
 
 infixr 40 _⇒_
@@ -98,7 +99,14 @@ private variable
   Y : Γ ⨾ Σ ⊢Space
 
 -- We have a notion of term/open set of a space
+data _⊢Atom_ : ∀ Σ -> Γ ⨾ Σ ⊢Space -> 𝒰₀
+
+_⊢Open_ : ∀ Σ -> Γ ⨾ Σ ⊢Space -> Space
 _⨾_⊢Open_ : ∀ Γ Σ -> Γ ⨾ Σ ⊢Space -> Space
+
+instance
+  hasStrictOrder:Atom : hasStrictOrder (Σ ⊢Atom X)
+  hasStrictOrder:Atom = {!!}
 
 data SCtx where
   [] : SCtx []
@@ -106,13 +114,39 @@ data SCtx where
 
 data _⨾_⊢Space where
   One : Γ ⨾ Σ ⊢Space
-  _⊗_ : (X Y : Γ ⨾ Σ ⊢Space) -> Γ ⨾ Σ ⊢Space
-  Free : (A : Γ ⊢Type) -> Γ ⨾ Σ ⊢Space
-  -- Sub : Γ ⨾ Σ ⊢Space -> 
 
-Γ ⨾ Σ ⊢Open One = {!!}
-Γ ⨾ Σ ⊢Open (X ⊗ Y) = (Γ ⨾ Σ ⊢Open X) ×-Space (Γ ⨾ Σ ⊢Open Y)
-Γ ⨾ Σ ⊢Open (Free A) = 𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ ((Γ ⊢ A) since hasStrictOrder:Term))
+  _⊗_ : (X : Γ ⨾ Σ ⊢Space) -> (Y : Γ ,[ A ] ⨾ Σ ,[ X ] ⊢Space) -> Γ ⨾ Σ ⊢Space
+  _⇒_ : (X : Γ ⨾ Σ ⊢Space) -> (Y : Γ ,[ A ] ⨾ Σ ,[ X ] ⊢Space) -> Γ ⨾ Σ ⊢Space
+
+  _⇒i_ : (X Y : Γ ⨾ Σ ⊢Space) -> Γ ⨾ Σ ⊢Space
+
+  Free : (A : Γ ⊢Type) -> Γ ⨾ Σ ⊢Space
+
+  Sub : (X : Γ ⨾ Σ ⊢Space) -> (U : List ((List (Σ ⊢Atom X) :& isUniqueSorted)) :& (IB.isIndependentBase λ a b -> a ≰ b ×-𝒰 b ≰ a)) -> Γ ⨾ Σ ⊢Space
+  -- Sub : (X : Γ ⨾ Σ ⊢Space) -> (U : List ((List (Σ ⊢Atom X) :& isUniqueSorted)) :& (isIndependent2Base λ a b -> ∑ λ x -> (x ∈ ⟨ a ⟩) ×-𝒰 (x ∉ ⟨ b ⟩) )) -> Γ ⨾ Σ ⊢Space
+  -- Sub : (X : Γ ⨾ Σ ⊢Space) -> (U : 𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ ((Σ ⊢Atom X) since hasStrictOrder:Atom))) -> Γ ⨾ Σ ⊢Space
+
+su-Atom-Space : Γ ⊢ A -> Σ ⊢Atom X -> Γ ,[ A ] ⨾ Σ ,[ X ] ⊢Space -> Γ ⨾ Σ ⊢Space
+su-Atom-Space = {!!}
+
+data _⊢Atom_ where
+  val : Γ ⊢ A -> Σ ⊢Atom Free A
+  app : Σ ⊢Atom X ⇒ Y -> (a : Γ ⊢ A) -> (x : Σ ⊢Atom X) -> Σ ⊢Atom su-Atom-Space a x Y
+  appi : Σ ⊢Atom (X ⇒i Y) -> (x : Σ ⊢Atom X) -> Σ ⊢Atom Y
+
+  free : ⟨ Γ ,[ A ] ⨾ Σ ,[ Free A ] ⊢Open X ⟩ -> Σ ,[ Free A ] ⊢Atom X
+
+
+Σ ⊢Open X = 𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ ((Σ ⊢Atom X) since hasStrictOrder:Atom))
+
+
+su-Space : Γ ⊢ A -> ⟨ Σ ⊢Open X ⟩ -> Γ ,[ A ] ⨾ Σ ,[ X ] ⊢Space -> Γ ⨾ Σ ⊢Space
+su-Space t s One = {!!}
+su-Space t s (Y ⊗ Y₁) = {!!}
+su-Space t s (X ⇒ Y) = {!!}
+su-Space t s (X ⇒i Y) = {!!}
+su-Space t s (Free A) = {!!}
+su-Space t s (Sub Y U) = Sub ({!!}) {!!}
 
 -- data _⨾_⊢Open_ where
 
@@ -122,15 +156,43 @@ data _⨾_⊢Space where
 -- Location layer
 
 -- We have an assignment of locations in a space to a type
--- data _⨾_⊢_＠_ : (Γ : TCtx) -> (Σ : SCtx Γ) -> Γ ⊢Type -> Γ ⨾ Σ ⊢Space -> 𝒰₂ where
+data _⨾_⊢_＠_ : (Γ : TCtx) -> (Σ : SCtx Γ) -> Γ ⊢Type -> Γ ⨾ Σ ⊢Space -> 𝒰₂ where
 
-  -- _,_ : (Γ ⨾ Σ ⊢ A ＠ X) -> Γ ,[ A ] ⨾ Σ ,[ X ] ⊢ B ＠ Y -> Γ ⨾ Σ ⊢ (A ⊗ B) ＠ {!!}
+  -- _,dep_ : (Γ ⨾ Σ ⊢ A ＠ X) -> Γ ,[ A ] ⨾ Σ ,[ X ] ⊢ B ＠ Y -> Γ ⨾ Σ ⊢ (A ⊗ B) ＠ (X ⊗ Y)
+
+  _,_ : (Γ ⨾ Σ ⊢ A ＠ X) -> (Γ ⨾ Σ ⊢ B ＠ X) -> Γ ⨾ Σ ⊢ (A ∥ B) ＠ X
+
+  loc : ∀{A} -> ⟨ Σ ⊢Open X ⟩ -> Γ ⨾ Σ ⊢ (Base A) ＠ X
+
+-- If we have a location assignment, we can restrict it along a ?
 
 
---   located : ∀{A} -> Σ ⊢Open -> Γ ⨾ Σ ⊢Loc (Base A)
+-- We have A over X and want to restrict to A over a smaller Y
+-- For that we need to give a map Y -> X (or X -> Y) which describes this
+-- restriction
+
+-- bind-Open : ⟨ Σ ⊢Open X ⟩ -> 
+
+map-loc : Γ ⨾ Σ ⊢ A ＠ X -> Σ ⊢Atom (X ⇒i Y) -> Γ ⨾ Σ ⊢ A ＠ Y
+map-loc (L , L₁) f = {!!}
+map-loc (loc x) f = {!!}
+
+-- restr : Γ ⨾ Σ ⊢ A ＠ X -> ⟨ Σ ,[ X ] ⊢Open Y ⟩ -> Γ ⨾ Σ ⊢ A ＠ su-Space {!!} {!!} Y
+-- restr = {!!}
+
 
 -- -- And a context "extension" which assigns locations 
 -- data LCtx : (Γ : TCtx) -> Γ ⊢Space -> 𝒰₂
+
+
+
+module Example where
+  T0 : [] ⊢Type
+  T0 = Base NN ∥ Base NN
+
+  T1 : [] ⨾ [] ⊢ T0 ＠ Free (Base BB)
+  T1 = loc (⦗ val b0 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])) , loc (⦗ val b1 ⦘ ∷ [] since (IB.[] IB.∷ IB.[]))
+
 
 
 ---------------------------------------------
