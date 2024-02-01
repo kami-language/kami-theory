@@ -3,124 +3,153 @@
 module KamiD.Dev.2024-01-20.Baby where
 
 open import KamiD.Dev.2024-01-20.UniqueSortedList
-{-
-open import Data.Empty using (⊥)
-open import Agda.Builtin.Unit using (⊤; tt)
-open import Agda.Primitive using (Level; lsuc; _⊔_)
-open import Data.Empty.Irrelevant using (⊥-elim)
-open import Relation.Nullary using (¬_)
-open import Data.Sum.Base using (_⊎_; inj₁; inj₂; [_,_]′)
-open import Data.Product.Base using (_×_)
-open import Agda.Builtin.Sigma using (Σ; _,_; fst)
-open import Relation.Binary.PropositionalEquality using (subst; cong)
-open import Data.Unit using (⊤)
--}
+
 open import Agda.Builtin.Nat using (Nat; zero; suc)
 open import Agda.Builtin.List using (List; []; _∷_)
 open import Agda.Builtin.Sigma using (Σ; _,_; fst)
 open import Agda.Builtin.Equality using (_≡_; refl)
+open import Data.Vec.Base using (Vec; _∷_; tabulate; lookup) renaming ([] to ⟦⟧; [_] to ⟦_⟧)
+open import Data.List.Base using (map; _++_)
 
-open import Data.Fin using (Fin ; zero ; suc)
+open import Data.Fin using (Fin) renaming (zero to 𝟘 ; suc to 𝕤)
 open import KamiD.Dev.2024-01-20.Basics
 open import KamiD.Dev.2024-01-20.StrictOrder.Base
 
 
-
--- open import Agora.Conventions using (′_′; ⟨_⟩; _since_)
 module _ where
   Roles : ∀ {n : Nat} → Set
   Roles {n} = Σ (List (Fin n)) isUniqueSorted
-
-  -- data LType {n} : Fin n → Set where
-  --   tt＠ : (r : Fin n) → LType r
-  --   ℕ＠ : (r : Fin n) → LType r
-
-  -- data Type (n : Nat) : (R : Roles {n}) → Set where
-  --   ∅ : Type n ([] , [])
-  --   <_◂_>as_ : ∀ {r rs p} (t : LType r) (ts : Type n (rs , p)) (p′ : isUniqueSorted (r ∷ rs)) → Type n (r ∷ rs , p′)
-  --   _⟶_ : ∀ {R} → Type n R → Type n R → Type n R
-
-  data LType : Set where
-    tt : LType
-    N : LType
-
-  data Type (n : Nat) : Set where
-    located : Fin n -> LType -> Type n
-    _×_ : Type n -> Type n -> Type n
-    _⇒_ : Type n -> Type n -> Type n
-
-  gsync : ∀{n} -> (f : Fin n -> Fin n) -> Type n -> Type n
-  gsync f (located n T) = located (f n) T
-  gsync f (T × S) = gsync f T × gsync f S
-  gsync f (T ⇒ S) = gsync f T ⇒ gsync f S
-
-  -- gsync : ∀ {n R p} → (f : Fin n → (Σ (Fin n) (_∈  R))) → Type n (R , p) → Type n (R , p)
-  -- gsync f ∅ = ∅
-  -- gsync f (<_◂_>as_ {r} t x _) = {!f r!}
-  -- gsync f (x ⟶ x₁) = gsync f x ⟶ gsync f x₁
-
-
-
-
-{-
-module _ {n : Nat} where
-  Roles = Σ (List (Fin n)) isUniqueSorted
 
   data LType : Set where
     tt : LType
     ℕ : LType
 
-  data Type : (R : Roles) → Set where
-    ∅ : Type ([] , [])
-    ⟦_⟧ : ∀ {r} → (t : LType) → Type ([ r ] , [-])
-    _◂_ : ∀ {r R} → (t : LType) → (ts : Type R) → (p : isUniqueSorted (r ∷ (fst R))) → Type (r ∷ (fst R) , p)
-    _⟶_ : ∀ {R} → Type R → Type R → Type R
+  data Type (n : Nat) (R : Roles {n}) : Set where
+    ◂ : Vec LType (length (fst R)) → Type n R -- green slime?
+    _⇒_ : Type n R → Type n R → Type n R
+
+
+  ∅ : {n : Nat} → Type n ([] , [])
+  ∅ {n} = ◂ {n} ⟦⟧
 
   -- discard entries in R′ ∖ R
-  π : ∀ {R′} (R : Roles) → fst R ⊆ fst R′ → Type R′ → Type R
-  π R s (t ⟶ t′) = (π R s t) ⟶ (π R s t′)
-  π {[] , []} ([] , []) x ∅ = ∅
-  π {R′} ([] , []) x x₁ = ∅
-  π {r′ ∷ .[] , .[-]} (r ∷ [] , [-]) x ⟦ t ⟧ = ⟦ t ⟧
-  π {r′ ∷ .[] , .[-]} (.r′ ∷ x₁ ∷ R , _) (succ x) ⟦ t ⟧ = x ↯ ⊈[] λ ()
-  π {r′ ∷ .[] , .[-]} (r ∷ x₁ ∷ R , _) (app x) ⟦ t ⟧ = x ↯ ⊈[] λ ()
-  π {r′ ∷ _ , P′} (.r′ ∷ R , P) (succ R⊆R′) ((t ◂ x₁) .P′) = (t ◂ (π (R , popSort P) R⊆R′ x₁)) P
-  π {r′ ∷ _ , P′} (r ∷ R , P) (app R⊆R′) ((t ◂ x₁) .P′) with r ≟ r′
-  ... | yes refl =  (t ◂ (π (R , popSort P) (∷⊆ R⊆R′) x₁)) P
-  ... | no ¬p = π (r ∷ R , P) R⊆R′ x₁
+  πVec : ∀ {n} (R R′ : List (Fin n)) → R ⊆ R′ → Vec LType (length R′) → Vec LType (length R)
+  πVec [] R′ _ _ = ⟦⟧
+  πVec (r ∷ R) (r′ ∷ R′) p (x ∷ xs) with r ≟ r′
+  ... | yes refl = x ∷ (πVec R R′ (∷∷⊆ p) xs) 
+  πVec (r ∷ R) (.r ∷ R′) (both p) (x ∷ xs) | no ¬p = refl ↯ ¬p
+  πVec (r ∷ R) (r′ ∷ R′) (grow p) (x ∷ xs) | no ¬p = πVec (r ∷ R) R′ p xs
 
+  π : ∀ {n} {R′ : Roles {n}} (R : Roles {n}) → fst R ⊆ fst R′ → Type n R′ → Type n R
+  π ([] , []) _ _ = ∅
+  π {R′ = (R′ , pR′)} (R , snd) x (◂ v) = ◂ (πVec R R′ x v)
+  π R x (x₁ ⇒ x₃) = (π R x x₁) ⇒ π R x x₃
+  
 
-  Context : (R : Roles) → Set
-  Context R = List (Type R)
+  Context : ∀ {n} → (R : Roles {n}) → Set
+  Context {n} R = List (Type n R)
+
+  π⋆ : ∀ {n} {R′ : Roles {n}} (R : Roles {n}) → fst R ⊆ fst R′ → Context {n} R′ → Context {n} R
+  π⋆ R p C = map (π R p) C
+
+  -- t-th entry of (gsync v f) is the (f t)-th entry of v
+  gsync : ∀ {n} {A : Set} → Vec A n → (f : Fin n → Fin n) → Vec A n
+  gsync v f = tabulate λ r → lookup v (f r)
 
   mutual
 
     data SyncContext : Set₁ where
       [] : SyncContext
-      _∷_ : ∀ {R} {Γ : Context R} → {T : Type R} → Γ ⊩ T → SyncContext → SyncContext
+      _∷_ : ∀ {n R} {Γ : Context {n} R} → {T : Type n R} → Γ ⊩ T → SyncContext → SyncContext
+
+    _⋆_ :  SyncContext → SyncContext → SyncContext
+    [] ⋆ C2 = C2
+    (x ∷ C1) ⋆ C2 = C1 ⋆ (x ∷ C2)
       
     -- global terms
     infix 3 _⊩_
-    _⊩_ : {R : Roles} → (Γ : Context R) → Type R → Set₁
+    _⊩_ : ∀ {n} {R : Roles {n}} → (Γ : Context R) → Type n R → Set₁
     Γ ⊩ T = Γ , [] ⊢ T 
 
 
     infix 3 _,_⊢_
-    data _,_⊢_ {R : Roles} : (Γ : Context R) → (Δ : SyncContext) → Type R → Set₁ where
+    data _,_⊢_ {n} {R : Roles {n}} : (Γ : Context R) → (Δ : SyncContext) → Type n R → Set₁ where
 
-      var : ∀ {T : Type R} {Γ : Context R}
+      var : ∀ {T : Type n R} {Γ : Context R} {Δ : SyncContext}
             → T ∈ Γ
               ------------
-            → Γ ⊩ T
+            → Γ , Δ ⊢ T
 
-      abs : ∀ {T T′ : Type R} {Γ : Context R} {Δ : SyncContext}
+      sync : ∀ {lT : Vec LType (length (fst R))} {Γ : Context R} {Δ : SyncContext}
+            → ◂ lT ∈ Γ → (f : Fin (length (fst R)) → Fin (length (fst R)))
+              ------------
+            → Γ , Δ ⊢ ◂ (gsync lT f)
+            
+      abs : ∀ {T T′ : Type n R} {Γ : Context R} {Δ : SyncContext}
           → T ∷ Γ , Δ ⊢ T′
             -----------------
-          → Γ , Δ ⊢ T ⟶ T′
+          → Γ , Δ ⊢ T ⇒ T′
+  
+      app : ∀ {T T′ : Type n R} {Γ : Context R} {Δ Δ′ : SyncContext}
+          → Γ , Δ ⊢ T ⇒ T′ → Γ , Δ′ ⊢ T
+            ---------------------------------
+          → Γ , (Δ ⋆ Δ′) ⊢ T′
 
-      comm : ∀ {Δ R′} {Γ′ : Context R′} {C : Type R′} {p : Γ′ ⊩ C} {Γ : Context R}
-             → (R⊆R′ : fst R ⊆ fst R′)
+      comm : ∀ {Δ R′} {Γ′ : Context R′} {C : Type n R′} {Γ : Context R}
+             → (p : Γ′ ⊩ C) → (R⊆R′ : fst R ⊆ fst R′)
                -----------------
-             → Γ , p ∷ Δ ⊢ (π R R⊆R′ C)
+             → Γ ++ π⋆ R R⊆R′ Γ′ , p ∷ Δ ⊢ (π R R⊆R′ C)
 
--}
+
+
+
+  roles0and1 : Roles {3}
+  roles0and1 = ( 𝟘 ∷ [ 𝕤 𝟘 ] , z<n ∷ [-])
+
+  role2 : Roles {3}
+  role2 = ([ 𝕤 𝟘 ] , [-])
+
+  ⟦1n⟧ : Type 3 roles0and1
+  ⟦1n⟧ = ◂ (ℕ ∷ ⟦ tt ⟧)
+  
+  ⟦n1⟧ : Type 3 roles0and1
+  ⟦n1⟧ = ◂ (tt ∷ ⟦ ℕ ⟧)
+  
+  ⟦nn⟧ : Type 3 roles0and1
+  ⟦nn⟧ = ◂ (ℕ ∷ ⟦ ℕ ⟧)
+
+  syncn : Type 3 roles0and1
+  syncn = ⟦1n⟧ ⇒ ⟦nn⟧
+
+  syncnt : [] , [] ⊢ syncn
+  syncnt = abs (sync here (λ { 𝟘 → 𝟘 ; (𝕤 𝟘) → 𝟘})) 
+  
+  recvn : Type 3 role2
+  recvn = ◂ ⟦ tt ⟧ ⇒ ◂ ⟦ ℕ ⟧
+  
+  t : Type 3 role2
+  t = ◂ ⟦ tt ⟧
+  
+  n : Type 3 role2
+  n = ◂ ⟦ ℕ ⟧
+  
+  recvnt : [] , syncnt ∷ [] ⊢ (t ⇒ n)
+  recvnt =  (comm syncnt (grow refl⊆))
+
+
+ -- role 𝟙 sends an ℕ to role 𝟘, "global" version
+  f : Fin 2 → Fin 2
+  f = (λ { 𝟘 → 𝟘 ; (𝕤 𝟘) → 𝟘})
+
+  -- role 𝟘 sends a ℕ to role 𝟙, "global" version
+  rf : Fin 2 → Fin 2
+  rf = (λ { 𝟘 → 𝕤 𝟘 ; (𝕤 𝟘) → 𝕤 𝟘})
+ 
+  -- role 1 applies its function to the ℕ received from role 1 and sends the result back, global version
+  gctx : List (Type 3 roles0and1)
+  gctx = ⟦n1⟧ ∷ [ ⟦nn⟧ ⇒ ⟦1n⟧ ] -- role 0 has an ℕ, role 1 has a map from ℕ -> ℕ
+
+  globappf : gctx , [] ⊢ ⟦nn⟧
+  globappf = app {Δ = []} (abs (sync here f)) -- send result from 1 to 0
+             (app {Δ = []} (var (there here)) -- apply f
+             (app {Δ = []} (abs (sync here rf)) (var here))) -- send input ℕ from 0 to 1
