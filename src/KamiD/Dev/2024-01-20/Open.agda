@@ -275,6 +275,10 @@ module _ {X' : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X'}} where
     isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ = record { _≤_ = _≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ }
 
   instance
+    isDecidablePreorder:𝒪ᶠⁱⁿ⁻ʷᵏ : isDecidablePreorder (𝒪ᶠⁱⁿ⁻ʷᵏ X)
+    isDecidablePreorder:𝒪ᶠⁱⁿ⁻ʷᵏ = {!!}
+
+  instance
     hasFiniteJoins:𝒪ᶠⁱⁿ⁻ʷᵏ : hasFiniteJoins (𝒪ᶠⁱⁿ⁻ʷᵏ X)
     hasFiniteJoins:𝒪ᶠⁱⁿ⁻ʷᵏ = record
                               { ⊥ = [] since []
