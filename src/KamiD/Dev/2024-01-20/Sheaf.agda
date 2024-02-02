@@ -60,6 +60,17 @@ module _ {X : 𝒰 _} {{_ : X is Lattice 𝑖}} where
       ; glue-π₁ = {!!}
       }
 
+  instance
+    isSheaf:× : ∀ {F G} -> {{_ : isSheaf {𝑗} F}} {{_ : isSheaf {𝑘} G}} -> isSheaf (λ x -> F x ×-𝒰 G x)
+    isSheaf:× = record
+                 { _↷_ = λ ϕ (a , b) -> ϕ ↷ a , ϕ ↷ b
+                 ; id-↷ = {!!}
+                 ; comp-↷ = {!!}
+                 ; glue = {!!}
+                 ; glue-π₀ = {!!}
+                 ; glue-π₁ = {!!}
+                 }
+
 
 Sheaf : Lattice 𝑖 -> ∀ 𝑗 -> _
 Sheaf X 𝑗 = (⟨ X ⟩ -> 𝒰 𝑗) :& isSheaf
@@ -71,4 +82,8 @@ macro
 macro
   Const : ∀{B : 𝒰 𝑘} (A : 𝒰 𝑗) -> _
   Const {B = B} A = #structureOn (const {A = B} A)
+
+_×-Sheaf_ : ∀{X : Lattice 𝑖} -> Sheaf X 𝑗 -> Sheaf X 𝑘 -> Sheaf X _
+_×-Sheaf_ F G = (λ x -> ⟨ F ⟩ x ×-𝒰 ⟨ G ⟩ x) since it
+
 
