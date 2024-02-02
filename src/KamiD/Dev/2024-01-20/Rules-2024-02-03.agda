@@ -1,7 +1,7 @@
 
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
-module KamiD.Dev.2024-01-20.Rules-2024-02-02 where
+module KamiD.Dev.2024-01-20.Rules-2024-02-03 where
 
 open import Agora.Conventions hiding (Σ ; Lift ; k)
 open import Agora.Order.Preorder
