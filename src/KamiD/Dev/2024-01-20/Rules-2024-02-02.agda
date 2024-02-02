@@ -47,6 +47,7 @@ private variable
   Z : Γ ⊢Space
 
 -- We have a notion of term/open set of a space
+data _⊢VarAtom_ : ∀ Γ -> Γ ⊢Space -> 𝒰₀
 data _⊢Atom_ : ∀ Γ -> Γ ⊢Space -> 𝒰₀
 
 instance
@@ -66,6 +67,17 @@ private variable
   U : Γ ⊢Open X
   V : Γ ⊢Open Y
 
+pure-Open : Γ ⊢Atom X -> Γ ⊢Open X
+pure-Open u = ⦗ u ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
+
+bind-Open : Γ ⊢Open X -> (Γ ⊢Atom X -> Γ ⊢Open Y) -> Γ ⊢Open Y
+bind-Open x f = bind-Space f x
+
+-- app-Open : Γ ⊢Open (X ⇒i Y) -> Γ ⊢Open X -> Γ ⊢Open Y
+-- app-Open F U = bind-Open F λ f -> bind-Open U λ u -> pure-Open (appi f u)
+
+atom : Γ ⊢Atom X -> Γ ⊢Open X
+atom u = pure-Open u
 
 data _⊢Type : ∀ (Γ : Ctx) -> 𝒰₀
 
@@ -102,6 +114,8 @@ wk-Type = {!!}
 -- su-Type : Γ ⊢ A -> Γ ,[ A over X ] ⊢Type -> Γ ⊢Type
 -- su-Type = {!!}
 
+Spc' : Γ ⊢Type
+
 data _⊢Space where
   One : Γ ⊢Space
   ⨆ : (X : Γ ⊢Space) -> (Y : Γ ,[ X ]ₛ ⊢Space) -> Γ ⊢Space
@@ -114,37 +128,67 @@ data _⊢Space where
 
   Free : (A : Γ ⊢Type) -> Γ ⊢Space
 
+  spc : (A : Γ ⊢ Spc') -> Γ ⊢Space
+
   -- Sub : (AX : Γ ⊢Space) -> (U : List ((List (Σ ⊢Atom X) :& isUniqueSorted)) :& (IB.isIndependentBase λ a b -> a ≰ b ×-𝒰 b ≰ a)) -> Γ ⊢Space
+
+data _⊢Atom_ where
+  val : Γ ⊢ A -> Γ ⊢Atom Free A
+  var : Γ ⊢VarAtom X -> Γ ⊢Atom X
 
 data _⊢Type where
   Base : BaseType -> Γ ⊢Type
   -- _⇒_ : (A : Γ ⊢Type) -> (B : Γ ,[ A over One ] ⊢Type) -> Γ ⊢Type
   ⨆ : (A : Γ ⊢Type) -> (B : Γ ,[ A ] ⊢Type) -> Γ ⊢Type
+  ⨅ : (A : Γ ⊢Type) -> (B : Γ ,[ A ] ⊢Type) -> Γ ⊢Type
+  ⨅ₛ : (X : Γ ⊢Space) -> (B : Γ ,[ X ]ₛ ⊢Type) -> Γ ⊢Type
+
+  _⇒_ : (A : Γ ⊢Type) -> (B : Γ ⊢Type) -> Γ ⊢Type
+
   -- _∥_ : (A B : Γ ⊢Type) -> Γ ⊢Type
   One : Γ ⊢Type
   -- Forget : (Y : Γ ⊢Space) -> (Γ ⊢Atom (Y ⇒i X)) -> Γ ⊢Type X
 
   Ap : Γ ⊢Sheaf X -> Γ ⊢Open X -> Γ ⊢Type
 
+  Sh : Γ ⊢Space -> Γ ⊢Type
+
+  Spc : Γ ⊢Type
+
 infixr 40 _⇒_
 infixr 50 _⊗_
+
+Spc' = Spc
 
 
 data _⊢Sheaf_ where
   _⊗_ : (F G : Γ ⊢Sheaf X) -> Γ ⊢Sheaf X
   _＠_ : (A : Γ ⊢Type) -> (U : Γ ⊢Open X) -> Γ ⊢Sheaf X
+  shf : Γ ⊢ Sh X -> Γ ⊢Sheaf X
 
 private variable
   F : Γ ⊢Sheaf X
   G : Γ ⊢Sheaf Y
 
 data _⊢Var_ where
-  -- zero : Γ ,[ A over X ] ⊢Var wk-Type A
-  -- suc : Γ ⊢Var A -> Γ ,[ B over X ] ⊢Var wk-Type A
+  zero : Γ ,[ A ] ⊢Var wk-Type A
+  suc : Γ ⊢Var A -> Γ ,[ B ] ⊢Var wk-Type A
+
+wk-Space : Γ ⊢Space -> Γ ,[ A ] ⊢Space
+wk-Space X = {!!}
+
+wkₛ-Space : Γ ⊢Space -> Γ ,[ X ]ₛ ⊢Space
+wkₛ-Space X = {!!}
+
+data _⊢VarAtom_ where
+  zero : Γ ,[ X ]ₛ ⊢VarAtom wkₛ-Space X
+  suc : Γ ⊢VarAtom X -> Γ ,[ B ] ⊢VarAtom wk-Space X
+  sucₛ : Γ ⊢VarAtom X -> Γ ,[ Y ]ₛ ⊢VarAtom wkₛ-Space X
 
 sheaf : ∀ Γ {X} -> Γ ⊢Sheaf X -> Sheaf (Γ ⊢Open X) _
 sheaf Γ (F ⊗ G) = sheaf Γ F ×-Sheaf sheaf Γ G
 sheaf Γ (A ＠ U) = Restr (Const (Γ ⊢ A)) U
+sheaf Γ (shf t) = {!!}
 
 -- instance
 --   isSheaf:sheaf : isSheaf ⟨ sheaf Γ F ⟩
@@ -156,23 +200,31 @@ sheaf Γ (A ＠ U) = Restr (Const (Γ ⊢ A)) U
 
 data _⊢Partial_＠_ : ∀ Γ {X} -> (F : Γ ⊢Sheaf X) -> (U : Γ ⊢Open X) -> 𝒰₀
 
+data _⊢_≡_Partial : ∀ Γ {X} {U} -> {F : Γ ⊢Sheaf X} -> (t s : Γ ⊢Partial F ＠ U) -> 𝒰₀
+
 {-# NO_POSITIVITY_CHECK #-}
 data _⊢Partial_＠_ where
   loc : Restr (Const (Γ ⊢ A)) U V -> Γ ⊢Partial (A ＠ U) ＠ V
   _,_ : Γ ⊢Partial F ＠ U -> Γ ⊢Partial G ＠ U -> Γ ⊢Partial (F ⊗ G) ＠ U
 
-  _⇂_ : 
+  _⇂_ : Γ ⊢Partial F ＠ U -> V ≤ U -> Γ ⊢Partial F ＠ V
 
-ev-Sheaf : Γ ⊢Partial F ＠ U -> ⟨ sheaf Γ F ⟩ U
-ev-Sheaf (loc x) = x
-ev-Sheaf (t , u) = ev-Sheaf t , ev-Sheaf u
+  glueP : {F : Γ ⊢Sheaf X} (t : Γ ⊢Partial F ＠ U) -> (s : Γ ⊢Partial F ＠ V) -> Γ ⊢ (t ⇂ π₀-∧) ≡ (s ⇂ π₁-∧) Partial
+          -> Γ ⊢Partial F ＠ (U ∨ V)
 
-re-Sheaf : ⟨ sheaf Γ F ⟩ U -> Γ ⊢Partial F ＠ U
-re-Sheaf {F = F ⊗ G} (t , u) = re-Sheaf t , re-Sheaf u
-re-Sheaf {F = A ＠ U} t = loc t
+  tm : Γ ⊢ Ap F U -> Γ ⊢Partial F ＠ U
 
-_⇂_ : Γ ⊢Partial F ＠ U -> V ≤ U -> Γ ⊢Partial F ＠ V
-_⇂_ {Γ = Γ} {F = F} t ϕ = re-Sheaf (_↷_ {{_}} {{of sheaf Γ F}} ϕ (ev-Sheaf t))
+-- ev-Sheaf : Γ ⊢Partial F ＠ U -> ⟨ sheaf Γ F ⟩ U
+-- ev-Sheaf (loc x) = x
+-- ev-Sheaf (t , u) = ev-Sheaf t , ev-Sheaf u
+-- ev-Sheaf (t , u) = ev-Sheaf t , ev-Sheaf u
+
+-- re-Sheaf : ⟨ sheaf Γ F ⟩ U -> Γ ⊢Partial F ＠ U
+-- re-Sheaf {F = F ⊗ G} (t , u) = re-Sheaf t , re-Sheaf u
+-- re-Sheaf {F = A ＠ U} t = loc t
+
+-- _⇂ᵉᵛ_ : Γ ⊢Partial F ＠ U -> V ≤ U -> Γ ⊢Partial F ＠ V
+-- _⇂ᵉᵛ_ {Γ = Γ} {F = F} t ϕ = re-Sheaf (_↷_ {{_}} {{of sheaf Γ F}} ϕ (ev-Sheaf t))
 
 
 data _⊢_ where
@@ -183,6 +235,13 @@ data _⊢_ where
   n0 : Γ ⊢ Base NN
 
   ap : Γ ⊢Partial F ＠ U -> Γ ⊢ Ap F U
+
+  sh : Γ ⊢Sheaf X -> Γ ⊢ Sh X
+
+  lamₛ : Γ ,[ X ]ₛ ⊢ A -> Γ ⊢ ⨅ₛ X A
+  lam : Γ ,[ A ] ⊢ B -> Γ ⊢ ⨅ A B
+  lami : Γ ,[ A ] ⊢ wk-Type B -> Γ ⊢ A ⇒ B
+
 
 
   -- elim-BB : Γ ⊢ A -> Γ ⊢ A -> Γ ⊢ Base BB ⇒ wk-Type A
@@ -201,8 +260,6 @@ instance
 -- su-Atom-Space : Γ ⊢ A -> Γ ⊢Atom X -> Γ ,[ A over X ] ⊢Space -> Γ ⊢Space
 -- su-Atom-Space = {!!}
 
-data _⊢Atom_ where
-  val : Γ ⊢ A -> Γ ⊢Atom Free A
   -- -- app : Σ ⊢Atom X ⇒ BY -> (a : Γ ⊢ A) -> (x : Σ ⊢Atom X) -> Σ ⊢Atom su-Atom-Space a x BY
   -- appi : Γ ⊢Atom (X ⇒i Y) -> (x : Γ ⊢Atom X) -> Γ ⊢Atom Y
 
@@ -261,6 +318,15 @@ module Examples where
   t1 : [] ⊢ Ap T0 v
   t1 = ap ((loc (λ x → n0)) , (loc (λ x → b0)))
 
+  t2 : [] ⊢ Ap T0 (u ∨ v)
+  t2 = ap (glueP {U = u} {V = v} (tm t0) ((tm t1)) {!!})
+
+  t3 : [] ⊢ ⨅ₛ (Free (Base BB)) (Ap (Base NN ＠ (u ∧ v)) (atom (var zero)) ⇒ Ap (Base NN ＠ (u ∧ v)) ((atom (var zero))))
+  t3 = lamₛ (lami (ap (tm (var zero))))
+
+  -- t3 : [] ⊢ ⨅ Spc (⨅ (Sh (spc (var zero))) (Ap (shf (var zero)) ⊥))
+  -- t3 = {!!}
+
   -- TN : [] ⊢Type
   -- TN = (Base NN over Free (Base BB)) ⊗ Base NN
   -- tn : [] ⊢ TN ＠ Free (Base BB)
@@ -315,14 +381,6 @@ wk-Space = {!!}
 -- map-loc (L , M) f = map-loc L f , map-loc M f
 -- map-loc (loc x) f = loc (bind-Space (λ x -> ⦗ appi f x ⦘ ∷ [] since (IB.[] IB.∷ IB.[])) x)
 
-pure-Open : Γ ⊢Atom X -> Γ ⊢Open X
-pure-Open u = ⦗ u ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
-
-bind-Open : Γ ⊢Open X -> (Γ ⊢Atom X -> Γ ⊢Open Y) -> Γ ⊢Open Y
-bind-Open x f = bind-Space f x
-
-app-Open : Γ ⊢Open (X ⇒i Y) -> Γ ⊢Open X -> Γ ⊢Open Y
-app-Open F U = bind-Open F λ f -> bind-Open U λ u -> pure-Open (appi f u)
 
 _⊢Sheaf_ : ∀ Γ X -> _
 Γ ⊢Sheaf X = ∑ λ (A : Γ ⊢Type X) -> Γ ⊢ X ⨞ A
