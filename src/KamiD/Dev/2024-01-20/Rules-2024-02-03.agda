@@ -128,6 +128,8 @@ data _⊢Space where
 
   Free : (A : Γ ⊢Type) -> Γ ⊢Space
 
+  Sub : ∀ X -> (U : Γ ⊢Open X) -> Γ ⊢Space
+
   spc : (A : Γ ⊢ Spc') -> Γ ⊢Space
 
   -- Sub : (AX : Γ ⊢Space) -> (U : List ((List (Σ ⊢Atom X) :& isUniqueSorted)) :& (IB.isIndependentBase λ a b -> a ≰ b ×-𝒰 b ≰ a)) -> Γ ⊢Space
@@ -135,7 +137,10 @@ data _⊢Space where
 data _⊢Atom_ where
   val : Γ ⊢ A -> Γ ⊢Atom Free A
   var : Γ ⊢VarAtom X -> Γ ⊢Atom X
+  sub : Γ ⊢Atom (Sub X U) -> Γ ⊢Atom X
 
+
+{-# NO_POSITIVITY_CHECK #-}
 data _⊢Type where
   Base : BaseType -> Γ ⊢Type
   -- _⇒_ : (A : Γ ⊢Type) -> (B : Γ ,[ A over One ] ⊢Type) -> Γ ⊢Type
@@ -145,18 +150,20 @@ data _⊢Type where
 
   _⇒_ : (A : Γ ⊢Type) -> (B : Γ ⊢Type) -> Γ ⊢Type
 
-  -- _∥_ : (A B : Γ ⊢Type) -> Γ ⊢Type
   One : Γ ⊢Type
   -- Forget : (Y : Γ ⊢Space) -> (Γ ⊢Atom (Y ⇒i X)) -> Γ ⊢Type X
 
-  Ap : Γ ⊢Sheaf X -> Γ ⊢Open X -> Γ ⊢Type
+  -- Ap : Γ ⊢Sheaf X -> Γ ⊢Open X -> Γ ⊢Type
 
-  Sh : Γ ⊢Space -> Γ ⊢Type
+  -- Sh : Γ ⊢Space -> Γ ⊢Type
+
+  Type : Γ ⊢Type
 
   Spc : Γ ⊢Type
 
   -- _＠_ : (A : Γ ⊢Type) -> (U : Γ ⊢Open X) -> Γ ⊢Type
-  -- _⊗_ : (F G : Γ ⊢Type) -> Γ ⊢Type
+  Inh : Γ ⊢Open X -> Γ ⊢Type
+  _⊗_ : (F G : Γ ⊢Type) -> Γ ⊢Type
 
 infixr 40 _⇒_
 infixr 50 _⊗_
@@ -164,15 +171,15 @@ infixr 50 _⊗_
 Spc' = Spc
 
 
-data _⊢Sheaf_ where
-  _⊗_ : (F G : Γ ⊢Sheaf X) -> Γ ⊢Sheaf X
-  _＠_ : (A : Γ ⊢Type) -> (U : Γ ⊢Open X) -> Γ ⊢Sheaf X
+-- data _⊢Sheaf_ where
+--   _⊗_ : (F G : Γ ⊢Sheaf X) -> Γ ⊢Sheaf X
+--   _＠_ : (A : Γ ⊢Type) -> (U : Γ ⊢Open X) -> Γ ⊢Sheaf X
 
-  shf : Γ ⊢ Sh X -> Γ ⊢Sheaf X
+--   shf : Γ ⊢ Sh X -> Γ ⊢Sheaf X
 
-private variable
-  F : Γ ⊢Sheaf X
-  G : Γ ⊢Sheaf Y
+-- private variable
+--   F : Γ ⊢Sheaf X
+--   G : Γ ⊢Sheaf Y
 
 data _⊢Var_ where
   zero : Γ ,[ A ] ⊢Var wk-Type A
@@ -189,10 +196,10 @@ data _⊢VarAtom_ where
   suc : Γ ⊢VarAtom X -> Γ ,[ B ] ⊢VarAtom wk-Space X
   sucₛ : Γ ⊢VarAtom X -> Γ ,[ Y ]ₛ ⊢VarAtom wkₛ-Space X
 
-sheaf : ∀ Γ {X} -> Γ ⊢Sheaf X -> Sheaf (Γ ⊢Open X) _
-sheaf Γ (F ⊗ G) = sheaf Γ F ×-Sheaf sheaf Γ G
-sheaf Γ (A ＠ U) = Restr (Const (Γ ⊢ A)) U
-sheaf Γ (shf t) = {!!}
+-- sheaf : ∀ Γ {X} -> Γ ⊢Sheaf X -> Sheaf (Γ ⊢Open X) _
+-- sheaf Γ (F ⊗ G) = sheaf Γ F ×-Sheaf sheaf Γ G
+-- sheaf Γ (A ＠ U) = Restr (Const (Γ ⊢ A)) U
+-- sheaf Γ (shf t) = {!!}
 
 -- instance
 --   isSheaf:sheaf : isSheaf ⟨ sheaf Γ F ⟩
@@ -202,21 +209,21 @@ sheaf Γ (shf t) = {!!}
 -- Γ ⊢Partial F ⊗ G ＠ U = (Γ ⊢Partial F ＠ U) × (Γ ⊢Partial G ＠ U)
 -- Γ ⊢Partial A ＠ V ＠ U = Restr (Const (Γ ⊢ A)) V U
 
-data _⊢Partial_＠_ : ∀ Γ {X} -> (F : Γ ⊢Sheaf X) -> (U : Γ ⊢Open X) -> 𝒰₀
+-- data _⊢Partial_＠_ : ∀ Γ {X} -> (F : Γ ⊢Sheaf X) -> (U : Γ ⊢Open X) -> 𝒰₀
 
-data _⊢_≡_Partial : ∀ Γ {X} {U} -> {F : Γ ⊢Sheaf X} -> (t s : Γ ⊢Partial F ＠ U) -> 𝒰₀
+-- data _⊢_≡_Partial : ∀ Γ {X} {U} -> {F : Γ ⊢Sheaf X} -> (t s : Γ ⊢Partial F ＠ U) -> 𝒰₀
 
-{-# NO_POSITIVITY_CHECK #-}
-data _⊢Partial_＠_ where
-  loc : Restr (Const (Γ ⊢ A)) U V -> Γ ⊢Partial (A ＠ U) ＠ V
-  _,_ : Γ ⊢Partial F ＠ U -> Γ ⊢Partial G ＠ U -> Γ ⊢Partial (F ⊗ G) ＠ U
+-- {-# NO_POSITIVITY_CHECK #-}
+-- data _⊢Partial_＠_ where
+--   loc : Restr (Const (Γ ⊢ A)) U V -> Γ ⊢Partial (A ＠ U) ＠ V
+--   _,_ : Γ ⊢Partial F ＠ U -> Γ ⊢Partial G ＠ U -> Γ ⊢Partial (F ⊗ G) ＠ U
 
-  _⇂_ : Γ ⊢Partial F ＠ U -> V ≤ U -> Γ ⊢Partial F ＠ V
+--   _⇂_ : Γ ⊢Partial F ＠ U -> V ≤ U -> Γ ⊢Partial F ＠ V
 
-  glueP : {F : Γ ⊢Sheaf X} (t : Γ ⊢Partial F ＠ U) -> (s : Γ ⊢Partial F ＠ V) -> Γ ⊢ (t ⇂ π₀-∧) ≡ (s ⇂ π₁-∧) Partial
-          -> Γ ⊢Partial F ＠ (U ∨ V)
+--   glueP : {F : Γ ⊢Sheaf X} (t : Γ ⊢Partial F ＠ U) -> (s : Γ ⊢Partial F ＠ V) -> Γ ⊢ (t ⇂ π₀-∧) ≡ (s ⇂ π₁-∧) Partial
+--           -> Γ ⊢Partial F ＠ (U ∨ V)
 
-  tm : Γ ⊢ Ap F U -> Γ ⊢Partial F ＠ U
+--   tm : Γ ⊢ Ap F U -> Γ ⊢Partial F ＠ U
 
 -- ev-Sheaf : Γ ⊢Partial F ＠ U -> ⟨ sheaf Γ F ⟩ U
 -- ev-Sheaf (loc x) = x
@@ -230,6 +237,9 @@ data _⊢Partial_＠_ where
 -- _⇂ᵉᵛ_ : Γ ⊢Partial F ＠ U -> V ≤ U -> Γ ⊢Partial F ＠ V
 -- _⇂ᵉᵛ_ {Γ = Γ} {F = F} t ϕ = re-Sheaf (_↷_ {{_}} {{of sheaf Γ F}} ϕ (ev-Sheaf t))
 
+special-su-top : Γ ,[ X ]ₛ ⊢Atom wkₛ-Space Y ->  Γ ,[ Y ]ₛ ⊢Type -> Γ ,[ X ]ₛ ⊢Type
+special-su-top t Y = {!!} -- su-Type t (wk-Type,ind ([] ,[ _ ]) T)
+
 
 data _⊢_ where
   var : Γ ⊢Var A -> Γ ⊢ A
@@ -238,13 +248,24 @@ data _⊢_ where
   b1 : Γ ⊢ Base BB
   n0 : Γ ⊢ Base NN
 
-  ap : Γ ⊢Partial F ＠ U -> Γ ⊢ Ap F U
-
-  sh : Γ ⊢Sheaf X -> Γ ⊢ Sh X
+  -- ap : Γ ⊢Partial F ＠ U -> Γ ⊢ Ap F U
+  -- sh : Γ ⊢Sheaf X -> Γ ⊢ Sh X
 
   lamₛ : Γ ,[ X ]ₛ ⊢ A -> Γ ⊢ ⨅ₛ X A
   lam : Γ ,[ A ] ⊢ B -> Γ ⊢ ⨅ A B
   lami : Γ ,[ A ] ⊢ wk-Type B -> Γ ⊢ A ⇒ B
+  -- appₛ : Γ ⊢ ⨅ₛ X A -> (U : Γ ⊢Open X) -> Γ ⊢ su-Type
+
+  inh : U ≰ ⊥ -> Γ ⊢ Inh U
+
+
+  -- full : Γ ,[ Sub X ⊤ ]ₛ ⊢ special-su-top (sub (var zero)) A -> Γ ,[ X ]ₛ ⊢ A
+
+  -- glue : (F : Γ ⊢ ⨅ₛ X A) -> (U V : Γ ⊢Open X) -> (Γ ⊢ App F U) -> Γ ⊢ App F V 
+
+
+  type : Γ ⊢Type -> Γ ⊢ Type
+
 
 
 
@@ -301,9 +322,9 @@ instance
 -- We can interpret a sheaf as a sheaf
 
 
-pu-Sheaf : (Γ ⊢Atom (⨅ X Y)) -> Γ ⊢Sheaf X -> Γ ,[ X ]ₛ ⊢Sheaf Y
-pu-Sheaf f (F ⊗ G) = pu-Sheaf f F ⊗ pu-Sheaf f G
-pu-Sheaf f (A ＠ U) = {!!} ＠ {!!}
+-- pu-Sheaf : (Γ ⊢Atom (⨅ X Y)) -> Γ ⊢Sheaf X -> Γ ,[ X ]ₛ ⊢Sheaf Y
+-- pu-Sheaf f (F ⊗ G) = pu-Sheaf f F ⊗ pu-Sheaf f G
+-- pu-Sheaf f (A ＠ U) = {!!} ＠ {!!}
 
 module Examples where
 
@@ -313,20 +334,25 @@ module Examples where
   v : Γ ⊢Open Free (Base BB)
   v = ⦗ val b1 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
 
-  T0 : [] ⊢Sheaf (Free (Base BB))
-  T0 = (Base NN ＠ u) ⊗ (Base BB ＠ v)
+  -- T0 : [] ⊢ ⨅ₛ (Free (Base BB)) Type
+  -- T0 = lamₛ (type (Inh (u ∧ atom (var zero)) ⇒ Base NN))
 
-  t0 : [] ⊢ Ap T0 u
-  t0 = ap ((loc (λ x → n0)) , (loc (λ x → b0)))
+  -- T0 : [] ⊢Sheaf (Free (Base BB))
+  -- T0 = (Base NN ＠ u) ⊗ (Base BB ＠ v)
 
-  t1 : [] ⊢ Ap T0 v
-  t1 = ap ((loc (λ x → n0)) , (loc (λ x → b0)))
+  -- t0 : [] ⊢ Ap T0 u
+  -- t0 = ap ((loc (λ x → n0)) , (loc (λ x → b0)))
 
-  t2 : [] ⊢ Ap T0 (u ∨ v)
-  t2 = ap (glueP {U = u} {V = v} (tm t0) ((tm t1)) {!!})
+  -- t1 : [] ⊢ Ap T0 v
+  -- t1 = ap ((loc (λ x → n0)) , (loc (λ x → b0)))
 
-  t3 : [] ⊢ ⨅ₛ (Free (Base BB)) (Ap (Base NN ＠ (u ∧ v)) (atom (var zero)) ⇒ Ap (Base NN ＠ (u ∧ v)) ((atom (var zero))))
-  t3 = lamₛ (lami (ap (tm (var zero))))
+  -- t2 : [] ⊢ Ap T0 (u ∨ v)
+  -- t2 = ap (glueP {U = u} {V = v} (tm t0) ((tm t1)) {!!})
+
+  -- t3 : [] ⊢ ⨅ₛ (Free (Base BB)) (Ap (Base NN ＠ (u ∧ v)) (atom (var zero)) ⇒ Ap (Base NN ＠ (u ∧ v)) ((atom (var zero))))
+  -- t3 = lamₛ (lami (ap (tm (var zero))))
+
+
 
   -- t3 : [] ⊢ ⨅ Spc (⨅ (Sh (spc (var zero))) (Ap (shf (var zero)) ⊥))
   -- t3 = {!!}
