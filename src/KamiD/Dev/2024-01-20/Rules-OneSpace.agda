@@ -54,15 +54,19 @@ module _ {P : Param} where
   data Kind : 𝒰₀ where
     type : Kind
     local : ⟨ P ⟩ -> Kind
+    com : ⟨ P ⟩ -> Kind
 
   private variable
     k l : Kind
+
 
   data _⊢Sort_ : ∀ (Γ : Ctx) -> Kind -> 𝒰₀
 
   private variable
     S : Γ ⊢Sort k
     T : Γ ⊢Sort l
+
+
 
   TypeSyntax : ∀ (Γ : Ctx) -> 𝒰 _
   TypeSyntax Γ = Γ ⊢Sort type
@@ -73,32 +77,53 @@ module _ {P : Param} where
     A : Γ ⊢Type
     B : Γ ⊢Type
 
-
   LocalSyntax : ∀ (Γ : Ctx) -> ⟨ P ⟩ -> 𝒰 _
   LocalSyntax Γ U = Γ ⊢Sort local U
 
   syntax LocalSyntax Γ U = Γ ⊢Local U
 
+  private variable
+    L : Γ ⊢Local U
+    M : Γ ⊢Local V
+    N : Γ ⊢Local W
+
+  ComSyntax : ∀ (Γ : Ctx) -> ⟨ P ⟩ -> 𝒰 _
+  ComSyntax Γ U = Γ ⊢Sort com U
+
+  syntax ComSyntax Γ U = Γ ⊢Com U
 
   private variable
-    X : Γ ⊢Local U
-    Y : Γ ⊢Local V
-    Z : Γ ⊢Local W
+    C : Γ ⊢Com U
+    D : Γ ⊢Com V
 
-
-  data _⊢Var_ : ∀ Γ -> Γ ⊢Sort k -> 𝒰₀
-  data _⊢_ : ∀ Γ -> Γ ⊢Sort k -> 𝒰₀
-
+  data _⊢Mod_ : ∀ (Γ : Ctx) -> Kind -> 𝒰₀ where
+    tt : Γ ⊢Mod type
+    tl : Γ ⊢Mod local U
+    res : Γ ⊢Type -> Γ ⊢Mod (com U)
 
   private variable
-    t : Γ ⊢ T
-    s : Γ ⊢ S
+    𝓂 : Γ ⊢Mod k
+    𝓃 : Γ ⊢Mod l
 
   data Ctx where
     [] : Ctx
     _,[_] : ∀ (Γ : Ctx) -> (A : Γ ⊢Sort k) -> Ctx
 
   infixl 30 _,[_]
+
+
+  -- data _⊢Mods : (Γ : Ctx) -> 𝒰₀ where
+  --   [] : [] ⊢Mods
+  --   _,[_] : Γ ⊢Mods -> (m : Γ ⊢Mod k) -> {T : Γ ⊢Sort k} -> Γ ,[ T ] ⊢Mods
+
+
+  data _⊢Var_ : ∀ Γ -> Γ ⊢Sort k -> 𝒰₀
+  data _⊢_/_ : ∀ Γ -> Γ ⊢Sort k -> Γ ⊢Mod k -> 𝒰₀
+
+  private variable
+    t : Γ ⊢ T / 𝓂
+    s : Γ ⊢ S / 𝓃
+
 
 
   --------------------------------------------------------------
@@ -147,7 +172,7 @@ module _ {P : Param} where
 
 
   wk-Sort : Γ ⊢Sort k -> Γ ,[ S ] ⊢Sort k
-  su-Sort : (t : Γ ⊢ S) -> Γ ,[ S ] ⊢Sort k -> Γ ⊢Sort k
+  su-Sort : (t : Γ ⊢ S / 𝓂) -> Γ ,[ S ] ⊢Sort k -> Γ ⊢Sort k
 
 
 
@@ -160,33 +185,39 @@ module _ {P : Param} where
     -- Generic
     ⨆ : (X : Γ ⊢Sort k) -> (Y : Γ ,[ X ] ⊢Sort k) -> Γ ⊢Sort k
     ⨅ : (X : Γ ⊢Sort k) -> (Y : Γ ,[ X ] ⊢Sort k) -> Γ ⊢Sort k
+    _⊗_ : (A B : Γ ⊢Sort k) -> Γ ⊢Sort k
 
     --------------------------------------------------------------
     -- Local
 
     Base : BaseType -> Γ ⊢Local U
 
-    Loc : (U : ⟨ P ⟩) -> Γ ⊢Local U -> Γ ⊢Type
+    Loc : (U : ⟨ P ⟩) -> (ϕ : U ≤ V) -> Γ ⊢Local V -> Γ ⊢Type
 
 
     --------------------------------------------------------------
     -- Types
-    _⊗_ : (A B : Γ ⊢Type) -> Γ ⊢Type
-
+    Com : ⟨ P ⟩ -> Γ ⊢Type -> Γ ⊢Type
 
     --------------------------------------------------------------
-    -- Spaces 2
+    -- Com
+    End : Γ ⊢Com U
+    [_to_⨾_]►_ : Γ ⊢Local V -> (ϕ : W ≤ U) -> (ψ : U ≤ V) -> Γ ⊢Com W
+
 
 
 
   -- infixr 40 _⇒_
   infixr 50 _⊗_
 
+  syntax Loc U L = L ＠ U
+  infixl 90 Loc
 
 
   data _⊢Var_ where
     zero : Γ ,[ S ] ⊢Var wk-Sort S
     suc : Γ ⊢Var S -> Γ ,[ T ] ⊢Var wk-Sort S
+
 
 
 
@@ -200,9 +231,16 @@ module _ {P : Param} where
     b1 : Γ ⊢ Base {U = U} BB
     n0 : Γ ⊢ Base {U = U} NN
 
+    loc : Γ ⊢ L -> Γ ⊢ L ＠ U
+    unloc : Γ ⊢ L ＠ U -> Γ ⊢ L
+
 
     lam : Γ ,[ S ] ⊢ B -> Γ ⊢ ⨅ S B
     app : Γ ⊢ ⨅ T S -> (t : Γ ⊢ T) -> Γ ⊢ su-Sort t S
+
+    π₁ : Γ ⊢ T ⊗ S -> Γ ⊢ T
+    π₂ : Γ ⊢ T ⊗ S -> Γ ⊢ S
+    _,_ : Γ ⊢ T -> Γ ⊢ S -> Γ ⊢ (T ⊗ S)
 
     -- inh : U ≰ ⊥ -> Γ ⊢ Inh U
 
@@ -238,7 +276,8 @@ module _ {P : Param} where
   wk-Sort,ind E (Base x) = Base x
   wk-Sort,ind E (⨆ A B) = {!!}
   wk-Sort,ind E (⨅ S B) = ⨅ (wk-Sort,ind E S) (wk-Sort,ind (E ,[ S ]) B)
-  wk-Sort,ind E _ = {!!}
+  wk-Sort,ind E (Loc U x) = Loc U (wk-Sort,ind E x)
+  wk-Sort,ind E (A ⊗ B) = wk-Sort,ind E A ⊗ wk-Sort,ind E B
 
 
   -- wk-Comm,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Comm ) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Comm 
@@ -318,13 +357,26 @@ module _ {P : Param} where
 
 
 
-  module Examples where
+module Examples where
 
-    -- uu : Γ ⊢Open Free (Base BB)
-    -- uu = ⦗ val b0 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
+  PP : Space
+  PP = 𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 2))
 
-    -- vv : Γ ⊢Open Free (Base BB)
-    -- vv = ⦗ val b1 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
+  uu vv : ⟨ PP ⟩
+  uu = ⦗ # 0 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
+  vv = ⦗ # 1 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
+
+  ε : Ctx {PP}
+  ε = []
+
+  T0 : ∀{Γ : Ctx {PP}} -> Γ ⊢Type
+  T0 = (Base NN ＠ uu) ⊗ (Base NN ＠ vv)
+
+  t1 : ε ⊢ ⨅ T0 (Base NN ＠ uu)
+  t1 = lam (π₁ (var zero) )
+
+  t2 : ε ⊢ ⨅ ((Base NN ＠ uu) ⊗ (Base NN ＠ vv)) ((Base NN ⊗ Base NN) ＠ uu)
+  t2 = lam (loc (unloc (π₁ (var zero)) , {!!}))
 
 {-
 
@@ -930,5 +982,6 @@ module _ {P : Param} where
   -}
 
 
+  -}
   -}
   -}
