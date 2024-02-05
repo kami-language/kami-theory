@@ -3,14 +3,14 @@
 
 module KamiD.Dev.2024-01-20.Rules-OneSpace where
 
-open import Agora.Conventions hiding (Σ ; Lift ; k)
+open import Agora.Conventions hiding (Σ ; Lift ; k ; m ; n)
 open import Agora.Order.Preorder
 open import Agora.Order.Lattice
 open import Agora.Data.Power.Definition
 open import Agora.Data.Sum.Definition
 open import Agora.Data.Product.Definition
 open import Data.Fin hiding (_-_ ; _+_ ; _≤_)
-open import Data.Nat hiding (_! ; _+_ ; _≤_ ; _≰_)
+open import Data.Nat hiding (_! ; _+_ ; _≤_ ; _≰_ ; _/_)
 open import Relation.Nullary.Decidable.Core
 
 open import KamiD.Dev.2024-01-20.Core hiding (_＠_)
@@ -53,7 +53,7 @@ module _ {P : Param} where
   -- setup of kinds for types and spaces
   data Kind : 𝒰₀ where
     type : Kind
-    local : ⟨ P ⟩ -> Kind
+    local : Kind
     com : ⟨ P ⟩ -> Kind
 
   private variable
@@ -77,15 +77,15 @@ module _ {P : Param} where
     A : Γ ⊢Type
     B : Γ ⊢Type
 
-  LocalSyntax : ∀ (Γ : Ctx) -> ⟨ P ⟩ -> 𝒰 _
-  LocalSyntax Γ U = Γ ⊢Sort local U
+  LocalSyntax : ∀ (Γ : Ctx) -> 𝒰 _
+  LocalSyntax Γ = Γ ⊢Sort local
 
-  syntax LocalSyntax Γ U = Γ ⊢Local U
+  syntax LocalSyntax Γ = Γ ⊢Local
 
   private variable
-    L : Γ ⊢Local U
-    M : Γ ⊢Local V
-    N : Γ ⊢Local W
+    L : Γ ⊢Local
+    M : Γ ⊢Local
+    N : Γ ⊢Local
 
   ComSyntax : ∀ (Γ : Ctx) -> ⟨ P ⟩ -> 𝒰 _
   ComSyntax Γ U = Γ ⊢Sort com U
@@ -96,18 +96,38 @@ module _ {P : Param} where
     C : Γ ⊢Com U
     D : Γ ⊢Com V
 
+
+  -- _⊢Mod_ : ∀ (Γ : Ctx) -> Kind -> 𝒰₀
+  -- Γ ⊢Mod type = 𝟙-𝒰
+  -- Γ ⊢Mod local = ⟨ P ⟩
+  -- Γ ⊢Mod com x = Γ ⊢Type
+
   data _⊢Mod_ : ∀ (Γ : Ctx) -> Kind -> 𝒰₀ where
-    tt : Γ ⊢Mod type
-    tl : Γ ⊢Mod local U
-    res : Γ ⊢Type -> Γ ⊢Mod (com U)
+    type : Γ ⊢Mod type
+    local : ⟨ P ⟩ -> Γ ⊢Mod local
+    com : Γ ⊢Type -> Γ ⊢Mod (com U)
 
   private variable
-    𝓂 : Γ ⊢Mod k
-    𝓃 : Γ ⊢Mod l
+    m : Γ ⊢Mod k
+    n : Γ ⊢Mod l
+
+  record _⊢Entry_ (Γ : Ctx) (k : Kind) : 𝒰₀ where
+    inductive ; pattern
+    constructor _/_
+    field fst : Γ ⊢Sort k
+    field snd : Γ ⊢Mod k
+
+  infixl 25 _/_
+
+  open _⊢Entry_ public
+
+  private variable
+    E F : Γ ⊢Entry k
+
 
   data Ctx where
     [] : Ctx
-    _,[_] : ∀ (Γ : Ctx) -> (A : Γ ⊢Sort k) -> Ctx
+    _,[_] : ∀ (Γ : Ctx) -> (A : Γ ⊢Entry k) -> Ctx
 
   infixl 30 _,[_]
 
@@ -117,12 +137,12 @@ module _ {P : Param} where
   --   _,[_] : Γ ⊢Mods -> (m : Γ ⊢Mod k) -> {T : Γ ⊢Sort k} -> Γ ,[ T ] ⊢Mods
 
 
-  data _⊢Var_ : ∀ Γ -> Γ ⊢Sort k -> 𝒰₀
-  data _⊢_/_ : ∀ Γ -> Γ ⊢Sort k -> Γ ⊢Mod k -> 𝒰₀
+  data _⊢Var_ : ∀ Γ -> Γ ⊢Entry k -> 𝒰₀
+  data _⊢_ : ∀ Γ -> Γ ⊢Entry k -> 𝒰₀
 
   private variable
-    t : Γ ⊢ T / 𝓂
-    s : Γ ⊢ S / 𝓃
+    t : Γ ⊢ E
+    s : Γ ⊢ F
 
 
 
@@ -135,7 +155,7 @@ module _ {P : Param} where
 
   data _⊢Ctx₊ where
     [] : Γ ⊢Ctx₊
-    _,[_] : (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E) ⊢Sort k -> Γ ⊢Ctx₊
+    _,[_] : (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E) ⊢Entry k -> Γ ⊢Ctx₊
 
   -- _⋆-Ctx₊₂_ : (Δ : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ Δ) ⊢Ctx₊ -> Γ ⊢Ctx₊
 
@@ -171,8 +191,22 @@ module _ {P : Param} where
   --------------------------------------------------------------
 
 
-  wk-Sort : Γ ⊢Sort k -> Γ ,[ S ] ⊢Sort k
-  su-Sort : (t : Γ ⊢ S / 𝓂) -> Γ ,[ S ] ⊢Sort k -> Γ ⊢Sort k
+  wk-Sort : Γ ⊢Sort k -> Γ ,[ E ] ⊢Sort k
+  su-Sort : (t : Γ ⊢ E) -> Γ ,[ E ] ⊢Sort k -> Γ ⊢Sort k
+
+  wk-Entry : Γ ⊢Entry k -> Γ ,[ E ] ⊢Entry k
+  su-Entry : (t : Γ ⊢ E) -> Γ ,[ E ] ⊢Entry k -> Γ ⊢Entry k
+
+  wk-Term : Γ ⊢ E -> Γ ,[ F ] ⊢ wk-Entry E
+
+  wk-Mod : Γ ⊢Mod k -> Γ ,[ E ] ⊢Mod k
+
+  special-su-top : Γ ,[ E ] ⊢ wk-Entry F ->  Γ ,[ F ] ⊢Sort k -> Γ ,[ E ] ⊢Sort k
+  special-su-top t T = {!!} -- su-Sort t (wk-Sort,ind ([] ,[ _ ]) T)
+
+  -- wk-Mod (type) m  = tt
+  -- wk-Mod (local) m = m
+  -- wk-Mod (com x) m = wk-Sort m
 
 
 
@@ -183,16 +217,18 @@ module _ {P : Param} where
 
     --------------------------------------------------------------
     -- Generic
-    ⨆ : (X : Γ ⊢Sort k) -> (Y : Γ ,[ X ] ⊢Sort k) -> Γ ⊢Sort k
-    ⨅ : (X : Γ ⊢Sort k) -> (Y : Γ ,[ X ] ⊢Sort k) -> Γ ⊢Sort k
+    ⨆ : (E : Γ ⊢Entry k) -> (Y : Γ ,[ E ] ⊢Sort k) -> Γ ⊢Sort k
+    ⨅ : (E : Γ ⊢Entry k) -> (Y : Γ ,[ E ] ⊢Sort k) -> Γ ⊢Sort k
     _⊗_ : (A B : Γ ⊢Sort k) -> Γ ⊢Sort k
 
     --------------------------------------------------------------
     -- Local
 
-    Base : BaseType -> Γ ⊢Local U
+    Base : BaseType -> Γ ⊢Local
 
-    Loc : (U : ⟨ P ⟩) -> (ϕ : U ≤ V) -> Γ ⊢Local V -> Γ ⊢Type
+    Loc : (U : ⟨ P ⟩) -> Γ ⊢Local -> Γ ⊢Type
+
+    Ext : Γ ⊢ Loc U L / type -> (ϕ : U ≤ V) -> Γ ⊢Type
 
 
     --------------------------------------------------------------
@@ -202,8 +238,7 @@ module _ {P : Param} where
     --------------------------------------------------------------
     -- Com
     End : Γ ⊢Com U
-    [_to_⨾_]►_ : Γ ⊢Local V -> (ϕ : W ≤ U) -> (ψ : U ≤ V) -> Γ ⊢Com W
-
+    [_to[_⨾_⨾_]_⨾_]►_ : (L : Γ ⊢Local) -> ∀ W U V -> (ϕ : W ≤ U) -> (ψ : U ≤ V) -> Γ ,[ L ＠ V / type ] ⊢Com W -> Γ ⊢Com W
 
 
 
@@ -215,32 +250,127 @@ module _ {P : Param} where
 
 
   data _⊢Var_ where
-    zero : Γ ,[ S ] ⊢Var wk-Sort S
-    suc : Γ ⊢Var S -> Γ ,[ T ] ⊢Var wk-Sort S
+    zero : Γ ,[ E ] ⊢Var wk-Entry E
+    suc : Γ ⊢Var E -> Γ ,[ F ] ⊢Var wk-Entry E
 
 
+
+
+
+  ------------------------------------------------------------------------
+  -- Weakening
+
+
+  {-# TERMINATING #-}
+  wk-Ctx₊ : (Δ : Γ ⊢Ctx₊) -> Γ ,[ E ] ⊢Ctx₊
+
+
+  wk-Mod,ind : ∀ Δ -> (m : Γ ⋆-Ctx₊ Δ ⊢Mod k) -> Γ ,[ E ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢Mod k
+
+  wk-Sort,ind : ∀ Δ -> (S : Γ ⋆-Ctx₊ Δ ⊢Sort k) -> Γ ,[ E ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢Sort k
+
+  wk-Entry,ind : ∀ Δ -> (E : Γ ⋆-Ctx₊ Δ ⊢Entry k) -> Γ ,[ F ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢Entry k
+  wk-Entry,ind Δ (S / m) = wk-Sort,ind Δ S / wk-Mod,ind Δ m
+
+  wk-Mod,ind Δ type = type
+  wk-Mod,ind Δ (local x) = local x
+  wk-Mod,ind Δ (com x) = com (wk-Sort,ind Δ x)
+
+
+  wk-Term,ind : ∀ Δ -> {AX : Γ ⋆-Ctx₊ Δ ⊢Entry k} -> Γ ⋆-Ctx₊ Δ ⊢ AX -> Γ ,[ E ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢ wk-Entry,ind Δ AX
+
+ --  wk-Term,ind [] t
+
+  -- wk-Var-ind : ∀ Δ -> {AX : Γ ⋆-Ctx₊ Δ ⊢Sort k} -> Γ ⋆-Ctx₊ Δ ⊢Var AX -> Γ ,[ S ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢Var wk-Sort,ind Δ AX
+
+  wk-Ctx₊ [] = []
+  wk-Ctx₊ (Δ ,[ E ]) = wk-Ctx₊ Δ ,[ wk-Entry,ind Δ E ]
+
+
+  wk-Sort,ind Δ (Base x) = Base x
+  wk-Sort,ind Δ (⨆ A B) = {!!}
+  wk-Sort,ind Δ (⨅ S B) = ⨅ (wk-Entry,ind Δ S) (wk-Sort,ind (Δ ,[ S ]) B)
+  wk-Sort,ind Δ (Loc U x) = Loc U (wk-Sort,ind Δ x)
+  wk-Sort,ind Δ (Ext x ϕ) = Ext (wk-Term,ind Δ x) ϕ -- ϕ (wk-Sort,ind Δ x)
+  wk-Sort,ind Δ (A ⊗ B) = wk-Sort,ind Δ A ⊗ wk-Sort,ind Δ B
+  wk-Sort,ind Δ (Com x x₁) = {!!}
+  wk-Sort,ind Δ End = End
+  wk-Sort,ind Δ ([_to[_⨾_⨾_]_⨾_]►_ x U V W ϕ ψ P) = {!!}
+
+  wk-Sort S = wk-Sort,ind [] S
+  wk-Mod m = wk-Mod,ind [] m
+  wk-Entry m = wk-Entry,ind [] m
+  wk-Term t = wk-Term,ind [] t
+
+
+  -- wk-Comm,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Comm ) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Comm 
+  -- wk-Comm,ind E (⟮ U ↝ V ⨾ ϕ ⟯[ A ] Z) = ⟮ U ↝ V ⨾ ϕ ⟯[ wk-Sort,ind E A ] wk-Comm,ind (E ,[ Fill _ _ ]) Z
+  -- wk-Comm,ind E End = End
+  -- wk-Comm,ind E (El-Comm x) = El-Comm (wk-Term-ind E x)
+
+  -- wk-Sort : Γ ⊢Sort k -> Γ ,[ A ] ⊢Sort k
+  -- wk-Sort AX = wk-Sort,ind [] AX -- [ wk-⇛♮ id-⇛♮ ]-Type
+
+  -- wk-≤-Local,ind E (Base b {ϕ = ϕ}) = Base b {ϕ = ϕ}
+  -- wk-≤-Local,ind E (Fam ϕ m n) = Fam ϕ (wk-Term-ind E m) (wk-Term-ind E n)
+
+
+  -- wk-Term : {AX : Γ ⊢Sort k} -> Γ ⊢ AX -> Γ ,[ A ] ⊢ wk-Sort AX
+  -- wk-Term t = ? -- wk-Term-ind [] t
+
+
+  -- wk-⇛♮-ind : ∀{A} -> ∀ E -> (Γ ⋆-Ctx₊ E) ⇛♮ Δ -> (Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E) ⇛♮ Δ
+
+  -- weakening over a whole context
+  -- wks-Sort : (E : Γ ⊢Ctx₊) -> (A : Γ ⊢Sort k) -> Γ ⋆-Ctx₊ E ⊢Sort k
+  -- wks-Sort [] A = A
+  -- wks-Sort (E ,[ x ]) A = wk-Sort (wks-Sort E A)
+
+  -- β-wk-Sort,ind,empty : ∀{A : Γ ,[ B ] ⊢Sort k} -> wk-Sort,ind [] A ≣ A
+  -- β-wk-Sort,ind,empty = ?
+
+
+
+  -- End weakening
+  ------------------------------------------------------------------------
 
 
   data _⊢_ where
 
     ---------------------------------------------
     -- Terms
-    var : Γ ⊢Var S -> Γ ⊢ S
+    var : Γ ⊢Var E -> Γ ⊢ E
 
-    b0 : Γ ⊢ Base {U = U} BB
-    b1 : Γ ⊢ Base {U = U} BB
-    n0 : Γ ⊢ Base {U = U} NN
+    b0 : Γ ⊢ Base BB / local U
+    b1 : Γ ⊢ Base BB / local U
+    n0 : Γ ⊢ Base NN / local U
 
-    loc : Γ ⊢ L -> Γ ⊢ L ＠ U
-    unloc : Γ ⊢ L ＠ U -> Γ ⊢ L
+    loc : Γ ⊢ L / local U -> Γ ⊢ (L ＠ U) / type
+    [_]unloc : (ϕ : U ≤ V) -> Γ ⊢ (L ＠ U) / type -> Γ ⊢ L / local V
+
+    fromext : {ϕ : U ≤ V} -> {val : Γ ⊢ L ＠ U / type} -> Γ ⊢ Ext val ϕ / type -> Γ ⊢ L ＠ V / type
 
 
-    lam : Γ ,[ S ] ⊢ B -> Γ ⊢ ⨅ S B
-    app : Γ ⊢ ⨅ T S -> (t : Γ ⊢ T) -> Γ ⊢ su-Sort t S
+    lam : Γ ,[ E ] ⊢ S / wk-Mod m  -> Γ ⊢ ⨅ E S / m
+    app : Γ ⊢ ⨅ (T / m) S / m -> (t : Γ ⊢ T / m) -> Γ ⊢ su-Sort t S / m
 
-    π₁ : Γ ⊢ T ⊗ S -> Γ ⊢ T
-    π₂ : Γ ⊢ T ⊗ S -> Γ ⊢ S
-    _,_ : Γ ⊢ T -> Γ ⊢ S -> Γ ⊢ (T ⊗ S)
+
+    π₁ : Γ ⊢ (T ⊗ S) / m -> Γ ⊢ T / m
+    π₂ : Γ ⊢ (T ⊗ S) / m -> Γ ⊢ S / m
+    _,_ : Γ ⊢ T / m -> Γ ⊢ S / m -> Γ ⊢ (T ⊗ S) / m
+
+
+    -------------------
+    -- protocols
+    _∋_ : (P : Γ ⊢Com U) -> Γ ⊢ P / com T -> Γ ⊢ Com U T / type
+
+    _►_ : ∀{U V W : ⟨ P ⟩} -> {ϕ : U ≤ V} -> {ψ : V ≤ W}
+        -> ∀ {C}
+        -> (val : Γ ⊢ L ＠ V / type)
+        -> Γ ,[ Ext val ψ / type ] ⊢ special-su-top (fromext (var zero) ) C / com (wk-Sort B)
+        -> Γ ⊢ ([ L to[ U ⨾ V ⨾ W ] ϕ ⨾ ψ ]► C) / com B
+
+    ret : Γ ⊢ B / type -> Γ ⊢ End {U = U} / com B
 
     -- inh : U ≰ ⊥ -> Γ ⊢ Inh U
 
@@ -258,58 +388,9 @@ module _ {P : Param} where
     -- forget : List ((List (Γ ⊢Atom X) :& isUniqueSorted)) :& (IB.isIndependentBase λ a b -> a ≰ b ×-𝒰 b ≰ a) -> Γ ⊢ Forget X
 
 
-  ------------------------------------------------------------------------
-  -- Weakening
 
 
-  {-# TERMINATING #-}
-  wk-Ctx₊ : (E : Γ ⊢Ctx₊) -> Γ ,[ S ] ⊢Ctx₊
-
-  wk-Sort,ind : ∀ E -> (S : Γ ⋆-Ctx₊ E ⊢Sort k) -> Γ ,[ T ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Sort k
-  -- wk-Term-ind : ∀ E -> {AX : Γ ⋆-Ctx₊ E ⊢Sort k} -> Γ ⋆-Ctx₊ E ⊢ AX -> Γ ,[ S ] ⋆-Ctx₊ wk-Ctx₊ E ⊢ wk-Sort,ind E AX
-  -- wk-Var-ind : ∀ E -> {AX : Γ ⋆-Ctx₊ E ⊢Sort k} -> Γ ⋆-Ctx₊ E ⊢Var AX -> Γ ,[ S ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Var wk-Sort,ind E AX
-
-  wk-Ctx₊ [] = []
-  wk-Ctx₊ (E ,[ x ]) = wk-Ctx₊ E ,[ wk-Sort,ind E x ]
-
-
-  wk-Sort,ind E (Base x) = Base x
-  wk-Sort,ind E (⨆ A B) = {!!}
-  wk-Sort,ind E (⨅ S B) = ⨅ (wk-Sort,ind E S) (wk-Sort,ind (E ,[ S ]) B)
-  wk-Sort,ind E (Loc U x) = Loc U (wk-Sort,ind E x)
-  wk-Sort,ind E (A ⊗ B) = wk-Sort,ind E A ⊗ wk-Sort,ind E B
-
-
-  -- wk-Comm,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Comm ) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Comm 
-  -- wk-Comm,ind E (⟮ U ↝ V ⨾ ϕ ⟯[ A ] Z) = ⟮ U ↝ V ⨾ ϕ ⟯[ wk-Sort,ind E A ] wk-Comm,ind (E ,[ Fill _ _ ]) Z
-  -- wk-Comm,ind E End = End
-  -- wk-Comm,ind E (El-Comm x) = El-Comm (wk-Term-ind E x)
-
-  -- wk-Sort : Γ ⊢Sort k -> Γ ,[ A ] ⊢Sort k
-  wk-Sort AX = wk-Sort,ind [] AX -- [ wk-⇛♮ id-⇛♮ ]-Type
-
-  -- wk-≤-Local,ind E (Base b {ϕ = ϕ}) = Base b {ϕ = ϕ}
-  -- wk-≤-Local,ind E (Fam ϕ m n) = Fam ϕ (wk-Term-ind E m) (wk-Term-ind E n)
-
-
-  -- wk-Term : {AX : Γ ⊢Sort k} -> Γ ⊢ AX -> Γ ,[ A ] ⊢ wk-Sort AX
-  -- wk-Term t = ? -- wk-Term-ind [] t
-
-
-  -- wk-⇛♮-ind : ∀{A} -> ∀ E -> (Γ ⋆-Ctx₊ E) ⇛♮ Δ -> (Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E) ⇛♮ Δ
-
-  -- weakening over a whole context
-  wks-Sort : (E : Γ ⊢Ctx₊) -> (A : Γ ⊢Sort k) -> Γ ⋆-Ctx₊ E ⊢Sort k
-  wks-Sort [] A = A
-  wks-Sort (E ,[ x ]) A = wk-Sort (wks-Sort E A)
-
-  -- β-wk-Sort,ind,empty : ∀{A : Γ ,[ B ] ⊢Sort k} -> wk-Sort,ind [] A ≣ A
-  -- β-wk-Sort,ind,empty = ?
-
-
-
-  -- End weakening
-  ------------------------------------------------------------------------
+{-
 
 
   ------------------------------------------------------------------------
@@ -355,6 +436,8 @@ module _ {P : Param} where
   -- End Equality
   ------------------------------------------------------------------------
 
+-}
+
 
 
 module Examples where
@@ -372,11 +455,18 @@ module Examples where
   T0 : ∀{Γ : Ctx {PP}} -> Γ ⊢Type
   T0 = (Base NN ＠ uu) ⊗ (Base NN ＠ vv)
 
-  t1 : ε ⊢ ⨅ T0 (Base NN ＠ uu)
-  t1 = lam (π₁ (var zero) )
+  t1 : ε ⊢ ⨅ (T0 / type) (Base NN ＠ uu) / type
+  t1 = lam (π₁ (var zero))
 
-  t2 : ε ⊢ ⨅ ((Base NN ＠ uu) ⊗ (Base NN ＠ vv)) ((Base NN ⊗ Base NN) ＠ uu)
-  t2 = lam (loc (unloc (π₁ (var zero)) , {!!}))
+  t2 : ε ⊢ ⨅ ((Base NN ＠ uu) ⊗ (Base NN ＠ vv) / type) ((Base NN ⊗ Base NN) ＠ uu) / type
+  t2 = lam (loc ([ reflexive ]unloc (π₁ (var zero)) , [ reflexive ]unloc (π₁ (var zero))))
+
+  t3 : ε ⊢ ⨅ (Base NN ＠ uu / type) (Com (uu ∧ vv) (Base NN ＠ vv)) / type
+  t3 = lam (([ Base NN to[ (uu ∧ vv) ⨾ uu ⨾ (uu ∨ vv) ] (π₀-∧) ⨾ (ι₀-∨) ]► End) ∋ (var zero ► ret (loc ([ {!!} ]unloc (fromext (var zero) )))))
+
+
+
+{-
 
 {-
 
@@ -427,12 +517,12 @@ module Examples where
 
 
   {-
-  data _⊢_∶_ : ∀ Γ {X} {A} -> (t : Γ ⊢ A) -> (l : Γ ⊢ X ⨞ A) -> 𝒰₂ where
+  data _⊢_/_ : ∀ Γ {X} {A} -> (t : Γ ⊢ A) -> (l : Γ ⊢ X ⨞ A) -> 𝒰₂ where
 
   -- also we can build a generic sheaf (it should be the same)
   -- on open sets:
   sheaf2 : Γ ⊢ X ⨞ A -> Sheaf (Γ ⊢Open' X) _
-  sheaf2 {Γ = Γ} F = (λ U -> ∑ λ t -> Γ ⊢ t ∶ F) since {!!}
+  sheaf2 {Γ = Γ} F = (λ U -> ∑ λ t -> Γ ⊢ t / F) since {!!}
 
   -- Now we can compute the etale space E of that sheaf,
   -- and the prime filters of E. They should be given by
@@ -795,7 +885,7 @@ module Examples where
   data _⊢domain_↦_ : ∀ (Γ : Ctx) -> (AX : Γ ⊢Global) -> (U : ⟨ L ⟩) -> 𝒰₂ where
 
   data _⊢_≡_Type : ∀(Γ : Ctx) -> (AX BY : Γ ⊢Sort k) -> 𝒰₂ where
-  data _⊢_≡_∶_ : ∀(Γ : Ctx) -> {AX BY : Γ ⊢Sort k} (x : Γ ⊢ AX) (y : Γ ⊢ BY) -> (Γ ⊢ AX ≡ BY Type) -> 𝒰₂ where
+  data _⊢_≡_/_ : ∀(Γ : Ctx) -> {AX BY : Γ ⊢Sort k} (x : Γ ⊢ AX) (y : Γ ⊢ BY) -> (Γ ⊢ AX ≡ BY Type) -> 𝒰₂ where
 
   data _⊢_Type where
 
@@ -879,8 +969,8 @@ module Examples where
 
   data _⊢Comm where
     ⟮_↝_⨾_⟯[_]_ : (U V : 𝒫ᶠⁱⁿ R) -> {W : 𝒫ᶠⁱⁿ R} -> .(ϕ : W ≤ U) -> (A : Γ ⇂ (ϕ ⟡ ι₀-∨ {b = V}) ⊢Partial) -> Γ ,[ Fill (ϕ ⟡ ι₀-∨ {b = V}) A ] ⊢Comm -> Γ ⊢Comm 
-    -- ⩒⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ (reflexive ∶ ⦗ a ⦘ ≤ ⦗ a ⦘) ⊢ R Type) -> Γ ,[ A ] ⊢Comm -> Γ ⊢Comm 
-    -- ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ (reflexive ∶ ⦗ a ⦘ ≤ ⦗ a ⦘) ⊢ R Type) -> Γ ,[ A ] ⊢Comm -> Γ ⊢Comm 
+    -- ⩒⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ (reflexive / ⦗ a ⦘ ≤ ⦗ a ⦘) ⊢ R Type) -> Γ ,[ A ] ⊢Comm -> Γ ⊢Comm 
+    -- ⩑⟮_⟯[_]_ : (a : ⟨ R ⟩) -> (A : Γ ⇂ (reflexive / ⦗ a ⦘ ≤ ⦗ a ⦘) ⊢ R Type) -> Γ ,[ A ] ⊢Comm -> Γ ⊢Comm 
     End : Γ ⊢Comm
 
     El-Comm : Γ ⊢ U-Comm -> Γ ⊢Comm
