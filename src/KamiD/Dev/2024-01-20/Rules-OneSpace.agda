@@ -42,6 +42,9 @@ private variable P : Param
 
 module _ {P : Param} where
 
+  private variable
+    U V W : ⟨ P ⟩
+
   data Ctx : 𝒰₀
 
   private variable
@@ -50,7 +53,7 @@ module _ {P : Param} where
   -- setup of kinds for types and spaces
   data Kind : 𝒰₀ where
     type : Kind
-    space : Kind
+    local : ⟨ P ⟩ -> Kind
 
   private variable
     k l : Kind
@@ -71,62 +74,25 @@ module _ {P : Param} where
     B : Γ ⊢Type
 
 
-  SpaceSyntax : ∀ (Γ : Ctx) -> 𝒰 _
-  SpaceSyntax Γ = Γ ⊢Sort space
+  LocalSyntax : ∀ (Γ : Ctx) -> ⟨ P ⟩ -> 𝒰 _
+  LocalSyntax Γ U = Γ ⊢Sort local U
 
-  syntax SpaceSyntax Γ = Γ ⊢Space
+  syntax LocalSyntax Γ U = Γ ⊢Local U
 
 
   private variable
-    X : Γ ⊢Space
-    Y : Γ ⊢Space
-    Z : Γ ⊢Space
-
-  -- We have a notion of term/open set of a space
-  data _⊢Atom_ : ∀ (Γ : Ctx) -> Γ ⊢Space -> 𝒰₀
-
-  instance
-    hasStrictOrder:Atom : hasStrictOrder (Γ ⊢Atom X)
-    hasStrictOrder:Atom = {!!}
-
-  _⊢Open'_ : ∀ Γ -> Γ ⊢Space -> 𝒰₀
-  _⊢Open'_ Γ X = (𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ ((Γ ⊢Atom X) since hasStrictOrder:Atom)))
-
-  macro
-    _⊢Open_ : ∀ Γ -> Γ ⊢Space -> _
-    _⊢Open_ Γ X = #structureOn (Γ ⊢Open' X)
-  -- _⊢Open'_ : ∀ Γ -> Γ ⊢Space -> Space
-  -- _⨾_⊢Open_ : ∀ Γ Σ -> Γ ⊢Space -> Space
-
-  private variable
-    U : Γ ⊢Open X
-    V : Γ ⊢Open Y
-
-  pure-Open : Γ ⊢Atom X -> Γ ⊢Open X
-  pure-Open u = ⦗ u ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
-
-  bind-Open : Γ ⊢Open X -> (Γ ⊢Atom X -> Γ ⊢Open Y) -> Γ ⊢Open Y
-  bind-Open x f = bind-Space f x
-
-  -- app-Open : Γ ⊢Open (X ⇒i Y) -> Γ ⊢Open X -> Γ ⊢Open Y
-  -- app-Open F U = bind-Open F λ f -> bind-Open U λ u -> pure-Open (appi f u)
-
-  atom : Γ ⊢Atom X -> Γ ⊢Open X
-  atom u = pure-Open u
-
-
-  data _⊢Sheaf_ : ∀ Γ -> Γ ⊢Space -> 𝒰₀
-
+    X : Γ ⊢Local U
+    Y : Γ ⊢Local V
+    Z : Γ ⊢Local W
 
 
   data _⊢Var_ : ∀ Γ -> Γ ⊢Sort k -> 𝒰₀
   data _⊢_ : ∀ Γ -> Γ ⊢Sort k -> 𝒰₀
 
 
-
   private variable
-    u : Γ ⊢ X
-    v : Γ ⊢ Y
+    t : Γ ⊢ T
+    s : Γ ⊢ S
 
   data Ctx where
     [] : Ctx
@@ -191,69 +157,30 @@ module _ {P : Param} where
   data _⊢Sort_ where
 
     --------------------------------------------------------------
-    -- Spaces
-    -- One : Γ ⊢Space
-    -- ⨆ : (X : Γ ⊢Space) -> (Y : Γ ,[ X ]ₛ ⊢Space) -> Γ ⊢Space
-    -- ⨅ : (X : Γ ⊢Space) -> (Y : Γ ,[ X ]ₛ ⊢Space) -> Γ ⊢Space
+    -- Generic
+    ⨆ : (X : Γ ⊢Sort k) -> (Y : Γ ,[ X ] ⊢Sort k) -> Γ ⊢Sort k
+    ⨅ : (X : Γ ⊢Sort k) -> (Y : Γ ,[ X ] ⊢Sort k) -> Γ ⊢Sort k
 
-    -- _⊗_ : (AX : Γ ⊢TS) -> (Y : Γ ,[ AX ] ⊢Space) -> Γ ⊢Space
-    -- _[_]⇒_ : (AX : Γ ⊢Space) -> (A : Γ ⊢Type) -> (BY : Γ ,[ A over X ] ⊢Space) -> Γ ⊢Space
+    --------------------------------------------------------------
+    -- Local
 
-    _⇒i_ : (X Y : Γ ⊢Space) -> Γ ⊢Space
+    Base : BaseType -> Γ ⊢Local U
 
-    Free : (A : Γ ⊢Type) -> Γ ⊢Space
-
-    Sub : ∀ X -> (U : Γ ⊢Open X) -> Γ ⊢Space
-
-
-    -- Sub : (AX : Γ ⊢Space) -> (U : List ((List (Σ ⊢Atom X) :& isUniqueSorted)) :& (IB.isIndependentBase λ a b -> a ≰ b ×-𝒰 b ≰ a)) -> Γ ⊢Space
+    Loc : (U : ⟨ P ⟩) -> Γ ⊢Local U -> Γ ⊢Type
 
 
     --------------------------------------------------------------
     -- Types
-
-    Base : BaseType -> Γ ⊢Type
-    ⨆ : (A : Γ ⊢Type) -> (B : Γ ,[ A ] ⊢Type) -> Γ ⊢Type
-    ⨅ : (S : Γ ⊢Type) -> (B : Γ ,[ S ] ⊢Type) -> Γ ⊢Type
-
-    -- ⨇ : (X : Γ ⊢Space) -> (F : Γ ,[ X ] ⊢Type) -> Γ ⊢Type
-    Ap : (F : Γ ⊢Sheaf X) -> Γ ⊢ X -> Γ ⊢Type
-
-    _⇒_ : (A : Γ ⊢Type) -> (B : Γ ⊢Type) -> Γ ⊢Type
-
-    One : Γ ⊢Type
-    -- Forget : (Y : Γ ⊢Space) -> (Γ ⊢Atom (Y ⇒i X)) -> Γ ⊢Type X
-
-    -- Ap : Γ ⊢Sheaf X -> Γ ⊢Open X -> Γ ⊢Type
-
-    -- Sh : Γ ⊢Space -> Γ ⊢Type
-
-    Type : Γ ⊢Type
-
-    Spc : Γ ⊢Type
+    _⊗_ : (A B : Γ ⊢Type) -> Γ ⊢Type
 
 
     --------------------------------------------------------------
     -- Spaces 2
 
-    spc : (A : Γ ⊢ Spc) -> Γ ⊢Space
 
 
-  infixr 40 _⇒_
+  -- infixr 40 _⇒_
   infixr 50 _⊗_
-
-  data _⊢Sheaf_ where
-    _＠_ : (A : Γ ⊢Type) -> (U : Γ ⊢ X) -> Γ ⊢Sheaf X
-    -- Inh : Γ ⊢Open X -> Γ ⊢Type
-    -- Yo : Γ ⊢ X -> Γ ⊢ X -> Γ ⊢Type
-    _⊗_ : (F G : Γ ⊢Sheaf X) -> Γ ⊢Sheaf X
-
-    Po : (Γ ⊢ (X ⇒i Y)) -> Γ ⊢Sheaf X -> Γ ⊢Sheaf Y
-    _⇒i_ : (F G : Γ ⊢Sheaf X) -> Γ ⊢Sheaf X
-
-  private variable
-    F : Γ ⊢Sheaf X
-    G : Γ ⊢Sheaf Y
 
 
 
@@ -262,57 +189,25 @@ module _ {P : Param} where
     suc : Γ ⊢Var S -> Γ ,[ T ] ⊢Var wk-Sort S
 
 
-  data _⊢Atom_ where
-    val : Γ ⊢ A -> Γ ⊢Atom Free A
-    var : Γ ⊢Var X -> Γ ⊢Atom X
-    sub : Γ ⊢Atom (Sub X U) -> Γ ⊢Atom X
-
-  data _⊢_≼_ : ∀ Γ {X : Γ ⊢Space} -> (u v : Γ ⊢ X) -> 𝒰₀
-
 
   data _⊢_ where
-    ---------------------------------------------
-    -- Opens
-    gen : Γ ⊢Open X -> Γ ⊢ X
 
     ---------------------------------------------
     -- Terms
     var : Γ ⊢Var S -> Γ ⊢ S
 
-    b0 : Γ ⊢ Base BB
-    b1 : Γ ⊢ Base BB
-    n0 : Γ ⊢ Base NN
+    b0 : Γ ⊢ Base {U = U} BB
+    b1 : Γ ⊢ Base {U = U} BB
+    n0 : Γ ⊢ Base {U = U} NN
 
-    -- ap : Γ ⊢Partial F ＠ U -> Γ ⊢ Ap F U
-    -- sh : Γ ⊢Sheaf X -> Γ ⊢ Sh X
 
     lam : Γ ,[ S ] ⊢ B -> Γ ⊢ ⨅ S B
-    lami : Γ ,[ A ] ⊢ wk-Sort B -> Γ ⊢ A ⇒ B
     app : Γ ⊢ ⨅ T S -> (t : Γ ⊢ T) -> Γ ⊢ su-Sort t S
 
     -- inh : U ≰ ⊥ -> Γ ⊢ Inh U
 
-    rest : (F : Γ ⊢Sheaf X) -> {u v : Γ ⊢ X} -> (ϕ : Γ ⊢ u ≼ v) -> Γ ⊢ Ap F v -> Γ ⊢ Ap F u
-
-    -- glue : (F : Γ ,[ X ] ⊢Type) -> (u v : Γ ⊢ X) -> Γ ⊢ su-Sort u F -> Γ ⊢ su-Sort v F
-    -- full : Γ ,[ Sub X ⊤ ]ₛ ⊢ special-su-top (sub (var zero)) A -> Γ ,[ X ]ₛ ⊢ A
-
-    -- glue : (F : Γ ⊢ ⨅ₛ X A) -> (U V : Γ ⊢Open X) -> (Γ ⊢ App F U) -> Γ ⊢ App F V 
-
-    preimg : Γ ⊢ (X ⇒i Y) -> Γ ⊢ Y -> Γ ⊢ X
-    img : Γ ⊢ (X ⇒i Y) -> Γ ⊢ X -> Γ ⊢ Y
-
-    loc : (Γ ⊢ u ≼ v -> Γ ⊢ A) -> Γ ⊢ Ap (A ＠ u) v
-    po : ∀{F : Γ ⊢Sheaf X} {f : Γ ⊢ (X ⇒i Y)} -> Γ ⊢ Ap F (preimg f u) -> Γ ⊢ Ap (Po f F) u
-    po⁻¹ : ∀{F : Γ ⊢Sheaf X} {f : Γ ⊢ (X ⇒i Y)} -> Γ ⊢ Ap (Po f F) (img f u) -> Γ ⊢ Ap F u
-    lams : ∀{F G : Γ ⊢Sheaf X} -> Γ ,[ Ap F u ] ⊢ wk-Sort (Ap G u) -> Γ ⊢ Ap (F ⇒i G) u
 
 
-    type : Γ ⊢Type -> Γ ⊢ Type
-
-
-  data _⊢_≼_ where
-    gen : ∀{u v : Γ ⊢Open X} (ϕ : u ≤ v) -> Γ ⊢ gen u ≼ gen v
 
 
 
@@ -340,18 +235,11 @@ module _ {P : Param} where
   wk-Ctx₊ (E ,[ x ]) = wk-Ctx₊ E ,[ wk-Sort,ind E x ]
 
 
-  wk-Sort,ind E (X ⇒i Y) = {!!}
-  wk-Sort,ind E (Free A) = Free (wk-Sort,ind E A)
-  wk-Sort,ind E (Sub X U) = Sub (wk-Sort,ind E X) {!!}
-  wk-Sort,ind E (spc A) = spc {!!}
   wk-Sort,ind E (Base x) = Base x
   wk-Sort,ind E (⨆ A B) = {!!}
   wk-Sort,ind E (⨅ S B) = ⨅ (wk-Sort,ind E S) (wk-Sort,ind (E ,[ S ]) B)
-  wk-Sort,ind E (A ⇒ B) = wk-Sort,ind E A ⇒ wk-Sort,ind E B
-  wk-Sort,ind E One = One
-  wk-Sort,ind E Type = Type
-  wk-Sort,ind E Spc = Spc
-  wk-Sort,ind E (Ap F U) = {!!}
+  wk-Sort,ind E _ = {!!}
+
 
   -- wk-Comm,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Comm ) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Comm 
   -- wk-Comm,ind E (⟮ U ↝ V ⨾ ϕ ⟯[ A ] Z) = ⟮ U ↝ V ⨾ ϕ ⟯[ wk-Sort,ind E A ] wk-Comm,ind (E ,[ Fill _ _ ]) Z
@@ -398,18 +286,10 @@ module _ {P : Param} where
   su-Ctx₊ t [] = []
   su-Ctx₊ t (E ,[ x ]) = su-Ctx₊ t E ,[ su-Sort,ind t _ x ]
 
-  su-Sort,ind t E (X ⇒i Y) = {!!}
-  su-Sort,ind t E (Free A) = Free (su-Sort,ind t E A)
-  su-Sort,ind t E (Sub X U) = {!!}
-  su-Sort,ind t E (spc A) = {!!}
   su-Sort,ind t E (Base x) = Base x
   su-Sort,ind t E (⨆ A B) = {!!}
   su-Sort,ind t E (⨅ S B) = ⨅ (su-Sort,ind t E S) (su-Sort,ind t (E ,[ S ]) B)
-  su-Sort,ind t E (A ⇒ B) = su-Sort,ind t E A ⇒ su-Sort,ind t E B
-  su-Sort,ind t E One = One
-  su-Sort,ind t E Type = Type
-  su-Sort,ind t E Spc = Spc
-  su-Sort,ind t E (Ap F U) = {!!}
+  su-Sort,ind t E _ = {!!}
 
 
   su-Sort t T = su-Sort,ind t [] T
@@ -438,101 +318,15 @@ module _ {P : Param} where
 
 
 
-  -- _⊢Partial_＠_ : ∀ Γ {X} -> (F : Γ ⊢Sheaf X) -> (U : Γ ⊢Open X) -> 𝒰₀
-  -- Γ ⊢Partial F ⊗ G ＠ U = (Γ ⊢Partial F ＠ U) × (Γ ⊢Partial G ＠ U)
-  -- Γ ⊢Partial A ＠ V ＠ U = Restr (Const (Γ ⊢ A)) V U
-
-  -- data _⊢Partial_＠_ : ∀ Γ {X} -> (F : Γ ⊢Sheaf X) -> (U : Γ ⊢Open X) -> 𝒰₀
-
-  -- data _⊢_≡_Partial : ∀ Γ {X} {U} -> {F : Γ ⊢Sheaf X} -> (t s : Γ ⊢Partial F ＠ U) -> 𝒰₀
-
-  -- {-# NO_POSITIVITY_CHECK #-}
-  -- data _⊢Partial_＠_ where
-  --   loc : Restr (Const (Γ ⊢ A)) U V -> Γ ⊢Partial (A ＠ U) ＠ V
-  --   _,_ : Γ ⊢Partial F ＠ U -> Γ ⊢Partial G ＠ U -> Γ ⊢Partial (F ⊗ G) ＠ U
-
-  --   _⇂_ : Γ ⊢Partial F ＠ U -> V ≤ U -> Γ ⊢Partial F ＠ V
-
-  --   glueP : {F : Γ ⊢Sheaf X} (t : Γ ⊢Partial F ＠ U) -> (s : Γ ⊢Partial F ＠ V) -> Γ ⊢ (t ⇂ π₀-∧) ≡ (s ⇂ π₁-∧) Partial
-  --           -> Γ ⊢Partial F ＠ (U ∨ V)
-
-  --   tm : Γ ⊢ Ap F U -> Γ ⊢Partial F ＠ U
-
-  -- ev-Sheaf : Γ ⊢Partial F ＠ U -> ⟨ sheaf Γ F ⟩ U
-  -- ev-Sheaf (loc x) = x
-  -- ev-Sheaf (t , u) = ev-Sheaf t , ev-Sheaf u
-  -- ev-Sheaf (t , u) = ev-Sheaf t , ev-Sheaf u
-
-  -- re-Sheaf : ⟨ sheaf Γ F ⟩ U -> Γ ⊢Partial F ＠ U
-  -- re-Sheaf {F = F ⊗ G} (t , u) = re-Sheaf t , re-Sheaf u
-  -- re-Sheaf {F = A ＠ U} t = loc t
-
-  -- _⇂ᵉᵛ_ : Γ ⊢Partial F ＠ U -> V ≤ U -> Γ ⊢Partial F ＠ V
-  -- _⇂ᵉᵛ_ {Γ = Γ} {F = F} t ϕ = re-Sheaf (_↷_ {{_}} {{of sheaf Γ F}} ϕ (ev-Sheaf t))
-
-  -- special-su-top : Γ ,[ X ]ₛ ⊢Atom wkₛ-Space Y ->  Γ ,[ Y ]ₛ ⊢Type -> Γ ,[ X ]ₛ ⊢Type
-  -- special-su-top t Y = {!!} -- su-Sort t (wk-Sort,ind ([] ,[ _ ]) T)
-
-
-
-  instance
-    hasStrictOrder:Term : hasStrictOrder (Γ ⊢ A)
-    hasStrictOrder:Term = {!!}
-
-
-
-  -- su-Atom-Space : Γ ⊢ A -> Γ ⊢Atom X -> Γ ,[ A over X ] ⊢Space -> Γ ⊢Space
-  -- su-Atom-Space = {!!}
-
-    -- -- app : Σ ⊢Atom X ⇒ BY -> (a : Γ ⊢ A) -> (x : Σ ⊢Atom X) -> Σ ⊢Atom su-Atom-Space a x BY
-    -- appi : Γ ⊢Atom (X ⇒i Y) -> (x : Γ ⊢Atom X) -> Γ ⊢Atom Y
-
-    -- compi : (f : Γ ⊢Atom (X ⇒i Y)) -> (g : Γ ⊢Atom (Y ⇒i Z)) -> Γ ⊢Atom (X ⇒i Z)
-    -- lami : Γ ,[ A over X ] ⊢Atom BY -> Γ ⊢Atom (AX [ A ]⇒ BY)
-
-    -- liftfree : Γ ⊢ A ⇒ wk-Sort B -> Σ ⊢Atom (Free A ⇒i Free B)
-
-    -- free : Γ ,[ A over Free A ] ⊢ Forget AX -> Γ ,[ A over Free A ] ⊢Atom X
-
-
-  -- Σ ⊢Open' X = 𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ ((Σ ⊢Atom X) since hasStrictOrder:Atom))
-
-
-  -- su-Space : Γ ⊢ A -> ⟨ Σ ⊢Open AX ⟩ -> Γ ,[ A ] ,[ AX ] ⊢Space -> Γ ⊢Space
-  -- su-Space t s One = {!!}
-  -- su-Space t s (BY ⊗ BY₁) = {!!}
-  -- su-Space t s (AX ⇒ BY) = {!!}
-  -- su-Space t s (AX ⇒i BY) = {!!}
-  -- su-Space t s (Free A) = {!!}
-  -- su-Space t s (Sub BY U) = Sub ({!!}) {!!}
-
-
-
-  -- We have an assignment of locations in a space to a type
-  -- data _⊢_⨞_ : (Γ : Ctx) -> (X : Γ ⊢Space) -> Γ ⊢Type X -> 𝒰₂ where
-
-  --   -- _,dep_ : (Γ ⊢ A ＠ AX) -> Γ ,[ A ] ,[ AX ] ⊢ B ＠ BY -> Γ ⊢ (A ⊗ B) ＠ (AX ⊗ BY)
-
-  --   _,_ : (Γ ⊢ X ⨞ A) -> (Γ ,[ X under A ] ⊢ Y ⨞ B) -> Γ ⊢ (X under A ⊗ Y) ⨞ ((X under A) ⊗ B)
-
-  --   loc : Γ ⊢Open X -> Γ ⊢ X ⨞ A
-
-
-  -- We can interpret a sheaf as a sheaf
-
-
-  -- pu-Sheaf : (Γ ⊢Atom (⨅ X Y)) -> Γ ⊢Sheaf X -> Γ ,[ X ]ₛ ⊢Sheaf Y
-  -- pu-Sheaf f (F ⊗ G) = pu-Sheaf f F ⊗ pu-Sheaf f G
-  -- pu-Sheaf f (A ＠ U) = {!!} ＠ {!!}
-
   module Examples where
 
-    uu : Γ ⊢Open Free (Base BB)
-    uu = ⦗ val b0 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
+    -- uu : Γ ⊢Open Free (Base BB)
+    -- uu = ⦗ val b0 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
 
-    vv : Γ ⊢Open Free (Base BB)
-    vv = ⦗ val b1 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
+    -- vv : Γ ⊢Open Free (Base BB)
+    -- vv = ⦗ val b1 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
 
+{-
 
     -- T0 : [] ⊢ ⨅ (Free (Base BB)) Type
     -- T0 = lam (type (Inh (u ∧ atom (var zero)) ⇒ Base NN))
@@ -1136,4 +930,5 @@ module _ {P : Param} where
   -}
 
 
+  -}
   -}
