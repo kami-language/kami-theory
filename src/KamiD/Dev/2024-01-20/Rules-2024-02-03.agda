@@ -14,7 +14,7 @@ open import Data.Nat hiding (_! ; _+_ ; _≤_ ; _≰_)
 open import Relation.Nullary.Decidable.Core
 
 open import KamiD.Dev.2024-01-20.Core hiding (_＠_)
-open import KamiD.Dev.2024-01-20.UniqueSortedList
+open import KamiD.Dev.2024-01-20.UniqueSortedList hiding (img)
 open import KamiD.Dev.2024-01-20.Space
 open import KamiD.Dev.2024-01-20.Sheaf
 open import KamiD.Dev.2024-01-20.Open
@@ -55,6 +55,10 @@ TypeSyntax : ∀ Γ -> 𝒰 _
 TypeSyntax Γ = Γ ⊢Sort type
 
 syntax TypeSyntax Γ = Γ ⊢Type
+
+private variable
+  A : Γ ⊢Type
+  B : Γ ⊢Type
 
 
 SpaceSyntax : ∀ Γ -> 𝒰 _
@@ -101,17 +105,18 @@ atom : Γ ⊢Atom X -> Γ ⊢Open X
 atom u = pure-Open u
 
 
+data _⊢Sheaf_ : ∀ Γ -> Γ ⊢Space -> 𝒰₀
 
--- data _⊢Type : ∀ (Γ : Ctx) -> 𝒰₀
-
-private variable
-  A : Γ ⊢Type
-  B : Γ ⊢Type
 
 
 data _⊢Var_ : ∀ Γ -> Γ ⊢Sort k -> 𝒰₀
 data _⊢_ : ∀ Γ -> Γ ⊢Sort k -> 𝒰₀
 
+
+
+private variable
+  u : Γ ⊢ X
+  v : Γ ⊢ Y
 
 data Ctx where
   [] : Ctx
@@ -200,8 +205,8 @@ data _⊢Sort_ where
   ⨆ : (A : Γ ⊢Type) -> (B : Γ ,[ A ] ⊢Type) -> Γ ⊢Type
   ⨅ : (S : Γ ⊢Type) -> (B : Γ ,[ S ] ⊢Type) -> Γ ⊢Type
 
-  ⨇ : (X : Γ ⊢Space) -> (F : Γ ,[ X ] ⊢Type) -> Γ ⊢Type
-  -- Ap : ∀{F} -> ⨇ X F -> Γ ⊢Open X -> Γ ⊢Type
+  -- ⨇ : (X : Γ ⊢Space) -> (F : Γ ,[ X ] ⊢Type) -> Γ ⊢Type
+  Ap : (F : Γ ⊢Sheaf X) -> Γ ⊢ X -> Γ ⊢Type
 
   _⇒_ : (A : Γ ⊢Type) -> (B : Γ ⊢Type) -> Γ ⊢Type
 
@@ -216,10 +221,6 @@ data _⊢Sort_ where
 
   Spc : Γ ⊢Type
 
-  -- _＠_ : (A : Γ ⊢Type) -> (U : Γ ⊢Open X) -> Γ ⊢Type
-  -- Inh : Γ ⊢Open X -> Γ ⊢Type
-  Yo : Γ ⊢ X -> Γ ⊢ X -> Γ ⊢Type
-  _⊗_ : (F G : Γ ⊢Type) -> Γ ⊢Type
 
   --------------------------------------------------------------
   -- Spaces 2
@@ -229,6 +230,19 @@ data _⊢Sort_ where
 
 infixr 40 _⇒_
 infixr 50 _⊗_
+
+data _⊢Sheaf_ where
+  _＠_ : (A : Γ ⊢Type) -> (U : Γ ⊢ X) -> Γ ⊢Sheaf X
+  -- Inh : Γ ⊢Open X -> Γ ⊢Type
+  -- Yo : Γ ⊢ X -> Γ ⊢ X -> Γ ⊢Type
+  _⊗_ : (F G : Γ ⊢Sheaf X) -> Γ ⊢Sheaf X
+
+  Po : (Γ ⊢ (X ⇒i Y)) -> Γ ⊢Sheaf X -> Γ ⊢Sheaf Y
+  _⇒i_ : (F G : Γ ⊢Sheaf X) -> Γ ⊢Sheaf X
+
+private variable
+  F : Γ ⊢Sheaf X
+  G : Γ ⊢Sheaf Y
 
 
 
@@ -267,12 +281,20 @@ data _⊢_ where
 
   -- inh : U ≰ ⊥ -> Γ ⊢ Inh U
 
-  rest : (F : Γ ,[ X ] ⊢Type) -> {u v : Γ ⊢ X} -> (ϕ : Γ ⊢ u ≼ v) -> Γ ⊢ su-Sort v F -> Γ ⊢ su-Sort u F
-  -- glue : (F : Γ ,[ X ] ⊢Type) -> (u v : Γ ⊢ X) -> Γ ⊢ su-Sort u F -> Γ ⊢ su-Sort v F
+  rest : (F : Γ ⊢Sheaf X) -> {u v : Γ ⊢ X} -> (ϕ : Γ ⊢ u ≼ v) -> Γ ⊢ Ap F v -> Γ ⊢ Ap F u
 
+  -- glue : (F : Γ ,[ X ] ⊢Type) -> (u v : Γ ⊢ X) -> Γ ⊢ su-Sort u F -> Γ ⊢ su-Sort v F
   -- full : Γ ,[ Sub X ⊤ ]ₛ ⊢ special-su-top (sub (var zero)) A -> Γ ,[ X ]ₛ ⊢ A
 
   -- glue : (F : Γ ⊢ ⨅ₛ X A) -> (U V : Γ ⊢Open X) -> (Γ ⊢ App F U) -> Γ ⊢ App F V 
+
+  preimg : Γ ⊢ (X ⇒i Y) -> Γ ⊢ Y -> Γ ⊢ X
+  img : Γ ⊢ (X ⇒i Y) -> Γ ⊢ X -> Γ ⊢ Y
+
+  loc : (Γ ⊢ u ≼ v -> Γ ⊢ A) -> Γ ⊢ Ap (A ＠ u) v
+  po : ∀{F : Γ ⊢Sheaf X} {f : Γ ⊢ (X ⇒i Y)} -> Γ ⊢ Ap F (preimg f u) -> Γ ⊢ Ap (Po f F) u
+  po⁻¹ : ∀{F : Γ ⊢Sheaf X} {f : Γ ⊢ (X ⇒i Y)} -> Γ ⊢ Ap (Po f F) (img f u) -> Γ ⊢ Ap F u
+  lams : ∀{F G : Γ ⊢Sheaf X} -> Γ ,[ Ap F u ] ⊢ wk-Sort (Ap G u) -> Γ ⊢ Ap (F ⇒i G) u
 
 
   type : Γ ⊢Type -> Γ ⊢ Type
@@ -318,8 +340,7 @@ wk-Sort,ind E (A ⇒ B) = wk-Sort,ind E A ⇒ wk-Sort,ind E B
 wk-Sort,ind E One = One
 wk-Sort,ind E Type = Type
 wk-Sort,ind E Spc = Spc
-wk-Sort,ind E (F ⊗ G) = {!!}
-wk-Sort,ind E (Yo u v) = {!!}
+wk-Sort,ind E (Ap F U) = {!!}
 
 -- wk-Comm,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Comm ) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Comm 
 -- wk-Comm,ind E (⟮ U ↝ V ⨾ ϕ ⟯[ A ] Z) = ⟮ U ↝ V ⨾ ϕ ⟯[ wk-Sort,ind E A ] wk-Comm,ind (E ,[ Fill _ _ ]) Z
@@ -377,8 +398,7 @@ su-Sort,ind t E (A ⇒ B) = su-Sort,ind t E A ⇒ su-Sort,ind t E B
 su-Sort,ind t E One = One
 su-Sort,ind t E Type = Type
 su-Sort,ind t E Spc = Spc
-su-Sort,ind t E (F ⊗ G) = {!!}
-su-Sort,ind t E (Yo u v) = {!!}
+su-Sort,ind t E (Ap F U) = {!!}
 
 
 su-Sort t T = su-Sort,ind t [] T
@@ -496,24 +516,30 @@ instance
 
 module Examples where
 
-  u : Γ ⊢Open Free (Base BB)
-  u = ⦗ val b0 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
+  uu : Γ ⊢Open Free (Base BB)
+  uu = ⦗ val b0 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
 
-  v : Γ ⊢Open Free (Base BB)
-  v = ⦗ val b1 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
+  vv : Γ ⊢Open Free (Base BB)
+  vv = ⦗ val b1 ⦘ ∷ [] since (IB.[] IB.∷ IB.[])
 
 
   -- T0 : [] ⊢ ⨅ (Free (Base BB)) Type
   -- T0 = lam (type (Inh (u ∧ atom (var zero)) ⇒ Base NN))
 
-  T1 : [] ,[ Free (Base BB) ] ⊢Type
-  T1 = Yo (gen u) (var zero) ⇒ Base NN
+  T0 : [] ⊢Sheaf (Free (Base BB))
+  T0 = Base NN ＠ gen uu
 
-  t0 : [] ⊢ su-Sort (gen (u ∨ v)) T1
-  t0 = {!!}
+  -- T1 : [] ,[ Free (Base BB) ] ⊢Type
+  -- T1 = Yo (gen u) (var zero) ⇒ Base NN
 
-  t1 : [] ⊢ su-Sort (gen u) T1
-  t1 = rest T1 {gen u} {gen (u ∨ v)} (gen ι₀-∨) t0
+  t0 : [] ⊢ Ap T0 (gen (uu ∨ vv))
+  t0 = loc λ a -> n0
+
+  t1 : [] ⊢ Ap T0 (gen uu)
+  t1 = rest T0 (gen ι₀-∨) t0
+
+  t2 : [] ⊢ Ap ((Base NN ＠ gen uu) ⇒i ((Base NN ＠ gen uu) ⊗ (Base NN ＠ gen vv))) (gen (uu ∨ vv))
+  t2 = {!!}
 
   -- T0 : [] ⊢Sheaf (Free (Base BB))
   -- T0 = (Base NN ＠ u) ⊗ (Base BB ＠ v)
