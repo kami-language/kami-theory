@@ -47,40 +47,46 @@ module _ {𝑖 : Level} {A : Set 𝑖} where
   ∉[] {a} ()
 
   data _⊆_ : List A → List A → Set 𝑖  where
-    empty : ∀ {bs} → [] ⊆ bs 
-    both : ∀ {a as bs} → as ⊆ bs → (a ∷ as) ⊆ (a ∷ bs)
-    grow : ∀ {a as bs} → as ⊆ bs → as ⊆ (a ∷ bs)
+    stop : [] ⊆ []
+    drop : ∀ {a as bs} → as ⊆ bs → as ⊆ (a ∷ bs)
+    keep : ∀ {a as bs} → as ⊆ bs → (a ∷ as) ⊆ (a ∷ bs)
+
+  []⊆ : ∀ {bs} → [] ⊆ bs
+  []⊆ {[]} = stop
+  []⊆ {x ∷ bs} = drop ([]⊆)
     
   refl⊆ : ∀ {as : List A} → as ⊆ as
-  refl⊆ {[]} = empty
-  refl⊆ {x ∷ as} = both refl⊆
+  refl⊆ {[]} = stop
+  refl⊆ {x ∷ as} = keep refl⊆
   
   trans⊆ : ∀ {as bs cs : List A} → as ⊆ bs → bs ⊆ cs → as ⊆ cs
-  trans⊆ empty _ = empty
-  trans⊆ (both x) x₁ = {!x₁!} --both (trans⊆ x x₁) (⊆∈ x₂ x₁)
-  trans⊆ (grow x) x₁ = {!!}
+  trans⊆ stop _ = []⊆
+  trans⊆ (keep x) x₁ = {!x₁!} --keep (trans⊆ x x₁) (⊆∈ x₂ x₁)
+  trans⊆ (drop x) x₁ = {!!}
   
   ⊈[] : ∀ {as : List A} → ¬ (as ≡ []) → ¬ (as ⊆ [])
   ⊈[] {[]} as≢[] x = refl ↯ as≢[]
   ⊈[] {x₁ ∷ as} as≢[] ()
   
   ∷⊆ : ∀ {a : A} {as bs : List A} → (a ∷ as) ⊆ bs → as ⊆ bs
-  ∷⊆ (both p) = {!!}
-  ∷⊆ (grow p) = {!!}
+  ∷⊆ (keep p) = drop p
+  ∷⊆ (drop p) = drop (∷⊆ p)
   
+  ⊆∈ : ∀ {a : A} {as bs : List A} → a ∈ as → as ⊆ bs → a ∈ bs
+  ⊆∈ here (drop x₁) = there (⊆∈ here x₁)
+  ⊆∈ (there x) (drop x₁) = there (⊆∈ x (∷⊆ x₁))
+  ⊆∈ here (keep x₁) = here
+  ⊆∈ (there x) (keep x₁) = there (⊆∈ x x₁)
+
   
 {-
 
   
   
   ⊆∷ : ∀ {a : A} {as bs : List A} → as ⊆ bs → as ⊆ (a ∷ bs)
-  ⊆∷ empty = empty
-  ⊆∷ (both x x₁) = both (⊆∷ x) (there x₁)
+  ⊆∷ stop = stop
+  ⊆∷ (keep x x₁) = keep (⊆∷ x) (there x₁)
 
-
-  ⊆∈ : ∀ {a : A} {as bs : List A} → a ∈ as → as ⊆ bs → a ∈ bs
-  ⊆∈ here (both x₁ x₂) = x₂
-  ⊆∈ (there x) (both x₁ x₂) = ⊆∈ x x₁
 
 -}
 --------------------------------------------------
@@ -101,10 +107,10 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   [-]⊆ a  = {!!}
   
   ∷∷⊆ : ∀ {{_ : hasDecidableEquality A}} {a : A} {as bs : List A} {p : UniqueSorted as} → (a ∷ as) ⊆ (a ∷ bs) → as ⊆ bs
-  ∷∷⊆ (both empty here) = empty
-  ∷∷⊆ (both (both x here) here) = {!!}
-  ∷∷⊆ (both (both x (there x₁)) here) = {!!}
-  ∷∷⊆ (both x (there x₁)) = {!!}
+  ∷∷⊆ (keep stop here) = stop
+  ∷∷⊆ (keep (keep x here) here) = {!!}
+  ∷∷⊆ (keep (keep x (there x₁)) here) = {!!}
+  ∷∷⊆ (keep x (there x₁)) = {!!}
 -}
 
   ∷∷⊆ : ∀ {{_ : hasDecidableEquality A}} {a : A} {as bs : List A} {p : isUniqueSorted as} → (a ∷ as) ⊆ (a ∷ bs) → as ⊆ bs
@@ -120,14 +126,14 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
 
   _⊆?_ : {{_ : hasDecidableEquality A}} → (as bs : List A) → Dec (as ⊆ bs)
-  [] ⊆? bs = yes empty
+  [] ⊆? bs = yes []⊆
   (a ∷ as) ⊆? [] = no {!!}
   (a ∷ as) ⊆? bs = {!!}
 
 {-with a ∈? bs | as ⊆? bs
-  ... | yes a∈bs | yes all = yes (both all a∈bs)
-  ... | yes a∈bs | no as⊈bs = no λ {(both x x₁) → x ↯ as⊈bs}
-  ... | no a∉bs | _ = no λ {(both x x₁) → x₁ ↯ a∉bs}
+  ... | yes a∈bs | yes all = yes (keep all a∈bs)
+  ... | yes a∈bs | no as⊈bs = no λ {(keep x x₁) → x ↯ as⊈bs}
+  ... | no a∉bs | _ = no λ {(keep x x₁) → x₁ ↯ a∉bs}
  -}
 --------------------------------------------------
 -- insertion
@@ -207,9 +213,9 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ... | inj₂ y = inj₂ (there y)
 
   insert⊆ : ∀ {a : A} {as bs : List A} → as ⊆ bs → as ⊆ insert a bs
-  insert⊆ empty = empty
-  insert⊆ (both x) = {!!}
-  insert⊆ (grow x) = {!!}
+  insert⊆ stop = []⊆
+  insert⊆ (keep x) = {!!}
+  insert⊆ (drop x) = {!!}
 
 --------------------------------------------------
 -- onions
@@ -253,23 +259,23 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   
   ι₀-∪ : ∀ {as bs : List A} → as ⊆ (as ∪ bs)
-  ι₀-∪ {[]} = empty
+  ι₀-∪ {[]} = []⊆
   ι₀-∪ {a ∷ as} {[]} = {!!}
-  ι₀-∪ {a ∷ as} {b ∷ bs} = {!!} --both (ι₀-∪ {as} {insert a (b ∷ bs)}) (∪-∈ₗ a as (insert a (b ∷ bs)) (insertInserts a (b ∷ bs))) 
+  ι₀-∪ {a ∷ as} {b ∷ bs} = {!!} --keep (ι₀-∪ {as} {insert a (b ∷ bs)}) (∪-∈ₗ a as (insert a (b ∷ bs)) (insertInserts a (b ∷ bs))) 
 
   
   ι₁-∪ : ∀ {as bs : List A} → bs ⊆ (as ∪ bs)
   ι₁-∪ {[]} = refl⊆
-  ι₁-∪ {a ∷ as} {[]} = empty
-  ι₁-∪ {a ∷ as} {b ∷ bs} = {!!} -- both (trans⊆ (insert⊆ (grow refl⊆)) (ι₁-∪ {as = (as)} {bs = insert a (b ∷ bs) })) ((∪-∈ₗ b as (insert a (b ∷ bs)) (insertKeeps here)))
+  ι₁-∪ {a ∷ as} {[]} = []⊆
+  ι₁-∪ {a ∷ as} {b ∷ bs} = {!!} -- keep (trans⊆ (insert⊆ (drop refl⊆)) (ι₁-∪ {as = (as)} {bs = insert a (b ∷ bs) })) ((∪-∈ₗ b as (insert a (b ∷ bs)) (insertKeeps here)))
 
   [_,_]-∪ : ∀ {as bs cs : List A} → as ⊆ cs -> bs ⊆ cs -> (as ∪ bs) ⊆ cs
   [_,_]-∪ = {!!}
 
 {-
-  [_,_]-∪ {.[]} {bs} empty y = y
-  [_,_]-∪ {.(_ ∷ _)} {.[]} (both x x₁) empty = both x x₁
-  [_,_]-∪ {a ∷ as} {b ∷ bs} (both x x₁) (both y x₂) = [ x , insert∈⊆ x₁ (both y x₂) ]-∪
+  [_,_]-∪ {.[]} {bs} stop y = y
+  [_,_]-∪ {.(_ ∷ _)} {.[]} (keep x x₁) stop = keep x x₁
+  [_,_]-∪ {a ∷ as} {b ∷ bs} (keep x x₁) (keep y x₂) = [ x , insert∈⊆ x₁ (keep y x₂) ]-∪
 -}
 
 --------------------------------------------------
@@ -341,7 +347,7 @@ module _ {A : StrictOrder 𝑖} where
     hasFiniteJoins:𝒫ᶠⁱⁿ : hasFiniteJoins (𝒫ᶠⁱⁿ A)
     hasFiniteJoins:𝒫ᶠⁱⁿ = record
                            { ⊥ = [] since []
-                           ; initial-⊥ = incl empty
+                           ; initial-⊥ = incl []⊆
                            ; _∨_ = _∨-𝒫ᶠⁱⁿ_
                            ; ι₀-∨ = incl ι₀-∪
                            ; ι₁-∨ = λ {as} → incl (ι₁-∪ {as = ⟨ as ⟩} )
@@ -387,9 +393,9 @@ module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
   ∈img f (there x) = there (∈img f x)
 
   map-img : ∀ {f : StrictOrderHom A B} {U V : List ⟨ A ⟩} -> U ⊆ V → img ⟨ f ⟩ U ⊆ img ⟨ f ⟩ V
-  map-img empty = empty
-  map-img (both x) = both (map-img x)
-  map-img (grow x) = grow (map-img x)
+  map-img stop = stop
+  map-img (keep x) = keep (map-img x)
+  map-img (drop x) = drop (map-img x)
 
   map-Img-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
   map-Img-𝒫ᶠⁱⁿ {f} (incl a) = incl (map-img {f} a)

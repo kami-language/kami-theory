@@ -4,152 +4,204 @@ module KamiD.Dev.2024-01-20.Baby where
 
 open import KamiD.Dev.2024-01-20.UniqueSortedList
 
+open import Agda.Builtin.Bool using (Bool; true; false)
 open import Agda.Builtin.Nat using (Nat; zero; suc)
 open import Agda.Builtin.List using (List; []; _∷_)
-open import Agda.Builtin.Sigma using (Σ; _,_; fst)
+open import Agda.Builtin.Sigma using (Σ; _,_; fst; snd)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
 open import Agda.Builtin.Equality using (_≡_; refl)
-open import Data.Vec.Base using (Vec; _∷_; tabulate; lookup) renaming ([] to ⟦⟧; [_] to ⟦_⟧)
+open import Relation.Binary.PropositionalEquality using (cong; subst)
 open import Data.List.Base using (map; _++_)
+open import Function.Base using (_∘_)
+open import Relation.Nullary using (¬_)
+open import Level
 
-open import Data.Fin using (Fin) renaming (zero to 𝟘 ; suc to 𝕤)
+open import Data.Fin using (Fin; cast) renaming (zero to 𝟘 ; suc to 𝕤)
 open import KamiD.Dev.2024-01-20.Basics
 open import KamiD.Dev.2024-01-20.StrictOrder.Base
 
 
 module _ where
-  Roles : ∀ {n : Nat} → Set
-  Roles {n} = Σ (List (Fin n)) isUniqueSorted
+
+  _×_ : ∀ {a b} (A : Set a) (B : Set b) → Set (a ⊔ b)
+  A × B = Σ A (λ _ → B)
+
+  Roles : Set
+  Roles = Σ (List Nat) isUniqueSorted
 
   data LType : Set where
     tt : LType
     ℕ : LType
 
-  data Type (n : Nat) (R : Roles {n}) : Set where
-    ◂ : Vec LType (length (fst R)) → Type n R -- green slime?
-    _⇒_ : Type n R → Type n R → Type n R
+  infixr 5 _∷_
+
+  data RVec {ℓ} (A : Set ℓ) : (R : List Nat) → Set ℓ where
+    ⟦⟧  : RVec A []
+    _∷_ : ∀ {r R} (x : A) (xs : RVec A R) → RVec A (r ∷ R)
+
+  ⟦_⟧ : ∀ {ℓ} {r : Nat} {A : Set ℓ} (a : A) → RVec A [ r ]
+  ⟦ a ⟧ = a ∷ ⟦⟧
+
+  Elem : ∀ (R : List Nat) → Set
+  Elem R = Σ Nat (_∈ R)
 
 
-  ∅ : {n : Nat} → Type n ([] , [])
-  ∅ {n} = ◂ {n} ⟦⟧
+  data Type (R : Roles) : Set where
+    ◂ : RVec LType (fst R) → Type R
+    _⇒_ : Type R → Type R → Type R
 
-  -- discard entries in R′ ∖ R
-  πVec : ∀ {n} (R R′ : List (Fin n)) → R ⊆ R′ → Vec LType (length R′) → Vec LType (length R)
-  πVec [] R′ _ _ = ⟦⟧
-  πVec (r ∷ R) (r′ ∷ R′) p (x ∷ xs) with r ≟ r′
-  ... | yes refl = x ∷ (πVec R R′ (∷∷⊆ p) xs) 
-  πVec (r ∷ R) (.r ∷ R′) (both p) (x ∷ xs) | no ¬p = refl ↯ ¬p
-  πVec (r ∷ R) (r′ ∷ R′) (grow p) (x ∷ xs) | no ¬p = πVec (r ∷ R) R′ p xs
+  ∅ : Type ([] , [])
+  ∅ = ◂ ⟦⟧
 
-  π : ∀ {n} {R′ : Roles {n}} (R : Roles {n}) → fst R ⊆ fst R′ → Type n R′ → Type n R
-  π ([] , []) _ _ = ∅
-  π {R′ = (R′ , pR′)} (R , snd) x (◂ v) = ◂ (πVec R R′ x v)
-  π R x (x₁ ⇒ x₃) = (π R x x₁) ⇒ π R x x₃
+  
+  Context : (R : Roles) → Set
+  Context R = List (Type R)
+
   
 
-  Context : ∀ {n} → (R : Roles {n}) → Set
-  Context {n} R = List (Type n R)
+  data Choose : (R : List Nat) → Set where
+    done : Choose []
+    choose : ∀ {r R} → Bool -> Choose R -> Choose (r ∷ R)
 
-  π⋆ : ∀ {n} {R′ : Roles {n}} (R : Roles {n}) → fst R ⊆ fst R′ → Context {n} R′ → Context {n} R
-  π⋆ R p C = map (π R p) C
-
-  -- t-th entry of (gsync v f) is the (f t)-th entry of v
-  gsync : ∀ {n} {A : Set} → Vec A n → (f : Fin n → Fin n) → Vec A n
-  gsync v f = tabulate λ r → lookup v (f r)
-
-  mutual
-
-    data SyncContext : Set₁ where
-      [] : SyncContext
-      _∷_ : ∀ {n R} {Γ : Context {n} R} → {T : Type n R} → Γ ⊩ T → SyncContext → SyncContext
-
-    _⋆_ :  SyncContext → SyncContext → SyncContext
-    [] ⋆ C2 = C2
-    (x ∷ C1) ⋆ C2 = C1 ⋆ (x ∷ C2)
-      
-    -- global terms
-    infix 3 _⊩_
-    _⊩_ : ∀ {n} {R : Roles {n}} → (Γ : Context R) → Type n R → Set₁
-    Γ ⊩ T = Γ , [] ⊢ T 
-
-
-    infix 3 _,_⊢_
-    data _,_⊢_ {n} {R : Roles {n}} : (Γ : Context R) → (Δ : SyncContext) → Type n R → Set₁ where
-
-      var : ∀ {T : Type n R} {Γ : Context R} {Δ : SyncContext}
-            → T ∈ Γ
-              ------------
-            → Γ , Δ ⊢ T
-
-      sync : ∀ {lT : Vec LType (length (fst R))} {Γ : Context R} {Δ : SyncContext}
-            → ◂ lT ∈ Γ → (f : Fin (length (fst R)) → Fin (length (fst R)))
-              ------------
-            → Γ , Δ ⊢ ◂ (gsync lT f)
-            
-      abs : ∀ {T T′ : Type n R} {Γ : Context R} {Δ : SyncContext}
-          → T ∷ Γ , Δ ⊢ T′
-            -----------------
-          → Γ , Δ ⊢ T ⇒ T′
+  -- i-th entry of (subset v f) is tt if (f i) and the i-th entry of v otherwise
+  subsetc : ∀ {R} → RVec LType R → (m : Choose R) → RVec LType R
+  subsetc ⟦⟧ done = ⟦⟧
+  subsetc (x ∷ x₂) (choose false m) = tt ∷ (subsetc x₂ m)
+  subsetc (x ∷ x₂) (choose true m) = x ∷ (subsetc x₂ m)
   
-      app : ∀ {T T′ : Type n R} {Γ : Context R} {Δ Δ′ : SyncContext}
-          → Γ , Δ ⊢ T ⇒ T′ → Γ , Δ′ ⊢ T
-            ---------------------------------
-          → Γ , (Δ ⋆ Δ′) ⊢ T′
+  -- i-th entry of (merge v w f) is the i-th entry of v if (f i) and the i-th entry of w otherwise
+  mergec : ∀ {R} → RVec LType R → RVec LType R → (m : Choose R) → RVec LType R
+  mergec ⟦⟧ ⟦⟧ done = ⟦⟧
+  mergec (x ∷ xs) (y ∷ ys) (choose false m) = y ∷ (mergec xs ys m)
+  mergec (x ∷ xs) (y ∷ ys) (choose true m) = x ∷ (mergec xs ys m)
+  
+  data Communicate : (R : List Nat) → Set where
+    from_to_ : ∀ {R} → Elem R → Elem R → Communicate R
 
-      comm : ∀ {Δ R′} {Γ′ : Context R′} {C : Type n R′} {Γ : Context R}
-             → (p : Γ′ ⊩ C) → (R⊆R′ : fst R ⊆ fst R′)
-               -----------------
-             → Γ ++ π⋆ R R⊆R′ Γ′ , p ∷ Δ ⊢ (π R R⊆R′ C)
+  lookup : ∀ {R : List Nat} → RVec LType R → Elem R → LType
+  lookup (x ∷ xs) (_ , here) = x
+  lookup (x ∷ xs) (r , there snd) = lookup xs (r , snd)
+  
+  tabulate : ∀ {A : Set} {R : List Nat} → (Elem R → A) → RVec A R
+  tabulate {R = []}  f = ⟦⟧
+  tabulate {R = r ∷ _} f = f (r , here) ∷ tabulate (λ (s , p) → f (s , there p))
+  
+  updateAt : ∀ {A : Set} {R : List Nat} → RVec A R → Elem R → (A → A) → RVec A R
+  updateAt (x ∷ xs) (_ , here) f = f x ∷ xs
+  updateAt {R = r ∷ _} (x ∷ xs) (s , there i) f = x ∷ updateAt xs (s , i) f
+
+  -- t-th entry of (csync v f) is the (f t)-th entry of v
+  csync : ∀ {R} → RVec LType R → Communicate R → RVec LType R
+  csync v (from r to s) = updateAt v r λ _ → lookup v s
+
+  repeat : LType → (R : List Nat) → RVec LType R
+  repeat T R = tabulate λ _ → T
+  
+  single :  ∀ {R : List Nat} → Elem R → LType → RVec LType R
+  single {R} r T = updateAt (repeat tt R) r (λ _ → T)
+  
+  
+  infix 3 _,_⊢_
+  data _,_⊢_ {R : Roles} : (Γ : Context R) → (Δ : List (LType × (Nat × Nat))) → Type R → Set₁ where
+
+    tt : ∀ {Γ Δ}
+           ------------
+          → Γ , Δ ⊢ ◂ (repeat tt (fst R))
+
+    var : ∀ {Γ Δ A}
+          → A ∈ Γ
+            ------------
+          → Γ , Δ ⊢ A
+
+    -- we may ignore the state at some roles
+    pvar : ∀ {Γ Δ a}
+          → Γ , Δ ⊢ ◂ a → (m : Choose (fst R))
+          ------------
+          → Γ , Δ ⊢ ◂ (subsetc a m) -- green slime
+
+    -- we may merge state at roles
+    mrg : ∀ {Γ Δ a b}
+          → Γ , Δ ⊢ ◂ a →  Γ , Δ ⊢ ◂ b → (m : Choose (fst R))
+            ------------
+          → Γ , Δ ⊢ ◂ (mergec a b m) -- green slime
+
+    -- we may communicate state between roles
+    sync : ∀ {Γ Δ a}
+          → Γ , Δ ⊢ ◂ a → (c : Communicate (fst R))
+            ------------
+          → Γ , Δ ⊢ ◂ (csync a c) -- green slime
+
+    abs : ∀ {Γ Δ A B}
+        → A ∷ Γ , Δ ⊢ B
+          -----------------
+        → Γ , Δ ⊢ A ⇒ B
+
+    app : ∀ {Γ Δ Δ′ A B}
+        → Γ , Δ ⊢ A ⇒ B → Γ , Δ′ ⊢ A -- what?
+          ---------------------------------
+        → Γ , (Δ ++ Δ′) ⊢ B -- green slime
+
+    recv : ∀ {s Δ} {Γ : Context R}
+        → (r : Elem (fst R)) → ¬ (s ∈ (fst R)) → (T : LType)
+           -----------------------------------------
+        → Γ , (T , (fst r , s)) ∷ Δ ⊢ ◂ (single r T)
+
+    send : ∀ {s Δ} {Γ : Context R}
+        → (r : Elem (fst R)) → ¬ (s ∈ (fst R)) → (T : LType)
+           -----------------------------------------
+        → Γ , (T , (s , fst r)) ∷ Δ ⊢ ◂ (repeat tt (fst R))
 
 
+-- maybe make "global" from partial terms
+{-
 
+  roles0and1 : Roles
+  roles0and1 = ( 0 ∷ [ 1 ] , z<n ∷ [-])
 
-  roles0and1 : Roles {3}
-  roles0and1 = ( 𝟘 ∷ [ 𝕤 𝟘 ] , z<n ∷ [-])
+  role2 : Roles
+  role2 = ([ 1 ] , [-])
 
-  role2 : Roles {3}
-  role2 = ([ 𝕤 𝟘 ] , [-])
-
-  ⟦1n⟧ : Type 3 roles0and1
+  ⟦1n⟧ : Type roles0and1
   ⟦1n⟧ = ◂ (ℕ ∷ ⟦ tt ⟧)
   
-  ⟦n1⟧ : Type 3 roles0and1
+  ⟦n1⟧ : Type roles0and1
   ⟦n1⟧ = ◂ (tt ∷ ⟦ ℕ ⟧)
   
-  ⟦nn⟧ : Type 3 roles0and1
+  ⟦nn⟧ : Type roles0and1
   ⟦nn⟧ = ◂ (ℕ ∷ ⟦ ℕ ⟧)
-
-  syncn : Type 3 roles0and1
+  
+  -- role 𝟙 sends an ℕ to role 𝟘, "global" version
+  syncn : Type roles0and1
   syncn = ⟦1n⟧ ⇒ ⟦nn⟧
 
   syncnt : [] , [] ⊢ syncn
-  syncnt = abs (sync here (λ { 𝟘 → 𝟘 ; (𝕤 𝟘) → 𝟘})) 
-  
-  recvn : Type 3 role2
-  recvn = ◂ ⟦ tt ⟧ ⇒ ◂ ⟦ ℕ ⟧
-  
-  t : Type 3 role2
-  t = ◂ ⟦ tt ⟧
-  
-  n : Type 3 role2
-  n = ◂ ⟦ ℕ ⟧
-  
-  recvnt : [] , syncnt ∷ [] ⊢ (t ⇒ n)
-  recvnt =  (comm syncnt (grow refl⊆))
-
-
- -- role 𝟙 sends an ℕ to role 𝟘, "global" version
-  f : Fin 2 → Fin 2
-  f = (λ { 𝟘 → 𝟘 ; (𝕤 𝟘) → 𝟘})
+  syncnt = abs (sync (var here) (from (1 , there here) to (0 , here))) -- ?λ { 𝟘 → 𝟘 ; (𝕤 𝟘) → 𝟘})
 
   -- role 𝟘 sends a ℕ to role 𝟙, "global" version
-  rf : Fin 2 → Fin 2
-  rf = (λ { 𝟘 → 𝕤 𝟘 ; (𝕤 𝟘) → 𝕤 𝟘})
- 
+  recvn : Type role2
+  recvn = ◂ ⟦ tt ⟧ ⇒ ◂ ⟦ ℕ ⟧
+  
+  t : Type role2
+  t = ◂ ⟦ tt ⟧
+  
+  n : Type role2
+  n = ◂ ⟦ ℕ ⟧
+  -}
+  {-
+  recvnt : [] , syncnt ∷ [] ⊢ (t ⇒ n)
+  recvnt =  (comm syncnt (drop refl⊆))
+
   -- role 1 applies its function to the ℕ received from role 1 and sends the result back, global version
-  gctx : List (Type 3 roles0and1)
-  gctx = ⟦n1⟧ ∷ [ ⟦nn⟧ ⇒ ⟦1n⟧ ] -- role 0 has an ℕ, role 1 has a map from ℕ -> ℕ
+  gctx : List (Type roles0and1)
+  gctx = ⟦n1⟧ ∷ [ ⟦1n⟧ ⇒ ⟦1n⟧ ] -- role 0 has an ℕ, role 1 has a map from ℕ -> ℕ
 
   globappf : gctx , [] ⊢ ⟦nn⟧
-  globappf = app {Δ = []} (abs (sync here f)) -- send result from 1 to 0
+  globappf = app {Δ = []} (abs (sync (var here) (from (1 , there here) to (0 , here)))) -- send result from 1 to 0
              (app {Δ = []} (var (there here)) -- apply f
-             (app {Δ = []} (abs (sync here rf)) (var here))) -- send input ℕ from 0 to 1
+             (pvar (app {Δ = []} (abs (sync (var here) (from (0 , here) to (1 , there here)))) (var here)) (choose true (choose false done)))) -- send input ℕ from 0 to 1
+
+  -- if we have both roles, we can merge their state
+  merget : [] , [] ⊢ ⟦1n⟧ ⇒ (⟦n1⟧ ⇒ ⟦nn⟧)
+  merget = abs (abs (mrg (var here) (var (there here)) (choose false (choose true done))))
+
+-}
