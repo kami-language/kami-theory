@@ -100,29 +100,15 @@ module _ {P : Param} where
     D : Γ ⊢Com V
 
 
-  data _⊢ModBase_ : ∀ (Γ : Ctx) -> Kind -> 𝒰₀ where
-    -- type : (W : ⟨ P ⟩) -> Γ ⊢Mod type -- W tells us for which locations this type is implemented
-    -- local : (U W : ⟨ P ⟩) -> Γ ⊢Mod local -- W as above, U tells us at which location this value is located
-    -- com : (R : ⟨ P ⟩) -> (A : Γ ⊢Type) -> (W : ⟨ P ⟩) -> Γ ⊢Mod (com R) -- W as above, A tells us the result type of the communication, R the "root"-location of the protocol
-
-    type : Γ ⊢ModBase type -- W tells us for which locations this type is implemented
-    local : (U : ⟨ P ⟩) -> Γ ⊢ModBase local -- W as above, U tells us at which location this value is located
-    com : (R : ⟨ P ⟩) -> (A : Γ ⊢Type) -> Γ ⊢ModBase (com R) -- W as above, A tells us the result type of the communication, R the "root"-location of the protocol
-
-  _⊢Mod_ : ∀ (Γ : Ctx) -> Kind -> 𝒰₀
-  _⊢Mod_ Γ k = Γ ⊢ModBase k ×-𝒰 ⟨ P ⟩
-
-    -- type : (W : ⟨ P ⟩) -> Γ ⊢Mod type -- W tells us for which locations this type is implemented
-    -- local : (U W : ⟨ P ⟩) -> Γ ⊢Mod local -- W as above, U tells us at which location this value is located
-    -- com : (R : ⟨ P ⟩) -> (A : Γ ⊢Type) -> (W : ⟨ P ⟩) -> Γ ⊢Mod (com R) -- W as above, A tells us the result type of the communication, R the "root"-location of the protocol
+  data _⊢Mod_ : ∀ (Γ : Ctx) -> Kind -> 𝒰₀ where
+    type : Γ ⊢Mod type
+    local : (U : ⟨ P ⟩) -> Γ ⊢Mod local -- U tells us at which location this value is located
+    com : (R : ⟨ P ⟩) -> (A : Γ ⊢Type) -> Γ ⊢Mod (com R) -- A tells us the result type of the communication, R the "root"-location of the protocol
 
 
   private variable
     m : Γ ⊢Mod k
     n : Γ ⊢Mod l
-
-    b : Γ ⊢ModBase k
-    c : Γ ⊢ModBase l
 
   record _⊢Entry_ (Γ : Ctx) (k : Kind) : 𝒰₀ where
     inductive ; eta-equality
@@ -146,16 +132,16 @@ module _ {P : Param} where
 
 
   data _⊢Var_ : ∀ Γ -> Γ ⊢Entry k -> 𝒰₀
-  data _⊢_ : ∀ Γ -> Γ ⊢Entry k -> 𝒰₀
+  data _∣_⊢_ : ∀ (W : ⟨ P ⟩) -> ∀ Γ -> Γ ⊢Entry k -> 𝒰₀
 
   private variable
-    t : Γ ⊢ E
-    s : Γ ⊢ F
+    t : W ∣ Γ ⊢ E
+    s : W ∣ Γ ⊢ F
 
 
 
   --------------------------------------------------------------
-  -- Context setup
+  -- Context extensions
 
   data _⊢Ctx₊ : Ctx -> 𝒰₂
 
@@ -165,30 +151,10 @@ module _ {P : Param} where
     [] : Γ ⊢Ctx₊
     _,[_] : (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E) ⊢Entry k -> Γ ⊢Ctx₊
 
-  -- _⋆-Ctx₊₂_ : (Δ : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ Δ) ⊢Ctx₊ -> Γ ⊢Ctx₊
-
-  -- assoc-⋆-Ctx₊ : ∀{Δ E} -> Γ ⋆-Ctx₊ (Δ ⋆-Ctx₊₂ E) ≣ Γ ⋆-Ctx₊ Δ ⋆-Ctx₊ E
-
-  -- Δ ⋆-Ctx₊₂ [] = Δ
-  -- Δ ⋆-Ctx₊₂ (E ,[ x ]) = (Δ ⋆-Ctx₊₂ E) ,[ transp-≣ (cong-≣ _⇂_⊢Type (sym-≣ assoc-⋆-Ctx₊)) x ]
 
   Γ ⋆-Ctx₊ [] = Γ
   Γ ⋆-Ctx₊ (E ,[ x ]) = (Γ ⋆-Ctx₊ E) ,[ x ]
 
-  -- instance
-  --   hasNotation-⋆:Ctx₊ : hasNotation-⋆ (Ctx) (_⊢Ctx₊) (λ _ _ -> Ctx)
-  --   hasNotation-⋆:Ctx₊ = record { _⋆_ = λ Γ E -> Γ ⋆-Ctx₊ E }
-
-
-  {-
-
-  assoc-⋆-Ctx₊ {E = []} = refl-≣
-  assoc-⋆-Ctx₊ {Γ = Γ} {Δ = Δ} {E = E ,[ x ]} =
-    let p = sym-≣ (assoc-⋆-Ctx₊ {Γ = Γ} {Δ = Δ} {E = E})
-    in J1 p _⊢Type _,[_] x
-
-  {-# REWRITE assoc-⋆-Ctx₊ #-}
-  -}
 
 
 
@@ -200,16 +166,16 @@ module _ {P : Param} where
 
 
   wk-Sort : Γ ⊢Sort k -> Γ ,[ E ] ⊢Sort k
-  su-Sort : (t : Γ ⊢ E) -> Γ ,[ E ] ⊢Sort k -> Γ ⊢Sort k
+  su-Sort : (t : W ∣ Γ ⊢ E) -> Γ ,[ E ] ⊢Sort k -> Γ ⊢Sort k
 
   wk-Entry : Γ ⊢Entry k -> Γ ,[ E ] ⊢Entry k
-  su-Entry : (t : Γ ⊢ E) -> Γ ,[ E ] ⊢Entry k -> Γ ⊢Entry k
+  su-Entry : (t : W ∣ Γ ⊢ E) -> Γ ,[ E ] ⊢Entry k -> Γ ⊢Entry k
 
-  wk-Term : Γ ⊢ E -> Γ ,[ F ] ⊢ wk-Entry E
+  wk-Term : W ∣ Γ ⊢ E -> W ∣ Γ ,[ F ] ⊢ wk-Entry E
 
   wk-Mod : Γ ⊢Mod k -> Γ ,[ E ] ⊢Mod k
 
-  special-su-top : Γ ,[ E ] ⊢ wk-Entry F ->  Γ ,[ F ] ⊢Sort k -> Γ ,[ E ] ⊢Sort k
+  special-su-top : W ∣ Γ ,[ E ] ⊢ wk-Entry F ->  Γ ,[ F ] ⊢Sort k -> Γ ,[ E ] ⊢Sort k
   special-su-top t T = {!!} -- su-Sort t (wk-Sort,ind ([] ,[ _ ]) T)
 
 
@@ -233,7 +199,7 @@ module _ {P : Param} where
 
     -- NOTE, only well "modalized" if W is the current global
     -- modality
-    Ext : Γ ⊢ Loc V L / type , W -> (ϕ : U ≤ V) -> Γ ⊢Type
+    Ext : W ∣ Γ ⊢ Loc V L / type -> (ϕ : U ≤ V) -> Γ ⊢Type
 
 
     --------------------------------------------------------------
@@ -247,7 +213,7 @@ module _ {P : Param} where
     -- A single communication of a protocol with R participants.
     -- We are sending local data from location U₀ to be accessible
     -- at location U₁
-    [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / type , W ] ⊢Com R) -> Γ ⊢Com R
+    [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / type ] ⊢Com R) -> Γ ⊢Com R
 
 
 
@@ -274,23 +240,23 @@ module _ {P : Param} where
   wk-Ctx₊ : (Δ : Γ ⊢Ctx₊) -> Γ ,[ E ] ⊢Ctx₊
 
 
-  wk-ModBase,ind : ∀ Δ -> (m : Γ ⋆-Ctx₊ Δ ⊢ModBase k) -> Γ ,[ E ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢ModBase k
+  wk-Mod,ind : ∀ Δ -> (m : Γ ⋆-Ctx₊ Δ ⊢Mod k) -> Γ ,[ E ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢Mod k
 
   wk-Sort,ind : ∀ Δ -> (S : Γ ⋆-Ctx₊ Δ ⊢Sort k) -> Γ ,[ E ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢Sort k
 
   wk-Entry,ind : ∀ Δ -> (E : Γ ⋆-Ctx₊ Δ ⊢Entry k) -> Γ ,[ F ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢Entry k
-  wk-Entry,ind Δ (S / m , W) = wk-Sort,ind Δ S / wk-ModBase,ind Δ m , W
+  wk-Entry,ind Δ (S / m) = wk-Sort,ind Δ S / wk-Mod,ind Δ m
 
-  wk-ModBase,ind Δ (type) = type
-  wk-ModBase,ind Δ (local U) = local U
-  wk-ModBase,ind Δ (com R A) = com R (wk-Sort,ind Δ A)
+  wk-Mod,ind Δ (type) = type
+  wk-Mod,ind Δ (local U) = local U
+  wk-Mod,ind Δ (com R A) = com R (wk-Sort,ind Δ A)
 
-
-  wk-Term,ind : ∀ Δ -> {AX : Γ ⋆-Ctx₊ Δ ⊢Entry k} -> Γ ⋆-Ctx₊ Δ ⊢ AX -> Γ ,[ E ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢ wk-Entry,ind Δ AX
-
- --  wk-Term,ind [] t
 
   -- wk-Var-ind : ∀ Δ -> {AX : Γ ⋆-Ctx₊ Δ ⊢Sort k} -> Γ ⋆-Ctx₊ Δ ⊢Var AX -> Γ ,[ S ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢Var wk-Sort,ind Δ AX
+
+  wk-Term,ind : ∀ Δ -> {AX : Γ ⋆-Ctx₊ Δ ⊢Entry k} -> W ∣ Γ ⋆-Ctx₊ Δ ⊢ AX -> W ∣ Γ ,[ E ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢ wk-Entry,ind Δ AX
+  wk-Term,ind = {!!}
+
 
   wk-Ctx₊ [] = []
   wk-Ctx₊ (Δ ,[ E ]) = wk-Ctx₊ Δ ,[ wk-Entry,ind Δ E ]
@@ -307,36 +273,10 @@ module _ {P : Param} where
   wk-Sort,ind Δ ([ L from U₀ to U₁ [ ϕ ⨾ ψ ]on W ]► x) = {!!}
 
   wk-Sort S = wk-Sort,ind [] S
-  wk-Mod (m , W) = wk-ModBase,ind [] m , W
+  wk-Mod (m) = wk-Mod,ind [] m
   wk-Entry m = wk-Entry,ind [] m
   wk-Term t = wk-Term,ind [] t
 
-
-  -- wk-Comm,ind : ∀ E -> (Z : Γ ⋆-Ctx₊ E ⊢Comm ) -> Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E ⊢Comm 
-  -- wk-Comm,ind E (⟮ U ↝ V ⨾ ϕ ⟯[ A ] Z) = ⟮ U ↝ V ⨾ ϕ ⟯[ wk-Sort,ind E A ] wk-Comm,ind (E ,[ Fill _ _ ]) Z
-  -- wk-Comm,ind E End = End
-  -- wk-Comm,ind E (El-Comm x) = El-Comm (wk-Term-ind E x)
-
-  -- wk-Sort : Γ ⊢Sort k -> Γ ,[ A ] ⊢Sort k
-  -- wk-Sort AX = wk-Sort,ind [] AX -- [ wk-⇛♮ id-⇛♮ ]-Type
-
-  -- wk-≤-Local,ind E (Base b {ϕ = ϕ}) = Base b {ϕ = ϕ}
-  -- wk-≤-Local,ind E (Fam ϕ m n) = Fam ϕ (wk-Term-ind E m) (wk-Term-ind E n)
-
-
-  -- wk-Term : {AX : Γ ⊢Sort k} -> Γ ⊢ AX -> Γ ,[ A ] ⊢ wk-Sort AX
-  -- wk-Term t = ? -- wk-Term-ind [] t
-
-
-  -- wk-⇛♮-ind : ∀{A} -> ∀ E -> (Γ ⋆-Ctx₊ E) ⇛♮ Δ -> (Γ ,[ A ] ⋆-Ctx₊ wk-Ctx₊ E) ⇛♮ Δ
-
-  -- weakening over a whole context
-  -- wks-Sort : (E : Γ ⊢Ctx₊) -> (A : Γ ⊢Sort k) -> Γ ⋆-Ctx₊ E ⊢Sort k
-  -- wks-Sort [] A = A
-  -- wks-Sort (E ,[ x ]) A = wk-Sort (wks-Sort E A)
-
-  -- β-wk-Sort,ind,empty : ∀{A : Γ ⊢Sort k} -> wk-Sort,ind [] A ≣ A
-  -- β-wk-Sort,ind,empty = ?
 
 
 
@@ -344,112 +284,56 @@ module _ {P : Param} where
   ------------------------------------------------------------------------
 
 
-  data _⊢_ where
+  data _∣_⊢_ where
 
     ---------------------------------------------
     -- Terms
-    var : Γ ⊢Var E -> Γ ⊢ E
+    var : Γ ⊢Var E -> W ∣ Γ ⊢ E
 
-    b0 : Γ ⊢ Base BB / local U , W
-    b1 : Γ ⊢ Base BB / local U , W
-    n0 : Γ ⊢ Base NN / local U , W
+    b0 : W ∣ Γ ⊢ Base BB / local U
+    b1 : W ∣ Γ ⊢ Base BB / local U
+    n0 : W ∣ Γ ⊢ Base NN / local U
 
     -- We only have to implement this term if our current location `U`
     -- Is part of the implemented locations `W`
-    loc : (U ≤ W -> Γ ⊢ L / local U , W) -> Γ ⊢ (L ＠ U) / type , W
+    loc : (U ≤ W -> W ∣ Γ ⊢ L / local U) -> W ∣ Γ ⊢ (L ＠ U) / type
 
     -- Given a value of type L at location U, we can make it into a local
     -- value of type L at location V, as long as V is a location which can access U
     -- (ie, is a superset).
-    [_]unloc : (ϕ : U ≤ V) -> Γ ⊢ (L ＠ U) / type , W -> Γ ⊢ L / local V , W
+    [_]unloc : (ϕ : U ≤ V) -> W ∣ Γ ⊢ (L ＠ U) / type -> W ∣ Γ ⊢ L / local V
 
 
 
-    fromext : {ϕ : V ≤ U} -> {val : Γ ⊢ L ＠ U / type , W} -> Γ ⊢ Ext val ϕ / type , W -> Γ ⊢ L ＠ V / type , W
+    fromext : {ϕ : V ≤ U} -> {val : W ∣ Γ ⊢ L ＠ U / type} -> W ∣ Γ ⊢ Ext val ϕ / type -> W ∣ Γ ⊢ L ＠ V / type
 
 
-    lam : Γ ,[ E ] ⊢ S / wk-Mod m  -> Γ ⊢ ⨅ E S / m
-    app : Γ ⊢ ⨅ (T / m) S / m -> (t : Γ ⊢ T / m) -> Γ ⊢ su-Sort t S / m
+    lam : W ∣ Γ ,[ E ] ⊢ S / wk-Mod m  -> W ∣ Γ ⊢ ⨅ E S / m
+    app : W ∣ Γ ⊢ ⨅ (T / m) S / n -> (t : W ∣ Γ ⊢ T / m) -> W ∣ Γ ⊢ su-Sort t S / n
 
 
-    π₁ : Γ ⊢ (T ⊗ S) / m -> Γ ⊢ T / m
-    π₂ : Γ ⊢ (T ⊗ S) / m -> Γ ⊢ S / m
-    _,_ : Γ ⊢ T / m -> Γ ⊢ S / m -> Γ ⊢ (T ⊗ S) / m
+    π₁ : W ∣ Γ ⊢ (T ⊗ S) / m -> W ∣ Γ ⊢ T / m
+    π₂ : W ∣ Γ ⊢ (T ⊗ S) / m -> W ∣ Γ ⊢ S / m
+    _,_ : W ∣ Γ ⊢ T / m -> W ∣ Γ ⊢ S / m -> W ∣ Γ ⊢ (T ⊗ S) / m
 
 
     -------------------
     -- protocols
-    _∋_ : (P : Γ ⊢Com R) -> Γ ⊢ P / com R A , W -> Γ ⊢ Com R A / type , W
+    _∋_ : (P : Γ ⊢Com R) -> W ∣ Γ ⊢ P / com R A -> W ∣ Γ ⊢ Com R A / type
 
     _►_ : {ϕ : R ≤ U₁} -> {ψ : U₁ ≤ U₀}
         -> ∀ {C}
-        -> (val : Γ ⊢ L ＠ U₀ / type , W)
-        -> Γ ,[ Ext val ψ / type , W ] ⊢ special-su-top (fromext (var zero) ) C / com R (wk-Sort A) , W
-        -> Γ ⊢ ([ L from U₀ to U₁ [ ϕ ⨾ ψ ]on W ]► C) / com R A , W
+        -> (val : W ∣ Γ ⊢ L ＠ U₀ / type)
+        -> W ∣ Γ ,[ Ext val ψ / type ] ⊢ special-su-top (fromext (var zero) ) C / com R (wk-Sort A)
+        -> W ∣ Γ ⊢ ([ L from U₀ to U₁ [ ϕ ⨾ ψ ]on W ]► C) / com R A
 
-    ret : Γ ⊢ A / type , W -> Γ ⊢ End / com R A , W
-
-
+    ret : W ∣ Γ ⊢ A / type -> W ∣ Γ ⊢ End / com R A
 
 
 
 
 
-    -- elim-BB : Γ ⊢ A -> Γ ⊢ A -> Γ ⊢ Base BB ⇒ wk-Sort A
 
-    -- lam : (t : Γ ,[ A over One ] ⊢ B) -> Γ ⊢ A ⇒ B
-    -- app : (f : Γ ⊢ A ⇒ B) -> (t : Γ ⊢ A) -> Γ ⊢ su-Sort t B
-
-    -- forget : List ((List (Γ ⊢Atom X) :& isUniqueSorted)) :& (IB.isIndependentBase λ a b -> a ≰ b ×-𝒰 b ≰ a) -> Γ ⊢ Forget X
-
-
-
-
-{-
-
-
-  ------------------------------------------------------------------------
-  -- Substitution
-
-  su-Ctx₊ : (Γ ⊢ T) -> Γ ,[ T ] ⊢Ctx₊ -> Γ ⊢Ctx₊
-
-  su-Sort,ind : (t : Γ ⊢ T) -> ∀ E -> (S : Γ ,[ T ] ⋆-Ctx₊ E ⊢Sort k) -> Γ ⋆-Ctx₊ su-Ctx₊ t E ⊢Sort k
-  -- su-≤-Local,ind : {Γ : Ctx}{A : Γ ⊢Sort k} -> ∀ E -> {AX : Γ ⋆-Ctx₊ E ⊢Local U} {BY : Γ ⋆-Ctx₊ E ⇂ V ⊢Local} -> .{ϕ : V ≤ U} -> _ ⇂ ϕ ⊢ AX ≤-Local BY -> _ ⇂ ϕ ⊢ su-Sort,ind {A = A} E AX ≤-Local su-Sort,ind E BY
-  -- su-Term-ind : ∀ E -> {AX : Γ ⋆-Ctx₊ E ⊢Sort k} -> Γ ⋆-Ctx₊ E ⊢ AX -> Γ ,[ A ] ⋆-Ctx₊ su-Ctx₊ E ⊢ su-Sort,ind E AX
-  -- su-Var-ind : ∀ E -> {AX : Γ ⋆-Ctx₊ E ⊢Sort k} -> Γ ⋆-Ctx₊ E ⊢Var AX -> Γ ,[ A ] ⋆-Ctx₊ su-Ctx₊ E ⊢Var su-Sort,ind E AX
-
-  su-Ctx₊ t [] = []
-  su-Ctx₊ t (E ,[ x ]) = su-Ctx₊ t E ,[ su-Sort,ind t _ x ]
-
-  su-Sort,ind t E (Base x) = Base x
-  su-Sort,ind t E (⨆ A B) = {!!}
-  su-Sort,ind t E (⨅ S B) = ⨅ (su-Sort,ind t E S) (su-Sort,ind t (E ,[ S ]) B)
-  su-Sort,ind t E _ = {!!}
-
-
-  su-Sort t T = su-Sort,ind t [] T
-
-
-  -- su-Ctx₊ : (E : Γ ,[ A ] ⊢Ctx₊) -> (t : Γ ⊢ A) -> Γ ⊢Ctx₊
-
-  -- su₂-Type,ind : ∀ E -> {A : Γ ⊢Sort k} -> (t : Γ ⋆-Ctx₊ E ⊢ wks-Sort E A) -> (Z : Γ ,[ A ] ⋆-Ctx₊ E ⊢Sort k) -> Γ ⋆-Ctx₊ su-Ctx₊ t E ⊢Sort k
-  -- su₂-Type,ind E t Y = ?
-
-
-  -- End Substitution
-  ------------------------------------------------------------------------
-
-  ------------------------------------------------------------------------
-  -- Equality
-
-  data _⊢_≡_ : ∀ Γ {A : Γ ⊢Type} -> (a b : Γ ⊢ A) -> 𝒰₀ where
-    -- β-rest-lam : ∀{F : Γ ,[ X ] ,[ A ] ⊢Type} {u v} (ϕ : Γ ⊢ u ≼ v) -> (t : Γ ,[ su-Sort v A ] ⊢ su-Sort,ind v _ F) -> Γ ⊢ rest (⨅ A F) ϕ (lam t) ≡ lam {!!}
-
-
-  -- End Equality
-  ------------------------------------------------------------------------
-
--}
 
   ----------------------------------------------------------
   -- Meta theorems
@@ -457,20 +341,26 @@ module _ {P : Param} where
   -- We can restrict terms to smaller locations (W)
   --
 
-  restrict-Var : W₀ ≤ W₁ ->  Γ ⊢Var A / b , W₁ -> Γ ⊢Var A / b , W₀
-  restrict-Var {Γ = _,[_] {k = k} Γ (S / m , Wx)} ϕ zero = {!zero!}
-  restrict-Var {Γ = _,[_] {k = k} Γ E} ϕ (suc v) = {!!}
+  restrict-Sort : W₀ ≤ W₁ -> Γ ⊢Sort k -> Γ ⊢Sort k
+  restrict-Sort ϕ S = {!!}
 
-  restrict : W₀ ≤ W₁ ->  Γ ⊢ A / type , W₁ -> Γ ⊢ A / type , W₀
-  restrict ϕ (var x) = {!var x!}
-  restrict ϕ (loc x) = {!!}
-  restrict ϕ (fromext t) = {!!}
-  restrict ϕ (lam t) = {!!}
-  restrict ϕ (app t t₁) = {!!}
+
+  restrict : W₀ ≤ W₁ -> W₁ ∣ Γ ⊢ T / m -> W₀ ∣ Γ ⊢ T / m
+  restrict ϕ (var x) = var x
+  restrict ϕ (loc x) = loc λ ψ -> restrict ϕ (x (ψ ⟡ ϕ))
+  restrict ϕ (fromext {val = val} t) = fromext {val = restrict ϕ val} {!!}
+  restrict ϕ (lam t) = lam (restrict ϕ t)
+  restrict ϕ (app {m = m} {n = n} t s) = let z = app (restrict ϕ t) (restrict ϕ s) in {!!}
   restrict ϕ (π₁ t) = {!!}
   restrict ϕ (π₂ t) = {!!}
   restrict ϕ (t , t₁) = {!!}
   restrict ϕ (P ∋ t) = {!!}
+  restrict ϕ b0 = {!!}
+  restrict ϕ b1 = {!!}
+  restrict ϕ n0 = {!!}
+  restrict ϕ ([ ϕ₁ ]unloc X) = {!!}
+  restrict ϕ (X ► X₁) = {!!}
+  restrict ϕ (ret X) = {!!}
 
 
 
@@ -490,16 +380,16 @@ module Examples where
   T0 : ∀{Γ : Ctx {PP}} -> Γ ⊢Type
   T0 = (Base NN ＠ uu) ⊗ (Base NN ＠ vv)
 
-  t1 : ε ⊢ ⨅ (T0 / type , all) (Base NN ＠ uu) / type , all
+  t1 : all ∣ ε ⊢ ⨅ (T0 / type) (Base NN ＠ uu) / type
   t1 = lam (π₁ (var zero))
 
-  t2 : ε ⊢ ⨅ ((Base NN ＠ uu) ⊗ (Base NN ＠ vv) / type , all) ((Base NN ⊗ Base NN) ＠ uu) / type , all
+  t2 : all ∣ ε ⊢ ⨅ ((Base NN ＠ uu) ⊗ (Base NN ＠ vv) / type) ((Base NN ⊗ Base NN) ＠ uu) / type
   t2 = lam (loc (λ _ -> [ reflexive ]unloc (π₁ (var zero)) , [ reflexive ]unloc (π₁ (var zero))))
 
   f : (uu ∧ vv) ≤ vv
   f = π₁-∧
 
-  t3 : ε ⊢ ⨅ (Base NN ＠ uu / type , all) (Com (uu ∧ vv) (Base NN ＠ vv)) / type , all
+  t3 : all ∣ ε ⊢ ⨅ (Base NN ＠ uu / type) (Com (uu ∧ vv) (Base NN ＠ vv)) / type
   t3 = {!!} -- lam (([ Base NN from uu to (uu ∧ vv) [ reflexive ⨾ π₀-∧ ]on all ]► End) ∋ (var zero ► ret (loc λ _ -> [ f ]unloc (fromext (var zero)))))
 
 
