@@ -55,7 +55,7 @@ module _ {P : Param} where
 
   -- setup of kinds for types and spaces
   data Kind : 𝒰₀ where
-    type : Kind
+    global : Kind
     local : Kind
     com : ⟨ P ⟩ -> Kind
 
@@ -70,15 +70,14 @@ module _ {P : Param} where
     T : Γ ⊢Sort l
 
 
+  GlobalSyntax : ∀ (Γ : Ctx) -> 𝒰 _
+  GlobalSyntax Γ = Γ ⊢Sort global
 
-  TypeSyntax : ∀ (Γ : Ctx) -> 𝒰 _
-  TypeSyntax Γ = Γ ⊢Sort type
-
-  syntax TypeSyntax Γ = Γ ⊢Type
+  syntax GlobalSyntax Γ = Γ ⊢Global
 
   private variable
-    A : Γ ⊢Type
-    B : Γ ⊢Type
+    A : Γ ⊢Global
+    B : Γ ⊢Global
 
   LocalSyntax : ∀ (Γ : Ctx) -> 𝒰 _
   LocalSyntax Γ = Γ ⊢Sort local
@@ -99,11 +98,21 @@ module _ {P : Param} where
     C : Γ ⊢Com U
     D : Γ ⊢Com V
 
+  data DepMod : Kind -> 𝒰₀ where
+    global : DepMod global
+    local : (U : ⟨ P ⟩) -> DepMod local
+
+  private variable
+    d : DepMod k
 
   data _⊢Mod_ : ∀ (Γ : Ctx) -> Kind -> 𝒰₀ where
-    type : Γ ⊢Mod type
-    local : (U : ⟨ P ⟩) -> Γ ⊢Mod local -- U tells us at which location this value is located
-    com : (R : ⟨ P ⟩) -> (A : Γ ⊢Type) -> Γ ⊢Mod (com R) -- A tells us the result type of the communication, R the "root"-location of the protocol
+    Dep : DepMod k -> Γ ⊢Mod k
+    -- type : Γ ⊢Mod type
+    -- local : (U : ⟨ P ⟩) -> Γ ⊢Mod local -- U tells us at which location this value is located
+    Com : (R : ⟨ P ⟩) -> (A : Γ ⊢Global) -> Γ ⊢Mod (com R) -- A tells us the result type of the communication, R the "root"-location of the protocol
+
+  pattern Local U = Dep (local U)
+  pattern Global = Dep global
 
 
   private variable
@@ -196,16 +205,16 @@ module _ {P : Param} where
 
     Base : BaseType -> Γ ⊢Local
 
-    _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Type
+    _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
 
     -- NOTE, only well "modalized" if W is the current global
     -- modality
-    Ext : W ∣ Γ ⊢ L ＠ V / type -> (ϕ : U ≤ V) -> Γ ⊢Type
+    Ext : W ∣ Γ ⊢ L ＠ V / Global -> (ϕ : U ≤ V) -> Γ ⊢Global
 
 
     --------------------------------------------------------------
     -- Types
-    Com : ⟨ P ⟩ -> Γ ⊢Type -> Γ ⊢Type
+    Com : ⟨ P ⟩ -> Γ ⊢Global -> Γ ⊢Global
 
     --------------------------------------------------------------
     -- Com
@@ -214,7 +223,7 @@ module _ {P : Param} where
     -- A single communication of a protocol with R participants.
     -- We are sending local data from location U₀ to be accessible
     -- at location U₁
-    [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / type ] ⊢Com R) -> Γ ⊢Com R
+    [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / Global ] ⊢Com R) -> Γ ⊢Com R
 
 
 
@@ -248,9 +257,9 @@ module _ {P : Param} where
   wk-Entry,ind : ∀ Δ -> (E : Γ ⋆-Ctx₊ Δ ⊢Entry k) -> Γ ,[ F ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢Entry k
   wk-Entry,ind Δ (S / m) = wk-Sort,ind Δ S / wk-Mod,ind Δ m
 
-  wk-Mod,ind Δ (type) = type
-  wk-Mod,ind Δ (local U) = local U
-  wk-Mod,ind Δ (com R A) = com R (wk-Sort,ind Δ A)
+  wk-Mod,ind Δ (Dep t) = Dep t
+  -- wk-Mod,ind Δ (local U) = local U
+  wk-Mod,ind Δ (Com R A) = Com R (wk-Sort,ind Δ A)
 
 
   -- wk-Var-ind : ∀ Δ -> {AX : Γ ⋆-Ctx₊ Δ ⊢Sort k} -> Γ ⋆-Ctx₊ Δ ⊢Var AX -> Γ ,[ S ] ⋆-Ctx₊ wk-Ctx₊ Δ ⊢Var wk-Sort,ind Δ AX
@@ -291,29 +300,29 @@ module _ {P : Param} where
     -- Terms
     var : Γ ⊢Var E -> W ∣ Γ ⊢ E
 
-    b0 : W ∣ Γ ⊢ Base BB / local U
-    b1 : W ∣ Γ ⊢ Base BB / local U
-    n0 : W ∣ Γ ⊢ Base NN / local U
+    b0 : W ∣ Γ ⊢ Base BB / Local U
+    b1 : W ∣ Γ ⊢ Base BB / Local U
+    n0 : W ∣ Γ ⊢ Base NN / Local U
 
     -- We only have to implement this term if our current location `U`
     -- Is part of the implemented locations `W`
-    loc : (W ∣ Γ ⊢ L / local U) -> W ∣ Γ ⊢ (L ＠ U) / type
+    loc : (W ∣ Γ ⊢ L / Local U) -> W ∣ Γ ⊢ (L ＠ U) / Global
 
-    -- loc : (Γ ⊢ L / local U) -> Γ ⊢ (L ＠ U) / type
+    -- loc : (Γ ⊢ L / Local U) -> Γ ⊢ (L ＠ U) / Global
 
     -- Given a value of type L at location U, we can make it into a local
     -- value of type L at location V, as long as V is a location which can access U
     -- (ie, is a superset).
-    [_]unloc : (ϕ : U ≤ V) -> W ∣ Γ ⊢ (L ＠ U) / type -> W ∣ Γ ⊢ L / local V
+    [_]unloc : (ϕ : U ≤ V) -> W ∣ Γ ⊢ (L ＠ U) / Global -> W ∣ Γ ⊢ L / Local V
 
 
 
 
-    fromext : {ϕ : V ≤ U} -> {val : W ∣ Γ ⊢ L ＠ U / type} -> W ∣ Γ ⊢ Ext val ϕ / type -> W ∣ Γ ⊢ L ＠ V / type
+    fromext : {ϕ : V ≤ U} -> {val : W ∣ Γ ⊢ L ＠ U / Global} -> W ∣ Γ ⊢ Ext val ϕ / Global -> W ∣ Γ ⊢ L ＠ V / Global
 
 
-    lam : W ∣ Γ ,[ E ] ⊢ S / wk-Mod m  -> W ∣ Γ ⊢ ⨅ E S / m
-    app : W ∣ Γ ⊢ ⨅ (T / m) S / n -> (t : W ∣ Γ ⊢ T / m) -> W ∣ Γ ⊢ su-Sort t S / n
+    lam : W ∣ Γ ,[ E ] ⊢ S / (Dep d)  -> W ∣ Γ ⊢ ⨅ E S / (Dep d)
+    app : W ∣ Γ ⊢ ⨅ (T / (Dep d)) S / n -> (t : W ∣ Γ ⊢ T / (Dep d)) -> W ∣ Γ ⊢ su-Sort t S / n
 
 
     π₁ : W ∣ Γ ⊢ (T ⊗ S) / m -> W ∣ Γ ⊢ T / m
@@ -323,15 +332,15 @@ module _ {P : Param} where
 
     -------------------
     -- protocols
-    _∋_ : (P : Γ ⊢Com R) -> W ∣ Γ ⊢ P / com R A -> W ∣ Γ ⊢ Com R A / type
+    _∋_ : (P : Γ ⊢Com R) -> W ∣ Γ ⊢ P / Com R A -> W ∣ Γ ⊢ Com R A / Global
 
     _►_ : {ϕ : R ≤ U₁} -> {ψ : U₁ ≤ U₀}
         -> ∀ {C}
-        -> (val : W ∣ Γ ⊢ L ＠ U₀ / type)
-        -> W ∣ Γ ,[ Ext val ψ / type ] ⊢ special-su-top (fromext (var zero) ) C / com R (wk-Sort A)
-        -> W ∣ Γ ⊢ ([ L from U₀ to U₁ [ ϕ ⨾ ψ ]on W ]► C) / com R A
+        -> (val : W ∣ Γ ⊢ L ＠ U₀ / Global)
+        -> W ∣ Γ ,[ Ext val ψ / Global ] ⊢ special-su-top (fromext (var zero) ) C / Com R (wk-Sort A)
+        -> W ∣ Γ ⊢ ([ L from U₀ to U₁ [ ϕ ⨾ ψ ]on W ]► C) / Com R A
 
-    ret : W ∣ Γ ⊢ A / type -> W ∣ Γ ⊢ End / com R A
+    ret : W ∣ Γ ⊢ A / Global -> W ∣ Γ ⊢ End / Com R A
 
 
   data _∣_⊢WFMod_ : ∀(W : ⟨ P ⟩) -> ∀ Γ -> Γ ⊢Mod k -> 𝒰₀
@@ -350,8 +359,7 @@ module _ {P : Param} where
     -- Generic
     -- ⨆ : (E : Γ ⊢Entry k) -> (Y : Γ ,[ E ] ⊢Sort k) -> Γ ⊢Sort k
 
-    ⨅ₜ : W ∣ Γ ⊢WFEntry E -> W ∣ Γ ,[ E ] ⊢WFSort T / type -> W ∣ Γ ⊢WFSort (⨅ E T) / type
-    ⨅ₗ : W ∣ Γ ⊢WFEntry E -> W ∣ Γ ,[ E ] ⊢WFSort T / local U -> W ∣ Γ ⊢WFSort (⨅ E T) / local U
+    ⨅ : W ∣ Γ ⊢WFEntry E -> W ∣ Γ ,[ E ] ⊢WFSort T / (Dep d) -> W ∣ Γ ⊢WFSort (⨅ E T) / (Dep d)
 
     -- (E : Γ ⊢Entry k) -> (Y : Γ ,[ E ] ⊢Sort k) -> Γ ⊢Sort k
     _⊗_ : W ∣ Γ ⊢WFSort S / m -> W ∣ Γ ⊢WFSort T / m -> W ∣ Γ ⊢WFSort (S ⊗ T) / m
@@ -361,17 +369,17 @@ module _ {P : Param} where
 
     Base : ∀{B} -> W ∣ Γ ⊢WFSort (Base B) / m
 
-    Loc : W ∣ Γ ⊢WFSort L / local U -> W ∣ Γ ⊢WFSort (L ＠ U) / type
+    Loc : W ∣ Γ ⊢WFSort L / Local U -> W ∣ Γ ⊢WFSort (L ＠ U) / Global
 
 
     -- NOTE, only well "modalized" if W is the current global
     -- modality
-    -- Ext : W ∣ Γ ⊢ Loc V L / type -> (ϕ : U ≤ V) -> Γ ⊢Type
+    -- Ext : W ∣ Γ ⊢ Loc V L / Global -> (ϕ : U ≤ V) -> Γ ⊢Global
 
 
     -- --------------------------------------------------------------
     -- -- Types
-    -- Com : ⟨ P ⟩ -> Γ ⊢Type -> Γ ⊢Type
+    -- Com : ⟨ P ⟩ -> Γ ⊢Global -> Γ ⊢Global
 
     -- --------------------------------------------------------------
     -- -- Com
@@ -380,14 +388,15 @@ module _ {P : Param} where
     -- -- A single communication of a protocol with R participants.
     -- -- We are sending local data from location U₀ to be accessible
     -- -- at location U₁
-    -- [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / type ] ⊢Com R) -> Γ ⊢Com R
+    -- [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / Global ] ⊢Com R) -> Γ ⊢Com R
 
 
 
   data _∣_⊢WFMod_ where
-    type : W ∣ Γ ⊢WFMod type
-    local : W ∣ Γ ⊢WFMod local U
-    com : W ∣ Γ ⊢WFSort (A / type) -> W ∣ Γ ⊢WFMod com R A
+    -- type : W ∣ Γ ⊢WFMod global
+    -- local : W ∣ Γ ⊢WFMod local U
+    Dep : ∀ (d : DepMod k) -> W ∣ Γ ⊢WFMod (Dep d)
+    Com : W ∣ Γ ⊢WFSort (A / Global) -> W ∣ Γ ⊢WFMod Com R A
 
 
   data _∣_⊢WFCtx : ⟨ P ⟩ -> ∀ (Γ : Ctx) -> 𝒰₀ where
@@ -402,23 +411,16 @@ module _ {P : Param} where
   -- We can restrict terms to smaller locations (W)
   --
 
-  -- _∣_⊢WFEntry_ : ⟨ P ⟩ -> ∀ (Γ : Ctx) -> Kind -> 𝒰₀
-  -- _∣_⊢WFEntry_ W Γ k = ∑ λ (E : Γ ⊢Entry k) -> W ∣ Γ ⊢WFSort E
-
-  -- restrict-Sort : W₀ ≤ W₁ -> Γ ⊢Sort k -> Γ ⊢Sort k
-  -- restrict-Sort ϕ S = {!!}
 
   restrict-Ctx : W₀ ≤ W₁ -> ∀ Γ -> W₁ ∣ Γ ⊢WFCtx -> Ctx
   restrict-Sort : (ϕ : W₀ ≤ W₁) -> (ΓP : W₁ ∣ Γ ⊢WFCtx) -> (S : Γ ⊢Sort k) -> (m : Γ ⊢Mod k) -> W₁ ∣ Γ ⊢WFSort (S / m) -> restrict-Ctx ϕ Γ ΓP ⊢Sort k
   restrict-Mod : (ϕ : W₀ ≤ W₁) -> (ΓP : W₁ ∣ Γ ⊢WFCtx ) -> (m : Γ ⊢Mod k) -> W₁ ∣ Γ ⊢WFMod m -> restrict-Ctx ϕ Γ ΓP ⊢Mod k
 
-  restrict-Entry : (ϕ : W₀ ≤ W₁) -> (ΓP : W₁ ∣ Γ ⊢WFCtx) -> W₁ ∣ Γ ⊢WFEntry (S / m) -> restrict-Ctx ϕ Γ ΓP ⊢Entry k
-  restrict-Entry = {!!}
+  -- restrict-Entry : (ϕ : W₀ ≤ W₁) -> (ΓP : W₁ ∣ Γ ⊢WFCtx) -> W₁ ∣ Γ ⊢WFEntry (S / m) -> restrict-Ctx ϕ Γ ΓP ⊢Entry k
+  -- restrict-Entry = {!!}
 
-  restrict-Mod ϕ ΓP .type type = type
-  restrict-Mod ϕ ΓP (local U) local = local U
-  restrict-Mod ϕ ΓP (com R A) (com Ap) = com R (restrict-Sort ϕ ΓP A type Ap)
-
+  restrict-Mod ϕ ΓP (Dep d) (Dep d) = Dep d
+  restrict-Mod ϕ ΓP (Com R A) (Com Ap) = Com R (restrict-Sort ϕ ΓP A Global Ap)
 
 
   restrict-Ctx ϕ [] P = []
@@ -426,11 +428,10 @@ module _ {P : Param} where
 
 
   restrict-Sort ϕ ΓP (⨆ E S) m P = {!!}
-  restrict-Sort ϕ ΓP (⨅ (S / m) T) .type (⨅ₜ (SP / mP) TP) = ⨅ (restrict-Sort ϕ ΓP S m SP / restrict-Mod ϕ ΓP m mP) (restrict-Sort ϕ (ΓP ,[ SP / mP ]) T type TP)
-  restrict-Sort ϕ ΓP (⨅ (S / m) T) .(local _) (⨅ₗ (SP / mP) TP) = {!!} -- ⨅ (restrict-Sort ϕ ΓP S m {!!} / m) {!!}
+  restrict-Sort ϕ ΓP (⨅ (S / m) T) (Dep d') (⨅ (SP / mP) TP) = ⨅ (restrict-Sort ϕ ΓP S m SP / restrict-Mod ϕ ΓP m mP) (restrict-Sort ϕ (ΓP ,[ SP / mP ]) T (Dep d') TP)
   restrict-Sort ϕ ΓP (S ⊗ T) m (SP ⊗ TP) = restrict-Sort ϕ ΓP S m SP ⊗ restrict-Sort ϕ ΓP T m TP
   restrict-Sort ϕ ΓP (Base x) m Base = Base x
-  restrict-Sort ϕ ΓP (L ＠ U) m (Loc P) = restrict-Sort ϕ ΓP L (local U) P ＠ U
+  restrict-Sort ϕ ΓP (L ＠ U) m (Loc P) = restrict-Sort ϕ ΓP L (Local U) P ＠ U
   restrict-Sort ϕ ΓP (Ext x ϕ₁) m P = {!!}
   restrict-Sort ϕ ΓP (Com x x₁) m P = {!!}
   restrict-Sort ϕ ΓP End m P = {!!}
@@ -444,36 +445,17 @@ module _ {P : Param} where
   restrict-Term ϕ ΓP SP mP b0 = {!!}
   restrict-Term ϕ ΓP SP mP b1 = {!!}
   restrict-Term ϕ ΓP SP mP n0 = {!!}
-  restrict-Term ϕ ΓP (Loc SP) type (loc t) = loc (restrict-Term ϕ ΓP SP (local) t)
+  restrict-Term ϕ ΓP (Loc {U = U} SP) (Dep .global) (loc t) = loc (restrict-Term ϕ ΓP SP (Dep (local U)) t)
   restrict-Term ϕ ΓP SP mP ([ ϕ₁ ]unloc t) = {!!}
   restrict-Term ϕ ΓP SP mP (fromext t) = {!!}
-  restrict-Term ϕ ΓP SP mP (lam t) = {!!}
+  restrict-Term ϕ ΓP (⨅ TP SP) (Dep d) (lam t) = lam (restrict-Term ϕ (ΓP ,[ TP ]) SP (Dep d) t )
   restrict-Term ϕ ΓP SP mP (app t s) = {!app ? ?!}
   restrict-Term ϕ ΓP SP mP (π₁ t) = {!!}
   restrict-Term ϕ ΓP SP mP (π₂ t) = {!!}
   restrict-Term ϕ ΓP SP mP (t , t₁) = {!!}
 
-  -- restrict-Term : (ϕ : W₀ ≤ W₁) -> W₁ ∣ Γ ⊢ E -> W₀ ∣ Γ ⊢ restrict-Entry ϕ E
-  -- restrict-Term = {!!}
 
-{-
-  restrict : W₀ ≤ W₁ -> W₁ ∣ Γ ⊢ T / m -> W₀ ∣ Γ ⊢ T / m
-  restrict ϕ (var x) = var x
-  restrict ϕ (loc x) = loc λ ψ -> restrict ϕ (x (ψ ⟡ ϕ))
-  restrict ϕ (fromext {val = val} t) = fromext {val = restrict ϕ val} {!!}
-  restrict ϕ (lam t) = lam (restrict ϕ t)
-  restrict ϕ (app {m = m} {n = n} t s) = let z = app (restrict ϕ t) (restrict ϕ s) in {!!}
-  restrict ϕ (π₁ t) = {!!}
-  restrict ϕ (π₂ t) = {!!}
-  restrict ϕ (t , t₁) = {!!}
-  restrict ϕ (P ∋ t) = {!!}
-  restrict ϕ b0 = {!!}
-  restrict ϕ b1 = {!!}
-  restrict ϕ n0 = {!!}
-  restrict ϕ ([ ϕ₁ ]unloc X) = {!!}
-  restrict ϕ (X ► X₁) = {!!}
-  restrict ϕ (ret X) = {!!}
-  -}
+
 
 
 
@@ -490,22 +472,22 @@ module Examples where
   ε : Ctx {PP}
   ε = []
 
-  T0 : ∀{Γ : Ctx {PP}} -> Γ ⊢Type
+  T0 : ∀{Γ : Ctx {PP}} -> Γ ⊢Global
   T0 = (Base NN ＠ uu) ⊗ (Base NN ＠ vv)
 
-  t1 : all ∣ ε ⊢ ⨅ (T0 / type) (Base NN ＠ uu) / type
+  t1 : all ∣ ε ⊢ ⨅ (T0 / Global) (Base NN ＠ uu) / Global
   t1 = lam (π₁ (var zero))
 
-  -- t2 : all ∣ ε ⊢ ((Base NN ＠ uu) ⊗ (Base NN ＠ vv) / type) → ((Base NN ⊗ Base NN) ＠ uu) / type
+  -- t2 : all ∣ ε ⊢ ((Base NN ＠ uu) ⊗ (Base NN ＠ vv) / Global) → ((Base NN ⊗ Base NN) ＠ uu) / Global
 
-  t2 : all ∣ ε ⊢ ⨅ ((Base NN ＠ uu) ⊗ (Base NN ＠ vv) / type) ((Base NN ⊗ Base NN) ＠ uu) / type
+  t2 : all ∣ ε ⊢ ⨅ ((Base NN ＠ uu) ⊗ (Base NN ＠ vv) / Global) ((Base NN ⊗ Base NN) ＠ uu) / Global
   t2 = lam (loc ((let x = π₂ (var zero) in [ {!!} ]unloc x) , {!!}))
   -- lam (loc ([ reflexive ]unloc (π₁ (var zero)) , [ reflexive ]unloc (π₁ (var zero))))
 
   f : (uu ∧ vv) ≤ vv
   f = π₁-∧
 
-  t3 : all ∣ ε ⊢ ⨅ (Base NN ＠ uu / type) (Com (uu ∧ vv) (Base NN ＠ vv)) / type
+  t3 : all ∣ ε ⊢ ⨅ (Base NN ＠ uu / Global) (Com (uu ∧ vv) (Base NN ＠ vv)) / Global
   t3 = {!!} -- lam (([ Base NN from uu to (uu ∧ vv) [ reflexive ⨾ π₀-∧ ]on all ]► End) ∋ (var zero ► ret (loc λ _ -> [ f ]unloc (fromext (var zero)))))
 
 
