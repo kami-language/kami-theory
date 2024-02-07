@@ -106,7 +106,7 @@ module _ {P : Param} where
     d : DepMod k
 
   data _⊢Mod_ : ∀ (Γ : Ctx) -> Kind -> 𝒰₀ where
-    Dep : DepMod k -> Γ ⊢Mod k
+    Dep : (d : DepMod k) -> Γ ⊢Mod k
     -- type : Γ ⊢Mod type
     -- local : (U : ⟨ P ⟩) -> Γ ⊢Mod local -- U tells us at which location this value is located
     Com : (R : ⟨ P ⟩) -> (A : Γ ⊢Global) -> Γ ⊢Mod (com R) -- A tells us the result type of the communication, R the "root"-location of the protocol
@@ -185,7 +185,6 @@ module _ {P : Param} where
   wk-Mod : Γ ⊢Mod k -> Γ ,[ E ] ⊢Mod k
 
   special-su-top : W ∣ Γ ,[ E ] ⊢ wk-Entry F ->  Γ ,[ F ] ⊢Sort k -> Γ ,[ E ] ⊢Sort k
-  special-su-top t T = {!!} -- su-Sort t (wk-Sort,ind ([] ,[ _ ]) T)
 
 
 
@@ -204,6 +203,10 @@ module _ {P : Param} where
     -- Local
 
     Base : BaseType -> Γ ⊢Local
+
+    -- `Vect L n` is a vector with entries of local type `L`
+    -- and of length `n`
+    Vect : (L : Γ ⊢Local) -> (n : W ∣ Γ ⊢ (Base NN) / Local U) -> Γ ⊢Local
 
     _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
 
@@ -273,6 +276,7 @@ module _ {P : Param} where
 
 
   wk-Sort,ind Δ (Base x) = Base x
+  wk-Sort,ind Δ (Vect L n) = {!!}
   wk-Sort,ind Δ (⨆ A B) = {!!}
   wk-Sort,ind Δ (⨅ S B) = ⨅ (wk-Entry,ind Δ S) (wk-Sort,ind (Δ ,[ S ]) B)
   wk-Sort,ind Δ (x ＠ U) = (wk-Sort,ind Δ x) ＠ U
@@ -293,6 +297,47 @@ module _ {P : Param} where
   -- End weakening
   ------------------------------------------------------------------------
 
+  ------------------------------------------------------------------------
+  -- Substitution
+
+  su-Ctx₊ : (W ∣ Γ ⊢ E) -> Γ ,[ E ] ⊢Ctx₊ -> Γ ⊢Ctx₊
+  su-Sort,ind : (t : W ∣ Γ ⊢ E) -> ∀ Δ -> (S : Γ ,[ E ] ⋆-Ctx₊ Δ ⊢Sort k) -> Γ ⋆-Ctx₊ su-Ctx₊ t Δ ⊢Sort k
+  su-Mod,ind : (t : W ∣ Γ ⊢ E) -> ∀ Δ -> (m : Γ ,[ E ] ⋆-Ctx₊ Δ ⊢Mod k) -> Γ ⋆-Ctx₊ su-Ctx₊ t Δ ⊢Mod k
+  su-Entry,ind : (t : W ∣ Γ ⊢ E) -> ∀ Δ -> (E : Γ ,[ E ] ⋆-Ctx₊ Δ ⊢Entry k) -> Γ ⋆-Ctx₊ su-Ctx₊ t Δ ⊢Entry k
+
+  su-Term-ind : (t : W ∣ Γ ⊢ E) -> ∀ Δ -> {S : _ ⊢Sort k} {m : _ ⊢Mod k}
+                -> (s : W ∣ Γ ,[ E ] ⋆-Ctx₊ Δ ⊢ S / m)
+                -> W ∣ Γ ⋆-Ctx₊ su-Ctx₊ t Δ ⊢ su-Sort,ind t Δ S / su-Mod,ind t Δ m
+
+
+  -- su-Term-ind : ∀ Δ -> {AX : Γ ⋆-Ctx₊ Δ ⊢Sort k} -> Γ ⋆-Ctx₊ Δ ⊢ AX -> Γ ,[ E ] ⋆-Ctx₊ su-Ctx₊ Δ ⊢ su-Sort,ind Δ AX
+  -- su-Var-ind : ∀ Δ -> {AX : Γ ⋆-Ctx₊ Δ ⊢Sort k} -> Γ ⋆-Ctx₊ Δ ⊢Var AX -> Γ ,[ A ] ⋆-Ctx₊ su-Ctx₊ Δ ⊢Var su-Sort,ind Δ AX
+
+  su-Mod,ind t Δ (Dep d) = Dep d
+  su-Mod,ind t Δ (Com R A) = Com R (su-Sort,ind t Δ A)
+  su-Entry,ind t Δ (S / m) = su-Sort,ind t Δ S / su-Mod,ind t Δ m
+
+  su-Ctx₊ t [] = []
+  su-Ctx₊ t (Δ ,[ E ]) = su-Ctx₊ t Δ ,[ su-Entry,ind t _ E ]
+
+  su-Sort,ind t Δ (Base x) = {!!}
+  su-Sort,ind t Δ (Vect L n) = Vect (su-Sort,ind t Δ L) {!su-Term-ind t Δ n!}
+  su-Sort,ind t Δ (⨆ E S) = {!!}
+  su-Sort,ind t Δ (⨅ E S) = {!!}
+  su-Sort,ind t Δ (S ⊗ S₁) = {!!}
+  su-Sort,ind t Δ (L ＠ U) = su-Sort,ind t Δ L ＠ U
+  su-Sort,ind t Δ (Ext x ϕ) = {!!}
+  su-Sort,ind t Δ (Com x x₁) = {!!}
+  su-Sort,ind t Δ End = {!!}
+  su-Sort,ind t Δ ([ L from U₀ to U₁ [ ϕ ⨾ ψ ]on W ]► C) = {!!}
+
+
+  su-Sort t T = su-Sort,ind t [] T
+  special-su-top t T = su-Sort t (wk-Sort,ind ([] ,[ _ ]) T)
+
+  -- End Substitution
+  ------------------------------------------------------------------------
+
 
   data _∣_⊢_ where
 
@@ -306,9 +351,8 @@ module _ {P : Param} where
 
     -- We only have to implement this term if our current location `U`
     -- Is part of the implemented locations `W`
-    loc : (W ∣ Γ ⊢ L / Local U) -> W ∣ Γ ⊢ (L ＠ U) / Global
+    loc : (U ≤ W -> (W ∣ Γ ⊢ L / Local U)) -> W ∣ Γ ⊢ (L ＠ U) / Global
 
-    -- loc : (Γ ⊢ L / Local U) -> Γ ⊢ (L ＠ U) / Global
 
     -- Given a value of type L at location U, we can make it into a local
     -- value of type L at location V, as long as V is a location which can access U
@@ -341,6 +385,32 @@ module _ {P : Param} where
         -> W ∣ Γ ⊢ ([ L from U₀ to U₁ [ ϕ ⨾ ψ ]on W ]► C) / Com R A
 
     ret : W ∣ Γ ⊢ A / Global -> W ∣ Γ ⊢ End / Com R A
+
+
+
+  ------------------------------------------------------------------------
+  -- Substitution for terms
+
+  su-Term-ind t Δ (var x) = {!!}
+  su-Term-ind t Δ b0 = {!!}
+  su-Term-ind t Δ b1 = {!!}
+  su-Term-ind t Δ n0 = {!!}
+  su-Term-ind t Δ (loc s) = loc λ ϕ -> su-Term-ind t Δ (s ϕ)
+  su-Term-ind t Δ ([ ϕ ]unloc s) = {!!}
+  su-Term-ind t Δ (fromext s) = {!!}
+  su-Term-ind t Δ (lam s) = {!!}
+  su-Term-ind t Δ (app s s₁) = {!!}
+  su-Term-ind t Δ (π₁ s) = {!!}
+  su-Term-ind t Δ (π₂ s) = {!!}
+  su-Term-ind t Δ (s , s₁) = {!!}
+  su-Term-ind t Δ (P ∋ s) = {!!}
+  su-Term-ind t Δ (s ► s₁) = {!!}
+  su-Term-ind t Δ (ret s) = {!!}
+
+  -- End Substitution for terms
+  ------------------------------------------------------------------------
+
+
 
 
   data _∣_⊢WFMod_ : ∀(W : ⟨ P ⟩) -> ∀ Γ -> Γ ⊢Mod k -> 𝒰₀
@@ -445,7 +515,7 @@ module _ {P : Param} where
   restrict-Term ϕ ΓP SP mP b0 = {!!}
   restrict-Term ϕ ΓP SP mP b1 = {!!}
   restrict-Term ϕ ΓP SP mP n0 = {!!}
-  restrict-Term ϕ ΓP (Loc {U = U} SP) (Dep .global) (loc t) = loc (restrict-Term ϕ ΓP SP (Dep (local U)) t)
+  restrict-Term ϕ ΓP (Loc {U = U} SP) (Dep .global) (loc t) = loc λ ψ -> (restrict-Term ϕ ΓP SP (Dep (local U)) (t (ψ ⟡ ϕ)))
   restrict-Term ϕ ΓP SP mP ([ ϕ₁ ]unloc t) = {!!}
   restrict-Term ϕ ΓP SP mP (fromext t) = {!!}
   restrict-Term ϕ ΓP (⨅ TP SP) (Dep d) (lam t) = lam (restrict-Term ϕ (ΓP ,[ TP ]) SP (Dep d) t )
@@ -481,7 +551,8 @@ module Examples where
   -- t2 : all ∣ ε ⊢ ((Base NN ＠ uu) ⊗ (Base NN ＠ vv) / Global) → ((Base NN ⊗ Base NN) ＠ uu) / Global
 
   t2 : all ∣ ε ⊢ ⨅ ((Base NN ＠ uu) ⊗ (Base NN ＠ vv) / Global) ((Base NN ⊗ Base NN) ＠ uu) / Global
-  t2 = lam (loc ((let x = π₂ (var zero) in [ {!!} ]unloc x) , {!!}))
+  t2 = {!!}
+  -- t2 = lam (loc ((let x = π₂ (var zero) in [ {!!} ]unloc x) , {!!}))
   -- lam (loc ([ reflexive ]unloc (π₁ (var zero)) , [ reflexive ]unloc (π₁ (var zero))))
 
   f : (uu ∧ vv) ≤ vv
