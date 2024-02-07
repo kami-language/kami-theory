@@ -482,15 +482,41 @@ module _ {P : Param} where
   --
 
   restrict-Ctx : W₀ ≤ W₁ -> ∀ (Γ : Ctx W₁) -> Ctx W₀
+  restrict-Ctx₊ : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> Γ ⊢Ctx₊ -> restrict-Ctx ϕ Γ ⊢Ctx₊
   restrict-Sort : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> (S : Γ ⊢Sort k) -> restrict-Ctx ϕ Γ ⊢Sort k
   restrict-Mod : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> (m : Γ ⊢Mod k) -> restrict-Ctx ϕ Γ ⊢Mod k
+  restrict-Term : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> ∀{S : Γ ⊢Sort k} {m : Γ ⊢Mod k}
+                  -> Γ ⊢ S / m
+                  -> restrict-Ctx ϕ Γ ⊢ restrict-Sort ϕ S / restrict-Mod ϕ m
+
+  restrict-Ctx ϕ [] = []
+  restrict-Ctx ϕ (Γ ,[ A / m ]) = restrict-Ctx ϕ Γ ,[ restrict-Sort ϕ A / restrict-Mod ϕ m  ]
+
+  restrict-Ctx₊ ϕ [] = []
+  restrict-Ctx₊ ϕ (Δ ,[ x ]) = restrict-Ctx₊ ϕ Δ ,[ {!!} ]
+
+  β-restrict,⋆ : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> {Δ : Γ ⊢Ctx₊} -> restrict-Ctx ϕ (Γ ⋆-Ctx₊ Δ) ≣ restrict-Ctx ϕ Γ ⋆-Ctx₊ restrict-Ctx₊ ϕ Δ
+  β-restrict,⋆ = {!!}
+
+  {-# REWRITE β-restrict,⋆ #-}
+
+  β-restrict,Ctx₊ : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> ∀{E : Γ ⊢Entry k} {Δ}
+                  -> (t : Γ ⊢ E)
+                  -> su-Ctx₊ (restrict-Term ϕ t) (restrict-Ctx₊ ϕ Δ) ≣ restrict-Ctx₊ ϕ (su-Ctx₊ t Δ)
+  β-restrict,Ctx₊ = {!!}
+
+  {-# REWRITE β-restrict,Ctx₊ #-}
+
+
+  β-restrict,su : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> ∀{E : Γ ⊢Entry k} {Δ} -> (S : Γ ,[ E ] ⋆-Ctx₊ Δ ⊢Sort k)
+                  -> (t : Γ ⊢ E)
+                  -> restrict-Sort ϕ (su-Sort,ind t Δ S) ≣ su-Sort,ind (restrict-Term ϕ t) (restrict-Ctx₊ ϕ Δ) (restrict-Sort ϕ S)
+  β-restrict,su = {!!}
 
   restrict-Mod ϕ (Dep d) = Dep d
   restrict-Mod ϕ (Com R A) = Com R (restrict-Sort ϕ A)
 
 
-  restrict-Ctx ϕ [] = []
-  restrict-Ctx ϕ (Γ ,[ A / m ]) = restrict-Ctx ϕ Γ ,[ restrict-Sort ϕ A / restrict-Mod ϕ m  ]
 
   restrict-Sort ϕ (⨆ E S) = {!!}
   restrict-Sort ϕ (⨅ (S / m) T) = ⨅ (restrict-Sort ϕ S / restrict-Mod ϕ m) (restrict-Sort ϕ T)
@@ -504,9 +530,6 @@ module _ {P : Param} where
   restrict-Sort ϕ ([ L from U₀ to U₁ [ ϕ₁ ⨾ ψ ]on W ]► C) = {!!}
 
 
-  restrict-Term : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> ∀{S : Γ ⊢Sort k} {m : Γ ⊢Mod k}
-                  -> Γ ⊢ S / m
-                  -> restrict-Ctx ϕ Γ ⊢ restrict-Sort ϕ S / restrict-Mod ϕ m
   restrict-Term ϕ (var x) = {!!}
   restrict-Term ϕ b0 = {!!}
   restrict-Term ϕ b1 = {!!}
