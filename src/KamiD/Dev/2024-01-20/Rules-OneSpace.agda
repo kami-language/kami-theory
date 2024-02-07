@@ -107,7 +107,7 @@ module _ {P : Param} where
   private variable
     d : DepMod k
 
-  data _⊢Mod_ : ∀ (Γ : Ctx W) -> Kind -> 𝒰₀ where
+  data _⊢Mod_ {W} : ∀ (Γ : Ctx W) -> Kind -> 𝒰₀ where
     Dep : (d : DepMod k) -> Γ ⊢Mod k
     -- type : Γ ⊢Mod type
     -- local : (U : ⟨ P ⟩) -> Γ ⊢Mod local -- U tells us at which location this value is located
@@ -320,8 +320,8 @@ module _ {P : Param} where
   su-Ctx₊ t [] = []
   su-Ctx₊ t (Δ ,[ E ]) = su-Ctx₊ t Δ ,[ su-Entry,ind t _ E ]
 
-  su-Sort,ind t Δ (Base x) = {!!}
-  su-Sort,ind t Δ (Vect L n) = Vect (su-Sort,ind t Δ L) {!!} -- (su-Term,ind t Δ n)
+  su-Sort,ind t Δ (Base x) = Base x
+  su-Sort,ind t Δ (Vect L n) = Vect (su-Sort,ind t Δ L) (su-Term,ind t Δ n)
   su-Sort,ind t Δ (⨆ E S) = {!!}
   su-Sort,ind t Δ (⨅ E S) = {!!}
   su-Sort,ind t Δ (S ⊗ S₁) = {!!}
@@ -481,48 +481,50 @@ module _ {P : Param} where
   -- We can restrict terms to smaller locations (W)
   --
 
+  restrict-Ctx : W₀ ≤ W₁ -> ∀ (Γ : Ctx W₁) -> Ctx W₀
+  restrict-Sort : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> (S : Γ ⊢Sort k) -> restrict-Ctx ϕ Γ ⊢Sort k
+  restrict-Mod : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> (m : Γ ⊢Mod k) -> restrict-Ctx ϕ Γ ⊢Mod k
 
-  restrict-Ctx : W₀ ≤ W₁ -> ∀ (Γ : Ctx W₁) -> Γ ⊢WFCtx -> Ctx W₀
-  restrict-Sort : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> (ΓP : Γ ⊢WFCtx) -> (S : Γ ⊢Sort k) -> (m : Γ ⊢Mod k) -> Γ ⊢WFSort (S / m) -> restrict-Ctx ϕ Γ ΓP ⊢Sort k
-  restrict-Mod : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> (ΓP : Γ ⊢WFCtx ) -> (m : Γ ⊢Mod k) -> Γ ⊢WFMod m -> restrict-Ctx ϕ Γ ΓP ⊢Mod k
-
-  -- restrict-Entry : (ϕ : W₀ ≤ W₁) -> (ΓP : W₁ ∣ Γ ⊢WFCtx) -> W₁ ∣ Γ ⊢WFEntry (S / m) -> restrict-Ctx ϕ Γ ΓP ⊢Entry k
-  -- restrict-Entry = {!!}
-
-  restrict-Mod ϕ ΓP (Dep d) (Dep d) = Dep d
-  restrict-Mod ϕ ΓP (Com R A) (Com Ap) = Com R (restrict-Sort ϕ ΓP A Global Ap)
+  restrict-Mod ϕ (Dep d) = Dep d
+  restrict-Mod ϕ (Com R A) = Com R (restrict-Sort ϕ A)
 
 
-  restrict-Ctx ϕ [] P = []
-  restrict-Ctx ϕ (Γ ,[ S / m ]) (ΓP ,[ SP / mP ]) = restrict-Ctx ϕ Γ ΓP ,[ restrict-Sort ϕ ΓP S m SP / restrict-Mod ϕ ΓP m mP  ]
+  restrict-Ctx ϕ [] = []
+  restrict-Ctx ϕ (Γ ,[ A / m ]) = restrict-Ctx ϕ Γ ,[ restrict-Sort ϕ A / restrict-Mod ϕ m  ]
+
+  restrict-Sort ϕ (⨆ E S) = {!!}
+  restrict-Sort ϕ (⨅ (S / m) T) = ⨅ (restrict-Sort ϕ S / restrict-Mod ϕ m) (restrict-Sort ϕ T)
+  restrict-Sort ϕ (S ⊗ S₁) = {!!}
+  restrict-Sort ϕ (Base x) = {!!}
+  restrict-Sort ϕ (Vect L n) = {!!}
+  restrict-Sort ϕ (L ＠ U) = restrict-Sort ϕ L ＠ U
+  restrict-Sort ϕ (Ext x ϕ₁) = {!!}
+  restrict-Sort ϕ (Com x x₁) = {!!}
+  restrict-Sort ϕ End = {!!}
+  restrict-Sort ϕ ([ L from U₀ to U₁ [ ϕ₁ ⨾ ψ ]on W ]► C) = {!!}
 
 
-  restrict-Sort ϕ ΓP (⨆ E S) m P = {!!}
-  restrict-Sort ϕ ΓP (⨅ (S / m) T) (Dep d') (⨅ (SP / mP) TP) = ⨅ (restrict-Sort ϕ ΓP S m SP / restrict-Mod ϕ ΓP m mP) (restrict-Sort ϕ (ΓP ,[ SP / mP ]) T (Dep d') TP)
-  restrict-Sort ϕ ΓP (S ⊗ T) m (SP ⊗ TP) = restrict-Sort ϕ ΓP S m SP ⊗ restrict-Sort ϕ ΓP T m TP
-  restrict-Sort ϕ ΓP (Base x) m Base = Base x
-  restrict-Sort ϕ ΓP (L ＠ U) m (Loc P) = restrict-Sort ϕ ΓP L (Local U) P ＠ U
-  restrict-Sort ϕ ΓP (Ext x ϕ₁) m P = {!!}
-  restrict-Sort ϕ ΓP (Com x x₁) m P = {!!}
-  restrict-Sort ϕ ΓP End m P = {!!}
-  restrict-Sort ϕ ΓP ([ L from U₀ to U₁ [ ϕ₁ ⨾ ψ ]on W ]► C) m P = {!!}
-
-
-  restrict-Term : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> ∀{S : Γ ⊢Sort k} {m : Γ ⊢Mod k} -> (ΓP : Γ ⊢WFCtx) -> (SP : Γ ⊢WFSort (S / m)) -> (mP : Γ ⊢WFMod m)
+  restrict-Term : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> ∀{S : Γ ⊢Sort k} {m : Γ ⊢Mod k}
                   -> Γ ⊢ S / m
-                  -> restrict-Ctx ϕ Γ ΓP ⊢ restrict-Sort ϕ ΓP S m SP / restrict-Mod ϕ ΓP m mP
-  restrict-Term ϕ ΓP SP mP (var x) = {!!}
-  restrict-Term ϕ ΓP SP mP b0 = {!!}
-  restrict-Term ϕ ΓP SP mP b1 = {!!}
-  restrict-Term ϕ ΓP SP mP n0 = {!!}
-  restrict-Term ϕ ΓP (Loc {U = U} SP) (Dep .global) (loc t) = loc λ ψ -> (restrict-Term ϕ ΓP SP (Dep (local U)) (t (ψ ⟡ ϕ)))
-  restrict-Term ϕ ΓP SP mP ([ ϕ₁ ]unloc t) = {!!}
-  restrict-Term ϕ ΓP SP mP (fromext t) = {!!}
-  restrict-Term ϕ ΓP (⨅ TP SP) (Dep d) (lam t) = lam (restrict-Term ϕ (ΓP ,[ TP ]) SP (Dep d) t )
-  restrict-Term ϕ ΓP SP mP (app t s) = {!app ? ?!}
-  restrict-Term ϕ ΓP SP mP (π₁ t) = {!!}
-  restrict-Term ϕ ΓP SP mP (π₂ t) = {!!}
-  restrict-Term ϕ ΓP SP mP (t , t₁) = {!!}
+                  -> restrict-Ctx ϕ Γ ⊢ restrict-Sort ϕ S / restrict-Mod ϕ m
+  restrict-Term ϕ (var x) = {!!}
+  restrict-Term ϕ b0 = {!!}
+  restrict-Term ϕ b1 = {!!}
+  restrict-Term ϕ n0 = {!!}
+  restrict-Term ϕ (loc x) = loc λ ψ -> restrict-Term ϕ (x (ψ ⟡ ϕ))
+  restrict-Term ϕ ([ ϕ₁ ]unloc t) = {!!}
+  restrict-Term ϕ (fromext t) = {!!}
+  restrict-Term ϕ (lam t) = lam (restrict-Term ϕ t)
+  restrict-Term ϕ (app t s) = let x = app (restrict-Term ϕ t) (restrict-Term ϕ s) in {!!}
+  restrict-Term ϕ (π₁ t) = {!!}
+  restrict-Term ϕ (π₂ t) = {!!}
+  restrict-Term ϕ (t , t₁) = {!!}
+  restrict-Term ϕ (P ∋ t) = {!!}
+  restrict-Term ϕ (t ► t₁) = {!!}
+  restrict-Term ϕ (ret t) = {!!}
+
+
+
 
 
 
@@ -563,6 +565,48 @@ module Examples where
 
 
 
+{-
+  restrict-Ctx : W₀ ≤ W₁ -> ∀ (Γ : Ctx W₁) -> Γ ⊢WFCtx -> Ctx W₀
+  restrict-Sort : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> (ΓP : Γ ⊢WFCtx) -> (S : Γ ⊢Sort k) -> (m : Γ ⊢Mod k) -> Γ ⊢WFSort (S / m) -> restrict-Ctx ϕ Γ ΓP ⊢Sort k
+  restrict-Mod : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> (ΓP : Γ ⊢WFCtx ) -> (m : Γ ⊢Mod k) -> Γ ⊢WFMod m -> restrict-Ctx ϕ Γ ΓP ⊢Mod k
 
+  -- restrict-Entry : (ϕ : W₀ ≤ W₁) -> (ΓP : W₁ ∣ Γ ⊢WFCtx) -> W₁ ∣ Γ ⊢WFEntry (S / m) -> restrict-Ctx ϕ Γ ΓP ⊢Entry k
+  -- restrict-Entry = {!!}
+
+  restrict-Mod ϕ ΓP (Dep d) (Dep d) = Dep d
+  restrict-Mod ϕ ΓP (Com R A) (Com Ap) = Com R (restrict-Sort ϕ ΓP A Global Ap)
+
+
+  restrict-Ctx ϕ [] P = []
+  restrict-Ctx ϕ (Γ ,[ S / m ]) (ΓP ,[ SP / mP ]) = restrict-Ctx ϕ Γ ΓP ,[ restrict-Sort ϕ ΓP S m SP / restrict-Mod ϕ ΓP m mP  ]
+
+
+  restrict-Sort ϕ ΓP (⨆ E S) m P = {!!}
+  restrict-Sort ϕ ΓP (⨅ (S / m) T) (Dep d') (⨅ (SP / mP) TP) = ⨅ (restrict-Sort ϕ ΓP S m SP / restrict-Mod ϕ ΓP m mP) (restrict-Sort ϕ (ΓP ,[ SP / mP ]) T (Dep d') TP)
+  restrict-Sort ϕ ΓP (S ⊗ T) m (SP ⊗ TP) = restrict-Sort ϕ ΓP S m SP ⊗ restrict-Sort ϕ ΓP T m TP
+  restrict-Sort ϕ ΓP (Base x) m Base = Base x
+  restrict-Sort ϕ ΓP (L ＠ U) m (Loc P) = restrict-Sort ϕ ΓP L (Local U) P ＠ U
+  restrict-Sort ϕ ΓP (Ext x ϕ₁) m P = {!!}
+  restrict-Sort ϕ ΓP (Com x x₁) m P = {!!}
+  restrict-Sort ϕ ΓP End m P = {!!}
+  restrict-Sort ϕ ΓP ([ L from U₀ to U₁ [ ϕ₁ ⨾ ψ ]on W ]► C) m P = {!!}
+
+
+  restrict-Term : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> ∀{S : Γ ⊢Sort k} {m : Γ ⊢Mod k} -> (ΓP : Γ ⊢WFCtx) -> (SP : Γ ⊢WFSort (S / m)) -> (mP : Γ ⊢WFMod m)
+                  -> Γ ⊢ S / m
+                  -> restrict-Ctx ϕ Γ ΓP ⊢ restrict-Sort ϕ ΓP S m SP / restrict-Mod ϕ ΓP m mP
+  restrict-Term ϕ ΓP SP mP (var x) = {!!}
+  restrict-Term ϕ ΓP SP mP b0 = {!!}
+  restrict-Term ϕ ΓP SP mP b1 = {!!}
+  restrict-Term ϕ ΓP SP mP n0 = {!!}
+  restrict-Term ϕ ΓP (Loc {U = U} SP) (Dep .global) (loc t) = loc λ ψ -> (restrict-Term ϕ ΓP SP (Dep (local U)) (t (ψ ⟡ ϕ)))
+  restrict-Term ϕ ΓP SP mP ([ ϕ₁ ]unloc t) = {!!}
+  restrict-Term ϕ ΓP SP mP (fromext t) = {!!}
+  restrict-Term ϕ ΓP (⨅ TP SP) (Dep d) (lam t) = lam (restrict-Term ϕ (ΓP ,[ TP ]) SP (Dep d) t )
+  restrict-Term ϕ ΓP SP (Dep d) (app t s) = let x = app (restrict-Term ϕ ΓP (⨅ {!!} {!!}) (Dep d) t) (restrict-Term ϕ (ΓP) {!!} (Dep {!!}) s) in {!!}
+  restrict-Term ϕ ΓP SP mP (π₁ t) = {!!}
+  restrict-Term ϕ ΓP SP mP (π₂ t) = {!!}
+  restrict-Term ϕ ΓP SP mP (t , t₁) = {!!}
+-}
 
 
