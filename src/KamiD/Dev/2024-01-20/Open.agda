@@ -17,6 +17,8 @@ open import Agora.Data.Sum.Definition
 
 open import Data.List using (_++_ ; concatMap)
 
+open Structure
+
 
 -- we define lists of preorder elements which represent open subsets
 -- in the alexandrov topology

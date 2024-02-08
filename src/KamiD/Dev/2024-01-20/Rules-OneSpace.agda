@@ -3,7 +3,7 @@
 
 module KamiD.Dev.2024-01-20.Rules-OneSpace where
 
-open import Agora.Conventions hiding (Σ ; Lift ; k ; m ; n)
+open import Agora.Conventions hiding (Σ ; Lift ; k ; m ; n ; Structure)
 open import Agora.Order.Preorder
 open import Agora.Order.Lattice
 open import Agora.Data.Power.Definition
@@ -11,7 +11,7 @@ open import Agora.Data.Sum.Definition
 open import Agora.Data.Product.Definition
 open import Data.Fin hiding (_-_ ; _+_ ; _≤_)
 open import Data.Nat hiding (_! ; _+_ ; _≤_ ; _≰_ ; _/_)
-open import Relation.Nullary.Decidable.Core
+-- open import Relation.Nullary.Decidable.Core
 
 open import KamiD.Dev.2024-01-20.Core hiding (_＠_)
 open import KamiD.Dev.2024-01-20.UniqueSortedList hiding (img)
@@ -42,11 +42,22 @@ private variable P : Param
 
 module _ {P : Param} where
 
+  private
+    isPreorder:P : isPreorder _ ′ ⟨ P ⟩ ′
+    isPreorder:P = it
+
   private variable
     U V W : ⟨ P ⟩
     U₀ U₁ : ⟨ P ⟩
     W₀ W₁ : ⟨ P ⟩
     R : ⟨ P ⟩
+
+  -- of_ : ℕ
+  -- of_ = ?
+
+  private variable
+    ϕ : _≤_ {{isPreorder:P}} U V
+    ψ : _≤_ {{isPreorder:P}} U₀ U₁
 
   Index = ⟨ P ⟩
 
@@ -54,6 +65,7 @@ module _ {P : Param} where
 
   private variable
     Γ : Ctx W
+    Γ₀ Γ₁ : Ctx W
 
   -- setup of kinds for types and spaces
   data Kind : 𝒰₀ where
@@ -70,6 +82,10 @@ module _ {P : Param} where
   private variable
     S : Γ ⊢Sort k
     T : Γ ⊢Sort l
+    T₀ : Γ ⊢Sort k
+    T₁ : Γ ⊢Sort k
+    S₀ : Γ ⊢Sort l
+    S₁ : Γ ⊢Sort l
 
 
   GlobalSyntax : ∀ (Γ : Ctx W) -> 𝒰 _
@@ -120,6 +136,8 @@ module _ {P : Param} where
   private variable
     m : Γ ⊢Mod k
     n : Γ ⊢Mod l
+    m₀ : Γ ⊢Mod k
+    m₁ : Γ ⊢Mod l
 
   record _⊢Entry_ (Γ : Ctx W) (k : Kind) : 𝒰₀ where
     inductive ; eta-equality
@@ -133,6 +151,8 @@ module _ {P : Param} where
 
   private variable
     E F : Γ ⊢Entry k
+    E₀ E₁ : Γ ⊢Entry k
+    F₀ F₁ : Γ ⊢Entry l
 
 
   data Ctx W where
@@ -148,6 +168,11 @@ module _ {P : Param} where
   private variable
     t : Γ ⊢ E
     s : Γ ⊢ F
+
+    t₀ : Γ ⊢ E₀
+    t₁ : Γ ⊢ E₁
+    s₀ : Γ ⊢ F₀
+    s₁ : Γ ⊢ F₁
 
 
 
@@ -478,9 +503,111 @@ module _ {P : Param} where
   ----------------------------------------------------------
   -- Meta theorems
 
-  -- We can restrict terms to smaller locations (W)
-  --
+  data _[_]⤇_ {W₀} {W₁} : (Γ₀ : Ctx W₀) -> (ϕ : W₁ ≤ W₀) -> (Γ₁ : Ctx W₁) -> 𝒰₀
 
+  private variable
+    γ : Γ₀ [ ϕ ]⤇ Γ₁
+
+  data _⊢Sort_⤇_ {W₀} {W₁} : {Γ₀ : Ctx W₀} -> {ϕ : W₁ ≤ W₀} -> {Γ₁ : Ctx W₁}
+                         -> Γ₀ [ ϕ ]⤇ Γ₁
+                         -> Γ₀ ⊢Sort k
+                         -> Γ₁ ⊢Sort k
+                         -> 𝒰₀
+
+  private variable
+    σ : γ ⊢Sort S₀ ⤇ S₁
+    τ : γ ⊢Sort T₀ ⤇ T₁
+
+  data _⊢Mod_⤇_ {W₀} {W₁} : {Γ₀ : Ctx W₀} -> {ϕ : W₁ ≤ W₀} -> {Γ₁ : Ctx W₁}
+                         -> Γ₀ [ ϕ ]⤇ Γ₁
+                         -> Γ₀ ⊢Mod k
+                         -> Γ₁ ⊢Mod k
+                         -> 𝒰₀
+
+  record _⊢Entry_⤇_ {W₀} {W₁} {Γ₀ : Ctx W₀} {ϕ : W₁ ≤ W₀} {Γ₁ : Ctx W₁}
+                         (γ : Γ₀ [ ϕ ]⤇ Γ₁)
+                         (E₀ : Γ₀ ⊢Entry k)
+                         (E₁ : Γ₁ ⊢Entry k) : 𝒰₀ where
+    inductive ; eta-equality
+    constructor _/_
+    field fst : γ ⊢Sort fst E₀ ⤇ fst E₁
+    field snd : γ ⊢Mod snd E₀ ⤇ snd E₁
+
+  open _⊢Entry_⤇_
+
+  private variable
+    η : γ ⊢Entry E₀ ⤇ E₁
+
+  data _⊢_⤇_∶_ {W₀} {W₁} : {Γ₀ : Ctx W₀} -> {ϕ : W₁ ≤ W₀} -> {Γ₁ : Ctx W₁}
+                         -> (γ : Γ₀ [ ϕ ]⤇ Γ₁)
+                         -> {E₀ : Γ₀ ⊢Entry k}
+                         -> {E₁ : Γ₁ ⊢Entry k}
+                         -> Γ₀ ⊢ E₀
+                         -> Γ₁ ⊢ E₁
+                         -> γ ⊢Entry E₀ ⤇ E₁
+                         -> 𝒰₀
+
+  data _[_]⤇_ {W₀} {W₁} where
+    [] : [] [ ϕ ]⤇ []
+    _,[_] : (Γ : Γ₀ [ ϕ ]⤇ Γ₁) -> Γ ⊢Entry E₀ ⤇ E₁
+              -> (Γ₀ ,[ E₀ ]) [ ϕ ]⤇ (Γ₁ ,[ E₁ ])
+
+  data _⊢Mod_⤇_ {W₀} {W₁} where
+    Dep : ∀ (d : DepMod k) -> γ ⊢Mod Dep d ⤇ Dep d
+    Com : γ ⊢Sort T₀ ⤇ T₁ -> γ ⊢Mod Com R T₀ ⤇ Com R T₁
+
+  data _⊢Sort_⤇_ {W₀} {W₁} where
+    Base : ∀(B : BaseType) -> γ ⊢Sort Base B ⤇ Base B
+    _⊗_ : γ ⊢Sort S₀ ⤇ S₁ -> γ ⊢Sort T₀ ⤇ T₁
+        -> γ ⊢Sort (S₀ ⊗ T₀) ⤇ (S₁ ⊗ T₁)
+
+    ⨅ : (η : γ ⊢Entry E₀ ⤇ E₁) -> (γ ,[ η ] ⊢Sort S₀ ⤇ S₁) -> γ ⊢Sort ⨅ E₀ S₀ ⤇ ⨅ E₁ S₁
+
+    _＠_ : γ ⊢Sort S₀ ⤇ S₁ -> (U : ⟨ P ⟩) -> γ ⊢Sort S₀ ＠ U ⤇ S₁ ＠ U
+
+    Vect : γ ⊢Sort S₀ ⤇ S₁
+         -> γ ⊢ t₀ ⤇ t₁ ∶ Base NN / Dep (local U)
+         -> γ ⊢Sort Vect S₀ t₀ ⤇ Vect S₁ t₁
+
+    -- ⨆ : (E : Γ ⊢Entry k) -> (Y : Γ ,[ E ] ⊢Sort k) -> Γ ⊢Sort k
+    -- Ext : Γ ⊢ L ＠ V / Global -> (ϕ : U ≤ V) -> Γ ⊢Global
+    -- Com : ⟨ P ⟩ -> Γ ⊢Global -> Γ ⊢Global
+    -- End : Γ ⊢Com U
+    -- [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / Global ] ⊢Com R) -> Γ ⊢Com R
+
+  data _⊢_⤇_∶_ {W₀} {W₁} where
+    b0 : γ ⊢ b0 ⤇ b0 ∶ Base BB / Dep (local U)
+    b1 : γ ⊢ b1 ⤇ b1 ∶ Base BB / Dep (local U)
+    n0 : γ ⊢ n0 ⤇ n0 ∶ Base NN / Dep (local U)
+
+    loc : {γ : Γ₀ [ ϕ ]⤇ Γ₁}
+         -> (σ : γ ⊢Sort S₀ ⤇ S₁)
+         -> (t₀ : U ≤ W₀ -> (Γ₀ ⊢ S₀ / Local U))
+         -> (t₁ : U ≤ W₁ -> (Γ₁ ⊢ S₁ / Local U))
+         -> ∀{ψ : U ≤ W₁} -> γ ⊢ t₀ (ψ ⟡ ϕ) ⤇ t₁ ψ ∶ (σ / Dep (local U))
+         -> γ ⊢ loc t₀ ⤇ loc t₁ ∶ σ ＠ U / Dep global
+
+    -- lam : γ ,[ η ] ⊢ t₀ ⤇ t₁ ∶ σ₀
+    -- Γ ,[ E ] ⊢ S / (Dep d)  -> Γ ⊢ ⨅ E S / (Dep d)
+    -- app : Γ ⊢ ⨅ (T / (Dep d)) S / n -> (t : Γ ⊢ T / (Dep d)) -> Γ ⊢ su-Sort t S / n
+
+    -- var : Γ ⊢Var E -> Γ ⊢ E
+    -- [_]unloc : (ϕ : U ≤ V) -> Γ ⊢ (L ＠ U) / Global -> Γ ⊢ L / Local V
+    -- fromext : {ϕ : V ≤ U} -> {val : Γ ⊢ L ＠ U / Global} -> Γ ⊢ Ext val ϕ / Global -> Γ ⊢ L ＠ V / Global
+    -- π₁ : Γ ⊢ (T ⊗ S) / m -> Γ ⊢ T / m
+    -- π₂ : Γ ⊢ (T ⊗ S) / m -> Γ ⊢ S / m
+    -- _,_ : Γ ⊢ T / m -> Γ ⊢ S / m -> Γ ⊢ (T ⊗ S) / m
+    -- _∋_ : (P : Γ ⊢Com R) -> Γ ⊢ P / Com R A -> Γ ⊢ Com R A / Global
+    -- _►_ : {ϕ : R ≤ U₁} -> {ψ : U₁ ≤ U₀}
+    --     -> ∀ {C}
+    --     -> (val : Γ ⊢ L ＠ U₀ / Global)
+    --     -> Γ ,[ Ext val ψ / Global ] ⊢ special-su-top (fromext (var zero) ) C / Com R (wk-Sort A)
+    --     -> Γ ⊢ ([ L from U₀ to U₁ [ ϕ ⨾ ψ ]on W ]► C) / Com R A
+
+    -- ret : Γ ⊢ A / Global -> Γ ⊢ End / Com R A
+
+
+{-
   restrict-Ctx : W₀ ≤ W₁ -> ∀ (Γ : Ctx W₁) -> Ctx W₀
   restrict-Ctx₊ : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> Γ ⊢Ctx₊ -> restrict-Ctx ϕ Γ ⊢Ctx₊
   restrict-Sort : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> (S : Γ ⊢Sort k) -> restrict-Ctx ϕ Γ ⊢Sort k
@@ -548,6 +675,7 @@ module _ {P : Param} where
 
 
 
+-}
 
 
 
@@ -585,6 +713,9 @@ module Examples where
 
   t3 : ε ⊢ ⨅ (Base NN ＠ uu / Global) (Com (uu ∧ vv) (Base NN ＠ vv)) / Global
   t3 = {!!} -- lam (([ Base NN from uu to (uu ∧ vv) [ reflexive ⨾ π₀-∧ ]on all ]► End) ∋ (var zero ► ret (loc λ _ -> [ f ]unloc (fromext (var zero)))))
+    
+  +ₙ : ∀ {U} -> ε ⊢ ⨅ (Base NN / Local U) (⨅ (Base NN / Local U) (Base NN)) / Local U
+
 
 
 
