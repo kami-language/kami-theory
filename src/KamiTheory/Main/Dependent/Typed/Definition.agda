@@ -73,12 +73,15 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     p q : Term P n
     Γ  : Con (Term P) n
     A B : Term P n
+    a b : Term P n
+    X Y : Term P n
     L K : Term P n
     E F : Term P n
     t s : Term P n
+    f g : Term P n
     G : Term P (1+ n)
     x : Fin n
-    U V : P
+    U V R : P
 
   -- wk1-Mod : Mod n -> Mod (1+ n)
   -- wk1-Mod (ml x) = ml x
@@ -138,15 +141,60 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
              → Γ ∙ (A / ML q) ⊢Entry (B / ML q)
              → Γ ⊢Entry (Σ (A / ML q) ▹ B / ML q)
 
-      -- -- univ   : Γ ⊢Sort A ∶ UU
-      -- --       → Γ ⊢Sort A
+      -- univ   : Γ ⊢Sort A ∶ UU
+      --       → Γ ⊢Sort A
 
-      -- Kami types
+      -------------------
+      -- Kami types (global ◯)
       Locⱼ : (U : P) -> Γ ⊢Entry (L / ▲ U) -> Γ ⊢Entry (L ＠ U / ◯)
+      Comⱼ : Γ ⊢Entry (A / ◯) -> Γ ⊢Entry (Com R A / ◯)
+
+      -------------------
+      -- Kami types (communication ⇄)
+
+      -- The identity communication
+      Endⱼ : Γ ⊢Entry (A / ◯) -> Γ ⊢Entry (End / ⇄ R A)
+
+      -- We concatenate two communications
+      _≫ⱼ_ : Γ ⊢Entry (X / ⇄ R A)
+           -> Γ ∙ (A / ◯) ⊢Entry (F / ⇄ R (wk1 B))
+           -> Γ ⊢Entry (X ≫ F / ⇄ R B)
+
+      -- We share a local value of type "A ＠ U" to be "A ＠ V"
+      Shareⱼ : Γ ⊢Entry (A / ▲ V)
+             -> ∀ (U V : P) -> (ϕ : V ≤ U)
+             -> Γ ⊢Entry (Share A U V / ⇄ R (A ＠ V))
 
 
     -- Well-formed term of a type
     data _⊢_∶_/_ (Γ : Con (Term P) n) : Term P n → Term P n -> Term P n → Set where
+
+      -------------------
+      -- Communication
+
+      -- We end a communication by giving a value of the
+      -- required type
+      endⱼ : Γ ⊢ a ∶ A / ◯ -> Γ ⊢ end a ∶ End / ⇄ R A
+
+      -- If we have:
+      --  - `a`: a com of type `X` which gives us a value of type A
+      --  - `b`: a com of type `Y` which (assuming a : A) gives us B,
+      -- we can compose these communications to get one of type `X ≫ Y`
+      _>ⱼ_ : Γ ⊢ a ∶ X / ⇄ R A
+           -> Γ ∙ (A / ◯) ⊢ b ∶ Y / ⇄ R (wk1 B)
+           -> Γ ⊢ (a > b) ∶ X ≫ Y / ⇄ R B
+
+      -- If we have a value (a ∶ A ＠ U) then we can share it so it is
+      -- available at V.
+      shareⱼ : Γ ⊢Entry (A / ▲ V)
+           -> Γ ⊢ a ∶ (A ＠ U) / ◯
+           -> (ϕ : V ≤ U)
+           -> Γ ⊢ share a ∶ Share A U V / ⇄ R (A ＠ V)
+
+      -------------------
+      -- Generic
+
+
       -- Πⱼ_▹_     : ∀ {F G}
       --           → Γ     ⊢ F ∶ U
       --           → Γ ∙ F ⊢ G ∶ U
@@ -203,7 +251,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
                 → Γ ⊢ sucₜ n ∶ NN / p
 
       natrecⱼ   : ∀ {G s z n}
-                → {{_ : isTrue (Γ ∙ NN ⊢Sort G)}}
+                → (Γ ∙ (NN / ▲ U) ⊢Sort G)
                 → Γ       ⊢ z ∶ G [ zeroₜ ] / p
                 → Γ       ⊢ s ∶ Π NN ▹ (G ▹▹ G [ sucₜ (var x0) ]↑) / p
                 → Γ       ⊢ n ∶ NN / p

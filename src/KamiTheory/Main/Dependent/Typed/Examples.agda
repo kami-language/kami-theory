@@ -31,6 +31,12 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   _⊢_/_≔_ : (Γ : Con (Term P) n) -> Term P n → Term P n -> Term P n → Set
   Γ ⊢ A / p ≔ t = Γ ⊢ t ∶ A / p
 
+  +ₙ : ε ⊢ _ ∶ (NN / ▲ U) ▹▹ ((NN / ▲ U) ▹▹ NN) / ▲ U
+  +ₙ {U = U} = lamⱼ NNⱼ (natrecⱼ {G = Π (NN / ▲ U) ▹ NN} (Πⱼ (NNⱼ) ▹ NNⱼ) {!!} {!!} {!!})
+  -- zeroⱼ (lamⱼ _ (lamⱼ _ (sucⱼ ((var {!zero!}) ∘ⱼ {!var zero!})))) (var zero))
+
+
+
   εε : Con (Term P) zero
   εε = ε
 

@@ -130,7 +130,7 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
     _≤-IB_ = _≤-IndependentBase_
 
   map-∈-IndependentBase : ∀{x u} -> x ∈ u -> x ∈-IndependentBase u
-  map-∈-IndependentBase here = take reflexive
+  map-∈-IndependentBase here = take refl-≤
   map-∈-IndependentBase (there p) = next (map-∈-IndependentBase p)
 
   lift-∈-IB : ∀{x y u} -> x ∈-IB u -> x ∈-IB (y ∷ u)
@@ -141,9 +141,9 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
   lift-≤-IB [] = []
   lift-≤-IB (x ∷ p) = lift-∈-IB x ∷ (lift-≤-IB p)
 
-  reflexive-≤-IndependentBase : ∀{v : List X} -> v ≤-IB v
-  reflexive-≤-IndependentBase {[]} = []
-  reflexive-≤-IndependentBase {x ∷ v} = take reflexive ∷ lift-≤-IB reflexive-≤-IndependentBase
+  refl-≤-IndependentBase : ∀{v : List X} -> v ≤-IB v
+  refl-≤-IndependentBase {[]} = []
+  refl-≤-IndependentBase {x ∷ v} = take refl-≤ ∷ lift-≤-IB refl-≤-IndependentBase
 
   trans-∈-IB : ∀{x y v} -> y ≤ x -> y ∈-IB v -> x ∈-IB v
   trans-∈-IB y≤x (take z≤y) = take (z≤y ⟡ y≤x)
@@ -169,9 +169,9 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
 
   private
     insert-∈ : ∀ x u -> x ∈-IB insertIB x u
-    insert-∈ x [] = take reflexive
+    insert-∈ x [] = take refl-≤
     insert-∈ x (y ∷ ys) with decide-≤ x y
-    ... | just x≤y = take reflexive
+    ... | just x≤y = take refl-≤
     ... | left x≰y with decide-≤ y x
     ... | just y≤x = take y≤x
     ... | left y≰x = next (insert-∈ x ys)
@@ -247,8 +247,8 @@ module _ {X' : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X'}} where
 
   open _≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ {{...}} public
 
-  reflexive-≤-𝒪ᶠⁱⁿ⁻ʷᵏ : ∀{u : 𝒪ᶠⁱⁿ⁻ʷᵏ X} -> u ≤-𝒪ᶠⁱⁿ⁻ʷᵏ u
-  reflexive-≤-𝒪ᶠⁱⁿ⁻ʷᵏ = incl reflexive-≤-IndependentBase
+  refl-≤-𝒪ᶠⁱⁿ⁻ʷᵏ : ∀{u : 𝒪ᶠⁱⁿ⁻ʷᵏ X} -> u ≤-𝒪ᶠⁱⁿ⁻ʷᵏ u
+  refl-≤-𝒪ᶠⁱⁿ⁻ʷᵏ = incl refl-≤-IndependentBase
 
   _⟡-≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ : ∀{u v w : 𝒪ᶠⁱⁿ⁻ʷᵏ X} -> u ≤-𝒪ᶠⁱⁿ⁻ʷᵏ v -> v ≤-𝒪ᶠⁱⁿ⁻ʷᵏ w -> u ≤-𝒪ᶠⁱⁿ⁻ʷᵏ w
   _⟡-≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ = λ p q -> incl (⟨ p ⟩ ⟡-≤-IndependentBase ⟨ q ⟩)
@@ -258,7 +258,7 @@ module _ {X' : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X'}} where
 
   instance
     isEquivRel:_∼-𝒪ᶠⁱⁿ⁻ʷᵏ_ : isEquivRel _∼-𝒪ᶠⁱⁿ⁻ʷᵏ_
-    isEquivRel:_∼-𝒪ᶠⁱⁿ⁻ʷᵏ_ = isEquivRel:byPreorder _≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ reflexive-≤-𝒪ᶠⁱⁿ⁻ʷᵏ _⟡-≤-𝒪ᶠⁱⁿ⁻ʷᵏ_
+    isEquivRel:_∼-𝒪ᶠⁱⁿ⁻ʷᵏ_ = isEquivRel:byPreorder _≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ refl-≤-𝒪ᶠⁱⁿ⁻ʷᵏ _⟡-≤-𝒪ᶠⁱⁿ⁻ʷᵏ_
 
   instance
     isSetoid:𝒪ᶠⁱⁿ⁻ʷᵏ : isSetoid (𝒪ᶠⁱⁿ⁻ʷᵏ X)
@@ -267,7 +267,7 @@ module _ {X' : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X'}} where
   instance
     isPreorderData:≤-𝒪ᶠⁱⁿ⁻ʷᵏ : isPreorderData (𝒪ᶠⁱⁿ⁻ʷᵏ X) _≤-𝒪ᶠⁱⁿ⁻ʷᵏ_
     isPreorderData:≤-𝒪ᶠⁱⁿ⁻ʷᵏ = record
-      { reflexive = reflexive-≤-𝒪ᶠⁱⁿ⁻ʷᵏ
+      { refl-≤ = refl-≤-𝒪ᶠⁱⁿ⁻ʷᵏ
       ; _⟡_ = _⟡-≤-𝒪ᶠⁱⁿ⁻ʷᵏ_
       ; transp-≤ = λ (p , q) (r , s) t -> (q ⟡-≤-𝒪ᶠⁱⁿ⁻ʷᵏ t) ⟡-≤-𝒪ᶠⁱⁿ⁻ʷᵏ r
       }

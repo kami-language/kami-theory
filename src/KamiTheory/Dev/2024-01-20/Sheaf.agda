@@ -22,7 +22,7 @@ open import Agora.Data.Product.Definition
 module _ {X : 𝒰 _} {{_ : X is Lattice 𝑖}} where
   record isSheaf {𝑗} (F : X -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
     field _↷_ : ∀{U V : X} -> (ϕ : U ≤ V) -> F V -> F U
-    field id-↷ : ∀{U} -> ∀{x : F U} -> reflexive ↷ x ≡ x
+    field id-↷ : ∀{U} -> ∀{x : F U} -> refl-≤ ↷ x ≡ x
     field comp-↷ : ∀{U V W} -> {ϕ : U ≤ V} {ψ : V ≤ W} -> {x : F W} -> (ϕ ⟡ ψ) ↷ x ≡ ϕ ↷ (ψ ↷ x)
     field glue : ∀{U V} -> (x : F U) -> (y : F V) -> π₀-∧ ↷ x ≡ π₁-∧ ↷ y -> F (U ∨ V)
     field glue-π₀ : ∀{U V} -> (x : F U) -> (y : F V) -> (p : π₀-∧ ↷ x ≡ π₁-∧ ↷ y) -> ι₀-∨ ↷ (glue x y p) ≡ x
@@ -51,11 +51,11 @@ module _ {X : 𝒰 _} {{_ : X is Lattice 𝑖}} where
   instance
     isSheaf:restr : ∀ {F U} -> {{_ : isSheaf {𝑗} F}} -> isSheaf (restr F U)
     isSheaf:restr {F = F} {U} = record
-      { _↷_ = λ ϕ f P -> ϕ ↷ f λ ψ⊥ -> P (map-∧ reflexive ϕ ⟡ ψ⊥)
+      { _↷_ = λ ϕ f P -> ϕ ↷ f λ ψ⊥ -> P (map-∧ refl-≤ ϕ ⟡ ψ⊥)
       ; id-↷ = {!!}
       ; comp-↷ = {!!}
       ; glue = λ f g p P -> glue (f (λ ψ⊥ -> P ({!!}))) {!!} {!!}
-  -- map-∧ reflexive {!!} ⟡ ψ⊥
+  -- map-∧ refl-≤ {!!} ⟡ ψ⊥
       ; glue-π₀ = {!!}
       ; glue-π₁ = {!!}
       }

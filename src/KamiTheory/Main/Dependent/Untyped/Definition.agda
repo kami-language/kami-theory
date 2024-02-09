@@ -103,15 +103,32 @@ data Kind : (ns : List Nat) → Set where
   Emptyreckind : Kind (0 ∷ 0 ∷ [])
 
   -- Kami modality system
-  Entrykind : Kind []
-  Slashkind : Kind (0 ∷ 0 ∷ [])
+  𝓀-/ : Kind (0 ∷ 0 ∷ [])
 
-  -- Kami types
-  Atkind : Kind (0 ∷ 0 ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
+  -- Kami modalities
+  𝓀-⇄ : Kind (0 ∷ 0 ∷ []) -- Com : Γ ⊢WFSort (A / Global) -> Γ ⊢WFMod Com R A
 
-  -- Kami terms
-  Lockind : Kind (0 ∷ 0 ∷ []) -- loc : (U ≤ W -> (Γ ⊢ L / Local U)) -> Γ ⊢ (L ＠ U) / Global
-  Unlockind : Kind (0 ∷ []) -- [_]unloc : (ϕ : U ≤ V) -> Γ ⊢ (L ＠ U) / Global -> Γ ⊢ L / Local V
+  -------------------
+  -- Kami types (global)
+  𝓀-＠ : Kind (0 ∷ 0 ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
+  𝓀-Com : Kind (0 ∷ 0 ∷ []) -- Com : ⟨ P ⟩ -> Γ ⊢Global -> Γ ⊢Global
+
+  -------------------
+  -- Kami types (Com)
+  𝓀-End : Kind [] -- End : Γ ⊢Com U
+  𝓀-≫ : Kind (0 ∷ 1 ∷ []) -- new (monadic?) composition operation
+  𝓀-Share : Kind (0 ∷ 0 ∷ 0 ∷ []) -- [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / Global ] ⊢Com R) -> Γ ⊢Com R
+
+  -------------------
+  -- Kami terms (com related)
+  𝓀-end : Kind (0 ∷ [])
+  𝓀-> : Kind (0 ∷ 1 ∷ [])
+  𝓀-share : Kind (0 ∷ [])
+
+  -------------------
+  -- Kami terms (location related)
+  𝓀-loc : Kind (0 ∷ 0 ∷ []) -- loc : (U ≤ W -> (Γ ⊢ L / Local U)) -> Γ ⊢ (L ＠ U) / Global
+  𝓀-unloc : Kind (0 ∷ []) -- [_]unloc : (ϕ : U ≤ V) -> Γ ⊢ (L ＠ U) / Global -> Γ ⊢ L / Local V
 
 -- Term Ps are indexed by its number of unbound variables and are either:
 -- de Bruijn style variables or
@@ -214,14 +231,30 @@ star = gen Starkind []
 Emptyrec : (A e : Term P n) → Term P n   -- Empty type recursor
 Emptyrec A e = gen Emptyreckind (A ∷ e ∷ [])
 
-pattern _/_ a b   = gen Slashkind (a ∷ b ∷ [])
-pattern ◯         = constₜ (mlmod Global)
-pattern ▲ U       = constₜ (mlmod (Local U))
-pattern ML p      = constₜ (mlmod p)
-pattern _＠_ L U  = gen Atkind (L ∷ constₜ (location U) ∷ [])
-pattern loc U t   = gen Lockind (constₜ (location U) ∷ t ∷ [])
-pattern unloc t   = gen Unlockind (t ∷ [])
+pattern _/_ a b     = gen 𝓀-/ (a ∷ b ∷ [])
+pattern ◯           = constₜ (mlmod Global)
+pattern ▲ U         = constₜ (mlmod (Local U))
+pattern ⇄ R A       = gen 𝓀-⇄ (constₜ (location R) ∷ A ∷ [])
+pattern ML p        = constₜ (mlmod p)
+pattern _＠_ L U    = gen 𝓀-＠ (L ∷ constₜ (location U) ∷ [])
+pattern Com R A     = gen 𝓀-Com (constₜ (location R) ∷ A ∷ [])
 
+pattern loc U t     = gen 𝓀-loc (constₜ (location U) ∷ t ∷ [])
+pattern unloc t     = gen 𝓀-unloc (t ∷ [])
+
+pattern _≫_ x f    = gen 𝓀-≫ (x ∷ f ∷ [])
+pattern _>_ x f    = gen 𝓀-> (x ∷ f ∷ [])
+
+pattern Share A U V = gen 𝓀-Share (A ∷ constₜ (location U) ∷ constₜ (location V) ∷ [])
+pattern share a     = gen 𝓀-share (a ∷ [])
+
+pattern End         = gen 𝓀-End []
+pattern end a       = gen 𝓀-end (a ∷ [])
+
+
+
+
+infixl 40 _≫_
 infixl 50 _＠_
 
 
