@@ -28,6 +28,29 @@ record hasDecidableEquality {ℓ} (A : Set ℓ) : Set ℓ where
 open hasDecidableEquality {{...}} public
 
 
+
+--------------------------------------------------
+-- derivability syntax sugar
+
+
+open import Agora.Conventions using (Maybe ; just)
+
+record isDerivable {𝑖} (A : Set 𝑖) : Set 𝑖 where
+  field derive : Maybe A
+
+open isDerivable {{...}} public
+
+record isTrue {𝑖} (A : Set 𝑖) : Set 𝑖 where
+  constructor because
+  field proof : A
+
+open isTrue {{...}} public
+
+instance
+  isTrue:isDerivable : ∀{𝑖} {A : Set 𝑖} -> {{der : isDerivable A}} {a : A} -> {{_ :  derive {{der}} ≡ just a}} -> isTrue A
+  isTrue:isDerivable {a = a} = record { proof = a }
+
+
 --------------------------------------------------
 -- others
 

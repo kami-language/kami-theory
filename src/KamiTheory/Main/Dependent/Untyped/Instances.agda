@@ -1,4 +1,6 @@
 
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module KamiTheory.Main.Dependent.Untyped.Instances where
 
 open import Agora.Conventions

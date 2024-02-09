@@ -23,39 +23,29 @@
 --   SOFTWARE.
 -- ```
 
-{-# OPTIONS --without-K #-}
+-- {-# OPTIONS --without-K #-}
 
 module KamiTheory.Main.Dependent.Typed where
 
+open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const)
+open import Agora.Order.Preorder
+
+open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped
 
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Fin
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Nat
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Product
 
-open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const)
-open import Agora.Order.Preorder
-
-record isDerivable (A : 𝒰 𝑖) : 𝒰 𝑖 where
-  field derive : Maybe A
-
-open isDerivable {{...}} public
-
-record isTrue (A : 𝒰 𝑖) : 𝒰 𝑖 where
-  constructor because
-  field proof : A
-
-open isTrue {{...}} public
-
-instance
-  isTrue:isDerivable : ∀{A : 𝒰 𝑖} -> {{der : isDerivable A}} {a : A} -> {{_ :  derive {{der}} ≡ just a}} -> isTrue A
-  isTrue:isDerivable {a = a} = record { proof = a }
 
 
 
-module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ P ⟩}} where
 
-  -- open DUN.KamiUntyped ⟨ P ⟩ hiding (_∷_)
+-- module _ {P : 𝒰 _} {{_ : Preorder (ℓ₀ , ℓ₀ , ℓ₀) on P}} {{_ : hasDecidableEquality P}} where
+module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}}
+       {{_ : hasDecidableEquality P}} where
+
+  -- open DUN.KamiUntyped P hiding (_∷_)
 
   infixl 30 _∙_
   infix 30 Πⱼ_▹_
@@ -64,43 +54,42 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
 
 
   -- data MLMod : Set where
-  --   local : (U : ⟨ P ⟩) -> MLMod
+  --   local : (U : P) -> MLMod
   --   global : MLMod
 
   -- data Mod (n : Nat) : Set where
   --   ml : MLMod -> Mod n
-  --   com : Term ⟨ P ⟩ n -> Mod n
+  --   com : Term P n -> Mod n
 
   -- record Term (n : Nat) : Set where
   --   constructor _/_
-  --   field type : Term ⟨ P ⟩ n
+  --   field type : Term P n
   --   field mod : Mod n
 
   open Term
 
-  private
-    variable
-      -- n m : Nat
-      p q : Term ⟨ P ⟩ n
-      Γ  : Con (Term ⟨ P ⟩) n
-      A B : Term ⟨ P ⟩ n
-      L K : Term ⟨ P ⟩ n
-      E F : Term ⟨ P ⟩ n
-      t s : Term ⟨ P ⟩ n
-      G : Term ⟨ P ⟩ (1+ n)
-      x : Fin n
-      U V : ⟨ P ⟩
+  private variable
+    -- n m : Nat
+    p q : Term P n
+    Γ  : Con (Term P) n
+    A B : Term P n
+    L K : Term P n
+    E F : Term P n
+    t s : Term P n
+    G : Term P (1+ n)
+    x : Fin n
+    U V : P
 
   -- wk1-Mod : Mod n -> Mod (1+ n)
   -- wk1-Mod (ml x) = ml x
   -- wk1-Mod (com x) = com (wk1 x)
 
-  -- wk1-Term : Term ⟨ P ⟩ n → Term (1+ n)
+  -- wk1-Term : Term P n → Term (1+ n)
   -- wk1-Term (A / p) = wk1 A / wk1-Mod p
 
 
   -- Well-typed variables
-  data _∶_∈_ : (x : Fin n) (E : Term ⟨ P ⟩ n) (Γ : Con (Term ⟨ P ⟩) n) → Set where
+  data _∶_∈_ : (x : Fin n) (E : Term P n) (Γ : Con (Term P) n) → Set where
     zero :                       x0 ∶ wk1 E ∈ (Γ ∙ E)
     suc  : (h : x ∶ E ∈ Γ) → (x +1) ∶ wk1 E ∈ (Γ ∙ F)
 
@@ -115,15 +104,15 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
 
 
     -- Well-formed context
-    data ⊢_ : Con (Term ⟨ P ⟩) n → Set where
+    data ⊢_ : Con (Term P) n → Set where
       ε   : ⊢ ε
       _∙_ : ⊢ Γ
           → Γ ⊢Entry E
           → ⊢ Γ ∙ E
 
 
-    -- data _⊢Var_∶_∷_ : {Γ : Con (Term ⟨ P ⟩) n} -> (ΓP : ⊢ Γ)
-    --                 -> (x : Fin n) (E : Term ⟨ P ⟩ n) (k : TypeKind) → Set where
+    -- data _⊢Var_∶_∷_ : {Γ : Con (Term P) n} -> (ΓP : ⊢ Γ)
+    --                 -> (x : Fin n) (E : Term P n) (k : TypeKind) → Set where
     --   zero : ∀{ΓP : ⊢ Γ}
     --          -> {EP : Γ ⊢Entry E ∷ k}
     --          -> (ΓP ∙ EP) ⊢Var x0 ∶ wk1 E ∷ k
@@ -134,29 +123,29 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
 
 
     -- Well-formed ml modality
-    -- data _⊢MLMod_∷_ (Γ : Con (Term ⟨ P ⟩) n) : Term ⟨ P ⟩ n -> TypeKind → Set where
+    -- data _⊢MLMod_∷_ (Γ : Con (Term P) n) : Term P n -> TypeKind → Set where
     --   globalⱼ : Γ ⊢MLMod ◯ ∷ Global
     --   localⱼ : ∀ U -> Γ ⊢MLMod ▲ U ∷ Local
 
     -- Well-formed modality
-    -- data _⊢Mod_∷_ (Γ : Con (Term ⟨ P ⟩) n) : Term ⟨ P ⟩ n → TypeKind -> Set where
+    -- data _⊢Mod_∷_ (Γ : Con (Term P) n) : Term P n → TypeKind -> Set where
     --   mlⱼ : Γ ⊢MLMod p -> Γ ⊢Mod p ∷ k
 
 
 
-    -- _⊢Sort_ : (Γ : Con (Term ⟨ P ⟩) n) -> Term ⟨ P ⟩ n -> Set
+    -- _⊢Sort_ : (Γ : Con (Term P) n) -> Term P n -> Set
     -- _⊢Sort_ Γ L = Γ ⊢Sort L ∷ Local
 
-    -- _⊢Sort_ : (Γ : Con (Term ⟨ P ⟩) n) -> Term ⟨ P ⟩ n -> Set
+    -- _⊢Sort_ : (Γ : Con (Term P) n) -> Term P n -> Set
     -- _⊢Sort_ Γ L = Γ ⊢Sort L ∷ Global
 
     -- Well-formed type
-    data _⊢Sort_ (Γ : Con (Term ⟨ P ⟩) n) : Term ⟨ P ⟩ n -> Set where
-      UUⱼ    : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Sort UU
-      NNⱼ    : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Sort NN
-      Vecⱼ   : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Sort A → Γ ⊢Sort F → Γ ⊢Sort Vec A F
-      Emptyⱼ : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Sort Empty
-      Unitⱼ  : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Sort Unit
+    data _⊢Sort_ (Γ : Con (Term P) n) : Term P n -> Set where
+      UUⱼ    : {{ΓP : isTrue (⊢ Γ)}} → Γ ⊢Sort UU
+      NNⱼ    : {{ΓP : isTrue (⊢ Γ)}} → Γ ⊢Sort NN
+      Vecⱼ   : {{ΓP : isTrue (⊢ Γ)}} → Γ ⊢Sort A → Γ ⊢Sort F → Γ ⊢Sort Vec A F
+      Emptyⱼ : {{ΓP : isTrue (⊢ Γ)}} → Γ ⊢Sort Empty
+      Unitⱼ  : {{ΓP : isTrue (⊢ Γ)}} → Γ ⊢Sort Unit
 
       Πⱼ_▹_  : Γ ⊢Entry E → Γ ∙ E ⊢Sort B → Γ ⊢Sort Π E ▹ B
       Σⱼ_▹_  : Γ ⊢Entry F → Γ ∙ F ⊢Sort G → Γ ⊢Sort Σ F ▹ G
@@ -164,14 +153,14 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
       --       → Γ ⊢Sort A
 
       -- Kami types
-      Locⱼ : (U : ⟨ P ⟩) -> Γ ⊢Sort L -> Γ ⊢Sort (L ＠ U)
+      Locⱼ : (U : P) -> Γ ⊢Sort L -> Γ ⊢Sort (L ＠ U)
 
     -- Well-formed entry
-    data _⊢Entry_ (Γ : Con (Term ⟨ P ⟩) n) : Term ⟨ P ⟩ n -> Set where
-      UUⱼ    : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Entry (UU / ▲ U)
-      NNⱼ    : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Entry (NN / ▲ U)
-      Emptyⱼ : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Entry (Empty / ▲ U)
-      Unitⱼ  : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Entry (Unit / ▲ U)
+    data _⊢Entry_ (Γ : Con (Term P) n) : Term P n -> Set where
+      UUⱼ    : {{ΓP : isTrue (⊢ Γ)}} → Γ ⊢Entry (UU / ▲ U)
+      NNⱼ    : {{ΓP : isTrue (⊢ Γ)}} → Γ ⊢Entry (NN / ▲ U)
+      Emptyⱼ : {{ΓP : isTrue (⊢ Γ)}} → Γ ⊢Entry (Empty / ▲ U)
+      Unitⱼ  : {{ΓP : isTrue (⊢ Γ)}} → Γ ⊢Entry (Unit / ▲ U)
 
       -- Πⱼ_▹_  : Γ ⊢Entry E → Γ ∙ E ⊢Sort B → Γ ⊢Sort Π E ▹ B
       Σⱼ_▹_  : ∀{q} -> Γ ⊢Entry (A / ML q)
@@ -182,11 +171,11 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
       -- --       → Γ ⊢Sort A
 
       -- Kami types
-      Locⱼ : (U : ⟨ P ⟩) -> Γ ⊢Entry (L / ▲ U) -> Γ ⊢Entry (L ＠ U / ◯)
+      Locⱼ : (U : P) -> Γ ⊢Entry (L / ▲ U) -> Γ ⊢Entry (L ＠ U / ◯)
 
 
     -- Well-formed term of a type
-    data _⊢_∶_/_ (Γ : Con (Term ⟨ P ⟩) n) : Term ⟨ P ⟩ n → Term ⟨ P ⟩ n -> Term ⟨ P ⟩ n → Set where
+    data _⊢_∶_/_ (Γ : Con (Term P) n) : Term P n → Term P n -> Term P n → Set where
       -- Πⱼ_▹_     : ∀ {F G}
       --           → Γ     ⊢ F ∶ U
       --           → Γ ∙ F ⊢ G ∶ U
@@ -204,7 +193,7 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
       -- Unitⱼ     : ⊢ Γ → Γ ⊢Sort Unit ∶ U
 
       var       : ∀ {A x}
-                -> {{_ : isTrue (⊢ Γ)}}
+                -> {{ΓP : isTrue (⊢ Γ)}}
                 → x ∶ (A / p) ∈ Γ
                 → Γ ⊢ (Term.var x) ∶ A / p
 
@@ -274,72 +263,7 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
       locⱼ : Γ ⊢ t ∶ A / ▲ U -> Γ ⊢ loc U t ∶ (A ＠ U) / ◯
       unlocⱼ : Γ ⊢ t ∶ (A ＠ U) / ◯ -> Γ ⊢ unloc t ∶ A / ▲ U
 
-  private
-    _>>=_ = bind-Maybe
 
-  mutual
-    {-# TERMINATING #-}
-    derive-Entry : ∀ (Γ : Con (Term ⟨ P ⟩) n) E -> Maybe (Γ ⊢Entry E)
-    derive-Entry Γ (UU / ▲ U)    = map-Maybe (λ P -> UUⱼ {{because P}}) (derive-Ctx Γ)
-    derive-Entry Γ (NN / ▲ U)    = map-Maybe (λ P -> NNⱼ {{because P}}) (derive-Ctx Γ)
-    derive-Entry Γ (Empty / ▲ U) = map-Maybe (λ P -> Emptyⱼ {{because P}}) (derive-Ctx Γ)
-    derive-Entry Γ (Unit / ▲ U)  = map-Maybe (λ P -> Unitⱼ {{because P}}) (derive-Ctx Γ)
-    derive-Entry Γ (L ＠ U / ◯)  = map-Maybe (Locⱼ U) (derive-Entry Γ (L / ▲ U))
-    derive-Entry Γ (Σ (A / ML p) ▹ B / ML q) with p ≟-Str q
-    ... | left x = nothing
-    ... | just refl-≡ = do
-      A' <- derive-Entry Γ (A / ML p)
-      B' <- derive-Entry (Γ ∙ (A / ML q)) (B / ML q)
-      just (Σⱼ A' ▹ B')
-    derive-Entry Γ E = nothing
-
-
-    derive-Ctx : ∀ (Γ : Con (Term ⟨ P ⟩) n) -> Maybe (⊢ Γ)
-    derive-Ctx ε = just ε
-    derive-Ctx (Γ ∙ E) = do
-      E' <- derive-Entry Γ E
-      Γ' <- derive-Ctx Γ
-      just (Γ' ∙ E')
-
-  derive-Sort : ∀ (Γ : Con (Term ⟨ P ⟩) n) E -> Maybe (Γ ⊢Sort E)
-  derive-Sort Γ (UU)    = map-Maybe (λ P -> UUⱼ {{because P}}) (derive-Ctx Γ)
-  derive-Sort Γ (NN)    = map-Maybe (λ P -> NNⱼ {{because P}}) (derive-Ctx Γ)
-  derive-Sort Γ (Empty) = map-Maybe (λ P -> Emptyⱼ {{because P}}) (derive-Ctx Γ)
-  derive-Sort Γ (Unit)  = map-Maybe (λ P -> Unitⱼ {{because P}}) (derive-Ctx Γ)
-  derive-Sort Γ (L ＠ U)  = map-Maybe (Locⱼ U) (derive-Sort Γ (L))
-  derive-Sort Γ E = nothing
-
-
-  derive-Term : ∀ Γ -> (t A p : Term ⟨ P ⟩ n) -> Γ ⊢ t ∶ A / p
-  derive-Term Γ t A p = {!!}
-
-  instance
-    isDerivable:Con : isDerivable (⊢ Γ)
-    isDerivable:Con = record { derive = derive-Ctx _ }
-
-  instance
-    isDerivable:Entry : isDerivable (Γ ⊢Entry A)
-    isDerivable:Entry = record { derive = derive-Entry _ _ }
-
-  instance
-    isDerivable:Sort : isDerivable (Γ ⊢Sort A)
-    isDerivable:Sort = record { derive = derive-Sort _ _ }
-
-  module Examples where
-
-    _⊢_/_≔_ : (Γ : Con (Term ⟨ P ⟩) n) -> Term ⟨ P ⟩ n → Term ⟨ P ⟩ n -> Term ⟨ P ⟩ n → Set
-    Γ ⊢ A / p ≔ t = Γ ⊢ t ∶ A / p
-
-    T0 : ε ⊢Sort NN
-    T0 = NNⱼ
-
-    t0 : ε ⊢ (NN / ▲ U) ▹▹ (NN ×× NN) / ▲ U
-           ≔ lam (var x0 ,ₜ var x0)
-
-    t0 = lamⱼ NNⱼ (prodⱼ NN NN (var zero) (var zero))
-
-    t1 : ε ⊢ _ ∶ ((((NN ＠ U) / ◯) ×× (NN ＠ U)) / ◯) ▹▹ (NN ×× NN) / ▲ U
-    t1 = lamⱼ (Σⱼ Locⱼ _ NNⱼ ▹ Locⱼ _ NNⱼ) (prodⱼ NN NN (unlocⱼ (fstⱼ (NN ＠ _) (NN ＠ _) (var zero))) ((unlocⱼ (sndⱼ (NN ＠ _) (NN ＠ _) (var zero)))))
 
 
 
@@ -368,7 +292,7 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
       --           → Γ ⊢Sort t ∶ B
 
     -- Type equality
-    -- data _⊢_≡_ (Γ : Con (Term ⟨ P ⟩) n) : Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Set where
+    -- data _⊢_≡_ (Γ : Con (Term P) n) : Term P n → Term P n → Set where
     --   univ   : ∀ {A B}
     --         → Γ ⊢Sort A ≡ B ∶ U
     --         → Γ ⊢Sort A ≡ B
@@ -394,7 +318,7 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
     --         → Γ     ⊢ Σ F ▹ G ≡ Σ H ▹ E
 
     -- Term equality
-  --   data _⊢_≡_∶_ (Γ : Con (Term ⟨ P ⟩) n) : Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Set where
+  --   data _⊢_≡_∶_ (Γ : Con (Term P) n) : Term P n → Term P n → Term P n → Set where
   --     refl          : ∀ {t A}
   --                   → Γ ⊢Sort t ∶ A
   --                   → Γ ⊢Sort t ≡ t ∶ A
@@ -495,7 +419,7 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
   --                   → Γ ⊢Sort e ≡ e' ∶ Unit
 
   -- -- Term reduction
-  -- data _⊢_⇒_∶_ (Γ : Con (Term ⟨ P ⟩) n) : Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Set where
+  -- data _⊢_⇒_∶_ (Γ : Con (Term P) n) : Term P n → Term P n → Term P n → Set where
   --   conv           : ∀ {A B t u}
   --                 → Γ ⊢Sort t ⇒ u ∶ A
   --                 → Γ ⊢Sort A ≡ B
@@ -555,13 +479,13 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
   --                 → Γ     ⊢ Emptyrec A n ⇒ Emptyrec A n′ ∶ A
 
   -- Type reduction
-  data _⊢_⇒_ (Γ : Con (Term ⟨ P ⟩) n) : Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Set where
+  data _⊢_⇒_ (Γ : Con (Term P) n) : Term P n → Term P n → Set where
     univ : ∀ {A B}
         → Γ ⊢Sort A ⇒ B ∶ U
         → Γ ⊢Sort A ⇒ B
 
   -- Term reduction closure
-  data _⊢_⇒*_∶_ (Γ : Con (Term ⟨ P ⟩) n) : Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Set where
+  data _⊢_⇒*_∶_ (Γ : Con (Term P) n) : Term P n → Term P n → Term P n → Set where
     id  : ∀ {A t}
         → Γ ⊢Sort t ∶ A
         → Γ ⊢Sort t ⇒* t ∶ A
@@ -571,7 +495,7 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
         → Γ ⊢Sort t  ⇒* u  ∶ A
 
   -- Type reduction closure
-  data _⊢_⇒*_ (Γ : Con (Term ⟨ P ⟩) n) : Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Set where
+  data _⊢_⇒*_ (Γ : Con (Term P) n) : Term P n → Term P n → Set where
     id  : ∀ {A}
         → Γ ⊢Sort A
         → Γ ⊢Sort A ⇒* A
@@ -581,23 +505,23 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
         → Γ ⊢Sort A  ⇒* B
 
   -- Type reduction to whnf
-  _⊢_↘_ : (Γ : Con (Term ⟨ P ⟩) n) → Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Set
+  _⊢_↘_ : (Γ : Con (Term P) n) → Term P n → Term P n → Set
   Γ ⊢Sort A ↘ B = Γ ⊢Sort A ⇒* B × Whnf B
 
   -- Term reduction to whnf
-  _⊢_↘_∶_ : (Γ : Con (Term ⟨ P ⟩) n) → Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Set
+  _⊢_↘_∶_ : (Γ : Con (Term P) n) → Term P n → Term P n → Term P n → Set
   Γ ⊢Sort t ↘ u ∶ A = Γ ⊢Sort t ⇒* u ∶ A × Whnf u
 
   -- Type equality with well-formed types
-  _⊢_:≡:_ : (Γ : Con (Term ⟨ P ⟩) n) → Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Set
+  _⊢_:≡:_ : (Γ : Con (Term P) n) → Term P n → Term P n → Set
   Γ ⊢Sort A :≡: B = Γ ⊢Sort A × Γ ⊢Sort B × (Γ ⊢Sort A ≡ B)
 
   -- Term equality with well-formed terms
-  _⊢_:≡:_∶_ : (Γ : Con (Term ⟨ P ⟩) n) → Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Term ⟨ P ⟩ n → Set
+  _⊢_:≡:_∶_ : (Γ : Con (Term P) n) → Term P n → Term P n → Term P n → Set
   Γ ⊢Sort t :≡: u ∶ A = (Γ ⊢Sort t ∶ A) × (Γ ⊢Sort u ∶ A) × (Γ ⊢Sort t ≡ u ∶ A)
 
   -- Type reduction closure with well-formed types
-  record _⊢_:⇒*:_ (Γ : Con (Term ⟨ P ⟩) n) (A B : Term ⟨ P ⟩ n) : Set where
+  record _⊢_:⇒*:_ (Γ : Con (Term P) n) (A B : Term P n) : Set where
     constructor [_,_,_]
     field
       ⊢A : Γ ⊢Sort A
@@ -607,7 +531,7 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
   open _⊢_:⇒*:_ using () renaming (D to red; ⊢A to ⊢A-red; ⊢B to ⊢B-red) public
 
   -- Term reduction closure with well-formed terms
-  record _⊢_:⇒*:_∶_ (Γ : Con (Term ⟨ P ⟩) n) (t u A : Term ⟨ P ⟩ n) : Set where
+  record _⊢_:⇒*:_∶_ (Γ : Con (Term P) n) (t u A : Term P n) : Set where
     constructor [_,_,_]
     field
       ⊢t : Γ ⊢Sort t ∶ A
@@ -617,7 +541,7 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
   open _⊢_:⇒*:_∶_ using () renaming (d to redₜ; ⊢t to ⊢t-redₜ; ⊢u to ⊢u-redₜ) public
 
   -- Well-formed substitutions.
-  data _⊢ˢ_∶_ (Δ : Con Term m) : (σ : Subst m n) (Γ : Con (Term ⟨ P ⟩) n) → Set where
+  data _⊢ˢ_∶_ (Δ : Con Term m) : (σ : Subst m n) (Γ : Con (Term P) n) → Set where
     id  : ∀ {σ} → Δ ⊢ˢ σ ∶ ε
     _,_ : ∀ {A σ}
         → Δ ⊢ˢ tail σ ∶ Γ
@@ -625,7 +549,7 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
         → Δ ⊢ˢ σ      ∶ Γ ∙ A
 
   -- Conversion of well-formed substitutions.
-  data _⊢ˢ_≡_∶_ (Δ : Con Term m) : (σ σ′ : Subst m n) (Γ : Con (Term ⟨ P ⟩) n) → Set where
+  data _⊢ˢ_≡_∶_ (Δ : Con Term m) : (σ σ′ : Subst m n) (Γ : Con (Term P) n) → Set where
     id  : ∀ {σ σ′} → Δ ⊢ˢ σ ≡ σ′ ∶ ε
     _,_ : ∀ {A σ σ′}
         → Δ ⊢ˢ tail σ ≡ tail σ′ ∶ Γ
