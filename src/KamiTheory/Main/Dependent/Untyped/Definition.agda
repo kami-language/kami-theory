@@ -139,6 +139,7 @@ data Kind : (ns : List Nat) → Set where
   -------------------
   -- Kami terms (location related)
   𝓀-loc : Kind (0 ∷ 0 ∷ []) -- loc : (U ≤ W -> (Γ ⊢ L / Local U)) -> Γ ⊢ (L ＠ U) / Global
+  𝓀-locskip : Kind [] -- not implementing a term because we don't need the current location
   𝓀-unloc : Kind (0 ∷ []) -- [_]unloc : (ϕ : U ≤ V) -> Γ ⊢ (L ＠ U) / Global -> Γ ⊢ L / Local V
 
 -- Term Ps are indexed by its number of unbound variables and are either:
@@ -258,6 +259,7 @@ pattern comval a     = gen 𝓀-comval (a ∷ [])
 pattern _＠_ L U     = gen 𝓀-＠ (L ∷ constₜ (location U) ∷ [])
 pattern loc U t      = gen 𝓀-loc (constₜ (location U) ∷ t ∷ [])
 pattern unloc t      = gen 𝓀-unloc (t ∷ [])
+pattern locskip      = gen 𝓀-locskip []
 
 pattern _≫_ x f     = gen 𝓀-≫ (x ∷ f ∷ [])
 pattern _>_ x f     = gen 𝓀-> (x ∷ f ∷ [])

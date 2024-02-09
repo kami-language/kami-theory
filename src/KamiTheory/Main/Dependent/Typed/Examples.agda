@@ -5,7 +5,7 @@ module KamiTheory.Main.Dependent.Typed.Examples where
 open import Data.Fin using (#_ ; zero ; suc)
 open import Data.List using (_∷_ ; [])
 
-open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const)
+open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
 open import Agora.Order.Preorder
 open import Agora.Order.Lattice
 
@@ -53,8 +53,8 @@ module Examples where
     A B C : Term P n
     U V W R : P
 
-  _⊢_/_≔_ : (Γ : Con (Term P) n) -> Term P n → Term P n -> Term P n → Set
-  Γ ⊢ A / p ≔ t = Γ ⊢ t ∶ A / p
+  _∣_⊢_/_≔_ : (W : P) -> (Γ : Con (Term P) n) -> Term P n → Term P n -> Term P n → Set
+  W ∣ Γ ⊢ A / p ≔ t = W ∣ Γ ⊢ t ∶ A / p
 
 
 
@@ -62,26 +62,31 @@ module Examples where
   εε : Con (Term P) zero
   εε = ε
 
-  T0 : εε ⊢Sort NN
+  T0 : all ∣ εε ⊢Sort NN
   T0 = NNⱼ
 
-  t0 : εε ⊢ (NN / ▲ U) ▹▹ (NN ×× NN) / ▲ U
+  t0 : all ∣ εε ⊢ (NN / ▲ U) ▹▹ (NN ×× NN) / ▲ U
           ≔ lam (var zero ,ₜ var zero)
 
   t0 = lamⱼ NNⱼ (prodⱼ NN NN (var zero) (var zero))
 
-  t1 : ε ⊢ _ ∶ ((((NN ＠ U) / ◯) ×× (NN ＠ U)) / ◯) ▹▹ (NN ×× NN) / ▲ U
+  t1 : all ∣ ε ⊢ _ ∶ ((((NN ＠ U) / ◯) ×× (NN ＠ U)) / ◯) ▹▹ (NN ×× NN) / ▲ U
   t1 = lamⱼ (Σⱼ Locⱼ _ NNⱼ ▹ Locⱼ _ NNⱼ) (prodⱼ NN NN (unlocⱼ (fstⱼ (NN ＠ _) (NN ＠ _) (var zero))) ((unlocⱼ (sndⱼ (NN ＠ _) (NN ＠ _) (var zero)))))
 
+  t2 : uu ∣ ε ⊢ _ ∶ NN ＠ vv / ◯
+  t2 = locskipⱼ λ { (incl (take (incl (drop ())) ∷ a))}
+
+
+  {-
   ---------------------------------------------
   -- communication
 
   -- We can send a value
-  c0 : ε ⊢ _ ∶ ((NN ＠ uu) / ◯ ⟶ Com all (NN ＠ (uu ∧ vv))) / ◯
+  c0 : all ∣ ε ⊢ _ ∶ ((NN ＠ uu) / ◯ ⟶ Com all (NN ＠ (uu ∧ vv))) / ◯
   c0 = lamⱼ (Locⱼ _ NNⱼ) (comⱼ (Shareⱼ uu _ π₀-∧ NNⱼ) (shareⱼ NNⱼ (var zero) π₀-∧))
 
   -- We can join two communications
-  c1 : ε ⊢ _ ∶
+  c1 : all ∣ ε ⊢ _ ∶
        (
          (( (NN ＠ uu) / ◯ ⟶ Com R (NN ＠ vv)) / ◯)
       ⟶ (((((NN ＠ vv) / ◯ ⟶ Com R (NN ＠ ww)) / ◯)
@@ -94,6 +99,6 @@ module Examples where
         ≫ⱼ Univ-Comⱼ ((comtypeⱼ (Locⱼ _ NNⱼ) (var (suc (suc zero)) ∘ⱼ var zero ))))
       (comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))
         >ⱼ comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))) )))
-
+  -}
 
 
