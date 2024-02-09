@@ -1,6 +1,7 @@
+
 {-# OPTIONS --allow-unsolved-metas #-}
 
-module KamiTheory.Dev.2024-01-20.UniqueSortedList where
+module KamiTheory.Data.UniqueSortedList.Definition where
 
 open import Data.Empty using (⊥)
 open import Agda.Builtin.Unit using (⊤; tt)
@@ -13,24 +14,12 @@ open import Data.Product.Base using (_×_)
 open import Agda.Builtin.Sigma using (Σ; _,_; fst)
 open import Agda.Builtin.List using (List; []; _∷_)
 open import Relation.Binary.PropositionalEquality using (subst; cong)
-open import KamiTheory.Dev.2024-01-20.StrictOrder.Base
-open import KamiTheory.Dev.2024-01-20.Basics
-
-data Dec {ℓ} (A : Set ℓ) : Set ℓ where
-  yes : (p : A) → Dec A
-  no : (¬p : ¬ A) → Dec A
+open import KamiTheory.Order.StrictOrder.Base
+open import KamiTheory.Basics
 
 [_] : ∀ {𝑖} {A : Set 𝑖} → A → List A
 [ a ] = a ∷ []
 
---------------------------------------------------
--- decidable equality
-
-record hasDecidableEquality {ℓ} (A : Set ℓ) : Set ℓ where
-  field
-    _≟_ : ∀ (x y : A) → Dec (x ≡ y)
-
-open hasDecidableEquality {{...}} public
 
 --------------------------------------------------
 -- elements and subsets
@@ -117,7 +106,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ∷∷⊆ = {!!}
 
  
-  _∈?_ : {{_ : hasDecidableEquality A}} → (a : A) → (as : List A) → Dec (a ∈ as)
+  _∈?_ : {{_ : hasDecidableEquality A}} → (a : A) → (as : List A) → isDecidable (a ∈ as)
   a ∈? [] = no λ ()
   a ∈? (b ∷ as) with (a ≟ b) | a ∈? as
   ...               | yes refl | _ = yes here
@@ -125,7 +114,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ...               | no a≠b | no a∉as = no λ { here → refl ↯ a≠b; (there a∈as) → a∈as ↯ a∉as}
 
 
-  _⊆?_ : {{_ : hasDecidableEquality A}} → (as bs : List A) → Dec (as ⊆ bs)
+  _⊆?_ : {{_ : hasDecidableEquality A}} → (as bs : List A) → isDecidable (as ⊆ bs)
   [] ⊆? bs = yes []⊆
   (a ∷ as) ⊆? [] = no {!!}
   (a ∷ as) ⊆? bs = {!!}
@@ -466,4 +455,6 @@ module _ {A : StrictOrder 𝑖} where
       ; decide-≤ = {!!}
       }
     -- record { decide-≤ = decide-≤-𝒫ᶠⁱⁿ }
+
+
 
