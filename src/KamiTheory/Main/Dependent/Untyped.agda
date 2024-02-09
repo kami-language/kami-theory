@@ -91,6 +91,11 @@ data Kind : (ns : List Nat) → Set where
   Suckind    : Kind (0 ∷ [])
   Natreckind : Kind (1 ∷ 0 ∷ 0 ∷ 0 ∷ [])
 
+  Veckind    : Kind (0 ∷ 0 ∷ [])
+  Nilkind    : Kind []
+  Conskind   : Kind (0 ∷ 0 ∷ [])
+  Vecreckind : Kind (1 ∷ 0 ∷ 0 ∷ 0 ∷ [])
+
   Unitkind : Kind []
   Starkind : Kind []
 
@@ -156,6 +161,9 @@ pattern Σ_▹_ A B = gen Sigmakind (A ∷ B ∷ [])
 -- NN      : Term P n                      -- Type of natural numbers.
 pattern NN = gen Natkind []
 
+-- Vec : (m : Term n) (t : Term n) → Term n -- Vector type.
+pattern Vec m t = gen Veckind (m ∷ t ∷ [])
+
 -- Empty : Term P n                       -- Empty type
 pattern Empty = gen Emptykind []
 
@@ -188,6 +196,16 @@ sucₜ t = gen Suckind (t ∷ [])
 
 natrec : (A : Term P (1+ n)) (t u v : Term P n) → Term P n  -- Natural number recursor (A is a binder).
 natrec A t u v = gen Natreckind (A ∷ t ∷ u ∷ v ∷ [])
+
+-- Introduction and elimination of vectors.
+nilₜ : Term P n                         -- Empty vector.
+nilₜ = gen Nilkind []
+
+consₜ : (v : Term P n) → (vs : Term P n) → Term P n -- Append.
+consₜ v vs = gen Conskind (v ∷ vs ∷ [])
+
+vecrec : (A : Term P (1+ n)) (t u v : Term P n) → Term P n  -- Vector recursor (A is a binder).
+vecrec A t u v = gen Vecreckind (A ∷ t ∷ u ∷ v ∷ [])
 
 
 star : Term P n                        -- Unit element
@@ -243,6 +261,7 @@ data Neutral (P : Set) : Term P n → Set where
   fstₙ      : Neutral P t   → Neutral P (fstₜ t)
   sndₙ      : Neutral P t   → Neutral P (sndₜ t)
   natrecₙ   : Neutral P v   → Neutral P (natrec G t u v)
+  vecrecₙ   : Neutral P v   → Neutral P (vecrec G t u v)
   Emptyrecₙ : Neutral P t   → Neutral P (Emptyrec A t)
 
 
@@ -257,6 +276,7 @@ data Whnf {P : Set} {n : Nat} : Term P n → Set where
   Πₙ     : Whnf (Π A ▹ B)
   Σₙ     : Whnf (Σ A ▹ B)
   ℕₙ     : Whnf NN
+  Vecₙ   : Whnf (Vec A F)
   Unitₙ  : Whnf Unit
   Emptyₙ : Whnf Empty
 
@@ -264,6 +284,8 @@ data Whnf {P : Set} {n : Nat} : Term P n → Set where
   lamₙ  : Whnf (lam t)
   zeroₙ : Whnf zeroₜ
   sucₙ  : Whnf (sucₜ t)
+  nilₙ  : Whnf nilₜ
+  consₙ : Whnf (consₜ t u)
   starₙ : Whnf star
   prodₙ : Whnf (prod t u)
 
@@ -314,6 +336,12 @@ zero≢ne () PE.refl
 suc≢ne : Neutral P t → sucₜ u PE.≢ t
 suc≢ne () PE.refl
 
+nil≢ne : Neutral P t → nilₜ PE.≢ t
+nil≢ne () PE.refl
+
+cons≢ne : Neutral P t → consₜ u v PE.≢ t
+cons≢ne () PE.refl
+
 -- Several views on whnfs (note: not recursive).
 
 -- A whnf of type ℕ is either zero, suc t, or neutral.
@@ -321,6 +349,8 @@ suc≢ne () PE.refl
 data Natural {P : Set} {n : Nat} : Term P n → Set where
   zeroₙ :             Natural zeroₜ
   sucₙ  :             Natural (sucₜ t)
+  nilₙ  :             Natural nilₜ
+  consₙ :             Natural (consₜ u v)
   ne    : Neutral P t → Natural t
 
 
@@ -331,6 +361,7 @@ data Type {P : Set} {n : Nat} : Term P n → Set where
   Πₙ     :             Type (Π A ▹ B)
   Σₙ     :             Type (Σ A ▹ B)
   ℕₙ     :             Type NN
+  Vecₙ   :             Type (Vec A F)
   Emptyₙ :             Type Empty
   Unitₙ  :             Type Unit
   ne     : Neutral P t → Type t
@@ -357,12 +388,15 @@ data Product {P : Set} {n : Nat} : Term P n → Set where
 naturalWhnf : Natural t → Whnf t
 naturalWhnf sucₙ   = sucₙ
 naturalWhnf zeroₙ  = zeroₙ
+naturalWhnf consₙ  = consₙ
+naturalWhnf nilₙ   = nilₙ
 naturalWhnf (ne x) = ne x
 
 typeWhnf : Type A → Whnf A
 typeWhnf Πₙ     = Πₙ
 typeWhnf Σₙ     = Σₙ
 typeWhnf ℕₙ     = ℕₙ
+typeWhnf Vecₙ   = Vecₙ
 typeWhnf Emptyₙ = Emptyₙ
 typeWhnf Unitₙ  = Unitₙ
 typeWhnf (ne x) = ne x
@@ -452,6 +486,7 @@ wkNeutral ρ (∘ₙ n)        = ∘ₙ (wkNeutral ρ n)
 wkNeutral ρ (fstₙ n)      = fstₙ (wkNeutral ρ n)
 wkNeutral ρ (sndₙ n)      = sndₙ (wkNeutral ρ n)
 wkNeutral ρ (natrecₙ n)   = natrecₙ (wkNeutral ρ n)
+wkNeutral ρ (vecrecₙ n)   = vecrecₙ (wkNeutral ρ n)
 wkNeutral ρ (Emptyrecₙ e) = Emptyrecₙ (wkNeutral ρ e)
 
 -- Weakening can be applied to our whnf views.
@@ -459,12 +494,15 @@ wkNeutral ρ (Emptyrecₙ e) = Emptyrecₙ (wkNeutral ρ e)
 wkNatural : ∀ ρ → Natural t → Natural {n = n} (wk ρ t)
 wkNatural ρ sucₙ   = sucₙ
 wkNatural ρ zeroₙ  = zeroₙ
+wkNatural ρ consₙ  = consₙ
+wkNatural ρ nilₙ   = nilₙ
 wkNatural ρ (ne x) = ne (wkNeutral ρ x)
 
 wkType : ∀ ρ → Type t → Type {n = n} (wk ρ t)
 wkType ρ Πₙ     = Πₙ
 wkType ρ Σₙ     = Σₙ
 wkType ρ ℕₙ     = ℕₙ
+wkType ρ Vecₙ   = Vecₙ
 wkType ρ Emptyₙ = Emptyₙ
 wkType ρ Unitₙ  = Unitₙ
 wkType ρ (ne x) = ne (wkNeutral ρ x)
@@ -482,12 +520,15 @@ wkWhnf ρ Uₙ      = Uₙ
 wkWhnf ρ Πₙ      = Πₙ
 wkWhnf ρ Σₙ      = Σₙ
 wkWhnf ρ ℕₙ      = ℕₙ
+wkWhnf ρ Vecₙ    = Vecₙ
 wkWhnf ρ Emptyₙ  = Emptyₙ
 wkWhnf ρ Unitₙ   = Unitₙ
 wkWhnf ρ lamₙ    = lamₙ
 wkWhnf ρ prodₙ   = prodₙ
 wkWhnf ρ zeroₙ   = zeroₙ
 wkWhnf ρ sucₙ    = sucₙ
+wkWhnf ρ nilₙ    = nilₙ
+wkWhnf ρ consₙ   = consₙ
 wkWhnf ρ starₙ   = starₙ
 wkWhnf ρ (ne x)  = ne (wkNeutral ρ x)
 

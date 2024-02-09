@@ -154,6 +154,7 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
     data _⊢Sort_ (Γ : Con (Term ⟨ P ⟩) n) : Term ⟨ P ⟩ n -> Set where
       UUⱼ    : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Sort UU
       NNⱼ    : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Sort NN
+      Vecⱼ   : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Sort A → Γ ⊢Sort F → Γ ⊢Sort Vec A F
       Emptyⱼ : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Sort Empty
       Unitⱼ  : {{_ : isTrue (⊢ Γ)}} → Γ ⊢Sort Unit
 
@@ -194,7 +195,11 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
       --           → Γ     ⊢ F ∶ U
       --           → Γ ∙ F ⊢ G ∶ U
       --           → Γ     ⊢ Σ F ▹ G ∶ U
-      -- ℕⱼ        : ⊢ Γ → Γ ⊢Sort ℕ ∶ U
+      ℕⱼ        : {{_ : isTrue (⊢ Γ)}} → Γ ⊢ NN ∶ UU / p
+      Vecⱼ      : ∀ {F l}
+                → Γ ⊢ F ∶ UU / p
+                → Γ ⊢ l ∶ NN / p
+                → Γ ⊢ Vec F l ∶ UU / p
       -- Emptyⱼ    : ⊢ Γ → Γ ⊢Sort Empty ∶ U
       -- Unitⱼ     : ⊢ Γ → Γ ⊢Sort Unit ∶ U
 
@@ -230,6 +235,34 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
                 → {{_ : isTrue (Γ ∙ (A / p) ⊢Sort B)}}
                 → Γ ⊢ t ∶ Σ (A / p) ▹ B / p
                 → Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / p
+                
+      zeroⱼ     : ⊢ Γ
+                → Γ ⊢ zeroₜ ∶ NN / p
+      sucⱼ      : ∀ {n}
+                → Γ ⊢      n ∶ NN / p
+                → Γ ⊢ sucₜ n ∶ NN / p
+
+      natrecⱼ   : ∀ {G s z n}
+                → {{_ : isTrue (Γ ∙ NN ⊢Sort G)}}
+                → Γ       ⊢ z ∶ G [ zeroₜ ] / p
+                → Γ       ⊢ s ∶ Π NN ▹ (G ▹▹ G [ sucₜ (var x0) ]↑) / p
+                → Γ       ⊢ n ∶ NN / p
+                → Γ       ⊢ natrec G z s n ∶ G [ n ] / p
+
+      nilⱼ      : ∀ {A}
+                → Γ ⊢ nilₜ ∶ Vec A zeroₜ / p
+      consⱼ     : ∀ {A v vs n}
+                → Γ ⊢         v ∶ A / p
+                → Γ ⊢        vs ∶ Vec A n / p
+                → Γ ⊢ consₜ v vs ∶ Vec A (sucₜ n) / p
+
+      vecrecⱼ   : ∀ {G A s z l v n}
+                → {{_ : isTrue (Γ ∙ (Vec A l / p) ⊢Sort G)}}
+                → Γ           ⊢ z ∶ G [ nilₜ ] / p
+                → Γ           ⊢ v ∶ A / p
+                → Γ           ⊢ s ∶ Π (Vec A l) ▹ (G ▹▹ G [ consₜ (wk1 v) (var x0) ]↑) / p
+                → Γ           ⊢ vecrec G z s n ∶ G [ n ] / p
+
 
       -- sndⱼ      : ∀ {F G t}
       --           → Γ ⊢Sort F
