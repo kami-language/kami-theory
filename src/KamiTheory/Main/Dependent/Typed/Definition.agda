@@ -196,7 +196,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
                 → Γ ⊢ t ∶ Σ (A / p) ▹ B / p
                 → Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / p
 
-      zeroⱼ     : ⊢ Γ
+      zeroⱼ     :  {{_ : isTrue (⊢ Γ)}}
                 → Γ ⊢ zeroₜ ∶ NN / p
       sucⱼ      : ∀ {n}
                 → Γ ⊢      n ∶ NN / p
