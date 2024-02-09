@@ -1,4 +1,4 @@
-module KamiD.Dev.2024-01-09.UniqueSortedList where
+module KamiTheory.Dev.2024-01-09.UniqueSortedList where
 
 open import Agora.Conventions -- using (¬_)
 

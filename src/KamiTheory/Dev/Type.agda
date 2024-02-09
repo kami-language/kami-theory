@@ -1,5 +1,5 @@
 
-module KamiD.Dev.Type where
+module KamiTheory.Dev.Type where
 
 open import Agora.Conventions hiding (Σ)
 open import Agora.Data.Universe.Power.Definition

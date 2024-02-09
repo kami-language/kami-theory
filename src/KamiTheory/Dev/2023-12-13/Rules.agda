@@ -1,13 +1,13 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 
-module KamiD.Dev.2023-12-13.Rules where
+module KamiTheory.Dev.2023-12-13.Rules where
 
 open import Agora.Conventions hiding (Σ ; Lift)
 open import Agora.Data.Power.Definition
 open import Data.Fin
 open import Data.Nat hiding (_!)
 open import Relation.Nullary.Decidable.Core
-open import KamiD.Dev.2023-12-05.Core
+open import KamiTheory.Dev.2023-12-05.Core
 
 Name = ℕ
 

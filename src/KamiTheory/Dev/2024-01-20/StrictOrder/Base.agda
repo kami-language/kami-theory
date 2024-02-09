@@ -1,7 +1,7 @@
 
 {-# OPTIONS --allow-unsolved-metas #-}
 
-module KamiD.Dev.2024-01-20.StrictOrder.Base where
+module KamiTheory.Dev.2024-01-20.StrictOrder.Base where
 
 open import Data.Empty using (⊥)
 open import Agda.Builtin.Unit using (⊤; tt)
@@ -14,7 +14,7 @@ open import Data.Product.Base using (_×_)
 open import Agda.Builtin.Sigma using (Σ; _,_; fst)
 open import Data.List.Base using (List; []; _∷_)
 open import Relation.Binary.PropositionalEquality using (subst; cong)
-open import KamiD.Dev.2024-01-20.Basics
+open import KamiTheory.Dev.2024-01-20.Basics
 open import Data.Fin.Base using (Fin ; zero ; suc)
 
 

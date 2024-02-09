@@ -1,13 +1,13 @@
 
 {-# OPTIONS --allow-unsolved-metas #-}
 
-module KamiD.Other.Chapter2 where
+module KamiTheory.Other.Chapter2 where
 
 open import Agora.Conventions hiding (Σ)
 open import Agora.Data.Power.Definition
 open import Data.Fin
 open import Data.Nat hiding (_!)
-open import KamiD.Dev.2023-11-27.Core
+open import KamiTheory.Dev.2023-11-27.Core
 
 
 data Type : 𝒰₀ where

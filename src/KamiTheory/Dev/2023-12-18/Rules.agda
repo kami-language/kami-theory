@@ -1,6 +1,6 @@
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
-module KamiD.Dev.2023-12-18.Rules where
+module KamiTheory.Dev.2023-12-18.Rules where
 
 open import Agora.Conventions hiding (Σ ; Lift)
 open import Agora.Data.Power.Definition
@@ -8,7 +8,7 @@ open import Data.Fin
 open import Data.Nat hiding (_!)
 open import Relation.Nullary.Decidable.Core
 
-open import KamiD.Dev.2023-12-18.Core
+open import KamiTheory.Dev.2023-12-18.Core
 
 {-# BUILTIN REWRITE _≣_ #-}
 

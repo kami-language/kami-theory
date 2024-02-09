@@ -1,6 +1,6 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 
-module KamiD.Dev.2024-01-14.UniqueSortedList where
+module KamiTheory.Dev.2024-01-14.UniqueSortedList where
 
 open import Data.Empty using (⊥)
 open import Agda.Builtin.Unit using (⊤; tt)

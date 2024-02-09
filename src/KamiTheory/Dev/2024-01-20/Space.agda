@@ -1,16 +1,16 @@
 
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
-module KamiD.Dev.2024-01-20.Space where
+module KamiTheory.Dev.2024-01-20.Space where
 
 open import Agora.Conventions hiding (Σ ; Lift ; k)
 
-open import KamiD.Dev.2024-01-20.Core hiding (_＠_)
-open import KamiD.Dev.2024-01-20.StrictOrder.Base
-open import KamiD.Dev.2024-01-20.UniqueSortedList
-open import KamiD.Dev.2024-01-20.StrictOrder.Instances.List
-open import KamiD.Dev.2024-01-20.Basics
-open import KamiD.Dev.2024-01-20.Open
+open import KamiTheory.Dev.2024-01-20.Core hiding (_＠_)
+open import KamiTheory.Dev.2024-01-20.StrictOrder.Base
+open import KamiTheory.Dev.2024-01-20.UniqueSortedList
+open import KamiTheory.Dev.2024-01-20.StrictOrder.Instances.List
+open import KamiTheory.Dev.2024-01-20.Basics
+open import KamiTheory.Dev.2024-01-20.Open
 
 open import Agora.Order.Preorder
 open import Agora.Order.Lattice

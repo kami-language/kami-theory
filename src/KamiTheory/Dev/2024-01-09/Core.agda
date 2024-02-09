@@ -1,6 +1,6 @@
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
-module KamiD.Dev.2024-01-09.Core where
+module KamiTheory.Dev.2024-01-09.Core where
 
 open import Agora.Conventions hiding (Σ)
 open import Agora.Data.Power.Definition

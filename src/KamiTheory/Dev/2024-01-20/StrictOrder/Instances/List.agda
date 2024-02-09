@@ -1,12 +1,12 @@
 
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
-module KamiD.Dev.2024-01-20.StrictOrder.Instances.List where
+module KamiTheory.Dev.2024-01-20.StrictOrder.Instances.List where
 
 open import Agora.Conventions hiding (Σ ; Lift ; k)
 
-open import KamiD.Dev.2024-01-20.Core hiding (_＠_)
-open import KamiD.Dev.2024-01-20.StrictOrder.Base
+open import KamiTheory.Dev.2024-01-20.Core hiding (_＠_)
+open import KamiTheory.Dev.2024-01-20.StrictOrder.Base
 
 
 -- We show that there is a strict (lexicographic) order on List A for a strict order A

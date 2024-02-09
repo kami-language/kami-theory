@@ -51,18 +51,6 @@ instance
   isTrue:isDerivable : ∀{A : 𝒰 𝑖} -> {{der : isDerivable A}} {a : A} -> {{_ :  derive {{der}} ≣ just a}} -> isTrue A
   isTrue:isDerivable {a = a} = record { proof = a }
 
-module _ {P : 𝒰₀} {{_ : isDiscrete P}} where
-  _≟-MLMod_ : (a b : MLMod P) -> isDecidable (a ≣ b)
-  Global ≟-MLMod Global = just refl-≣
-  Global ≟-MLMod Local U = left (λ ())
-  Local U ≟-MLMod Global = left (λ ())
-  Local U ≟-MLMod Local V with U ≟-Str V
-  ... | left x = left λ {refl-≣ -> x refl-≣}
-  ... | just refl-≣ = just refl-≣
-
-instance
-  isDiscrete:MLMod : ∀{P} -> {{_ : isDiscrete P}} -> isDiscrete (MLMod P)
-  isDiscrete:MLMod = record { _≟-Str_ = _≟-MLMod_ }
 
 
 module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ P ⟩}} where

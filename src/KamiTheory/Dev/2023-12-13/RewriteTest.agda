@@ -1,7 +1,7 @@
 
 {-# OPTIONS --cubical --rewriting #-}
 
-module KamiD.Dev.2023-12-13.RewriteTest where
+module KamiTheory.Dev.2023-12-13.RewriteTest where
 
 -- open import Agora.Conventions hiding (Σ ; Lift)
 -- open import Agora.Data.Power.Definition
@@ -10,7 +10,7 @@ module KamiD.Dev.2023-12-13.RewriteTest where
 -- open import Relation.Nullary.Decidable.Core
 
 open import Cubical.Core.Primitives
--- open import KamiD.Dev.2023-12-05.Core
+-- open import KamiTheory.Dev.2023-12-05.Core
 
 {-# BUILTIN REWRITE _≡_ #-}
 

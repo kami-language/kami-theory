@@ -1,7 +1,7 @@
 
 {-# OPTIONS --rewriting #-}
 
-module KamiD.Dev.2023-11-10.Utils where
+module KamiTheory.Dev.2023-11-10.Utils where
 
 open import Agda.Builtin.Equality.Rewrite
 open import Agora.Conventions hiding (Σ ; toℕ)
@@ -13,9 +13,9 @@ open import Data.String hiding (_≈_)
 open import Relation.Nullary.Decidable.Core
 open import Relation.Nullary.Reflects
 
-open import KamiD.Dev.2023-11-10.Core
-open import KamiD.Dev.2023-11-10.Rules
-open import KamiD.Dev.2023-11-10.Utils.Context
+open import KamiTheory.Dev.2023-11-10.Core
+open import KamiTheory.Dev.2023-11-10.Rules
+open import KamiTheory.Dev.2023-11-10.Utils.Context
 
 {-# REWRITE +-suc +-zero #-}
 

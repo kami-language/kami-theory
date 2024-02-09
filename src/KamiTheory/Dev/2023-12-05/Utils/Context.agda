@@ -1,5 +1,5 @@
 
-module KamiD.Dev.2023-12-05.Utils.Context where
+module KamiTheory.Dev.2023-12-05.Utils.Context where
 
 open import Agora.Conventions hiding (Σ)
 open import Agora.Data.Power.Definition
@@ -9,8 +9,8 @@ open import Data.List using (List ; [] ; _∷_)
 open import Data.String
 open import Relation.Nullary.Decidable.Core
 
-open import KamiD.Dev.2023-12-05.Core
-open import KamiD.Dev.2023-12-05.Rules
+open import KamiTheory.Dev.2023-12-05.Core
+open import KamiTheory.Dev.2023-12-05.Rules
 
 
 skip-right : ∀{Γ Δ Ε k x} -> {A : Ε ⊢Type! k} -> {{_ : Δ ⊇ Ε}}

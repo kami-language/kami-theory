@@ -1,6 +1,6 @@
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
-module KamiD.Dev.2024-01-20.Rules-2024-01-30 where
+module KamiTheory.Dev.2024-01-20.Rules-2024-01-30 where
 
 open import Agora.Conventions hiding (Σ ; Lift ; k)
 open import Agora.Order.Preorder
@@ -12,11 +12,11 @@ open import Data.Fin hiding (_-_ ; _+_ ; _≤_)
 open import Data.Nat hiding (_! ; _+_ ; _≤_ ; _≰_)
 open import Relation.Nullary.Decidable.Core
 
-open import KamiD.Dev.2024-01-20.Core hiding (_＠_)
-open import KamiD.Dev.2024-01-20.UniqueSortedList
-open import KamiD.Dev.2024-01-20.Space
-open import KamiD.Dev.2024-01-20.Open
-open import KamiD.Dev.2024-01-20.StrictOrder.Base
+open import KamiTheory.Dev.2024-01-20.Core hiding (_＠_)
+open import KamiTheory.Dev.2024-01-20.UniqueSortedList
+open import KamiTheory.Dev.2024-01-20.Space
+open import KamiTheory.Dev.2024-01-20.Open
+open import KamiTheory.Dev.2024-01-20.StrictOrder.Base
 
 -- We have type contexts and normal contexts which additionally
 -- contain location assignments.
@@ -654,8 +654,8 @@ data _⊢_ where
 
 
 module Examples where
-  open import KamiD.Dev.2024-01-20.Open
-  open import KamiD.Dev.2024-01-20.StrictOrder.Base
+  open import KamiTheory.Dev.2024-01-20.Open
+  open import KamiTheory.Dev.2024-01-20.StrictOrder.Base
 
   XX : hasFiniteJoins {𝑖 = ℓ₁ , ℓ₁ , ℓ₁} (𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 2)))
   XX = it

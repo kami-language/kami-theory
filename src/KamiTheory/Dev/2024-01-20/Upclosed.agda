@@ -1,7 +1,7 @@
 
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
-module KamiD.Dev.2024-01-20.Upclosed where
+module KamiTheory.Dev.2024-01-20.Upclosed where
 
 open import Agora.Conventions hiding (Σ ; Lift ; k)
 open import Agora.Order.Preorder
@@ -12,8 +12,8 @@ open import Data.Fin hiding (_-_ ; _+_ ; _≤_ ; join ; _<_)
 open import Data.Nat hiding (_! ; _+_ ; _≤_ ; _≰_ ; _<_)
 open import Relation.Nullary.Decidable.Core
 
-open import KamiD.Dev.2024-01-20.Core hiding (_＠_)
-open import KamiD.Dev.2024-01-20.UniqueSortedList
+open import KamiTheory.Dev.2024-01-20.Core hiding (_＠_)
+open import KamiTheory.Dev.2024-01-20.UniqueSortedList
 
 -- A preorder where we have a notion of "direct" parent
 

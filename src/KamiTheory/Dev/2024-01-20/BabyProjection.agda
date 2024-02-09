@@ -1,6 +1,6 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 
-module KamiD.Dev.2024-01-20.BabyProjection where
+module KamiTheory.Dev.2024-01-20.BabyProjection where
 
 open import Agda.Builtin.List using (List; []; _∷_)
 open import Agda.Builtin.Nat using (Nat; zero; suc)
@@ -15,11 +15,11 @@ open import Relation.Nullary using (¬_)
 open import Level
 
 
-open import KamiD.Dev.2024-01-20.Basics
+open import KamiTheory.Dev.2024-01-20.Basics
 
-open import KamiD.Dev.2024-01-20.UniqueSortedList
-open import KamiD.Dev.2024-01-20.StrictOrder.Base
-open import KamiD.Dev.2024-01-20.Baby
+open import KamiTheory.Dev.2024-01-20.UniqueSortedList
+open import KamiTheory.Dev.2024-01-20.StrictOrder.Base
+open import KamiTheory.Dev.2024-01-20.Baby
 
 
 module _ where

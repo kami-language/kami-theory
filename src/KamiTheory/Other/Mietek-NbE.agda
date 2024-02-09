@@ -14,7 +14,7 @@
 
 ----------------------------------------------------------------------------------------------------
 
-module KamiD.Other.Mietek-NbE where
+module KamiTheory.Other.Mietek-NbE where
 
 open import Data.Empty public
   using (⊥ ; ⊥-elim)

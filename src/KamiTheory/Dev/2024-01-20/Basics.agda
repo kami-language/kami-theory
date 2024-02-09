@@ -1,5 +1,5 @@
 
-module KamiD.Dev.2024-01-20.Basics where
+module KamiTheory.Dev.2024-01-20.Basics where
 
 open import Data.Empty using (⊥)
 open import Agda.Builtin.Unit using (⊤; tt)

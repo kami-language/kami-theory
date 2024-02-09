@@ -1,8 +1,8 @@
 {-# OPTIONS --allow-unsolved-metas #-}
 
-module KamiD.Dev.2024-01-20.Baby where
+module KamiTheory.Dev.2024-01-20.Baby where
 
-open import KamiD.Dev.2024-01-20.UniqueSortedList
+open import KamiTheory.Dev.2024-01-20.UniqueSortedList
 
 open import Agda.Builtin.Bool using (Bool; true; false)
 open import Agda.Builtin.Nat using (Nat; zero; suc)
@@ -17,8 +17,8 @@ open import Relation.Nullary using (¬_)
 open import Level
 
 open import Data.Fin using (Fin; cast) renaming (zero to 𝟘 ; suc to 𝕤)
-open import KamiD.Dev.2024-01-20.Basics
-open import KamiD.Dev.2024-01-20.StrictOrder.Base
+open import KamiTheory.Dev.2024-01-20.Basics
+open import KamiTheory.Dev.2024-01-20.StrictOrder.Base
 
 
 module _ where

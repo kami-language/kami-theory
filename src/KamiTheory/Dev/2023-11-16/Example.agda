@@ -1,17 +1,17 @@
 
 {-# OPTIONS --rewriting #-}
 
-module KamiD.Dev.2023-11-16.Example where
+module KamiTheory.Dev.2023-11-16.Example where
 
 open import Agora.Conventions hiding (Σ)
 open import Agora.Data.Power.Definition
 open import Data.Fin
 open import Data.Nat
 open import Relation.Nullary.Decidable.Core
-open import KamiD.Dev.2023-11-16.Core
-open import KamiD.Dev.2023-11-16.Rules
-open import KamiD.Dev.2023-11-16.Utils
-open import KamiD.Dev.2023-11-16.Utils.Context
+open import KamiTheory.Dev.2023-11-16.Core
+open import KamiTheory.Dev.2023-11-16.Rules
+open import KamiTheory.Dev.2023-11-16.Utils
+open import KamiTheory.Dev.2023-11-16.Utils.Context
 
 instance _ = Derive:⊇
 
