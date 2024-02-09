@@ -110,35 +110,6 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
           → Γ ⊢Entry E
           → ⊢ Γ ∙ E
 
-
-    -- data _⊢Var_∶_∷_ : {Γ : Con (Term P) n} -> (ΓP : ⊢ Γ)
-    --                 -> (x : Fin n) (E : Term P n) (k : TypeKind) → Set where
-    --   zero : ∀{ΓP : ⊢ Γ}
-    --          -> {EP : Γ ⊢Entry E ∷ k}
-    --          -> (ΓP ∙ EP) ⊢Var x0 ∶ wk1 E ∷ k
-    --   suc : ∀{ΓP : ⊢ Γ}
-    --          -> ΓP ⊢Var x ∶ E ∷ k
-    --          -> {FP : Γ ⊢Entry F}
-    --          -> (ΓP ∙ FP) ⊢Var (x +1) ∶ wk1 E ∷ k
-
-
-    -- Well-formed ml modality
-    -- data _⊢MLMod_∷_ (Γ : Con (Term P) n) : Term P n -> TypeKind → Set where
-    --   globalⱼ : Γ ⊢MLMod ◯ ∷ Global
-    --   localⱼ : ∀ U -> Γ ⊢MLMod ▲ U ∷ Local
-
-    -- Well-formed modality
-    -- data _⊢Mod_∷_ (Γ : Con (Term P) n) : Term P n → TypeKind -> Set where
-    --   mlⱼ : Γ ⊢MLMod p -> Γ ⊢Mod p ∷ k
-
-
-
-    -- _⊢Sort_ : (Γ : Con (Term P) n) -> Term P n -> Set
-    -- _⊢Sort_ Γ L = Γ ⊢Sort L ∷ Local
-
-    -- _⊢Sort_ : (Γ : Con (Term P) n) -> Term P n -> Set
-    -- _⊢Sort_ Γ L = Γ ⊢Sort L ∷ Global
-
     -- Well-formed type
     data _⊢Sort_ (Γ : Con (Term P) n) : Term P n -> Set where
       UUⱼ    : {{ΓP : isTrue (⊢ Γ)}} → Γ ⊢Sort UU
