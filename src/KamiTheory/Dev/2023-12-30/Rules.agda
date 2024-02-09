@@ -11,30 +11,30 @@ open import Relation.Nullary.Decidable.Core
 
 open import KamiTheory.Dev.2023-12-26.Core
 
-{-# BUILTIN REWRITE _≣_ #-}
+{-# BUILTIN REWRITE _≡_ #-}
 
 Name = ℕ
 
 module _ {A B : 𝒰 𝑖} where
-  transp-≣ : (A ≣ B) -> A -> B
-  transp-≣ refl-≣ a = a
+  transp-≡ : (A ≡ B) -> A -> B
+  transp-≡ refl-≡ a = a
 
 module _ {A : 𝒰 𝑖} {B : 𝒰 𝑗} {C : 𝒰 𝑘} where
-  cong₂-≣ : (f : A -> B -> C) -> ∀{a₀ a₁ : A} -> ∀{b₀ b₁ : B} -> a₀ ≣ a₁ -> b₀ ≣ b₁ -> f a₀ b₀ ≣ f a₁ b₁
-  cong₂-≣ f refl-≣ refl-≣ = refl-≣
+  cong₂-≡ : (f : A -> B -> C) -> ∀{a₀ a₁ : A} -> ∀{b₀ b₁ : B} -> a₀ ≡ a₁ -> b₀ ≡ b₁ -> f a₀ b₀ ≡ f a₁ b₁
+  cong₂-≡ f refl-≡ refl-≡ = refl-≡
 
--- cong-≣ : {A : 𝒰 𝑖} {B : A -> 𝒰 𝑗} -> (f : (a : A) -> B a) -> {a b : A} -> (a ≣ b) -> f a ≣ f b
-cong-≣ : {A : 𝒰 𝑖} {B : 𝒰 𝑗} -> (f : A -> B) -> {a b : A} -> (a ≣ b) -> f a ≣ f b
-cong-≣ f refl-≣ = refl-≣
+-- cong-≡ : {A : 𝒰 𝑖} {B : A -> 𝒰 𝑗} -> (f : (a : A) -> B a) -> {a b : A} -> (a ≡ b) -> f a ≡ f b
+cong-≡ : {A : 𝒰 𝑖} {B : 𝒰 𝑗} -> (f : A -> B) -> {a b : A} -> (a ≡ b) -> f a ≡ f b
+cong-≡ f refl-≡ = refl-≡
 
-ap₀ : ∀{A : 𝒰 𝑖} {a b : A} -> a ≣ b -> A
+ap₀ : ∀{A : 𝒰 𝑖} {a b : A} -> a ≡ b -> A
 ap₀ {a = a} _ = a
 
-ap₁ : ∀{A : 𝒰 𝑖} {a b : A} -> a ≣ b -> A
+ap₁ : ∀{A : 𝒰 𝑖} {a b : A} -> a ≡ b -> A
 ap₁ {b = b} _ = b
 
-J1 : ∀{A : 𝒰 𝑖} {B : 𝒰 𝑘} -> ∀{a b : A} -> (p : a ≣ b) -> (F : A -> 𝒰 𝑗) -> (f : ∀ a -> F a -> B) -> (x : F a) -> f b (transp-≣ (cong-≣ F p) x) ≣ f a x
-J1 refl-≣ F f x = refl-≣
+J1 : ∀{A : 𝒰 𝑖} {B : 𝒰 𝑘} -> ∀{a b : A} -> (p : a ≡ b) -> (F : A -> 𝒰 𝑗) -> (f : ∀ a -> F a -> B) -> (x : F a) -> f b (transp-≡ (cong-≡ F p) x) ≡ f a x
+J1 refl-≡ F f x = refl-≡
 
 
 
@@ -52,10 +52,10 @@ J1 refl-≣ F f x = refl-≣
 --   One could, instead, have a certain derivative (∂ : Term -> Hom_Hole Γ Γ')
 --   which describes how the negative parts of the context get modified
 --   by the (a : A) term. If we write (hole ↦ z) then with the `hole`
---   term we create a new hole, and as such, `(∂ hole) Γ ≣ (Γ , A)`
+--   term we create a new hole, and as such, `(∂ hole) Γ ≡ (Γ , A)`
 --   which means that (b : B a) gets a new A-variable. While if we don't
 --   create a new hole, but merely project one from the context, then
---   this is also visible in the derivative: `(∂ (var x)) (Γ , x , Δ) ≣ (Γ , Δ , x)`.
+--   this is also visible in the derivative: `(∂ (var x)) (Γ , x , Δ) ≡ (Γ , Δ , x)`.
 --   But as one can see, no new variable is created.
 --
 --   We have a very strong _,_ operator: 

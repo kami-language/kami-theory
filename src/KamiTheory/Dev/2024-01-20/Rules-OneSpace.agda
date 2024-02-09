@@ -622,14 +622,14 @@ module _ {P : Param} where
   restrict-Ctx₊ ϕ [] = []
   restrict-Ctx₊ ϕ (Δ ,[ x ]) = restrict-Ctx₊ ϕ Δ ,[ {!!} ]
 
-  β-restrict,⋆ : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> {Δ : Γ ⊢Ctx₊} -> restrict-Ctx ϕ (Γ ⋆-Ctx₊ Δ) ≣ restrict-Ctx ϕ Γ ⋆-Ctx₊ restrict-Ctx₊ ϕ Δ
+  β-restrict,⋆ : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> {Δ : Γ ⊢Ctx₊} -> restrict-Ctx ϕ (Γ ⋆-Ctx₊ Δ) ≡ restrict-Ctx ϕ Γ ⋆-Ctx₊ restrict-Ctx₊ ϕ Δ
   β-restrict,⋆ = {!!}
 
   {-# REWRITE β-restrict,⋆ #-}
 
   β-restrict,Ctx₊ : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> ∀{E : Γ ⊢Entry k} {Δ}
                   -> (t : Γ ⊢ E)
-                  -> su-Ctx₊ (restrict-Term ϕ t) (restrict-Ctx₊ ϕ Δ) ≣ restrict-Ctx₊ ϕ (su-Ctx₊ t Δ)
+                  -> su-Ctx₊ (restrict-Term ϕ t) (restrict-Ctx₊ ϕ Δ) ≡ restrict-Ctx₊ ϕ (su-Ctx₊ t Δ)
   β-restrict,Ctx₊ = {!!}
 
   {-# REWRITE β-restrict,Ctx₊ #-}
@@ -637,7 +637,7 @@ module _ {P : Param} where
 
   β-restrict,su : (ϕ : W₀ ≤ W₁) -> {Γ : Ctx W₁} -> ∀{E : Γ ⊢Entry k} {Δ} -> (S : Γ ,[ E ] ⋆-Ctx₊ Δ ⊢Sort k)
                   -> (t : Γ ⊢ E)
-                  -> restrict-Sort ϕ (su-Sort,ind t Δ S) ≣ su-Sort,ind (restrict-Term ϕ t) (restrict-Ctx₊ ϕ Δ) (restrict-Sort ϕ S)
+                  -> restrict-Sort ϕ (su-Sort,ind t Δ S) ≡ su-Sort,ind (restrict-Term ϕ t) (restrict-Ctx₊ ϕ Δ) (restrict-Sort ϕ S)
   β-restrict,su = {!!}
 
   restrict-Mod ϕ (Dep d) = Dep d

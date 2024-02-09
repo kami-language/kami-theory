@@ -69,10 +69,10 @@ instance
 -- Helpers
 
 -- ‵ : ∀{Γ k} -> (x : Name)
---      -> {{_ : findVar Γ x ≣ just k }}
+--      -> {{_ : findVar Γ x ≡ just k }}
 --      -> Fin ∣ Γ ∣
 -- ‵ {Γ = Γ} x {{P}} with findVar Γ x | P
--- ... | just k | refl-≣ = k
+-- ... | just k | refl-≡ = k
 
 
 -- get : ∀{Γ} -> (i : Fin ∣ Γ ∣) -> Γ ⊢ i isKind (Γ ＠ i)
@@ -80,9 +80,9 @@ instance
 
 -}
 
-‵ : ∀{Γ k} -> (x : Name) -> {{_ : findVar Γ x ≣ just k}} -> Γ ⊢ k isKind (Γ ＠ k)
+‵ : ∀{Γ k} -> (x : Name) -> {{_ : findVar Γ x ≡ just k}} -> Γ ⊢ k isKind (Γ ＠ k)
 ‵ {Γ} {k} x {{P}} with findVar Γ x | P
-... | just x₁ | refl-≣ = it
+... | just x₁ | refl-≡ = it
 
 
 -- getIsShape : ∀ Γ k -> Maybe (Γ ⊢ k isKind 𝑆)
@@ -90,11 +90,11 @@ instance
 -- getIsShape (_,[_∶_] Γ x {𝑆} x₁) zero = just zero
 -- getIsShape (_,[_∶_] Γ x {⩝ x₂ ∶ A , k} x₁) zero = nothing
 
--- ‵ : ∀{Γ k p} -> (x : Name) -> {{_ : findVar Γ x ≣ just k}}
---         -> {{_ : getIsShape Γ k ≣ just p}}
+-- ‵ : ∀{Γ k p} -> (x : Name) -> {{_ : findVar Γ x ≡ just k}}
+--         -> {{_ : getIsShape Γ k ≡ just p}}
 --         -> Γ ⊢ k isKind 𝑆
 -- ‵ {Γ} {k} x {{P}} {{Q}} with findVar Γ x | P
--- ... | just x₁ | refl-≣ with getIsShape Γ k | Q
--- ... | just x₂ | refl-≣ = x₂
+-- ... | just x₁ | refl-≡ with getIsShape Γ k | Q
+-- ... | just x₂ | refl-≡ = x₂
 
 

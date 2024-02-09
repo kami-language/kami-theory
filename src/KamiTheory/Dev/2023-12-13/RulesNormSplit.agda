@@ -11,7 +11,7 @@ open import Relation.Nullary.Decidable.Core
 -- open import Cubical.Core.Everything
 -- open import KamiTheory.Dev.2023-12-05.Core
 
-{-# BUILTIN REWRITE _≣_ #-}
+{-# BUILTIN REWRITE _≡_ #-}
 
 
 data Test : 𝒰₀ where
@@ -20,7 +20,7 @@ data Test : 𝒰₀ where
   T0 : Test
 
 postulate
-  unit-l-Test : ∀{t : Test} -> T0 ⋆ t ≣ t
+  unit-l-Test : ∀{t : Test} -> T0 ⋆ t ≡ t
 
 {-# REWRITE unit-l-Test #-}
 
@@ -272,10 +272,10 @@ data Ctx where
 
 postulate
   β-Dull : ∀{Γ : Ctx (+- , τ)} {A}
-         -> Dull (Γ ,[ A ]) ≣ Dull-Ctx Γ ,[ Dull-Type A ]
+         -> Dull (Γ ,[ A ]) ≡ Dull-Ctx Γ ,[ Dull-Type A ]
 
 {-# REWRITE β-Dull #-}
-  -- β-, : ∀{Γ A} -> ⏏-Ctx Γ ,[ A ] ≣ ⏏ (Γ ,[ A ])
+  -- β-, : ∀{Γ A} -> ⏏-Ctx Γ ,[ A ] ≡ ⏏ (Γ ,[ A ])
 
 
 Dull-Ctx = Dull
@@ -331,19 +331,19 @@ Dull-Var : {A : Dull Γ ⊢Type} -> Γ ⊢Var ⏏ (D⁻ A) -> Dull Γ ⊢Var A
 Dull-Var = {!!}
 
 postulate
-  σ-Dull-Restr : {Γ : Ctx (+- , τ)} -> {A : Dull Γ ⊢Type} -> {v : Γ ⊢Var ⏏ (D⁻ A)} -> Dull (Restr Γ v) ≣ Restr-Ctx (Dull Γ) (Dull-Var v)
+  σ-Dull-Restr : {Γ : Ctx (+- , τ)} -> {A : Dull Γ ⊢Type} -> {v : Γ ⊢Var ⏏ (D⁻ A)} -> Dull (Restr Γ v) ≡ Restr-Ctx (Dull Γ) (Dull-Var v)
 
 {-# REWRITE σ-Dull-Restr #-}
 
 postulate
-  subst-D⁺ : ∀{σ : Δ ⇛ Γ} {A : Dull Γ ⊢Type} -> ⏏ (D⁺ A) [ σ ] ≣ ⏏ (D⁺ (A [ Dull-⇛ σ ]))
-  subst-D⁻ : ∀{σ : Δ ⇛ Γ} {A : Dull Γ ⊢Type} -> ⏏ (D⁻ A) [ σ ] ≣ ⏏ (D⁻ (A [ Dull-⇛ σ ]))
-  subst-NN : ∀{σ : Δ ⇛ Γ} -> ⏏ NN [ σ ] ≣ ⏏ NN
-  subst-End : ∀{σ : Δ ⇛ Γ} -> ⏏ End [ σ ] ≣ ⏏ End
+  subst-D⁺ : ∀{σ : Δ ⇛ Γ} {A : Dull Γ ⊢Type} -> ⏏ (D⁺ A) [ σ ] ≡ ⏏ (D⁺ (A [ Dull-⇛ σ ]))
+  subst-D⁻ : ∀{σ : Δ ⇛ Γ} {A : Dull Γ ⊢Type} -> ⏏ (D⁻ A) [ σ ] ≡ ⏏ (D⁻ (A [ Dull-⇛ σ ]))
+  subst-NN : ∀{σ : Δ ⇛ Γ} -> ⏏ NN [ σ ] ≡ ⏏ NN
+  subst-End : ∀{σ : Δ ⇛ Γ} -> ⏏ End [ σ ] ≡ ⏏ End
 
-  β-Dull-D⁻ : ∀{Γ : Ctx (+- , τ)} -> ∀{A : Dull Γ ⊢Type} -> Dull {Γ = Γ} (⏏ (D⁻ A)) ≣ A
+  β-Dull-D⁻ : ∀{Γ : Ctx (+- , τ)} -> ∀{A : Dull Γ ⊢Type} -> Dull {Γ = Γ} (⏏ (D⁻ A)) ≡ A
 
-  β-Restr-D⁻ : ∀{Γ : Ctx (+- , τ)} -> ∀{A : Dull Γ ⊢Type} -> ∀{v : Γ ⊢Var ⏏ (D⁻ A)} -> RestrT (⏏ (D⁻ A)) v ≣ ⏏ (D⁻ (Restr-Type A (Dull-Var v)))
+  β-Restr-D⁻ : ∀{Γ : Ctx (+- , τ)} -> ∀{A : Dull Γ ⊢Type} -> ∀{v : Γ ⊢Var ⏏ (D⁻ A)} -> RestrT (⏏ (D⁻ A)) v ≡ ⏏ (D⁻ (Restr-Type A (Dull-Var v)))
 
 
 {-# REWRITE subst-D⁺ subst-D⁻ subst-NN subst-End #-}
@@ -406,9 +406,9 @@ data _⊢_ where
 ---------------------------------------------
 -- rewriting for single substitution
 postulate
-  ssubst-zero : ∀{τ}{Γ : Ctx (+- , τ)} -> ∀{A} {x : Restr (Γ ,[ A ]) zero ⊢ RestrT (A [ wk ]) zero} -> (Γ ,[ A ]) [ zero ≔ x ] ≣ Γ --  & A wit x
-  -- ssubst-zero-End : ∀{τ}{Γ : Ctx (◌ , τ)} -> {x : Restr (Γ ,[ ⏏ End ]) zero ⊢ RestrT (⏏ End) zero} -> (Γ ,[ ⏏ End ]) [ zero ≔ x ] ≣ Γ
-  -- ssubst-suc : ∀{τ}{Γ : Ctx (+- , τ)} -> ∀{A B v} {x : Γ ⊢ B} -> (Γ ,[ A ]) [ suc v ≔ x [ wk ]t ] ≣ (Γ [ v ≔ x ]) ,[ A [ σ-subst-Ctx ] ]
+  ssubst-zero : ∀{τ}{Γ : Ctx (+- , τ)} -> ∀{A} {x : Restr (Γ ,[ A ]) zero ⊢ RestrT (A [ wk ]) zero} -> (Γ ,[ A ]) [ zero ≔ x ] ≡ Γ --  & A wit x
+  -- ssubst-zero-End : ∀{τ}{Γ : Ctx (◌ , τ)} -> {x : Restr (Γ ,[ ⏏ End ]) zero ⊢ RestrT (⏏ End) zero} -> (Γ ,[ ⏏ End ]) [ zero ≔ x ] ≡ Γ
+  -- ssubst-suc : ∀{τ}{Γ : Ctx (+- , τ)} -> ∀{A B v} {x : Γ ⊢ B} -> (Γ ,[ A ]) [ suc v ≔ x [ wk ]t ] ≡ (Γ [ v ≔ x ]) ,[ A [ σ-subst-Ctx ] ]
 
 {-# REWRITE ssubst-zero #-}
 -- {-# REWRITE ssubst-zero ssubst-suc #-}
@@ -421,7 +421,7 @@ postulate
 -- Special rewriting rules involving terms
 
 postulate
-  subst-Fam : ∀{σ : Δ ⇛ Γ} {x : Γ ⊢ ⏏ NN} -> ⏏ (Fam x) [ σ ] ≣ ⏏ (Fam (x [ σ ]t))
+  subst-Fam : ∀{σ : Δ ⇛ Γ} {x : Γ ⊢ ⏏ NN} -> ⏏ (Fam x) [ σ ] ≡ ⏏ (Fam (x [ σ ]t))
 
 --
 ---------------------------------------------
@@ -433,8 +433,8 @@ module Examples where
   -- F1 : ε ⊢ ⏏ (⨇ (⏏ (D⁺ (⏏ NN))) (⨇ (⏏ (D⁻ (⏏ NN))) (D⁺ (⏏ End))))
   -- F1 = Λ (Λ ([ zero ≔ var (suc zero) ] end) )
 
-  -- T1 : (ε ,[ ⏏ (D⁻ (⏏ NN)) ]) [ zero ≔ inv (d⁺ n0) ] ≣ ε
-  -- T1 = {!refl-≣!}
+  -- T1 : (ε ,[ ⏏ (D⁻ (⏏ NN)) ]) [ zero ≔ inv (d⁺ n0) ] ≡ ε
+  -- T1 = {!refl-≡!}
 
   -- F2 : ε ⊢ ⏏ (⨇ (⏏ (D⁻ (⏏ NN))) (⨇ (⏏ (D⁺ (⏏ (Fam (var zero))))) (D⁺ (⏏ (Fam (n0))))))
   -- F2 = Λ (Λ ([ suc zero ≔ d⁺ n0 ] {!var zero!}) )

@@ -8,8 +8,8 @@ open import Data.Nat
 open import Relation.Nullary.Decidable.Core
 
 module _ {A : 𝒰 𝑖} where
-  -- data _!≣_ : A -> A -> 𝒰 𝑖 where
-  --   irrefl : ∀{a b} -> {{_ : {a ≣ b} -> 𝟘-𝒰}} -> a !≣ b
+  -- data _!≡_ : A -> A -> 𝒰 𝑖 where
+  --   irrefl : ∀{a b} -> {{_ : {a ≡ b} -> 𝟘-𝒰}} -> a !≡ b
 
 -- data Name : 𝒰₀ where
 --   a b c d e f p q r α β γ δ : Name
@@ -153,7 +153,7 @@ module _ where
                   -> {{_ : Γ ⊇ Δ₀}}
                   -> {{_ : Γ ⊇ Δ₂}}
                   -> {{_ : VarsCtxHelper Γ Δ₀ xs}}
-                  -> {{_ : findVar x Γ ≣ just i}}
+                  -> {{_ : findVar x Γ ≡ just i}}
                   -> {{_ : Γ ⊇ Δ₁}} -> {{_ : VarCtx Γ Δ₁ i}}
                   -> {{_ : Δ₂ ⊇ Δ₀}}
                   -> {{_ : Δ₂ ⊇ Δ₁}}

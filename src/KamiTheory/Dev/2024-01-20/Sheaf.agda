@@ -22,11 +22,11 @@ open import Agora.Data.Product.Definition
 module _ {X : 𝒰 _} {{_ : X is Lattice 𝑖}} where
   record isSheaf {𝑗} (F : X -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
     field _↷_ : ∀{U V : X} -> (ϕ : U ≤ V) -> F V -> F U
-    field id-↷ : ∀{U} -> ∀{x : F U} -> reflexive ↷ x ≣ x
-    field comp-↷ : ∀{U V W} -> {ϕ : U ≤ V} {ψ : V ≤ W} -> {x : F W} -> (ϕ ⟡ ψ) ↷ x ≣ ϕ ↷ (ψ ↷ x)
-    field glue : ∀{U V} -> (x : F U) -> (y : F V) -> π₀-∧ ↷ x ≣ π₁-∧ ↷ y -> F (U ∨ V)
-    field glue-π₀ : ∀{U V} -> (x : F U) -> (y : F V) -> (p : π₀-∧ ↷ x ≣ π₁-∧ ↷ y) -> ι₀-∨ ↷ (glue x y p) ≣ x
-    field glue-π₁ : ∀{U V} -> (x : F U) -> (y : F V) -> (p : π₀-∧ ↷ x ≣ π₁-∧ ↷ y) -> ι₁-∨ ↷ (glue x y p) ≣ y
+    field id-↷ : ∀{U} -> ∀{x : F U} -> reflexive ↷ x ≡ x
+    field comp-↷ : ∀{U V W} -> {ϕ : U ≤ V} {ψ : V ≤ W} -> {x : F W} -> (ϕ ⟡ ψ) ↷ x ≡ ϕ ↷ (ψ ↷ x)
+    field glue : ∀{U V} -> (x : F U) -> (y : F V) -> π₀-∧ ↷ x ≡ π₁-∧ ↷ y -> F (U ∨ V)
+    field glue-π₀ : ∀{U V} -> (x : F U) -> (y : F V) -> (p : π₀-∧ ↷ x ≡ π₁-∧ ↷ y) -> ι₀-∨ ↷ (glue x y p) ≡ x
+    field glue-π₁ : ∀{U V} -> (x : F U) -> (y : F V) -> (p : π₀-∧ ↷ x ≡ π₁-∧ ↷ y) -> ι₁-∨ ↷ (glue x y p) ≡ y
 
     infixr 30 _↷_
 
@@ -37,11 +37,11 @@ module _ {X : 𝒰 _} {{_ : X is Lattice 𝑖}} where
     isSheaf:const : ∀{A : 𝒰 𝑗} -> isSheaf (const A)
     isSheaf:const = record
       { _↷_ = λ _ x -> x
-      ; id-↷ = refl-≣
-      ; comp-↷ = refl-≣
+      ; id-↷ = refl-≡
+      ; comp-↷ = refl-≡
       ; glue = λ x _ _ -> x
-      ; glue-π₀ = λ x y p -> refl-≣
-      ; glue-π₁ = λ {x y refl-≣ -> refl-≣}
+      ; glue-π₀ = λ x y p -> refl-≡
+      ; glue-π₁ = λ {x y refl-≡ -> refl-≡}
       }
 
 

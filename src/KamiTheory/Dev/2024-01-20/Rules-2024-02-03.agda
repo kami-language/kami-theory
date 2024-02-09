@@ -138,10 +138,10 @@ data _⊢Ctx₊ where
 
 -- _⋆-Ctx₊₂_ : (Δ : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ Δ) ⊢Ctx₊ -> Γ ⊢Ctx₊
 
--- assoc-⋆-Ctx₊ : ∀{Δ E} -> Γ ⋆-Ctx₊ (Δ ⋆-Ctx₊₂ E) ≣ Γ ⋆-Ctx₊ Δ ⋆-Ctx₊ E
+-- assoc-⋆-Ctx₊ : ∀{Δ E} -> Γ ⋆-Ctx₊ (Δ ⋆-Ctx₊₂ E) ≡ Γ ⋆-Ctx₊ Δ ⋆-Ctx₊ E
 
 -- Δ ⋆-Ctx₊₂ [] = Δ
--- Δ ⋆-Ctx₊₂ (E ,[ x ]) = (Δ ⋆-Ctx₊₂ E) ,[ transp-≣ (cong-≣ _⇂_⊢Type (sym-≣ assoc-⋆-Ctx₊)) x ]
+-- Δ ⋆-Ctx₊₂ (E ,[ x ]) = (Δ ⋆-Ctx₊₂ E) ,[ transp-≡ (cong-≡ _⇂_⊢Type (sym-≡ assoc-⋆-Ctx₊)) x ]
 
 Γ ⋆-Ctx₊ [] = Γ
 Γ ⋆-Ctx₊ (E ,[ x ]) = (Γ ⋆-Ctx₊ E) ,[ x ]
@@ -153,9 +153,9 @@ data _⊢Ctx₊ where
 
 {-
 
-assoc-⋆-Ctx₊ {E = []} = refl-≣
+assoc-⋆-Ctx₊ {E = []} = refl-≡
 assoc-⋆-Ctx₊ {Γ = Γ} {Δ = Δ} {E = E ,[ x ]} =
-  let p = sym-≣ (assoc-⋆-Ctx₊ {Γ = Γ} {Δ = Δ} {E = E})
+  let p = sym-≡ (assoc-⋆-Ctx₊ {Γ = Γ} {Δ = Δ} {E = E})
   in J1 p _⊢Type _,[_] x
 
 {-# REWRITE assoc-⋆-Ctx₊ #-}
@@ -365,7 +365,7 @@ wks-Sort : (E : Γ ⊢Ctx₊) -> (A : Γ ⊢Sort k) -> Γ ⋆-Ctx₊ E ⊢Sort k
 wks-Sort [] A = A
 wks-Sort (E ,[ x ]) A = wk-Sort (wks-Sort E A)
 
--- β-wk-Sort,ind,empty : ∀{A : Γ ,[ B ] ⊢Sort k} -> wk-Sort,ind [] A ≣ A
+-- β-wk-Sort,ind,empty : ∀{A : Γ ,[ B ] ⊢Sort k} -> wk-Sort,ind [] A ≡ A
 -- β-wk-Sort,ind,empty = ?
 
 
@@ -864,14 +864,14 @@ infixl 40 _,[_]
 
 
 
--- ⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
--- ⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≣ (cong-≣ (Γ ⊢_) p) x
+-- ⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx) -> {A B : Γ ⊢Type} -> (A ≡ B) -> Γ ⊢ A -> Γ ⊢ B
+-- ⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≡ (cong-≡ (Γ ⊢_) p) x
 
--- ⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx) -> {A B : Γ ⊢Type} -> (A ≣ B) -> Γ ⊢ A -> Γ ⊢ B
--- ⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≣ (cong-≣ (Γ ⊢_) p) x
+-- ⟨_⊢⇂_⇃⟩ : ∀ (Γ : Ctx) -> {A B : Γ ⊢Type} -> (A ≡ B) -> Γ ⊢ A -> Γ ⊢ B
+-- ⟨_⊢⇂_⇃⟩ Γ {A} {B} p x = transp-≡ (cong-≡ (Γ ⊢_) p) x
 
--- _∥⊢Type↷_ : Γ ≣ Δ -> Γ ⊢Type -> Δ ⊢Type
--- _∥⊢Type↷_ p A = transp-≣ (cong-≣ (_⊢Type) p) A
+-- _∥⊢Type↷_ : Γ ≡ Δ -> Γ ⊢Type -> Δ ⊢Type
+-- _∥⊢Type↷_ p A = transp-≡ (cong-≡ (_⊢Type) p) A
 
 
 ------------------------------------------------------------------------
@@ -890,16 +890,16 @@ filter-Type,Ctx₊ : {Γ : Ctx} -> (E : Γ ⊢Ctx₊) -> (Γ ⋆-Ctx₊ E ⊢Typ
 [] ⇂-Ctx₊ U = []
 E ,[ x ] ⇂-Ctx₊ U = E ⇂-Ctx₊ U ,[ filter-Type,Ctx₊ E x U ]
 
-σ-⋆,⇂,Ctx : ∀ E U -> ((Γ ⋆-Ctx₊ E) ⇂ U) ≣ (Γ ⇂ ψ ⋆-Ctx₊ E ⇂-Ctx₊ U)
+σ-⋆,⇂,Ctx : ∀ E U -> ((Γ ⋆-Ctx₊ E) ⇂ U) ≡ (Γ ⇂ ψ ⋆-Ctx₊ E ⇂-Ctx₊ U)
 filter-Type,Ctx₊ {Γ = Γ} E A U = σ-⋆,⇂,Ctx E U ∥⊢Type↷ (A ⇂-Type U)
 
-σ-⋆,⇂,Ctx [] U = refl-≣
-σ-⋆,⇂,Ctx (E ,[ x ]) U = sym-≣ $ J1 (σ-⋆,⇂,Ctx E U) _⊢Type _,[_] (x ⇂-Type U)
+σ-⋆,⇂,Ctx [] U = refl-≡
+σ-⋆,⇂,Ctx (E ,[ x ]) U = sym-≡ $ J1 (σ-⋆,⇂,Ctx E U) _⊢Type _,[_] (x ⇂-Type U)
 
 {-# REWRITE σ-⋆,⇂,Ctx #-} -- we need this for `wk-Sort,ind` and for `σ-wk-⇂-Ctx₊`
 
 -- we also need to reduce `σ-⋆,⇂,Ctx` to refl:
-isRefl:σ-⋆,⇂,Ctx : ∀ {E : Γ ⊢Ctx₊} {U} -> σ-⋆,⇂,Ctx E U ≣ refl-≣
+isRefl:σ-⋆,⇂,Ctx : ∀ {E : Γ ⊢Ctx₊} {U} -> σ-⋆,⇂,Ctx E U ≡ refl-≡
 isRefl:σ-⋆,⇂,Ctx = K1 _
 
 {-# REWRITE isRefl:σ-⋆,⇂,Ctx #-}

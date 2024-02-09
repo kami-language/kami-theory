@@ -44,7 +44,7 @@ infixl 40 _⊇_ -- _⊇[_]_
 
 -- _⊇[_]_ : Ctx -> VarMode -> Ctx -> 𝒰₀
 -- Γ ⊇[ strict ] Δ = Γ ⊇ Δ
--- Γ ⊇[ lax ] Δ = Γ ≣ Δ
+-- Γ ⊇[ lax ] Δ = Γ ≡ Δ
 
 record _⊢Type_ (Γ : Ctx) (k : Kind) : 𝒰₀ where
   inductive

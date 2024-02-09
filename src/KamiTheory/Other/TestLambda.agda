@@ -94,7 +94,7 @@ rei {Γ = Γ ,, X ⇒ Y} f = {!letin ? ?!}
 -- normalize : Γ ⊢ A -> Γ ⊢ A
 -- normalize = {!!}
 
--- good-normalize : ∀ (t : Γ ⊢ A) -> ⟦ t ⟧ ≣ ⟦ normalize t ⟧
+-- good-normalize : ∀ (t : Γ ⊢ A) -> ⟦ t ⟧ ≡ ⟦ normalize t ⟧
 -- good-normalize = {!!}
 
 

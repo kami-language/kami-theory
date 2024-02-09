@@ -48,7 +48,7 @@ record isTrue (A : 𝒰 𝑖) : 𝒰 𝑖 where
 open isTrue {{...}} public
 
 instance
-  isTrue:isDerivable : ∀{A : 𝒰 𝑖} -> {{der : isDerivable A}} {a : A} -> {{_ :  derive {{der}} ≣ just a}} -> isTrue A
+  isTrue:isDerivable : ∀{A : 𝒰 𝑖} -> {{der : isDerivable A}} {a : A} -> {{_ :  derive {{der}} ≡ just a}} -> isTrue A
   isTrue:isDerivable {a = a} = record { proof = a }
 
 
@@ -254,7 +254,7 @@ module KamiTyped (P : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : isDiscrete ⟨ 
     derive-Entry Γ (L ＠ U / ◯)  = map-Maybe (Locⱼ U) (derive-Entry Γ (L / ▲ U))
     derive-Entry Γ (Σ (A / ML p) ▹ B / ML q) with p ≟-Str q
     ... | left x = nothing
-    ... | just refl-≣ = do
+    ... | just refl-≡ = do
       A' <- derive-Entry Γ (A / ML p)
       B' <- derive-Entry (Γ ∙ (A / ML q)) (B / ML q)
       just (Σⱼ A' ▹ B')

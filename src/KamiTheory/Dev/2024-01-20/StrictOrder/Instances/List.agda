@@ -37,17 +37,17 @@ module _ {A : 𝒰 𝑖} {{Ap : hasStrictOrder A}} where
   tail-<-List (take x) = ⊥-elim (irrefl-< x)
   tail-<-List (next p) = p
 
-  conn-<-List : (a b : List A) -> Tri (a <-List b) (a ≣ b) (b <-List a)
-  conn-<-List [] [] = tri≡ (λ ()) refl-≣ (λ ())
+  conn-<-List : (a b : List A) -> Tri (a <-List b) (a ≡ b) (b <-List a)
+  conn-<-List [] [] = tri≡ (λ ()) refl-≡ (λ ())
   conn-<-List [] (x ∷ b) = tri< empty (λ ()) (λ ())
   conn-<-List (x ∷ a) [] = tri> (λ ()) (λ ()) empty
   conn-<-List (a ∷ as) (b ∷ bs) with conn-< a b
-  ... | tri< a<b a≢b a≯b = tri< (take a<b) (λ p -> a≢b (head-≣ p)) (λ p -> head-<-List p a<b)
-  ... | tri> a≮b a≢b a>b = tri> ((λ p -> head-<-List p a>b)) ((λ p -> a≢b (head-≣ p))) (take a>b)
-  ... | tri≡ a≮b refl-≣ a≯b with conn-<-List as bs
-  ... | tri< as<bs as≢bs as≯bs = tri< (next as<bs) (λ p -> as≢bs (tail-≣ p)) (λ p → as≯bs (tail-<-List p))
-  ... | tri≡ a≮b₁ refl-≣ a≯b₁ = tri≡ irrefl-<-List refl-≣ irrefl-<-List
-  ... | tri> as≮bs as≢bs as>bs = tri> ((λ p → as≮bs (tail-<-List p))) ((λ p -> as≢bs (tail-≣ p))) (next as>bs)
+  ... | tri< a<b a≢b a≯b = tri< (take a<b) (λ p -> a≢b (head-≡ p)) (λ p -> head-<-List p a<b)
+  ... | tri> a≮b a≢b a>b = tri> ((λ p -> head-<-List p a>b)) ((λ p -> a≢b (head-≡ p))) (take a>b)
+  ... | tri≡ a≮b refl-≡ a≯b with conn-<-List as bs
+  ... | tri< as<bs as≢bs as≯bs = tri< (next as<bs) (λ p -> as≢bs (tail-≡ p)) (λ p → as≯bs (tail-<-List p))
+  ... | tri≡ a≮b₁ refl-≡ a≯b₁ = tri≡ irrefl-<-List refl-≡ irrefl-<-List
+  ... | tri> as≮bs as≢bs as>bs = tri> ((λ p → as≮bs (tail-<-List p))) ((λ p -> as≢bs (tail-≡ p))) (next as>bs)
 
   instance
     isStrictOrder:<-List : isStrictOrder _<-List_

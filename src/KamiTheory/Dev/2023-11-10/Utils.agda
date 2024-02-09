@@ -226,16 +226,16 @@ testx = ?
 
 
 -- ‵ : ∀{k} -> {Γ : Ctx} -> (x : Name)
---      -> {{_ : map-Maybe fst (varByName Γ x) ≣ just k }}
+--      -> {{_ : map-Maybe fst (varByName Γ x) ≡ just k }}
 --      -> Γ ⊢Varkind k
 -- ‵ {Γ = Γ} x {{P}} with varByName Γ x | P
--- ... | just (k , i) | refl-≣ = i
+-- ... | just (k , i) | refl-≡ = i
 
 ‵ : ∀{Γ k} -> (x : Name)
-     -> {{_ : findVar Γ x ≣ just k }}
+     -> {{_ : findVar Γ x ≡ just k }}
      -> Fin ∣ Γ ∣
 ‵ {Γ = Γ} x {{P}} with findVar Γ x | P
-... | just k | refl-≣ = k
+... | just k | refl-≡ = k
 
 
 {-
@@ -334,7 +334,7 @@ getNamesOfCtx (Δ ,[ x ∶ x₁ ]) = x ∷ getNamesOfCtx Δ
 ----------------------------------------------------
 -- Derivation for ⊇
 
-Derive:⊇ : ∀{Γ Δ Δ'} -> {X : Γ ⊇ Δ} -> {{_ : getVarsCtx Γ (getNamesOfCtx Δ) ≣ just (Δ , X)}} -> Γ ⊇ Δ
+Derive:⊇ : ∀{Γ Δ Δ'} -> {X : Γ ⊇ Δ} -> {{_ : getVarsCtx Γ (getNamesOfCtx Δ) ≡ just (Δ , X)}} -> Γ ⊇ Δ
 Derive:⊇ {Γ} {Δ} {X} = X
 
 
@@ -353,7 +353,7 @@ Derive:⊇ {Γ} {Δ} {X} = X
 
 -}
 
-_?⊩_ : ∀{Γ Δ k} -> {X : Γ ⊇ Δ} -> (xs : List Name) -> {{_ : getVarsCtx Γ xs ≣ just (Δ , X)}} -> Δ ⊢Type! k -> Γ ⊢Type k
+_?⊩_ : ∀{Γ Δ k} -> {X : Γ ⊇ Δ} -> (xs : List Name) -> {{_ : getVarsCtx Γ xs ≡ just (Δ , X)}} -> Δ ⊢Type! k -> Γ ⊢Type k
 _?⊩_ {Δ = Δ} {X = X} xs tp =
   let instance _ = X
   in Δ ⊩ tp
