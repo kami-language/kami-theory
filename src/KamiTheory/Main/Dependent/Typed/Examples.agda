@@ -25,6 +25,7 @@ open import KamiTheory.Order.StrictOrder.Base
 
 
 
+
 -- module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} {{_ : hasDecidableEquality P}} where
 
 module Examples where
@@ -42,19 +43,19 @@ module Examples where
 
   all = uu ∨ vv ∨ ww
 
+  _⟶_ = _▹▹_
+
   private variable
     -- n m : Nat
     p q : Term P n
     t u : Term P n
     Γ  : Con (Term P) n
-    A B : Term P n
-    U V : P
+    A B C : Term P n
+    U V W R : P
 
   _⊢_/_≔_ : (Γ : Con (Term P) n) -> Term P n → Term P n -> Term P n → Set
   Γ ⊢ A / p ≔ t = Γ ⊢ t ∶ A / p
 
-  -- +ₙ : ε ⊢ _ ∶ (NN / ▲ U) ▹▹ ((NN / ▲ U) ▹▹ NN) / ▲ U
-  -- +ₙ {U = U} = lamⱼ NNⱼ (natrecⱼ {G = Π (NN / ▲ U) ▹ NN} (Πⱼ (NNⱼ) ▹ NNⱼ) {!!} {!!} {!!})
 
 
 
@@ -75,11 +76,24 @@ module Examples where
   ---------------------------------------------
   -- communication
 
-  f : (uu ∧ vv) ≤ uu
-  f = π₀-∧
-
   -- We can send a value
-  c0 : ε ⊢ _ ∶ ((NN ＠ uu) / ◯ ▹▹ Com all (NN ＠ (uu ∧ vv))) / ◯
+  c0 : ε ⊢ _ ∶ ((NN ＠ uu) / ◯ ⟶ Com all (NN ＠ (uu ∧ vv))) / ◯
   c0 = lamⱼ (Locⱼ _ NNⱼ) (comⱼ (Shareⱼ uu _ π₀-∧ NNⱼ) (shareⱼ NNⱼ (var zero) π₀-∧))
+
+  -- We can join two communications
+  c1 : ε ⊢ _ ∶
+       (
+         (( (NN ＠ uu) / ◯ ⟶ Com R (NN ＠ vv)) / ◯)
+      ⟶ (((((NN ＠ vv) / ◯ ⟶ Com R (NN ＠ ww)) / ◯)
+      ⟶  ((NN ＠ uu) / ◯ ⟶ Com R (NN ＠ ww))))
+       ) / ◯
+  c1 = lamⱼ (Πⱼ Locⱼ _ NNⱼ ▹ Comⱼ (Locⱼ _ NNⱼ))
+       (lamⱼ ((Πⱼ Locⱼ _ NNⱼ ▹ Comⱼ (Locⱼ _ NNⱼ)))
+       (lamⱼ (Locⱼ _ NNⱼ)
+      (comⱼ (Univ-Comⱼ (comtypeⱼ (Locⱼ _ NNⱼ) (var (suc (suc zero)) ∘ⱼ var zero))
+        ≫ⱼ Univ-Comⱼ ((comtypeⱼ (Locⱼ _ NNⱼ) (var (suc (suc zero)) ∘ⱼ var zero ))))
+      (comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))
+        >ⱼ comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))) )))
+
 
 

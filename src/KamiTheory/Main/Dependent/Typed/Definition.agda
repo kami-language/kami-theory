@@ -136,13 +136,19 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
       Emptyⱼ : {{ΓP : isTrue (⊢ Γ)}} → Γ ⊢Entry (Empty / ▲ U)
       Unitⱼ  : {{ΓP : isTrue (⊢ Γ)}} → Γ ⊢Entry (Unit / ▲ U)
 
-      -- Πⱼ_▹_  : Γ ⊢Entry E → Γ ∙ E ⊢Sort B → Γ ⊢Sort Π E ▹ B
+      Πⱼ_▹_  : ∀{p q} -> Γ ⊢Entry (A / ML p)
+               → Γ ∙ (A / ML p) ⊢Entry (B / ML q)
+               → Γ ⊢Entry (Π (A / ML p) ▹ B / ML q)
+
       Σⱼ_▹_  : ∀{q} -> Γ ⊢Entry (A / ML q)
              → Γ ∙ (A / ML q) ⊢Entry (B / ML q)
              → Γ ⊢Entry (Σ (A / ML q) ▹ B / ML q)
 
-      -- univ   : Γ ⊢Sort A ∶ UU
-      --       → Γ ⊢Sort A
+      -------------------
+      -- Kami universes
+
+      Univ-Comⱼ : Γ ⊢ X ∶ Univ-Com R A / ◯
+               → Γ ⊢Entry (X / ⇄ R A)
 
       -------------------
       -- Kami types (global ◯)
@@ -174,9 +180,20 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
       -- Interaction of Communication with global types
 
       -- If we have a communication value, we can create a global value
+      -- by packing the comm-type and the comm-value into a "tuple" with `com`
       comⱼ : Γ ⊢Entry (X / ⇄ R A)
              -> Γ ⊢ t ∶ X / ⇄ R A
              -> Γ ⊢ com X t ∶ Com R A / ◯
+
+      -- we can project to the first (type) component
+      comtypeⱼ : Γ ⊢Entry (A / ◯)
+             -> Γ ⊢ a ∶ Com R A / ◯
+             -> Γ ⊢ comtype a ∶ Univ-Com R A / ◯
+
+      -- we can project to the second (value) component
+      comvalⱼ : Γ ⊢Entry (A / ◯)
+             -> Γ ⊢ a ∶ Com R A / ◯
+             -> Γ ⊢ comval a ∶ comtype a / ⇄ R A
 
       -------------------
       -- Communication
@@ -230,10 +247,10 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
                 → Γ ∙ E ⊢ t ∶ B / ML q
                 → Γ     ⊢ lam t ∶ Π E ▹ B / ML q
 
-      _∘ⱼ_      : ∀ {g a F G}
-                → Γ ⊢ g ∶ Π F ▹ G / q
-                → Γ ⊢ a ∶ F / p
-                → Γ ⊢ g ∘ a ∶ G [ a ] / q
+      _∘ⱼ_      : ∀ {g a p q}
+                → Γ ⊢ g ∶ Π (A / ML p) ▹ B / ML q
+                → Γ ⊢ a ∶ A / ML p
+                → Γ ⊢ g ∘ a ∶ B [ a ] / ML q
 
       prodⱼ     : ∀ A B -> ∀{t u}
                 → {{_ : isTrue (Γ ⊢Entry (A / p))}}
@@ -262,7 +279,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
       natrecⱼ   : ∀ {G s z n}
                 → (Γ ∙ (NN / ▲ U) ⊢Sort G)
                 → Γ       ⊢ z ∶ G [ zeroₜ ] / p
-                → Γ       ⊢ s ∶ Π NN ▹ (G ▹▹ G [ sucₜ (var x0) ]↑) / p
+                → Γ       ⊢ s ∶ Π (NN / ▲ U) ▹ (G ▹▹ G [ sucₜ (var x0) ]↑) / p
                 → Γ       ⊢ n ∶ NN / p
                 → Γ       ⊢ natrec G z s n ∶ G [ n ] / p
 

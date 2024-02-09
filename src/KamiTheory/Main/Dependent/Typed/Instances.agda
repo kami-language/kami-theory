@@ -35,12 +35,17 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   derive-Entry Γ (Empty / ▲ U) = map-Maybe (λ P -> Emptyⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Entry Γ (Unit / ▲ U)  = map-Maybe (λ P -> Unitⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Entry Γ (L ＠ U / ◯)  = map-Maybe (Locⱼ U) (derive-Entry Γ (L / ▲ U))
+  derive-Entry Γ (Com R A / ◯)  = map-Maybe Comⱼ (derive-Entry Γ (A / ◯))
   derive-Entry Γ (Σ (A / ML p) ▹ B / ML q) with p ≟ q
   ... | left x = nothing
   ... | just refl-≡ = do
     A' <- derive-Entry Γ (A / ML p)
     B' <- derive-Entry (Γ ∙ (A / ML q)) (B / ML q)
     just (Σⱼ A' ▹ B')
+  derive-Entry Γ (Π (A / ML p) ▹ B / ML q) = do
+    A' <- derive-Entry Γ (A / ML p)
+    B' <- derive-Entry (Γ ∙ (A / ML p)) (B / ML q)
+    just (Πⱼ A' ▹ B')
   derive-Entry Γ E = nothing
 
 

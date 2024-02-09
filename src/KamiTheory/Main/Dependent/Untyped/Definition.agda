@@ -109,6 +109,10 @@ data Kind : (ns : List Nat) → Set where
   𝓀-⇄ : Kind (0 ∷ 0 ∷ []) -- Com : Γ ⊢WFSort (A / Global) -> Γ ⊢WFMod Com R A
 
   -------------------
+  -- Kami universe types
+  𝓀-Univ-Com : Kind (0 ∷ 0 ∷ [])
+
+  -------------------
   -- Kami types (global)
   𝓀-＠ : Kind (0 ∷ 0 ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
   𝓀-Com : Kind (0 ∷ 0 ∷ []) -- Com : ⟨ P ⟩ -> Γ ⊢Global -> Γ ⊢Global
@@ -119,12 +123,18 @@ data Kind : (ns : List Nat) → Set where
   𝓀-≫ : Kind (0 ∷ 1 ∷ []) -- new (monadic?) composition operation
   𝓀-Share : Kind (0 ∷ 0 ∷ 0 ∷ []) -- [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / Global ] ⊢Com R) -> Γ ⊢Com R
 
-  -------------------
+  ---------------------------------------------
   -- Kami terms (com related)
-  𝓀-com : Kind (0 ∷ 0 ∷ [])
-  𝓀-end : Kind (0 ∷ [])
-  𝓀-> : Kind (0 ∷ 1 ∷ [])
-  𝓀-share : Kind (0 ∷ [])
+
+  -- packing and unpacking communication into global types
+  𝓀-com : Kind (0 ∷ 0 ∷ []) -- the tuple constructor
+  𝓀-comtype : Kind (0 ∷ []) -- the first projection
+  𝓀-comval : Kind (0 ∷ [])  -- the second projection
+
+  -- the three communication primitives
+  𝓀-end : Kind (0 ∷ [])   -- pure
+  𝓀-> : Kind (0 ∷ 1 ∷ []) -- bind
+  𝓀-share : Kind (0 ∷ []) -- generator
 
   -------------------
   -- Kami terms (location related)
@@ -238,21 +248,25 @@ pattern ▲ U         = constₜ (mlmod (Local U))
 pattern ⇄ R A       = gen 𝓀-⇄ (constₜ (location R) ∷ A ∷ [])
 pattern ML p        = constₜ (mlmod p)
 
-pattern Com R A     = gen 𝓀-Com (constₜ (location R) ∷ A ∷ [])
-pattern com T a     = gen 𝓀-com (T ∷ a ∷ [])
+pattern Univ-Com R A = gen 𝓀-Univ-Com (constₜ (location R) ∷ A ∷ [])
 
-pattern _＠_ L U    = gen 𝓀-＠ (L ∷ constₜ (location U) ∷ [])
-pattern loc U t     = gen 𝓀-loc (constₜ (location U) ∷ t ∷ [])
-pattern unloc t     = gen 𝓀-unloc (t ∷ [])
+pattern Com R A      = gen 𝓀-Com (constₜ (location R) ∷ A ∷ [])
+pattern com T a      = gen 𝓀-com (T ∷ a ∷ [])
+pattern comtype a    = gen 𝓀-comtype (a ∷ [])
+pattern comval a     = gen 𝓀-comval (a ∷ [])
 
-pattern _≫_ x f    = gen 𝓀-≫ (x ∷ f ∷ [])
-pattern _>_ x f    = gen 𝓀-> (x ∷ f ∷ [])
+pattern _＠_ L U     = gen 𝓀-＠ (L ∷ constₜ (location U) ∷ [])
+pattern loc U t      = gen 𝓀-loc (constₜ (location U) ∷ t ∷ [])
+pattern unloc t      = gen 𝓀-unloc (t ∷ [])
 
-pattern Share A U V = gen 𝓀-Share (A ∷ constₜ (location U) ∷ constₜ (location V) ∷ [])
-pattern share a     = gen 𝓀-share (a ∷ [])
+pattern _≫_ x f     = gen 𝓀-≫ (x ∷ f ∷ [])
+pattern _>_ x f     = gen 𝓀-> (x ∷ f ∷ [])
 
-pattern End         = gen 𝓀-End []
-pattern end a       = gen 𝓀-end (a ∷ [])
+pattern Share A U V  = gen 𝓀-Share (A ∷ constₜ (location U) ∷ constₜ (location V) ∷ [])
+pattern share a      = gen 𝓀-share (a ∷ [])
+
+pattern End          = gen 𝓀-End []
+pattern end a        = gen 𝓀-end (a ∷ [])
 
 
 
