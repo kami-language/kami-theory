@@ -121,6 +121,7 @@ data Kind : (ns : List Nat) → Set where
 
   -------------------
   -- Kami terms (com related)
+  𝓀-com : Kind (0 ∷ 0 ∷ [])
   𝓀-end : Kind (0 ∷ [])
   𝓀-> : Kind (0 ∷ 1 ∷ [])
   𝓀-share : Kind (0 ∷ [])
@@ -236,9 +237,11 @@ pattern ◯           = constₜ (mlmod Global)
 pattern ▲ U         = constₜ (mlmod (Local U))
 pattern ⇄ R A       = gen 𝓀-⇄ (constₜ (location R) ∷ A ∷ [])
 pattern ML p        = constₜ (mlmod p)
-pattern _＠_ L U    = gen 𝓀-＠ (L ∷ constₜ (location U) ∷ [])
-pattern Com R A     = gen 𝓀-Com (constₜ (location R) ∷ A ∷ [])
 
+pattern Com R A     = gen 𝓀-Com (constₜ (location R) ∷ A ∷ [])
+pattern com T a     = gen 𝓀-com (T ∷ a ∷ [])
+
+pattern _＠_ L U    = gen 𝓀-＠ (L ∷ constₜ (location U) ∷ [])
 pattern loc U t     = gen 𝓀-loc (constₜ (location U) ∷ t ∷ [])
 pattern unloc t     = gen 𝓀-unloc (t ∷ [])
 
@@ -256,6 +259,7 @@ pattern end a       = gen 𝓀-end (a ∷ [])
 
 infixl 40 _≫_
 infixl 50 _＠_
+infixl 25 _/_
 
 
 

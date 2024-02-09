@@ -161,13 +161,22 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
            -> Γ ⊢Entry (X ≫ F / ⇄ R B)
 
       -- We share a local value of type "A ＠ U" to be "A ＠ V"
-      Shareⱼ : Γ ⊢Entry (A / ▲ V)
-             -> ∀ (U V : P) -> (ϕ : V ≤ U)
+      Shareⱼ : ∀ (U V : P)
+             -> (ϕ : V ≤ U)
+             -> Γ ⊢Entry (A / ▲ V)
              -> Γ ⊢Entry (Share A U V / ⇄ R (A ＠ V))
 
 
     -- Well-formed term of a type
     data _⊢_∶_/_ (Γ : Con (Term P) n) : Term P n → Term P n -> Term P n → Set where
+
+      -------------------
+      -- Interaction of Communication with global types
+
+      -- If we have a communication value, we can create a global value
+      comⱼ : Γ ⊢Entry (X / ⇄ R A)
+             -> Γ ⊢ t ∶ X / ⇄ R A
+             -> Γ ⊢ com X t ∶ Com R A / ◯
 
       -------------------
       -- Communication

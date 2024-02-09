@@ -5,7 +5,7 @@ module KamiTheory.Data.UniqueSortedList.Definition where
 
 open import Data.Empty using (⊥)
 open import Agda.Builtin.Unit using (⊤; tt)
-open import Agda.Builtin.Equality using (_≡_; refl)
+open import Agda.Builtin.Equality using (_≡_)
 open import Agda.Primitive using (Level; lsuc; _⊔_)
 open import Data.Empty.Irrelevant using (⊥-elim)
 open import Relation.Nullary using (¬_)
@@ -16,6 +16,8 @@ open import Agda.Builtin.List using (List; []; _∷_)
 open import Relation.Binary.PropositionalEquality using (subst; cong)
 open import KamiTheory.Order.StrictOrder.Base
 open import KamiTheory.Basics
+
+open import Agora.Conventions using (isDecidable ; yes ; no)
 
 [_] : ∀ {𝑖} {A : Set 𝑖} → A → List A
 [ a ] = a ∷ []
@@ -310,8 +312,8 @@ module _ {A : StrictOrder 𝑖} where
     field ⟨_⟩ : ⟨ U ⟩ ⊆ ⟨ V ⟩
   open _≤-𝒫ᶠⁱⁿ_ {{...}} public
 
-  reflexive-≤-𝒫ᶠⁱⁿ : ∀{U} -> U ≤-𝒫ᶠⁱⁿ U
-  reflexive-≤-𝒫ᶠⁱⁿ = incl refl⊆
+  refl-≤-𝒫ᶠⁱⁿ : ∀{U} -> U ≤-𝒫ᶠⁱⁿ U
+  refl-≤-𝒫ᶠⁱⁿ = incl refl⊆
 
   _⟡-𝒫ᶠⁱⁿ_ : ∀{U V W} -> U ≤-𝒫ᶠⁱⁿ V -> V ≤-𝒫ᶠⁱⁿ W -> U ≤-𝒫ᶠⁱⁿ W
   incl p ⟡-𝒫ᶠⁱⁿ incl q = incl (trans⊆ p q)
@@ -319,7 +321,7 @@ module _ {A : StrictOrder 𝑖} where
   instance
     isPreorderData:≤-𝒫ᶠⁱⁿ : isPreorderData (𝒫ᶠⁱⁿ A) _≤-𝒫ᶠⁱⁿ_
     isPreorderData:≤-𝒫ᶠⁱⁿ = record
-      { reflexive = reflexive-≤-𝒫ᶠⁱⁿ
+      { refl-≤ = refl-≤-𝒫ᶠⁱⁿ
       ; _⟡_ = _⟡-𝒫ᶠⁱⁿ_
       ; transp-≤ = λ {refl refl x₂ → x₂}
       }
@@ -423,23 +425,27 @@ module _ {A : StrictOrder 𝑖} where
   ⦗_⦘ a = (a ∷ []) since [-]
 
 module _ {𝑖} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
-  instance
-    hasDecidableEquality:byStrictOrder : hasDecidableEquality A
-    hasDecidableEquality:byStrictOrder = record { _≟_ = f }
-      where
-        f : (a b : A) -> _
-        f a b with conn-< a b
-        ... | tri< a<b a≢b a≯b = no λ {refl -> irrefl-< a<b}
-        ... | tri≡ a≮b a≡b a≯b = yes a≡b
-        ... | tri> a≮b a≢b a>b = no λ {refl -> irrefl-< a>b}
+  hasDecidableEquality:byStrictOrder : hasDecidableEquality A
+  hasDecidableEquality:byStrictOrder = record { _≟_ = f }
+    where
+      f : (a b : A) -> _
+      f a b with conn-< a b
+      ... | tri< a<b a≢b a≯b = no λ {refl -> irrefl-< a<b}
+      ... | tri≡ a≮b a≡b a≯b = yes a≡b
+      ... | tri> a≮b a≢b a>b = no λ {refl -> irrefl-< a>b}
 
 open Agora.Conventions hiding (¬_)
+
 
 module _ {A : 𝒰 𝑖} where
   data _∉_ : A -> List A -> 𝒰 𝑖 where
 
 module _ {A : StrictOrder 𝑖} where
   open Agora.Order.Preorder
+  open Structure -- funnily this is needed for `of_` to work
+
+  private instance _ = hasDecidableEquality:byStrictOrder {{of A}}
+
 
   decide-≤-𝒫ᶠⁱⁿ : ∀(u v : 𝒫ᶠⁱⁿ A) -> (¬ (u ≤ v)) +-𝒰 (u ≤ v)
   decide-≤-𝒫ᶠⁱⁿ u v with ⟨ u ⟩ ⊆? ⟨ v ⟩

@@ -1,15 +1,14 @@
 
-{-# OPTIONS --allow-unsolved-metas --rewriting #-}
+{-# OPTIONS --allow-unsolved-metas #-}
 
-module KamiTheory.Dev.2024-01-20.StrictOrder.Instances.UniqueSortedList where
+module KamiTheory.Order.StrictOrder.Instances.UniqueSortedList where
 
 open import Agora.Conventions hiding (Σ ; Lift ; k)
 
-open import KamiTheory.Dev.2024-01-20.Core hiding (_＠_)
-open import KamiTheory.Dev.2024-01-20.StrictOrder.Base
-open import KamiTheory.Dev.2024-01-20.UniqueSortedList
-open import KamiTheory.Dev.2024-01-20.StrictOrder.Instances.List
-open import KamiTheory.Dev.2024-01-20.Basics
+open import KamiTheory.Basics
+open import KamiTheory.Order.StrictOrder.Base
+open import KamiTheory.Order.StrictOrder.Instances.List
+open import KamiTheory.Data.UniqueSortedList.Definition
 
 -- we show that 𝒫ᶠⁱⁿ has a strict order (inherited from list)
 
