@@ -1,4 +1,4 @@
-name: kami-d
+name: kami-theory
 depend: standard-library-2.1 agora
 include: ./src
 flags: -WnoUnsupportedIndexedMatch
