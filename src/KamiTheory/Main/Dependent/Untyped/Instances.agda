@@ -6,7 +6,7 @@ module KamiTheory.Main.Dependent.Untyped.Instances where
 open import Agora.Conventions
 
 open import KamiTheory.Basics
-open import KamiTheory.Main.Dependent.Untyped
+open import KamiTheory.Main.Dependent.Untyped.Definition
 
 
 

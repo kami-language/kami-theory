@@ -7,9 +7,9 @@ open import Agora.Order.Preorder
 open import Data.Fin.Base
 
 open import KamiTheory.Basics
-open import KamiTheory.Main.Dependent.Untyped
+open import KamiTheory.Main.Dependent.Untyped.Definition
 open import KamiTheory.Main.Dependent.Untyped.Instances
-open import KamiTheory.Main.Dependent.Typed
+open import KamiTheory.Main.Dependent.Typed.Definition
 open import KamiTheory.Main.Dependent.Typed.Instances
 
 -- open import KamiTheory.ThirdParty.logrel-mltt.Tools.Fin

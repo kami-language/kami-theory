@@ -25,13 +25,13 @@
 
 -- {-# OPTIONS --without-K #-}
 
-module KamiTheory.Main.Dependent.Typed where
+module KamiTheory.Main.Dependent.Typed.Definition where
 
 open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const)
 open import Agora.Order.Preorder
 
 open import KamiTheory.Basics
-open import KamiTheory.Main.Dependent.Untyped
+open import KamiTheory.Main.Dependent.Untyped.Definition
 
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Fin
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Nat
@@ -195,7 +195,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
                 → {{_ : isTrue (Γ ∙ (A / p) ⊢Sort B)}}
                 → Γ ⊢ t ∶ Σ (A / p) ▹ B / p
                 → Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / p
-                
+
       zeroⱼ     : ⊢ Γ
                 → Γ ⊢ zeroₜ ∶ NN / p
       sucⱼ      : ∀ {n}

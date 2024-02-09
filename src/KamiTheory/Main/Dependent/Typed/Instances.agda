@@ -5,9 +5,9 @@ open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const)
 open import Agora.Order.Preorder
 
 open import KamiTheory.Basics
-open import KamiTheory.Main.Dependent.Untyped
+open import KamiTheory.Main.Dependent.Untyped.Definition
 open import KamiTheory.Main.Dependent.Untyped.Instances
-open import KamiTheory.Main.Dependent.Typed
+open import KamiTheory.Main.Dependent.Typed.Definition
 
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Fin
 -- open import KamiTheory.ThirdParty.logrel-mltt.Tools.Nat

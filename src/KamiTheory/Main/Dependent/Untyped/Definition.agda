@@ -25,7 +25,7 @@
 
 {-# OPTIONS --without-K #-}
 
-module KamiTheory.Main.Dependent.Untyped where
+module KamiTheory.Main.Dependent.Untyped.Definition where
 
 -- Raw terms, weakening (renaming) and substitution.
 
