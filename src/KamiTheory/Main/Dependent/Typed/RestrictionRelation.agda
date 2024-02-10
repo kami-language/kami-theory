@@ -24,8 +24,9 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   private variable
     -- n m : Nat
     p q : Term P n
-    Γ  : Con (Term P) n
+    Γ Γ₀ Γ₁  : Con (Term P) n
     A B : Term P n
+    A₀ A₁ : Term P n
     a b : Term P n
     X Y : Term P n
     L K : Term P n
@@ -66,5 +67,9 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
     gen-loc-remove : ∀ U t -> ¬(U ≤ W) -> loc U t [ W ]⤇ locskip
 
+
+  data _[_]⤇Ctx_ : Con (Term P) n -> P -> Con (Term P) n -> Set where
+    ε : ε [ W ]⤇Ctx ε
+    _∙_ : Γ₀ [ W ]⤇Ctx Γ₁ -> A₀ [ W ]⤇ A₁ -> (Γ₀ ∙ A₀) [ W ]⤇Ctx (Γ₁ ∙ A₁)
 
 
