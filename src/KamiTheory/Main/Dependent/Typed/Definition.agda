@@ -50,7 +50,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   infixl 30 _∙_
   infix 30 Πⱼ_▹_
   infix 30 Σⱼ_▹_
-  infix 30 ⟦_⟧ⱼ_▹_
+  -- infix 30 ⟦_⟧ⱼ_▹_
 
 
   -- data MLMod : Set where
