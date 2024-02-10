@@ -42,8 +42,8 @@ open import KamiTheory.ThirdParty.logrel-mltt.Tools.Product
 
 
 -- module _ {P : 𝒰 _} {{_ : Preorder (ℓ₀ , ℓ₀ , ℓ₀) on P}} {{_ : hasDecidableEquality P}} where
-module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}}
-       {{_ : hasDecidableEquality P}} where
+module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} where
+       -- {{_ : hasDecidableEquality P}} where
 
   -- open DUN.KamiUntyped P hiding (_∷_)
 

@@ -49,9 +49,10 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   restrict W₁ (var x) = var x
   restrict W₁ (constₜ x) = constₜ x
   restrict W₁ (gen 𝓀-loc (constₜ (location U) ∷ (t ∷ []))) with decide-≤ U W₁
-  ... | no x = gen 𝓀-locskip []
+  ... | no x = gen (main 𝓀-locskip) []
   ... | yes x = gen 𝓀-loc ((constₜ (location U)) ∷ (restrict W₁ t) ∷ [])
-  restrict W₁ (gen k c) = gen k (restrict-GenTs W₁ c)
+  restrict W₁ a@(gen 𝓀-loc (c ∷ (t ∷ []))) = a -- IMPOSSIBLE in well-typed terms
+  restrict W₁ (gen (main k) c) = gen (main k) (restrict-GenTs W₁ c)
 
   lemma0 : ∀ W (B : Term P _) (σ : Subst P m n)
          -> restrict W (subst σ B) ≡ (subst (λ x -> restrict W (σ x)) (restrict W B))

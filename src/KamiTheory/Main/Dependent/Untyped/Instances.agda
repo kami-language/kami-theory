@@ -36,13 +36,31 @@ cast⁻¹-Dec-Std (yes a) = (yes-Std a)
 cast⁻¹-Dec-Std (no a)  = (no-Std a)
 
 ---------------------------------------------
+-- Deriving eq for MainKind using Prelude
+
+eqMainKind : {l : List ℕ} (k k₁ : MainKind l) → Dec-Prelude (StrId k k₁)
+unquoteDef eqMainKind = deriveEqDef eqMainKind (quote MainKind)
+
+_≟-MainKind_ : ∀{ns} -> (k l : MainKind ns) -> isDecidable (k ≡ l)
+_≟-MainKind_ = λ k l -> cast-Dec-Prelude (eqMainKind k l)
+
+instance
+  hasDecidableEquality:MainKind : ∀{ns} -> hasDecidableEquality (MainKind ns)
+  hasDecidableEquality:MainKind = record { _≟_ = _≟-MainKind_ }
+
+---------------------------------------------
 -- Deriving eq for Kind using Prelude
 
-eqKind : {l : List ℕ} (k k₁ : Kind l) → Dec-Prelude (StrId k k₁)
-unquoteDef eqKind = deriveEqDef eqKind (quote Kind)
+-- eqKind : {l : List ℕ} (k k₁ : Kind l) → Dec-Prelude (StrId k k₁)
+-- unquoteDef eqKind = deriveEqDef eqKind (quote Kind)
 
 _≟-Kind_ : ∀{ns} -> (k l : Kind ns) -> isDecidable (k ≡ l)
-_≟-Kind_ = λ k l -> cast-Dec-Prelude (eqKind k l)
+main x ≟-Kind main y with x ≟ y
+... | no x₁ = no λ {refl -> x₁ refl}
+... | yes refl = yes refl
+main x ≟-Kind 𝓀-loc = no (λ ())
+𝓀-loc ≟-Kind main x = no (λ ())
+𝓀-loc ≟-Kind 𝓀-loc = yes refl-≡
 
 instance
   hasDecidableEquality:Kind : ∀{ns} -> hasDecidableEquality (Kind ns)
