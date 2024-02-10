@@ -141,11 +141,11 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
     Πⱼ_▹_  : ∀{p q} -> W ∣ Γ ⊢Entry (A / ML p)
               → W ∣ Γ ∙ (A / ML p) ⊢Entry (B / ML q)
-              → W ∣ Γ ⊢Entry (Π (A / ML p) ▹ B / ML q)
+              → W ∣ Γ ⊢Entry ((Π (A / ML p) ▹ B) / ML q)
 
     Σⱼ_▹_  : ∀{q} -> W ∣ Γ ⊢Entry (A / ML q)
             → W ∣ Γ ∙ (A / ML q) ⊢Entry (B / ML q)
-            → W ∣ Γ ⊢Entry (Σ (A / ML q) ▹ B / ML q)
+            → W ∣ Γ ⊢Entry ((Σ (A / ML q) ▹ B) / ML q)
 
     -------------------
     -- Kami universes
@@ -294,7 +294,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
               → W ∣ Γ ⊢ t ∶ Σ (A / p) ▹ B / p
               → W ∣ Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / p
 
-    zeroⱼ     :  {{_ : isTrue (W ⊢Ctx Γ)}}
+    zeroⱼ     :  {{ΓP : isTrue (W ⊢Ctx Γ)}}
               → W ∣ Γ ⊢ zeroₜ ∶ NN  / ▲ U
     sucⱼ      : ∀ {n}
               → W ∣ Γ ⊢      n ∶ NN  / ▲ U
