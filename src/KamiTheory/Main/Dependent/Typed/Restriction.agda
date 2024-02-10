@@ -4,9 +4,11 @@ module KamiTheory.Main.Dependent.Typed.Restriction where
 open import Data.Fin using (#_ ; zero ; suc)
 open import Data.List using (_∷_ ; [])
 
-open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
+open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_ ; _≡⟨_⟩_ ; _∎ ; sym)
 open import Agora.Order.Preorder
 open import Agora.Order.Lattice
+
+open import Prelude.Equality using (eqReasoningStep ; _∎ ; cong ; sym )
 
 open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
@@ -58,8 +60,50 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
          -> restrict W (subst σ B) ≡ (subst (λ x -> restrict W (σ x)) (restrict W B))
   lemma0 W B a = {!!}
 
+  lemma2 : ∀ {W k} → (restrict W (gen k ([] {n = n}))) ≡ (gen k [])
+  lemma2 {k = Ukind} = refl
+  lemma2 {k = Natkind} = refl
+  lemma2 {k = Zerokind} = refl
+  lemma2 {k = Nilkind} = refl
+  lemma2 {k = Unitkind} = refl
+  lemma2 {k = Starkind} = refl
+  lemma2 {k = Emptykind} = refl
+  lemma2 {k = 𝓀-End} = refl
+  lemma2 {k = 𝓀-locskip} = refl
+ 
+ 
+
   lemma1 : ∀ W (B : Term P _) (a : Term P n) -> restrict W (B [ a ]) ≡ (restrict W B [ restrict W a ])
-  lemma1 W B a = {!lemma0 W B _!}
+  lemma1 W (var zero) a = refl
+  lemma1 W (var (suc x)) a = refl
+  lemma1 W (constₜ x) a = refl
+  lemma1 W (gen k []) a = restrict W ((gen k []) [ a ])
+                            ≡⟨ lemma2 ⟩
+                          (gen k []) [ restrict W a ]
+                            ≡⟨ cong (λ x → (x [ restrict W a ])) (sym lemma2) ⟩
+                          (restrict W (gen k [])) [ restrict W a ]  ∎
+  lemma1 W (gen 𝓀-loc (constₜ (location U) ∷ (t ∷ []))) a with decide-≤ U W
+  ... | no x = refl
+  ... | yes x = cong (loc U) (lemma1 W t a)
+  
+  lemma1 W (gen k (_∷_ {b = b} t c)) a = (restrict W
+       (gen k
+        (subst (liftSubstn (consSubst var a) b) t ∷
+         substGen (consSubst var a) c)))  ≡⟨ {!!} ⟩
+      (subst (consSubst var (restrict W a)) (gen k (restrict-GenTs W (t ∷ c))))
+        ≡⟨ cong (subst (consSubst var (restrict W a))) {x = (gen k (restrict-GenTs W (t ∷ c)))} {y =  (restrict W (gen k (t ∷ c))) } {!refl!} ⟩
+      (subst (consSubst var (restrict W a)) (restrict W (gen k (t ∷ c))) )∎
+
+{-restrict W (gen k (t ∷ c) [ a ])
+      ≡⟨ refl ⟩
+       restrict W (gen k (substGen (sgSubst a) (t ∷ c)))
+       ≡⟨ {!!} ⟩
+    (subst (consSubst var (restrict W a)) (restrict W (gen k (t ∷ c)))) ∎
+-}
+
+--(restrict W (gen k (substGen (consSubst var a) c))) ≡⟨ {!!} ⟩
+--      (subst (consSubst var (restrict W a)) (restrict W (gen k c))) ∎
+  
 
 {-
   restrict-Con : P -> Con (Term P) n -> Con (Term P) n
