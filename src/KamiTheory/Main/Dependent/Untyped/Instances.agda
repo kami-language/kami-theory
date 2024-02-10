@@ -8,6 +8,14 @@ open import Agora.Conventions
 open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
 
+open import Tactic.Deriving.Eq
+
+
+eqMod2 : deriveEqType MLMod
+unquoteDef eqMod2 = deriveEqDef eqMod2 (quote MLMod)
+
+eqKind : deriveEqType Kind
+unquoteDef eqKind = deriveEqDef eqKind (quote Kind)
 
 
 module _ {P : 𝒰₀} {{_ : hasDecidableEquality P}} where

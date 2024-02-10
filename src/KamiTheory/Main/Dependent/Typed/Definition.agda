@@ -119,7 +119,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   data _∣_⊢Sort_ W Γ where
     UUⱼ    : {{ΓP : isTrue (W ⊢Ctx Γ)}} → Γ ⊢Sort UU
     NNⱼ    : {{ΓP : isTrue (W ⊢Ctx Γ)}} → Γ ⊢Sort NN
-    Vecⱼ   : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Sort A → W ∣ Γ ⊢Sort F → Γ ⊢Sort Vec A F
+    Vecⱼ   : W ∣ Γ ⊢Sort A → W ∣ Γ ⊢ t ∶ NN / ▲ U  → Γ ⊢Sort Vec A t
     Emptyⱼ : {{ΓP : isTrue (W ⊢Ctx Γ)}} → Γ ⊢Sort Empty
     Unitⱼ  : {{ΓP : isTrue (W ⊢Ctx Γ)}} → Γ ⊢Sort Unit
 

@@ -74,73 +74,79 @@ data GenTs (A : Nat → Set) : Nat → List Nat → Set where
 -- Kinds are indexed on the number of expected sub terms
 -- and the number of new variables bound by each sub term
 
+
+open import Data.Nat using (suc ; zero)
+
+pattern n0 = zero
+pattern n1 = suc (zero)
+
 data Kind : (ns : List Nat) → Set where
   Ukind : Kind []
 
-  Pikind  : Kind (0 ∷ 1 ∷ [])
-  Lamkind : Kind (1 ∷ [])
-  Appkind : Kind (0 ∷ 0 ∷ [])
+  Pikind  : Kind (n0 ∷ n1 ∷ [])
+  Lamkind : Kind (n1 ∷ [])
+  Appkind : Kind (n0 ∷ n0 ∷ [])
 
-  Sigmakind : Kind (0 ∷ 1 ∷ [])
-  Prodkind  : Kind (0 ∷ 0 ∷ [])
-  Fstkind   : Kind (0 ∷ [])
-  Sndkind   : Kind (0 ∷ [])
+  Sigmakind : Kind (n0 ∷ n1 ∷ [])
+  Prodkind  : Kind (n0 ∷ n0 ∷ [])
+  Fstkind   : Kind (n0 ∷ [])
+  Sndkind   : Kind (n0 ∷ [])
 
   Natkind    : Kind []
   Zerokind   : Kind []
-  Suckind    : Kind (0 ∷ [])
-  Natreckind : Kind (1 ∷ 0 ∷ 0 ∷ 0 ∷ [])
+  Suckind    : Kind (n0 ∷ [])
+  Natreckind : Kind (n1 ∷ n0 ∷ n0 ∷ n0 ∷ [])
 
-  Veckind    : Kind (0 ∷ 0 ∷ [])
+  Veckind    : Kind (n0 ∷ n0 ∷ [])
   Nilkind    : Kind []
-  Conskind   : Kind (0 ∷ 0 ∷ [])
-  Vecreckind : Kind (1 ∷ 0 ∷ 0 ∷ 0 ∷ [])
+  Conskind   : Kind (n0 ∷ n0 ∷ [])
+  Vecreckind : Kind (n1 ∷ n0 ∷ n0 ∷ n0 ∷ [])
 
   Unitkind : Kind []
   Starkind : Kind []
 
   Emptykind    : Kind []
-  Emptyreckind : Kind (0 ∷ 0 ∷ [])
+  Emptyreckind : Kind (n0 ∷ n0 ∷ [])
 
   -- Kami modality system
-  𝓀-/ : Kind (0 ∷ 0 ∷ [])
+  𝓀-/ : Kind (n0 ∷ n0 ∷ [])
 
   -- Kami modalities
-  𝓀-⇄ : Kind (0 ∷ 0 ∷ []) -- Com : Γ ⊢WFSort (A / Global) -> Γ ⊢WFMod Com R A
+  𝓀-⇄ : Kind (n0 ∷ n0 ∷ []) -- Com : Γ ⊢WFSort (A / Global) -> Γ ⊢WFMod Com R A
 
   -------------------
   -- Kami universe types
-  𝓀-Univ-Com : Kind (0 ∷ 0 ∷ [])
+  𝓀-Univ-Com : Kind (n0 ∷ n0 ∷ [])
 
   -------------------
   -- Kami types (global)
-  𝓀-＠ : Kind (0 ∷ 0 ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
-  𝓀-Com : Kind (0 ∷ 0 ∷ []) -- Com : ⟨ P ⟩ -> Γ ⊢Global -> Γ ⊢Global
+  𝓀-＠ : Kind (n0 ∷ n0 ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
+  𝓀-Com : Kind (n0 ∷ n0 ∷ []) -- Com : ⟨ P ⟩ -> Γ ⊢Global -> Γ ⊢Global
 
   -------------------
   -- Kami types (Com)
   𝓀-End : Kind [] -- End : Γ ⊢Com U
-  𝓀-≫ : Kind (0 ∷ 1 ∷ []) -- new (monadic?) composition operation
-  𝓀-Share : Kind (0 ∷ 0 ∷ 0 ∷ []) -- [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / Global ] ⊢Com R) -> Γ ⊢Com R
+  𝓀-≫ : Kind (n0 ∷ n1 ∷ []) -- new (monadic?) composition operation
+  𝓀-Share : Kind (n0 ∷ n0 ∷ n0 ∷ []) -- [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / Global ] ⊢Com R) -> Γ ⊢Com R
 
   ---------------------------------------------
   -- Kami terms (com related)
 
   -- packing and unpacking communication into global types
-  𝓀-com : Kind (0 ∷ 0 ∷ []) -- the tuple constructor
-  𝓀-comtype : Kind (0 ∷ []) -- the first projection
-  𝓀-comval : Kind (0 ∷ [])  -- the second projection
+  𝓀-com : Kind (n0 ∷ n0 ∷ []) -- the tuple constructor
+  𝓀-comtype : Kind (n0 ∷ []) -- the first projection
+  𝓀-comval : Kind (n0 ∷ [])  -- the second projection
 
   -- the three communication primitives
-  𝓀-end : Kind (0 ∷ [])   -- pure
-  𝓀-> : Kind (0 ∷ 1 ∷ []) -- bind
-  𝓀-share : Kind (0 ∷ []) -- generator
+  𝓀-end : Kind (n0 ∷ [])   -- pure
+  𝓀-> : Kind (n0 ∷ n1 ∷ []) -- bind
+  𝓀-share : Kind (n0 ∷ []) -- generator
 
   -------------------
   -- Kami terms (location related)
-  𝓀-loc : Kind (0 ∷ 0 ∷ []) -- loc : (U ≤ W -> (Γ ⊢ L / Local U)) -> Γ ⊢ (L ＠ U) / Global
+  𝓀-loc : Kind (n0 ∷ n0 ∷ []) -- loc : (U ≤ W -> (Γ ⊢ L / Local U)) -> Γ ⊢ (L ＠ U) / Global
   𝓀-locskip : Kind [] -- not implementing a term because we don't need the current location
-  𝓀-unloc : Kind (0 ∷ []) -- [_]unloc : (ϕ : U ≤ V) -> Γ ⊢ (L ＠ U) / Global -> Γ ⊢ L / Local V
+  𝓀-unloc : Kind (n0 ∷ []) -- [_]unloc : (ϕ : U ≤ V) -> Γ ⊢ (L ＠ U) / Global -> Γ ⊢ L / Local V
 
 -- Term Ps are indexed by its number of unbound variables and are either:
 -- de Bruijn style variables or
