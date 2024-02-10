@@ -119,7 +119,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   data _∣_⊢Sort_ W Γ where
     UUⱼ    : {{ΓP : isTrue (W ⊢Ctx Γ)}} → Γ ⊢Sort UU
     NNⱼ    : {{ΓP : isTrue (W ⊢Ctx Γ)}} → Γ ⊢Sort NN
-    Vecⱼ   : W ∣ Γ ⊢Sort A → W ∣ Γ ⊢ t ∶ NN / ▲ U  → Γ ⊢Sort Vec A t
+    Vecⱼ   : W ∣ Γ ⊢Sort A → W ∣ Γ ⊢ t ∶ NN / ▲ U → Γ ⊢Sort Vec A t
     Emptyⱼ : {{ΓP : isTrue (W ⊢Ctx Γ)}} → Γ ⊢Sort Empty
     Unitⱼ  : {{ΓP : isTrue (W ⊢Ctx Γ)}} → Γ ⊢Sort Unit
 
@@ -135,6 +135,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   data _∣_⊢Entry_ W Γ where
     UUⱼ    : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (UU / ▲ U)
     NNⱼ    : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (NN / ▲ U)
+    Vecⱼ   : W ∣ Γ ⊢Entry (A / ▲ U) → W ∣ Γ ⊢ t ∶ NN / ▲ U → Γ ⊢Entry (Vec A t / ▲ U)
     Emptyⱼ : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (Empty / ▲ U)
     Unitⱼ  : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (Unit / ▲ U)
 
@@ -223,6 +224,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     -------------------
     -- Location
 
+
     -- If we have a value of a local type `A` (i.e. with ▲ U annotation), we can view it
     -- as `(A ＠ U)` which is a global type (with ◯ annotation). Note that if U is not subset
     -- of the currently implemented locations, it is not allowed to give a term here. Instead,
@@ -240,7 +242,6 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
     -------------------
     -- Generic
-
 
     -- Πⱼ_▹_     : ∀ {F G}
     --           → Γ     ⊢ F ∶ U
@@ -294,32 +295,31 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
               → W ∣ Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / p
 
     zeroⱼ     :  {{_ : isTrue (W ⊢Ctx Γ)}}
-              → W ∣ Γ ⊢ zeroₜ ∶ NN / p
+              → W ∣ Γ ⊢ zeroₜ ∶ NN  / ▲ U
     sucⱼ      : ∀ {n}
-              → W ∣ Γ ⊢      n ∶ NN / p
-              → W ∣ Γ ⊢ sucₜ n ∶ NN / p
+              → W ∣ Γ ⊢      n ∶ NN  / ▲ U
+              → W ∣ Γ ⊢ sucₜ n ∶ NN  / ▲ U
 
     natrecⱼ   : ∀ {G s z n}
               → W ∣ Γ ∙ (NN / ▲ U) ⊢Sort G
-              → W ∣ Γ       ⊢ z ∶ G [ zeroₜ ] / p
-              → W ∣ Γ       ⊢ s ∶ Π (NN / ▲ U) ▹ (G ▹▹ G [ sucₜ (var x0) ]↑) / p
-              → W ∣ Γ       ⊢ n ∶ NN / p
-              → W ∣ Γ       ⊢ natrec G z s n ∶ G [ n ] / p
+              → W ∣ Γ       ⊢ z ∶ G [ zeroₜ ]  / ▲ U
+              → W ∣ Γ       ⊢ s ∶ Π (NN / ▲ U) ▹ (G ▹▹ G [ sucₜ (var x0) ]↑)  / ▲ U
+              → W ∣ Γ       ⊢ n ∶ NN  / ▲ U
+              → W ∣ Γ       ⊢ natrec G z s n ∶ G [ n ]  / ▲ U
 
     nilⱼ      : ∀ {A}
-              → W ∣ Γ ⊢ nilₜ ∶ Vec A zeroₜ / p
+              → W ∣ Γ ⊢ nilₜ ∶ Vec A zeroₜ  / ▲ U
     consⱼ     : ∀ {A v vs n}
-              → W ∣ Γ ⊢         v ∶ A / p
-              → W ∣ Γ ⊢        vs ∶ Vec A n / p
-              → W ∣ Γ ⊢ consₜ v vs ∶ Vec A (sucₜ n) / p
+              → W ∣ Γ ⊢         v ∶ A  / ▲ U
+              → W ∣ Γ ⊢        vs ∶ Vec A n  / ▲ U
+              → W ∣ Γ ⊢ consₜ v vs ∶ Vec A (sucₜ n)  / ▲ U
 
     vecrecⱼ   : ∀ {G A s z l v n}
-              → {{_ : isTrue (W ∣ Γ ∙ (Vec A l / p) ⊢Sort G)}}
-              → W ∣ Γ           ⊢ z ∶ G [ nilₜ ] / p
-              → W ∣ Γ           ⊢ v ∶ A / p
-              → W ∣ Γ           ⊢ s ∶ Π (Vec A l) ▹ (G ▹▹ G [ consₜ (wk1 v) (var x0) ]↑) / p
-              → W ∣ Γ           ⊢ vecrec G z s n ∶ G [ n ] / p
-
+              → {{_ : isTrue (W ∣ Γ ∙ (Vec A l / ▲ U) ⊢Sort G)}}
+              → W ∣ Γ           ⊢ z ∶ G [ nilₜ ]  / ▲ U
+              → W ∣ Γ           ⊢ v ∶ A  / ▲ U
+              → W ∣ Γ           ⊢ s ∶ Π (Vec A l) ▹ ((G / ▲ U) ▹▹ G [ consₜ (wk1 v) (var x0) ]↑)  / ▲ U
+              → W ∣ Γ           ⊢ vecrec G z s n ∶ G [ n ]  / ▲ U
 
 
 
