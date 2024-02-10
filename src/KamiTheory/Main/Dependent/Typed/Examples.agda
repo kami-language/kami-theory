@@ -56,11 +56,16 @@ module Examples where
   _∣_⊢_/_≔_ : (W : P) -> (Γ : Con (Term P) n) -> Term P n → Term P n -> Term P n → Set
   W ∣ Γ ⊢ A / p ≔ t = W ∣ Γ ⊢ t ∶ A / p
 
-{-
-  +ₙ : ε ⊢ _ ∶ (NN / ▲ U) ▹▹ ((NN / ▲ U) ▹▹ NN) / ▲ U
-  +ₙ {U = U} = lamⱼ NNⱼ (lamⱼ NNⱼ (natrecⱼ {G = NN} NNⱼ (var (suc zero)) (lamⱼ NNⱼ (lamⱼ NNⱼ (sucⱼ (var zero)))) (var zero)))
 
-  zerov : ε ⊢ _ ∶ Π (NN / ▲ U) ▹ (Vec NN (var zero)) / ▲ U
+  εε : Con (Term P) zero
+  εε = ε
+
+
+  +ₙ : all ∣ εε ⊢ _ ∶ (NN / ▲ U) ▹▹ ((NN / ▲ U) ▹▹ NN) / ▲ U
+  +ₙ {U = U} = lamⱼ NNⱼ (lamⱼ NNⱼ (natrecⱼ {G = NN} NNⱼ (var (suc zero)) (lamⱼ NNⱼ (lamⱼ NNⱼ (sucⱼ (var zero)))) (var zero)))
+  
+
+  zerov :  all ∣ εε  ⊢ _ ∶ Π (NN / ▲ U) ▹ (Vec NN (var zero)) / ▲ U
   zerov = lamⱼ NNⱼ (natrecⱼ                   -- lets call this NNⱼ variable l
                       {G = Vec NN (var zero)} -- we want to produce a Vec NN l
                       (Vecⱼ NNⱼ (var zero))   -- that is a valid type in (ε ∙ NNⱼ)
@@ -68,14 +73,11 @@ module Examples where
                       (lamⱼ NNⱼ (lamⱼ                     -- now lets call this NNⱼ variable n
                                   (Vecⱼ NNⱼ (var zero))   -- and this vec variable vv (it has length n)
                                   (consⱼ -- we want to append to vv
-                                         (zeroⱼ (((ε ∙ NNⱼ) ∙ NNⱼ) ∙ (Vecⱼ NNⱼ (var zero)))) -- we want to append zero (ugh)
-                                         (var zero)))) -- we want to append to vv, yes!
+                                         {!zeroⱼ!} -- we want to append zero (ugh)
+                                         {!(var zero)!}))) -- we want to append to vv, yes!
                       (var zero))             -- we recurse on l
--}
 
 
-  εε : Con (Term P) zero
-  εε = ε
 
   T0 : all ∣ εε ⊢Sort NN
   T0 = NNⱼ

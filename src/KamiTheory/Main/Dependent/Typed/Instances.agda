@@ -30,9 +30,14 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   {-# TERMINATING #-}
   derive-Entry : ∀ (Γ : Con (Term P) n) E -> Maybe (W ∣ Γ ⊢Entry E)
   derive-Ctx : ∀ (Γ : Con (Term P) n) -> Maybe (W ⊢Ctx Γ)
+  derive-Term : ∀ Γ -> (t A p : Term P n) -> Maybe (W ∣ Γ ⊢ t ∶ A / p)
 
   derive-Entry Γ (UU / ▲ U)    = map-Maybe (λ P -> UUⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Entry Γ (NN / ▲ U)    = map-Maybe (λ P -> NNⱼ {{ΓP = because P}}) (derive-Ctx Γ)
+  derive-Entry Γ (Vec A t / ▲ U) = do
+    A′ <- derive-Entry Γ (A / ▲ U )
+    t′ <- derive-Term Γ t NN (▲ U)
+    just (Vecⱼ A′ t′)
   derive-Entry Γ (Empty / ▲ U) = map-Maybe (λ P -> Emptyⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Entry Γ (Unit / ▲ U)  = map-Maybe (λ P -> Unitⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Entry Γ (L ＠ U / ◯)  = map-Maybe (Locⱼ U) (derive-Entry Γ (L / ▲ U))
@@ -77,7 +82,6 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   ... | yes refl-≡ | yes refl-≡ = yes Ep
   derive-Var Γ t A p | _ = nothing
 
-  derive-Term : ∀ Γ -> (t A p : Term P n) -> Maybe (W ∣ Γ ⊢ t ∶ A / p)
   derive-Term Γ (var x) A p = do
     A' <- (derive-Var Γ x A p)
     G' <- derive-Ctx Γ
