@@ -60,22 +60,27 @@ module Examples where
   εε : Con (Term P) zero
   εε = ε
 
+  ttt = derive-Var (εε ∙ (NN / ▲ uu)) zero NN (▲ uu)
 
-  +ₙ : all ∣ εε ⊢ _ ∶ (NN / ▲ U) ▹▹ ((NN / ▲ U) ▹▹ NN) / ▲ U
-  +ₙ {U = U} = lamⱼ NNⱼ (lamⱼ NNⱼ (natrecⱼ {G = NN} NNⱼ (var (suc zero)) (lamⱼ NNⱼ (lamⱼ NNⱼ (sucⱼ (var zero)))) (var zero)))
+  -- P0 : all ∣ εε ∙ (NN / ▲ uu) ⊢ var zero ∶ NN / ▲ uu
+  -- P0 = proof
+
+
+  -- +ₙ : all ∣ εε ⊢ _ ∶ (NN / ▲ U) ▹▹ ((NN / ▲ U) ▹▹ NN) / ▲ U
+  -- +ₙ {U = U} = lamⱼ NNⱼ (lamⱼ NNⱼ (natrecⱼ {G = NN} NNⱼ (var (suc zero)) (lamⱼ NNⱼ (lamⱼ NNⱼ (sucⱼ (var zero)))) (var zero)))
   
 
-  zerov :  all ∣ εε  ⊢ _ ∶ Π (NN / ▲ U) ▹ (Vec NN (var zero)) / ▲ U
-  zerov = lamⱼ NNⱼ (natrecⱼ                   -- lets call this NNⱼ variable l
-                      {G = Vec NN (var zero)} -- we want to produce a Vec NN l
-                      (Vecⱼ NNⱼ (var zero))   -- that is a valid type in (ε ∙ NNⱼ)
-                      nilⱼ                    -- for l=0 we give empty vector
-                      (lamⱼ NNⱼ (lamⱼ                     -- now lets call this NNⱼ variable n
-                                  (Vecⱼ NNⱼ (var zero))   -- and this vec variable vv (it has length n)
-                                  (consⱼ -- we want to append to vv
-                                         {!zeroⱼ!} -- we want to append zero (ugh)
-                                         {!(var zero)!}))) -- we want to append to vv, yes!
-                      (var zero))             -- we recurse on l
+  -- zerov :  all ∣ εε  ⊢ _ ∶ Π (NN / ▲ U) ▹ (Vec NN (var zero)) / ▲ U
+  -- zerov = lamⱼ NNⱼ (natrecⱼ                   -- lets call this NNⱼ variable l
+  --                     {G = Vec NN (var zero)} -- we want to produce a Vec NN l
+  --                     (Vecⱼ NNⱼ (var zero))   -- that is a valid type in (ε ∙ NNⱼ)
+  --                     nilⱼ                    -- for l=0 we give empty vector
+  --                     (lamⱼ NNⱼ (lamⱼ                     -- now lets call this NNⱼ variable n
+  --                                 (Vecⱼ NNⱼ (var zero))   -- and this vec variable vv (it has length n)
+  --                                 (consⱼ -- we want to append to vv
+  --                                        {!zeroⱼ!} -- we want to append zero (ugh)
+  --                                        {!(var zero)!}))) -- we want to append to vv, yes!
+  --                     (var zero))             -- we recurse on l
 
 
 
