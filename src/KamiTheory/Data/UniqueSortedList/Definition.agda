@@ -220,7 +220,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   isUniqueSorted:sort : ∀ (l : List A) -> isUniqueSorted (sort l)
   isUniqueSorted:sort [] = []
-  isUniqueSorted:sort (x ∷ l) = insertSorted {!isUniqueSorted:sort l!}
+  isUniqueSorted:sort (x ∷ l) = insertSorted (isUniqueSorted:sort l)
 
 
 --------------------------------------------------
