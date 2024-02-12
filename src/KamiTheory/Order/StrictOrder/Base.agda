@@ -17,6 +17,8 @@ open import Relation.Binary.PropositionalEquality using (subst; cong)
 open import KamiTheory.Basics
 open import Data.Fin.Base using (Fin ; zero ; suc)
 
+open import Agora.Conventions using (isProp)
+
 
 --------------------------------------------------
 -- strict order

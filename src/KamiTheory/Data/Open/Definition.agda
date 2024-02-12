@@ -453,6 +453,7 @@ module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X}} {{_ : hasStrictOrder X
     isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ : isNormalizable _ (𝒪ᶠⁱⁿ⁻ʷᵏ ′ X ′)
     isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ = record
       { Normal = Normal-𝒪ᶠⁱⁿ⁻ʷᵏ
+      ; isProp:Normal = {!!}
       ; normalize = {!!}
       ; normal = {!!}
       ; preserves-∼:normalize = {!!}
