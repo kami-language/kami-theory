@@ -1,4 +1,6 @@
 
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module KamiTheory.Data.List.Definition where
 
 open import Agora.Conventions hiding (Σ ; Lift ; k)
@@ -107,10 +109,50 @@ module _ {A : Set 𝑖} where
 
 module _ {X : 𝒰 𝑖} where
   open import Data.Fin using (Fin ; suc ; zero)
+  open import Data.Fin.Properties renaming (suc-injective to isInjective:suc)
 
   data _∈_at_ : (x : X) -> (xs : List X) -> Fin (length xs) -> 𝒰 𝑖 where
     take : ∀{x} {xs} -> x ∈ (x ∷ xs) at zero
     skip : ∀{x y} {xs i} -> y ∈ xs at i -> y ∈ x ∷ xs at suc i
+
+  indexOf : ∀{x : X} -> {xs : List X} -> x ∈ xs -> Fin (length xs)
+  indexOf here = zero
+  indexOf (there p) = suc (indexOf p)
+
+  indexed : ∀{x : X} -> {xs : List X} -> (p : x ∈ xs) -> x ∈ xs at indexOf p
+  indexed here = take
+  indexed (there p) = skip (indexed p)
+
+  unindexed : ∀{x : X} -> {xs : List X} -> ∀{i} -> (p : x ∈ xs at i) -> x ∈ xs
+  unindexed take = here
+  unindexed (skip p) = there (unindexed p)
+
+  β-indexed : ∀{xs : List X} -> ∀{x i} -> {p : x ∈ xs at i} -> indexOf (unindexed p) ≡ i
+  β-indexed {p = take} = refl-≡
+  β-indexed {p = skip p} = cong-≡ suc (β-indexed)
+
+  transport-indexed : ∀{xs ys : List X} -> (ϕ : xs ⊆ ys) -> ∀{x i} -> (p : x ∈ xs at i) -> x ∈ ys at indexOf (ϕ x (unindexed p))
+  transport-indexed ϕ p = indexed (ϕ _ (unindexed p))
+
+  isUnique : List X -> 𝒰 _
+  isUnique xs = ∀{x} -> (p q : x ∈ xs) -> indexOf p ≡ indexOf q
+
+  isInjective₊:indexOf : ∀{xs : List X} -> ∀{x y} -> {p : x ∈ xs} -> {q : y ∈ xs} -> indexOf p ≡ indexOf q -> x ≡ y
+  isInjective₊:indexOf {p = here} {q = here} ip≡iq = refl-≡
+  isInjective₊:indexOf {p = (there p)} {q = (there q)} ip≡iq = isInjective₊:indexOf (isInjective:suc ip≡iq)
+
+  isInjective:indexOf : ∀{xs : List X} -> ∀{x} -> {p q : x ∈ xs} -> indexOf p ≡ indexOf q -> p ≡ q
+  isInjective:indexOf {p = here} {here} P = refl
+  isInjective:indexOf {p = there p} {there q} P with isInjective:indexOf (isInjective:suc P)
+  ... | refl-≡ = refl-≡
+
+  -- transport-∈,index : ∀{xs ys : List X} -> xs ⊆ ys -> ∀{x i} -> x ∈ xs at i -> Fin (length ys)
+  -- transport-∈,index = {!!}
+
+  -- transport-∈at : ∀{xs ys : List X} -> xs ⊆ ys -> ∀{x i} -> x ∈ xs at i -> ∑ λ j -> x ∈ ys at j
+  -- transport-∈at p = {!!}
+
+  -- isInjective:transport-∈at : 
 
   data _⊆ⁱⁿᵈ_ : (u : List X) -> (v : List X) -> 𝒰 𝑖 where
     [] : ∀{vs} -> [] ⊆ⁱⁿᵈ vs

@@ -1,4 +1,6 @@
 
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module KamiTheory.Data.Vec.Definition where
 
 open import Agora.Conventions hiding (Σ ; Lift ; k)
@@ -6,7 +8,7 @@ open import KamiTheory.Basics
 
 open import Data.Fin using (Fin ; suc ; zero)
 -- open import Data.Vec using () renaming (_[_]=_ to _∈_at_ ; here to take ; there to skip) public
-open import Data.Vec using (Vec ; [] ; _∷_)
+open import Data.Vec using (Vec ; [] ; _∷_) public
 
 module _ {X : 𝒰 𝑖} where
 

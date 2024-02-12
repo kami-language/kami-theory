@@ -291,16 +291,16 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
     isInjective:suc refl-≡ = refl-≡
 
     isIBCharacter : List X -> 𝒰 _
-    isIBCharacter xs = ∀ {x y i j} -> x ∈ xs at i -> y ∈ xs at j -> x ≤ y -> i ≡ j
+    isIBCharacter xs = ∀ {x y i j} -> x ∈ xs at i -> y ∈ xs at j -> x ≤ y -> (¬(i ≡ j)) -> 𝟘-𝒰
 
     isICharacter : X -> List X -> 𝒰 _
     isICharacter x ys = ∀{y i} -> y ∈ ys at i -> independent x y
 
     tail-IBCharacter : ∀{x xs} -> isIBCharacter (x ∷ xs) -> isIBCharacter xs
-    tail-IBCharacter P p q x≤y = let Z = P (skip p) (skip q) x≤y in isInjective:suc Z
+    tail-IBCharacter P p q x≤y = let Z = P (skip p) (skip q) x≤y in λ i≠j -> Z λ p -> i≠j (isInjective:suc p) -- isInjective:suc Z
 
     head-IBCharacter : ∀{x xs} -> isIBCharacter (x ∷ xs) -> isICharacter x xs
-    head-IBCharacter P p = (λ x≤y → ↯:zero≡suc (P take (skip p) x≤y)) , (λ y≤x → ↯:zero≡suc (sym-≡ (P (skip p) take y≤x)))
+    head-IBCharacter P p = (λ x≤y → (P take (skip p) x≤y λ {()})) , (λ y≤x → (P (skip p) take y≤x λ {()}))
 
     tail-ICharacter : ∀{x y ys} -> isICharacter x (y ∷ ys) -> isICharacter x ys
     tail-ICharacter P z∈ys = P (skip z∈ys)
@@ -318,14 +318,22 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
     into-ICharacter (x IB.∷ P) (skip p) = into-ICharacter P p
 
     into-IBCharacter : ∀{xs} -> isIndependentBase xs -> isIBCharacter xs
-    into-IBCharacter (x IB.∷ P) take take r = refl-≡
-    into-IBCharacter (x IB.∷ P) take (skip q) r = let Z = into-ICharacter x q in ⊥-elim (fst Z r)
-    into-IBCharacter (x IB.∷ P) (skip p) take r = let Z = into-ICharacter x p in ⊥-elim (snd Z r)
-    into-IBCharacter (x IB.∷ P) (skip p) (skip q) r = cong-≡ suc (into-IBCharacter P p q r)
+    into-IBCharacter (x IB.∷ P) take take r s = ⊥-elim (s refl)
+    into-IBCharacter (x IB.∷ P) take (skip q) r s = let Z = into-ICharacter x q in fst Z r
+    into-IBCharacter (x IB.∷ P) (skip p) take r s = let Z = into-ICharacter x p in snd Z r
+    into-IBCharacter (x IB.∷ P) (skip p) (skip q) r s = into-IBCharacter P p q r λ {refl -> s refl}
 
 
-    transport-IB : ∀{xs ys} -> xs ⊆ ys -> isIBCharacter ys -> isIBCharacter xs
-    transport-IB p P x∈xs y∈xs x≤y = {!P ? ? ?!}
+    transport-IBCharacter : ∀{xs ys} -> isUnique xs -> xs ⊆ ys -> isIBCharacter ys -> isIBCharacter xs
+    transport-IBCharacter isUnique:xs xs⊆ys P {x} {y} x∈xs y∈xs x≤y i≢j = P (transport-indexed xs⊆ys x∈xs) (transport-indexed xs⊆ys y∈xs) x≤y Prop
+      where
+        Prop : ¬ indexOf (xs⊆ys x (unindexed x∈xs)) ≡ indexOf (xs⊆ys y (unindexed y∈xs))
+        Prop p with isInjective₊:indexOf p
+        ... | refl-≡ = let Z = isUnique:xs (unindexed x∈xs) (unindexed y∈xs) in i≢j ((sym-≡ (β-indexed) ∙-≡ Z) ∙-≡ β-indexed)
+
+    transport-IndependentBase : ∀{xs ys} -> isUnique xs -> xs ⊆ ys -> isIndependentBase ys -> isIndependentBase xs
+    transport-IndependentBase unique ϕ P = from-IBCharacter (transport-IBCharacter unique ϕ (into-IBCharacter P))
+
 
     -- getIndependent : ∀{x as} -> x ∈ as -> y ∈ as -> x ≤ y -> isIndependentBase as -> 𝟘-𝒰
     -- ↯:independentButSubset : ∀{x y as} -> x ∈ as -> y ∈ as -> x ≤ y -> (¬(y ≤ x)) -> isIndependentBase as -> 𝟘-𝒰
@@ -359,7 +367,6 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
   -- transport-isIndependentBase p [] (x IB.∷ P) = IB.[]
   -- transport-isIndependentBase p (x₁ ∷ q) (x IB.∷ P) = {!!} IB.∷ {!!}
 
-{-
 
 
 IndependentBase : (X : DecidablePreorder 𝑖) -> 𝒰 _
@@ -537,7 +544,7 @@ module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X}} {{_ : hasStrictOrder X
     isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ = record
       { Normal = Normal-𝒪ᶠⁱⁿ⁻ʷᵏ
       ; isProp:Normal = {!!}
-      ; normalize = {!!}
+      ; normalize = λ xs -> sort ⟨ xs ⟩ since {!!}
       ; normal = {!!}
       ; preserves-∼:normalize = {!!}
       ; cong-∼-normalize = {!!}
@@ -556,6 +563,7 @@ module Test (X : SortableDecidablePreorder 𝑖) where
     isPreorder:𝒪ᶠⁱⁿ = isPreorder:𝒩
 
 
+{-
 {-
 module TestExample where
 
