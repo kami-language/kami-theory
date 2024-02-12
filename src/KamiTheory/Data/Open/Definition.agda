@@ -229,9 +229,11 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
   ι₁-IndependentBase : ∀{u v : List X} -> isIndependentBase v -> v ≤-IB mergeIB u v
   ι₁-IndependentBase {u = u} vp = ≤:byAllElements (λ p -> merge-ι₁ _ vp _ u (map-∈-IndependentBase p))
 
+  intoIB : (u : List X) -> List X :& isIndependentBase -- (𝒪ᶠⁱⁿ⁻ʷᵏ X)
+  intoIB u = mergeIB u [] since isIndependentBase:mergeIB u IB.[]
+
 
   private
-
     clear-≤ : ∀ x ys w -> x ∈-IB w -> ys ≤-IB w -> clearIB x ys ≤-IB w
     clear-≤ x [] w p q = []
     clear-≤ x (y ∷ ys) w x∈w yys≤w@(y∈w ∷ ys≤w) with decide-≤ x y
@@ -253,8 +255,22 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
   [_,_]-∨-IndependentBase {u = x ∷ u} (x∈w ∷ p) q = [ p , insert-≤ x _ _ x∈w q ]-∨-IndependentBase
 
 
-  intoIB : (u : List X) -> List X :& isIndependentBase -- (𝒪ᶠⁱⁿ⁻ʷᵏ X)
-  intoIB u = mergeIB u [] since isIndependentBase:mergeIB u IB.[]
+  decide-∈-IB : ∀ x as -> isDecidable (x ∈-IB as)
+  decide-∈-IB x [] = no λ {()}
+  decide-∈-IB x (a ∷ as) with decide-≤ a x
+  ... | yes a≤x = yes (take a≤x)
+  ... | no a≰x with decide-∈-IB x as
+  ... | no x∉as = no λ { (take a≤x) → a≰x a≤x ; (next x∈as) → x∉as x∈as}
+  ... | yes x∈as = yes (next x∈as)
+
+  decide-≤-IB : ∀ as bs -> isDecidable (as ≤-IB bs)
+  decide-≤-IB [] bs = yes []
+  decide-≤-IB (x ∷ as) bs with decide-∈-IB x bs
+  ... | no x∉bs = no λ { (x∈bs ∷ _) → x∉bs x∈bs}
+  ... | yes x∈bs with decide-≤-IB as bs
+  ... | no as≰bs = no λ { (_ ∷ as≤bs) → as≰bs as≤bs}
+  ... | yes as≤bs = yes (x∈bs ∷ as≤bs)
+
 
 
 IndependentBase : (X : DecidablePreorder 𝑖) -> 𝒰 _
@@ -307,9 +323,14 @@ module _ {X' : 𝒰 𝑖} {{_ : isSetoid {𝑗} X'}} {{_ : isPreorder 𝑘 ′ X
     isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ : isPreorder _ (𝒪ᶠⁱⁿ⁻ʷᵏ X)
     isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ = record { _≤_ = _≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ }
 
+  decide-≤-𝒪ᶠⁱⁿ⁻ʷᵏ : ∀(a b : 𝒪ᶠⁱⁿ⁻ʷᵏ X) -> isDecidable (a ≤ b)
+  decide-≤-𝒪ᶠⁱⁿ⁻ʷᵏ a b with decide-≤-IB ⟨ a ⟩ ⟨ b ⟩
+  ... | no a≰b = no (λ p -> a≰b ⟨ p ⟩)
+  ... | yes a≤b = yes (incl a≤b)
+
   instance
     isDecidablePreorder:𝒪ᶠⁱⁿ⁻ʷᵏ : isDecidablePreorder (𝒪ᶠⁱⁿ⁻ʷᵏ X)
-    isDecidablePreorder:𝒪ᶠⁱⁿ⁻ʷᵏ = {!!}
+    isDecidablePreorder:𝒪ᶠⁱⁿ⁻ʷᵏ = record { decide-≤ = decide-≤-𝒪ᶠⁱⁿ⁻ʷᵏ }
 
   instance
     hasFiniteJoins:𝒪ᶠⁱⁿ⁻ʷᵏ : hasFiniteJoins (𝒪ᶠⁱⁿ⁻ʷᵏ X)
@@ -326,13 +347,21 @@ module _ {X' : 𝒰 𝑖} {{_ : isSetoid {𝑗} X'}} {{_ : isPreorder 𝑘 ′ X
     hasDecidableEquality:𝒪ᶠⁱⁿ⁻ʷᵏ : hasDecidableEquality (𝒪ᶠⁱⁿ⁻ʷᵏ X)
     hasDecidableEquality:𝒪ᶠⁱⁿ⁻ʷᵏ = {!!}
 
+
+
+
+---------------------------------------------
+-- Building meets for 𝒪ᶠⁱⁿ⁻ʷᵏ
+--
+-- Idea: if we have (a ∨ b) ∧ (c ∨ d), this evaluates
+-- to ((a ∨ b) ∧ c) ∨ ((a ∨ b) ∧ d)
+-- to (a ∧ c) ∨ (b ∧ c) ∨ (a ∧ d) ∨ (b ∧ d)
+--
+-- this means that we require our underlying preorder to be
+-- closed under unions
+
 module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X}} {{_ : hasFiniteJoins ′ X ′}} where
 
-  -- private
-  --   X : DecidablePreorder _
-  --   X = ′ X' ′
-
-  -- I have an element of X and I want ∨ all elements of a list with it, this is still an IB
   private
     restrictIB : X -> List X -> List X
     restrictIB a as = map-List (a ∨_) as
@@ -410,15 +439,6 @@ module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X}} {{_ : hasFiniteJoins �
 
 
 
----------------------------------------------
--- Building meets for 𝒪ᶠⁱⁿ⁻ʷᵏ
---
--- Idea: if we have (a ∨ b) ∧ (c ∨ d), this evaluates
--- to ((a ∨ b) ∧ c) ∨ ((a ∨ b) ∧ d)
--- to (a ∧ c) ∨ (b ∧ c) ∨ (a ∧ d) ∨ (b ∧ d)
---
--- this means that we require our underlying preorder to be
--- closed under unions
 
 {-
 module TestExample where
