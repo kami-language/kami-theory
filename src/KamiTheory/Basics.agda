@@ -50,7 +50,7 @@ instance
 _↯_ : ∀ {𝒶 ℓ} {A : Set 𝒶} {W : Set ℓ} → A → ¬ A → W
 a ↯ ¬a = ⊥-elim (¬a a)
 
-length : ∀ {A : Set} → List A → Nat
+length : ∀ {a} -> {A : Set a} → List A → Nat
 length []        =  zero
 length (x ∷ xs)  =  suc (length xs)
 

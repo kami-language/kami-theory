@@ -9,6 +9,7 @@ open import KamiTheory.Basics
 open import KamiTheory.Order.StrictOrder.Base
 open import KamiTheory.Order.StrictOrder.Instances.List
 open import KamiTheory.Data.UniqueSortedList.Definition
+open import KamiTheory.Data.List.Definition
 
 open import Agora.Order.Preorder
 open import Agora.Order.Lattice
@@ -272,6 +273,93 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
   ... | no as≰bs = no λ { (_ ∷ as≤bs) → as≰bs as≤bs}
   ... | yes as≤bs = yes (x∈bs ∷ as≤bs)
 
+  ---------------------------------------------
+  -- Showing transport for IB,
+  --
+
+  -- ↯:subsetOfEmpty : ∀{x : X} {bs} -> x ∷ bs ⊆ [] -> 𝟘-𝒰
+  -- ↯:subsetOfEmpty p with z <- p _ here with () <- z
+
+  open import Data.Fin using (Fin ; zero ; suc)
+
+
+  private
+    ↯:zero≡suc : ∀{i : Fin n} -> zero ≡ suc i -> 𝟘-𝒰
+    ↯:zero≡suc ()
+
+    isInjective:suc : ∀{i j : Fin n} -> suc i ≡ suc j -> i ≡ j
+    isInjective:suc refl-≡ = refl-≡
+
+    isIBCharacter : List X -> 𝒰 _
+    isIBCharacter xs = ∀ {x y i j} -> x ∈ xs at i -> y ∈ xs at j -> x ≤ y -> i ≡ j
+
+    isICharacter : X -> List X -> 𝒰 _
+    isICharacter x ys = ∀{y i} -> y ∈ ys at i -> independent x y
+
+    tail-IBCharacter : ∀{x xs} -> isIBCharacter (x ∷ xs) -> isIBCharacter xs
+    tail-IBCharacter P p q x≤y = let Z = P (skip p) (skip q) x≤y in isInjective:suc Z
+
+    head-IBCharacter : ∀{x xs} -> isIBCharacter (x ∷ xs) -> isICharacter x xs
+    head-IBCharacter P p = (λ x≤y → ↯:zero≡suc (P take (skip p) x≤y)) , (λ y≤x → ↯:zero≡suc (sym-≡ (P (skip p) take y≤x)))
+
+    tail-ICharacter : ∀{x y ys} -> isICharacter x (y ∷ ys) -> isICharacter x ys
+    tail-ICharacter P z∈ys = P (skip z∈ys)
+
+    from-ICharacter : ∀{x xs} -> isICharacter x xs -> isIndependent x xs
+    from-ICharacter {x} {[]} p = IB.[]
+    from-ICharacter {x} {y ∷ xs} p = p take IB.∷ from-ICharacter (tail-ICharacter p)
+
+    from-IBCharacter : ∀{xs} -> isIBCharacter xs -> isIndependentBase xs
+    from-IBCharacter {[]} P = IB.[]
+    from-IBCharacter {x ∷ xs} P = from-ICharacter (head-IBCharacter P) IB.∷ from-IBCharacter (tail-IBCharacter P)
+
+    into-ICharacter : ∀{x xs} -> isIndependent x xs -> isICharacter x xs
+    into-ICharacter (x IB.∷ P) take = x
+    into-ICharacter (x IB.∷ P) (skip p) = into-ICharacter P p
+
+    into-IBCharacter : ∀{xs} -> isIndependentBase xs -> isIBCharacter xs
+    into-IBCharacter (x IB.∷ P) take take r = refl-≡
+    into-IBCharacter (x IB.∷ P) take (skip q) r = let Z = into-ICharacter x q in ⊥-elim (fst Z r)
+    into-IBCharacter (x IB.∷ P) (skip p) take r = let Z = into-ICharacter x p in ⊥-elim (snd Z r)
+    into-IBCharacter (x IB.∷ P) (skip p) (skip q) r = cong-≡ suc (into-IBCharacter P p q r)
+
+
+    transport-IB : ∀{xs ys} -> xs ⊆ ys -> isIBCharacter ys -> isIBCharacter xs
+    transport-IB p P x∈xs y∈xs x≤y = {!P ? ? ?!}
+
+    -- getIndependent : ∀{x as} -> x ∈ as -> y ∈ as -> x ≤ y -> isIndependentBase as -> 𝟘-𝒰
+    -- ↯:independentButSubset : ∀{x y as} -> x ∈ as -> y ∈ as -> x ≤ y -> (¬(y ≤ x)) -> isIndependentBase as -> 𝟘-𝒰
+    -- ↯:independentButSubset here here x≤y P = {!!}
+    -- ↯:independentButSubset here (there q) x≤y P = {!!}
+    -- ↯:independentButSubset (there p) q x≤y P = {!!}
+
+    -- split : ∀{x : X} {as : List X} -> x ∈ as -> List X
+    -- split = {!!}
+
+    -- split-isIndependent : ∀{x as} -> (p : x ∈ as) -> isIndependentBase as -> isIndependent x (split p)
+
+    -- split-isIndependentBase : ∀{x as} -> (p : x ∈ as) -> isIndependentBase as -> isIndependentBase (split p)
+
+  -- transport-isIndependent : ∀{as bs x} -> bs ⊆ⁱⁿᵈ as -> x ∈ as -> isIndependentBase as -> isIndependent x bs
+  -- transport-isIndependent {bs = []} bs⊆as x∈as P = IB.[]
+  -- transport-isIndependent {bs = x ∷ bs} {y} (p ∷ bs⊆as) x∈as P with decide-≤ x y | decide-≤ y x
+  -- ... | no x≰y | no y≰x = (y≰x , x≰y) IB.∷ transport-isIndependent bs⊆as x∈as P
+  -- ... | no x₁ | yes x₂ = {!!}
+  -- ... | yes x₁ | no x₂ = {!!} IB.∷ transport-isIndependent bs⊆as x∈as P
+  -- ... | yes x₁ | yes x₂ = {!!}
+  -- {!!} IB.∷ transport-isIndependent bs⊆as x∈as P
+
+  -- transport-isIndependentBase : ∀{as bs} -> bs ⊆ⁱⁿᵈ as -> isIndependentBase as -> isIndependentBase bs
+  -- transport-isIndependentBase {bs = []} p P = IB.[]
+  -- transport-isIndependentBase {bs = x ∷ bs} (x∈as ∷ p) P = {!!} IB.∷ transport-isIndependentBase {!!} (split-isIndependentBase x∈as P )
+  -- (transport-isIndependentBase p P)
+
+  -- transport-isIndependentBase : ∀{as bs} -> as ⊆ⁱⁿᵈ bs -> bs ⊆ⁱⁿᵈ as -> isIndependentBase as -> isIndependentBase bs
+  -- transport-isIndependentBase p [] IB.[] = IB.[]
+  -- transport-isIndependentBase p [] (x IB.∷ P) = IB.[]
+  -- transport-isIndependentBase p (x₁ ∷ q) (x IB.∷ P) = {!!} IB.∷ {!!}
+
+{-
 
 
 IndependentBase : (X : DecidablePreorder 𝑖) -> 𝒰 _
@@ -344,9 +432,6 @@ module _ {X' : 𝒰 𝑖} {{_ : isSetoid {𝑗} X'}} {{_ : isPreorder 𝑘 ′ X
                               ; [_,_]-∨ = λ ϕ ψ -> incl [ ⟨ ϕ ⟩ , ⟨ ψ ⟩ ]-∨-IndependentBase
                               }
 
-  instance
-    hasDecidableEquality:𝒪ᶠⁱⁿ⁻ʷᵏ : hasDecidableEquality (𝒪ᶠⁱⁿ⁻ʷᵏ X)
-    hasDecidableEquality:𝒪ᶠⁱⁿ⁻ʷᵏ = {!!}
 
 
 
@@ -438,8 +523,6 @@ module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X}} {{_ : hasFiniteJoins �
       ; ⟨_,_⟩-∧ = λ ϕ ψ -> incl ⟨ ⟨ ϕ ⟩ , ⟨ ψ ⟩ ⟩-∧-IndependentBase
       }
 
--- record SortableDecidablePreorder 𝑖 : 𝒰 𝑖 where
---   -- field 
 
 SortableDecidablePreorder : ∀ (𝑖 : 𝔏 ^ 3) -> _
 SortableDecidablePreorder 𝑖 = 𝒰 (𝑖 ⌄ 0) :& (hasStrictOrder :, (isSetoid {𝑖 ⌄ 1} :> (isPreorder (𝑖 ⌄ 2) :> isDecidablePreorder)))
@@ -534,4 +617,5 @@ module _ where
   v = ⦗ # 2 ⦘ ∷ []
 
   res2 = mergeIB v u
+-}
 -}
