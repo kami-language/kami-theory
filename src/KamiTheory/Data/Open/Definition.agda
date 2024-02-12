@@ -13,6 +13,7 @@ open import KamiTheory.Data.UniqueSortedList.Definition
 open import Agora.Order.Preorder
 open import Agora.Order.Lattice
 open import Agora.Data.Sum.Definition
+open import Agora.Data.Normal.Definition
 
 open import Data.List using (_++_ ; concatMap)
 
@@ -437,7 +438,38 @@ module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X}} {{_ : hasFiniteJoins �
       ; ⟨_,_⟩-∧ = λ ϕ ψ -> incl ⟨ ⟨ ϕ ⟩ , ⟨ ψ ⟩ ⟩-∧-IndependentBase
       }
 
+-- record SortableDecidablePreorder 𝑖 : 𝒰 𝑖 where
+--   -- field 
 
+SortableDecidablePreorder : ∀ (𝑖 : 𝔏 ^ 3) -> _
+SortableDecidablePreorder 𝑖 = 𝒰 (𝑖 ⌄ 0) :& (hasStrictOrder :, (isSetoid {𝑖 ⌄ 1} :> (isPreorder (𝑖 ⌄ 2) :> isDecidablePreorder)))
+
+
+module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X}} {{_ : hasStrictOrder X}} where
+  Normal-𝒪ᶠⁱⁿ⁻ʷᵏ : (𝒪ᶠⁱⁿ⁻ʷᵏ ′ X ′) -> 𝒰 _
+  Normal-𝒪ᶠⁱⁿ⁻ʷᵏ (xs since _) = isUniqueSorted xs
+
+  instance
+    isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ : isNormalizable _ (𝒪ᶠⁱⁿ⁻ʷᵏ ′ X ′)
+    isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ = record
+      { Normal = Normal-𝒪ᶠⁱⁿ⁻ʷᵏ
+      ; normalize = {!!}
+      ; normal = {!!}
+      ; preserves-∼:normalize = {!!}
+      ; cong-∼-normalize = {!!}
+      }
+
+macro
+  𝒪ᶠⁱⁿ : SortableDecidablePreorder 𝑖 -> _
+  𝒪ᶠⁱⁿ X = #structureOn (Normalform (𝒪ᶠⁱⁿ⁻ʷᵏ ′ ⟨ X ⟩ ′))
+
+module Test (X : SortableDecidablePreorder 𝑖) where
+
+  open import Agora.Data.Normal.Instance.Setoid
+  open import Agora.Data.Normal.Instance.Preorder
+  private instance
+    isPreorder:𝒪ᶠⁱⁿ : isPreorder _ (𝒪ᶠⁱⁿ X)
+    isPreorder:𝒪ᶠⁱⁿ = isPreorder:𝒩
 
 
 {-

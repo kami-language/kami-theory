@@ -19,13 +19,6 @@ pattern refl = refl-≡
 --------------------------------------------------
 -- decidable equality
 
-open import Agora.Conventions using (isDecidable)
-
-record hasDecidableEquality {ℓ} (A : Set ℓ) : Set ℓ where
-  field
-    _≟_ : ∀ (x y : A) → isDecidable (x ≡ y)
-
-open hasDecidableEquality {{...}} public
 
 
 

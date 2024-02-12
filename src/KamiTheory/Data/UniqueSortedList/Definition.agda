@@ -18,6 +18,8 @@ open import KamiTheory.Order.StrictOrder.Base
 open import KamiTheory.Basics
 
 open import Agora.Conventions using (isDecidable ; yes ; no)
+open import Agora.Conventions.Prelude.Classes.DecidableEquality
+
 
 [_] : ∀ {𝑖} {A : Set 𝑖} → A → List A
 [ a ] = a ∷ []
