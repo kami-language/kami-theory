@@ -11,7 +11,7 @@ open import Agora.Order.Lattice
 open import Prelude.Equality using (eqReasoningStep ; _∎ ; cong ; sym )
 
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Nat
-open import KamiTheory.Basics
+open import KamiTheory.Basics hiding (wk)
 open import KamiTheory.Main.Dependent.Untyped.Definition
 open import KamiTheory.Main.Dependent.Untyped.Instances
 open import KamiTheory.Main.Dependent.Typed.Definition
@@ -61,19 +61,61 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
          -> restrict W (subst σ B) ≡ (subst (λ x -> restrict W (σ x)) (restrict W B))
   lemma0 W B a = {!!}
 
-  lemma2 : ∀ {W k} → (restrict W (gen k ([] {n = n}))) ≡ gen k []
-  lemma2 {k = main x} = refl
-
-  lemma5 : ∀ {W a b} → (λ x → restrict W (liftSubstn (sgSubst a) b x)) ≡ (liftSubstn (sgSubst (restrict W a)) b)
-  lemma5 {b = n0} = {!!}
-  lemma5 {b = 1+ b} = _ ≡⟨ {!!} ⟩ _ ∎
 
   mutual
     lemma6 : ∀ {W a bs} {c : GenTs (Term P) (1+ n) bs} → (restrict-GenTs {n = n} {bs} W (substGen (sgSubst a) c)) ≡ (substGen (sgSubst (restrict W a)) (restrict-GenTs W c))
-    lemma6 {c = []} = {!!}
+    lemma6 {c = []} = refl
     lemma6 {W = W} {a = a} {c = _∷_ {b = b} t c} =
        _ ≡⟨ cong (_ ∷_) lemma6 ⟩
-       _ ≡⟨  cong (_∷ _) {!!}  ⟩ _ ∎
+       _ ≡⟨ cong (_∷ _) (lemmagen b W t a)⟩ _ ∎
+
+    helper2 : ∀ b W (B : Term P _) (a : Term P n) → (restrict W (subst (liftSubst (liftSubstn (consSubst var a) b)) B)) ≡ (subst (liftSubst (liftSubstn (consSubst var (restrict W a)) b)) (restrict W B))
+    helper2 = {!!}
+
+    lemmagen : ∀ b W (B : Term P _) (a : Term P n) -> restrict W (subst (liftSubstn (sgSubst a) b) B) ≡ subst (liftSubstn (sgSubst (restrict W a)) b) (restrict W B)
+    lemmagen n0 W (var zero) a = refl
+    lemmagen n0 W (var (suc x)) a = refl
+    lemmagen n0 W (constₜ x) a = refl
+    lemmagen n0 W (gen (main x) []) a = refl
+    lemmagen n0 W (gen 𝓀-loc (constₜ (location U) ∷ (t ∷ []))) a with decide-≤ U W
+    ... | no x = refl
+    ... | yes x = cong (loc U) (lemmagen 0 W t a)
+    lemmagen n0 W (gen (main x) (_∷_ {b = b} {bs} t c)) a =
+      cong (gen (main x))
+      (_ ≡⟨ cong (_∷ _) (lemmagen b W t a) ⟩
+       _ ≡⟨ cong (_ ∷_) lemma6 ⟩  _ ∎)
+    lemmagen n0 W (gen 𝓀-loc (c ∷ (t ∷ []))) a = {!!}
+
+    lemmagen (1+ b) W (var zero) a = refl
+    lemmagen (1+ b) W (var (suc x)) a = restrict W ((liftSubst (liftSubstn (sgSubst a) b)) (suc x)) ≡⟨ {!lemmagen b W ? a!} ⟩
+      (liftSubst (substVar (liftSubstn (sgSubst (restrict W a)) b))) (suc x)
+      ≡⟨ ? ⟩
+      (liftSubst (liftSubstn (sgSubst (restrict W a)) b))
+      (suc x) ∎
+
+
+
+-- restrict W (wk (step id) ((liftSubstn (sgSubst a) b) x)) ≡⟨ {!x!} ⟩ restrict W (wk (step id) ((liftSubstn (sgSubst a) b) x)) ≡⟨ {!!} ⟩ wk (step id) ((liftSubstn (sgSubst (restrict W a)) b) x) ∎
+    lemmagen (1+ b) W (gen 𝓀-loc (constₜ (location U) ∷ (t ∷ []))) a with decide-≤ U W
+    ... | no x = refl
+    ... | yes x = cong (loc U) (lemmagen (1+ b) W t a)
+    lemmagen (1+ b) W (gen (main x) []) a = cong (gen (main x)) refl
+    lemmagen (1+ b) W (gen (main x) (_∷_ {b = b₁} t c)) a = cong (gen (main x)) {!!}
+    lemmagen (1+ b) W (gen 𝓀-loc (c ∷ (t ∷ []))) a = {!!}
+    lemmagen (1+ b) W (constₜ x) a = refl
+
+
+  lemma1 : ∀ W (B : Term P _) (a : Term P n) -> restrict W (B [ a ]) ≡ (restrict W B [ restrict W a ])
+  lemma1 W B a = lemmagen 0 W B a
+  
+{-
+
+  mutual
+    lemma6 : ∀ {W a bs} {c : GenTs (Term P) (1+ n) bs} → (restrict-GenTs {n = n} {bs} W (substGen (sgSubst a) c)) ≡ (substGen (sgSubst (restrict W a)) (restrict-GenTs W c))
+    lemma6 {c = []} = refl
+    lemma6 {W = W} {a = a} {c = _∷_ {b = b} t c} =
+       _ ≡⟨ cong (_ ∷_) lemma6 ⟩
+       _ ≡⟨  cong (_∷ _) (lemmagen b W t a)⟩ _ ∎
 
     lemma1 : ∀ W (B : Term P _) (a : Term P n) -> restrict W (B [ a ]) ≡ (restrict W B [ restrict W a ])
     lemma1 W (var zero) a = refl
@@ -96,7 +138,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     
     lemma1 W (gen 𝓀-loc (c ∷ (t ∷ []))) a =  restrict W (gen 𝓀-loc (c ∷ (t ∷ [])) [ a ]) ≡⟨ {!refl!} ⟩ (gen 𝓀-loc (c ∷ (t ∷ [])) [ restrict W a ]) ≡⟨ cong (_[ restrict W a ]) refl ⟩ restrict W (gen 𝓀-loc (c ∷ (t ∷ []))) [ restrict W a ] ∎ -- IMPOSSIBLE in well-typed terms
 
-
+-}
 
 {-
   restrict-Con : P -> Con (Term P) n -> Con (Term P) n
