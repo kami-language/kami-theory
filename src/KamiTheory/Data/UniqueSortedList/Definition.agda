@@ -130,6 +130,15 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   isUniqueSorted:sort [] = []
   isUniqueSorted:sort (x ∷ l) = insertSorted (isUniqueSorted:sort l)
 
+  subsetSorted : ∀{l : List A} -> sort l ⊆ l
+  subsetSorted = {!!}
+
+  subsetSorted2 : ∀{l : List A} -> l ⊆ sort l
+  subsetSorted2 = {!!}
+
+  cast-isUniqueSorted,isUnique : ∀{l : List A} -> isUniqueSorted l -> isUnique l
+  cast-isUniqueSorted,isUnique = {!!}
+
 
 --------------------------------------------------
 -- onions

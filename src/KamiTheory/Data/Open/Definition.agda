@@ -167,10 +167,9 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
 
   --------------------------------------------------------------
   -- merge is join
-  private
-    ≤:byAllElements : ∀{u v} -> (∀{x} -> x ∈ u -> x ∈-IB v) -> u ≤-IB v
-    ≤:byAllElements {u = []} F = []
-    ≤:byAllElements {u = x ∷ u} F = F here ∷ (≤:byAllElements (λ p -> F (there p)))
+  ≤:byAllElements : ∀{u v} -> (∀{x} -> x ∈ u -> x ∈-IB v) -> u ≤-IB v
+  ≤:byAllElements {u = []} F = []
+  ≤:byAllElements {u = x ∷ u} F = F here ∷ (≤:byAllElements (λ p -> F (there p)))
 
 
   _∨-IndependentBase_ = mergeIB
@@ -331,8 +330,8 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
         Prop p with isInjective₊:indexOf p
         ... | refl-≡ = let Z = isUnique:xs (unindexed x∈xs) (unindexed y∈xs) in i≢j ((sym-≡ (β-indexed) ∙-≡ Z) ∙-≡ β-indexed)
 
-    transport-IndependentBase : ∀{xs ys} -> isUnique xs -> xs ⊆ ys -> isIndependentBase ys -> isIndependentBase xs
-    transport-IndependentBase unique ϕ P = from-IBCharacter (transport-IBCharacter unique ϕ (into-IBCharacter P))
+  transport-IndependentBase : ∀{xs ys} -> isUnique xs -> xs ⊆ ys -> isIndependentBase ys -> isIndependentBase xs
+  transport-IndependentBase unique ϕ P = from-IBCharacter (transport-IBCharacter unique ϕ (into-IBCharacter P))
 
 
     -- getIndependent : ∀{x as} -> x ∈ as -> y ∈ as -> x ≤ y -> isIndependentBase as -> 𝟘-𝒰
@@ -544,10 +543,9 @@ module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X}} {{_ : hasStrictOrder X
     isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ = record
       { Normal = Normal-𝒪ᶠⁱⁿ⁻ʷᵏ
       ; isProp:Normal = {!!}
-      ; normalize = λ xs -> sort ⟨ xs ⟩ since {!!}
-      ; normal = {!!}
-      ; preserves-∼:normalize = {!!}
-      ; cong-∼-normalize = {!!}
+      ; normalize = λ xs -> sort ⟨ xs ⟩ since transport-IndependentBase (cast-isUniqueSorted,isUnique (isUniqueSorted:sort ⟨ xs ⟩)) subsetSorted (of xs)
+      ; normal = λ {xs} -> isUniqueSorted:sort ⟨ xs ⟩
+      ; preserves-∼:normalize = λ {xs} -> (incl (≤:byAllElements λ x -> map-∈-IndependentBase (subsetSorted _ x))) , incl (≤:byAllElements λ x -> map-∈-IndependentBase (subsetSorted2 _ x))
       }
 
 macro
