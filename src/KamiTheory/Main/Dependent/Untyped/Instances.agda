@@ -3,7 +3,7 @@
 
 module KamiTheory.Main.Dependent.Untyped.Instances where
 
-open import Agora.Conventions hiding (_≟-ℕ_)
+open import Agora.Conventions
 
 open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
