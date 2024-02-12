@@ -39,6 +39,18 @@ module _ {𝑖 : Level} {A : Set 𝑖} where
   ∉[] : ∀ {a : A} → ¬ (a ∈ [])
   ∉[] {a} ()
 
+  infix 4 _⊆_
+  _⊆_ : List A → List A → Set 𝑖
+  as ⊆ bs = ∀ x → x ∈ as → x ∈ bs
+
+  ⊈[] : ∀ {as : List A} → ¬ (as ≡ []) → ¬ (as ⊆ [])
+  ⊈[] {[]} as≢[] x = refl ↯ as≢[]
+  ⊈[] {x₁ ∷ as} as≢[] x = x x₁ here ↯ λ ()
+
+  ⊆∷ : ∀ {a : A} {as bs : List A} → (a ∷ as) ⊆ bs → as ⊆ bs
+  ⊆∷ sf = λ x x₁ → sf x (there x₁)
+
+{-
   data _⊆_ : List A → List A → Set 𝑖  where
     stop : [] ⊆ []
     drop : ∀ {a as bs} → as ⊆ bs → as ⊆ (a ∷ bs)
@@ -52,15 +64,6 @@ module _ {𝑖 : Level} {A : Set 𝑖} where
   refl⊆ {[]} = stop
   refl⊆ {x ∷ as} = keep refl⊆
   
-  trans⊆ : ∀ {as bs cs : List A} → as ⊆ bs → bs ⊆ cs → as ⊆ cs
-  trans⊆ stop _ = []⊆
-  trans⊆ (keep x) x₁ = {!x₁!} --keep (trans⊆ x x₁) (⊆∈ x₂ x₁)
-  trans⊆ (drop x) x₁ = {!!}
-  
-  ⊈[] : ∀ {as : List A} → ¬ (as ≡ []) → ¬ (as ⊆ [])
-  ⊈[] {[]} as≢[] x = refl ↯ as≢[]
-  ⊈[] {x₁ ∷ as} as≢[] ()
-  
   ∷⊆ : ∀ {a : A} {as bs : List A} → (a ∷ as) ⊆ bs → as ⊆ bs
   ∷⊆ (keep p) = drop p
   ∷⊆ (drop p) = drop (∷⊆ p)
@@ -70,18 +73,24 @@ module _ {𝑖 : Level} {A : Set 𝑖} where
   ⊆∈ (there x) (drop x₁) = there (⊆∈ x (∷⊆ x₁))
   ⊆∈ here (keep x₁) = here
   ⊆∈ (there x) (keep x₁) = there (⊆∈ x x₁)
-
   
-{-
-
+  trans⊆ : ∀ {as bs cs : List A} → as ⊆ bs → bs ⊆ cs → as ⊆ cs
+  trans⊆ stop _ = []⊆
+  trans⊆ (keep x) (drop x₁) = drop (trans⊆ (keep x) x₁)
+  trans⊆ (keep x) (keep x₁) = keep (trans⊆ x x₁)
+  trans⊆ (drop x) x₁ = trans⊆ x (∷⊆ x₁)
   
+  ⊈[] : ∀ {as : List A} → ¬ (as ≡ []) → ¬ (as ⊆ [])
+  ⊈[] {[]} as≢[] x = refl ↯ as≢[]
+  ⊈[] {x₁ ∷ as} as≢[] ()
   
+ 
   ⊆∷ : ∀ {a : A} {as bs : List A} → as ⊆ bs → as ⊆ (a ∷ bs)
-  ⊆∷ stop = stop
-  ⊆∷ (keep x x₁) = keep (⊆∷ x) (there x₁)
-
-
+  ⊆∷ stop = drop stop
+  ⊆∷ (drop a) = drop (drop a)
+  ⊆∷ (keep a) = (drop (keep a))
 -}
+
 --------------------------------------------------
 -- sortedness
 
@@ -95,20 +104,6 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   popSort : {a : A} → {as : List A} → isUniqueSorted (a ∷ as) → isUniqueSorted as
   popSort [-] = []
   popSort (x ∷ x₁) = x₁
-{-
-  [-]⊆ : ∀ {a : A} {as : List A} → as ⊆ (a ∷ []) → as ≡ (a ∷ [])
-  [-]⊆ a  = {!!}
-  
-  ∷∷⊆ : ∀ {{_ : hasDecidableEquality A}} {a : A} {as bs : List A} {p : UniqueSorted as} → (a ∷ as) ⊆ (a ∷ bs) → as ⊆ bs
-  ∷∷⊆ (keep stop here) = stop
-  ∷∷⊆ (keep (keep x here) here) = {!!}
-  ∷∷⊆ (keep (keep x (there x₁)) here) = {!!}
-  ∷∷⊆ (keep x (there x₁)) = {!!}
--}
-
-  ∷∷⊆ : ∀ {{_ : hasDecidableEquality A}} {a : A} {as bs : List A} {p : isUniqueSorted as} → (a ∷ as) ⊆ (a ∷ bs) → as ⊆ bs
-  ∷∷⊆ = {!!}
-
  
   _∈?_ : {{_ : hasDecidableEquality A}} → (a : A) → (as : List A) → isDecidable (a ∈ as)
   a ∈? [] = no λ ()
@@ -119,15 +114,26 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
 
   _⊆?_ : {{_ : hasDecidableEquality A}} → (as bs : List A) → isDecidable (as ⊆ bs)
-  [] ⊆? bs = yes []⊆
-  (a ∷ as) ⊆? [] = no {!!}
-  (a ∷ as) ⊆? bs = {!!}
+  [] ⊆? bs = yes (λ c ())
+  (a ∷ as) ⊆? [] = no λ { all → all a here ↯ ∉[]}
+  (a ∷ as) ⊆? bs with a ∈? bs | as ⊆? bs
+  ... | yes a∈bs | yes all = yes (λ { c here → a∈bs ; c (there x) → all c x})
+  ... | yes a∈bs | no as⊈bs = no (λ { all → (λ c c∈as → all c (there c∈as)) ↯ as⊈bs})
+  ... | no a∉bs | _ = no λ { all → all a here ↯ a∉bs}
 
-{-with a ∈? bs | as ⊆? bs
-  ... | yes a∈bs | yes all = yes (keep all a∈bs)
-  ... | yes a∈bs | no as⊈bs = no λ {(keep x x₁) → x ↯ as⊈bs}
-  ... | no a∉bs | _ = no λ {(keep x x₁) → x₁ ↯ a∉bs}
- -}
+{-
+  _⊆?_ : {{_ : hasDecidableEquality A}} → (as bs : List A) → isDecidable (as ⊆ bs)
+  [] ⊆? bs = yes []⊆
+  (a ∷ as) ⊆? [] = no (⊈[] (λ ()))
+  (a ∷ as) ⊆? (b ∷ bs) with a ≟ b
+  aas@(a ∷ as) ⊆? (b ∷ bs) | no x with aas ⊆? bs
+  (a ∷ as) ⊆? (b ∷ bs)     | no x | no y = no (λ { (drop x₁) → x₁ ↯ y ; (keep x₁) → refl ↯ x})
+  (a ∷ as) ⊆? (b ∷ bs)     | no x | yes y = yes (drop y)
+  (a ∷ as) ⊆? (b ∷ bs)     | yes refl with as ⊆? bs
+  ... | no x₁ = no λ { (drop x) → ∷⊆ x ↯ x₁ ; (keep x) → x ↯ x₁}
+  ... | yes x₁ = yes (keep x₁)
+-}
+
 --------------------------------------------------
 -- insertion
 
@@ -205,11 +211,6 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ... | inj₁ x₁ = inj₁ x₁
   ... | inj₂ y = inj₂ (there y)
 
-  insert⊆ : ∀ {a : A} {as bs : List A} → as ⊆ bs → as ⊆ insert a bs
-  insert⊆ stop = []⊆
-  insert⊆ (keep x) = {!!}
-  insert⊆ (drop x) = {!!}
-
 --------------------------------------------------
 -- onions
 
@@ -250,11 +251,40 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   ... | inj₁ refl = inj₁ here
   ... | inj₂ y₁ = inj₂ y₁
 
+
+  ι₀-∪ : ∀ {as bs : List A} → as ⊆ (as ∪ bs)
+  ι₀-∪ {[]} = λ c ()
+  ι₀-∪ {a ∷ as} {[]} = λ c z → z
+  ι₀-∪ {a ∷ as} {b ∷ bs} with conn-< a b
+  ... | tri< _ _ _ = λ { x here → ∪-∈ₗ a as (a ∷ b ∷ bs) here ;
+                         x (there x₁) → ∪-∈ᵣ x as (a ∷ b ∷ bs) x₁}
+  ... | tri≡ _ refl _ = λ { x here → ∪-∈ₗ a as (a ∷ bs) here ;
+                             x (there x₁) → ∪-∈ᵣ x as (a ∷ bs) x₁}
+  ... | tri> _ _ _ = λ { x here →  ∪-∈ₗ a as (b ∷ insert a bs) (there (insertInserts a bs)) ;
+                         x (there x₁) → ∪-∈ᵣ x as (b ∷ insert a bs) x₁}
+
   
+  ι₁-∪ : ∀ {as bs : List A} → bs ⊆ (as ∪ bs)
+  ι₁-∪ {[]} = λ x z → z
+  ι₁-∪ {a ∷ as} {[]} = λ x ()
+  ι₁-∪ {a ∷ as} {b ∷ bs} with conn-< a b
+  ... | tri< _ _ _ = λ { x here → ∪-∈ₗ b as (a ∷ b ∷ bs) (there here) ;
+                         x (there x₁) → ∪-∈ₗ x as (a ∷ b ∷ bs) (there (there x₁))}
+  ... | tri≡ _ refl _ = λ { x here → ∪-∈ₗ a as (a ∷ bs) here ;
+                             x (there x₁) → ∪-∈ₗ x as (a ∷ bs) (there x₁)}
+  ... | tri> _ _ _ = λ { x here →  ∪-∈ₗ b as (b ∷ insert a bs) here ;
+                         x (there x₁) → ∪-∈ₗ x as (b ∷ insert a bs) (there (insertKeeps x₁))}
+
+  [_,_]-∪ : ∀ {as bs cs : List A} → as ⊆ cs -> bs ⊆ cs -> (as ∪ bs) ⊆ cs
+  [_,_]-∪ {as} {bs} x y = λ a a∈as∪bs → [ x a , y a ]′ (∈-∪ a∈as∪bs)
+
+
+
+  {-
   ι₀-∪ : ∀ {as bs : List A} → as ⊆ (as ∪ bs)
   ι₀-∪ {[]} = []⊆
-  ι₀-∪ {a ∷ as} {[]} = {!!}
-  ι₀-∪ {a ∷ as} {b ∷ bs} = {!!} --keep (ι₀-∪ {as} {insert a (b ∷ bs)}) (∪-∈ₗ a as (insert a (b ∷ bs)) (insertInserts a (b ∷ bs))) 
+  ι₀-∪ {a ∷ as} {[]} = keep refl⊆
+  ι₀-∪ {a ∷ as} {b ∷ bs} = {! ι₀-∪ {as} {insert a (b ∷ bs)}!} --keep (ι₀-∪ {as} {insert a (b ∷ bs)}) (∪-∈ₗ a as (insert a (b ∷ bs)) (insertInserts a (b ∷ bs))) 
 
   
   ι₁-∪ : ∀ {as bs : List A} → bs ⊆ (as ∪ bs)
@@ -270,7 +300,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   [_,_]-∪ {.(_ ∷ _)} {.[]} (keep x x₁) stop = keep x x₁
   [_,_]-∪ {a ∷ as} {b ∷ bs} (keep x x₁) (keep y x₂) = [ x , insert∈⊆ x₁ (keep y x₂) ]-∪
 -}
-
+-}
 --------------------------------------------------
 -- now here comes the weird stuff
 
@@ -315,10 +345,10 @@ module _ {A : StrictOrder 𝑖} where
   open _≤-𝒫ᶠⁱⁿ_ {{...}} public
 
   refl-≤-𝒫ᶠⁱⁿ : ∀{U} -> U ≤-𝒫ᶠⁱⁿ U
-  refl-≤-𝒫ᶠⁱⁿ = incl refl⊆
+  refl-≤-𝒫ᶠⁱⁿ = incl (λ c x → x)
 
   _⟡-𝒫ᶠⁱⁿ_ : ∀{U V W} -> U ≤-𝒫ᶠⁱⁿ V -> V ≤-𝒫ᶠⁱⁿ W -> U ≤-𝒫ᶠⁱⁿ W
-  incl p ⟡-𝒫ᶠⁱⁿ incl q = incl (trans⊆ p q)
+  incl p ⟡-𝒫ᶠⁱⁿ incl q = incl (λ c x → q c (p c x))
 
   instance
     isPreorderData:≤-𝒫ᶠⁱⁿ : isPreorderData (𝒫ᶠⁱⁿ A) _≤-𝒫ᶠⁱⁿ_
@@ -340,7 +370,7 @@ module _ {A : StrictOrder 𝑖} where
     hasFiniteJoins:𝒫ᶠⁱⁿ : hasFiniteJoins (𝒫ᶠⁱⁿ A)
     hasFiniteJoins:𝒫ᶠⁱⁿ = record
                            { ⊥ = [] since []
-                           ; initial-⊥ = incl []⊆
+                           ; initial-⊥ = incl λ _ x₁ → x₁ ↯ ∉[]
                            ; _∨_ = _∨-𝒫ᶠⁱⁿ_
                            ; ι₀-∨ = incl ι₀-∪
                            ; ι₁-∨ = λ {as} → incl (ι₁-∪ {as = ⟨ as ⟩} )
@@ -384,7 +414,7 @@ module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
   ∈img : ∀ {𝑖 𝑗} {A : Set 𝑖} {B : Set 𝑗} {a : A} {as : List A} → (f : A → B) → a ∈ as → f a ∈ img f as
   ∈img f here = here
   ∈img f (there x) = there (∈img f x)
-
+{-
   map-img : ∀ {f : StrictOrderHom A B} {U V : List ⟨ A ⟩} -> U ⊆ V → img ⟨ f ⟩ U ⊆ img ⟨ f ⟩ V
   map-img stop = stop
   map-img (keep x) = keep (map-img x)
@@ -403,7 +433,7 @@ module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
   postulate
     PreImg-𝒫ᶠⁱⁿ : (f : StrictOrderHom A B) -> 𝒫ᶠⁱⁿ B -> 𝒫ᶠⁱⁿ A
     map-PreImg-𝒫ᶠⁱⁿ : ∀{f U V} -> U ≤ V -> Img-𝒫ᶠⁱⁿ f U ≤ Img-𝒫ᶠⁱⁿ f V
-
+-}
 
 
 --------------------------------------------------
