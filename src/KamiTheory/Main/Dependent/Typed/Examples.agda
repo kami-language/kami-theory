@@ -8,6 +8,10 @@ open import Data.List using (_∷_ ; [])
 open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
 open import Agora.Order.Preorder
 open import Agora.Order.Lattice
+open import Agora.Data.Normal.Definition
+open import Agora.Data.Normal.Instance.Setoid
+open import Agora.Data.Normal.Instance.Preorder
+open import Agora.Data.Normal.Instance.Lattice
 
 open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
@@ -18,6 +22,7 @@ open import KamiTheory.Main.Dependent.Typed.Instances
 open import KamiTheory.Data.Open.Definition
 open import KamiTheory.Data.UniqueSortedList.Definition
 open import KamiTheory.Order.StrictOrder.Base
+open import KamiTheory.Order.StrictOrder.Instances.UniqueSortedList
 
 -- open import KamiTheory.ThirdParty.logrel-mltt.Tools.Fin
 -- open import KamiTheory.ThirdParty.logrel-mltt.Tools.Nat
@@ -28,18 +33,26 @@ open import KamiTheory.Order.StrictOrder.Base
 
 -- module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} {{_ : hasDecidableEquality P}} where
 
+
 module Examples where
+
+  isStrictOrder:𝒫ᶠⁱⁿ𝔽3 : hasStrictOrder (𝒫ᶠⁱⁿ (𝔽 3))
+  isStrictOrder:𝒫ᶠⁱⁿ𝔽3 = it
+
+  𝒫𝔽3 : SortableDecidablePreorder _
+  𝒫𝔽3 = 𝒫ᶠⁱⁿ (𝔽 3)
+
   P : 𝒰 _
-  P = 𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 3))
+  P = 𝒪ᶠⁱⁿ (𝒫𝔽3)
 
   uu : P
-  uu = (⦗ # 0 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])
+  uu = (((⦗ # 0 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
 
   vv : P
-  vv = (⦗ # 1 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])
+  vv = (((⦗ # 1 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
 
   ww : P
-  ww = (⦗ # 2 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])
+  ww = (((⦗ # 2 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
 
   all = uu ∨ vv ∨ ww
 
@@ -62,6 +75,7 @@ module Examples where
 
   ttt = derive-Var (εε ∙ (NN / ▲ uu)) zero NN (▲ uu)
 
+{-
   -- P0 : all ∣ εε ∙ (NN / ▲ uu) ⊢ var zero ∶ NN / ▲ uu
   -- P0 = proof
 
@@ -122,5 +136,5 @@ module Examples where
       (comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))
         >ⱼ comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))) )))
   -}
-
+-}
 

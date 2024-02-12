@@ -5,7 +5,7 @@ module KamiTheory.Order.StrictOrder.Base where
 
 open import Data.Empty using (⊥)
 open import Agda.Builtin.Unit using (⊤; tt)
-open import Agda.Builtin.Equality using (_≡_; refl)
+open import Agda.Builtin.Equality using (_≡_)
 open import Agda.Primitive using (Level; lsuc; _⊔_)
 open import Data.Empty.Irrelevant using (⊥-elim)
 open import Relation.Nullary using (¬_)
@@ -14,7 +14,7 @@ open import Data.Product.Base using (_×_)
 open import Agda.Builtin.Sigma using (Σ; _,_; fst)
 open import Data.List.Base using (List; []; _∷_)
 open import Relation.Binary.PropositionalEquality using (subst; cong)
-open import KamiTheory.Dev.2024-01-20.Basics
+open import KamiTheory.Basics
 open import Data.Fin.Base using (Fin ; zero ; suc)
 
 
@@ -39,12 +39,13 @@ map-Tri< {a = a} {b = b} f f-inj x y (tri≡ a≮b a≡b a≯b) = tri≡ (λ x�
 map-Tri< {a = a} {b = b} f f-inj x y (tri> a≮b a≢b a>b) = tri> (λ x₁ → y a b x₁ ↯ a≮b) (λ refl → f-inj refl ↯ a≢b) (x b a a>b)
 
 
-record isStrictOrder {𝑖} {A : Set 𝑖} (_<_ : A -> A -> Set 𝑖) : Set 𝑖 where
+record isStrictOrder {𝑖} {A : Set 𝑖} (_<_ : A -> A -> Set 𝑖) : Set (lsuc 𝑖) where
   field
     irrefl-< : ∀ {a : A} → ¬ (a < a)
     -- asym< : ∀ {a b : A} → a < b → ¬ (b < a) -- follows from trans and iref
     trans-< : ∀ {a b c : A} → a < b → b < c → a < c
     conn-< : ∀ (a b : A) → Tri (a < b) (a ≡ b) (b < a)
+    -- isProp:< : ∀{a b : A} -> isProp (a < b)
 
   asym-< : ∀ {a b : A} → a < b → ¬ (b < a) -- follows from trans and iref
   asym-< p q = irrefl-< (trans-< p q)
@@ -93,9 +94,17 @@ module _ where
   ... | tri≡ a≮b refl a≯b = tri≡ irrefl-<-ℕ refl irrefl-<-ℕ
   ... | tri> a≮b a≢b a>b = tri> (λ { (s<s x) → x ↯ a≮b}) (λ x → ≡suc x ↯ a≢b) (s<s a>b)
 
+  force-≡-<-ℕ : ∀{x y} -> (p q : x <-ℕ y) → p ≡ q
+  force-≡-<-ℕ z<n z<n = refl
+  force-≡-<-ℕ (s<s p) (s<s q) = cong s<s (force-≡-<-ℕ p q)
+
+  instance
+    isProp:<-ℕ : ∀{x y : Nat} -> isProp (x <-ℕ y)
+    isProp:<-ℕ = record { force-≡ = force-≡-<-ℕ }
+
   instance
     isStrictOrder:<-ℕ : isStrictOrder _<-ℕ_
-    isStrictOrder:<-ℕ = record { irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<-ℕ }
+    isStrictOrder:<-ℕ = record { irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<-ℕ ; isProp:< = isProp:<-ℕ }
 
   instance
     hasStrictOrder:ℕ : hasStrictOrder Nat
@@ -125,14 +134,20 @@ module _ where
   ... | tri< a<b a≢b a≯b = tri< a<b (λ x → (cong toℕ x) ↯ a≢b) a≯b
   ... | tri≡ a≮b a≡b a≯b = tri≡ a≮b (≡𝔽 a≡b) a≯b
   ... | tri> a≮b a≢b a>b = tri> a≮b ((λ x → (cong toℕ x) ↯ a≢b)) a>b
+
+  instance
+    isProp:<-𝔽 : ∀{n} -> ∀{x y : Fin n} -> isProp (toℕ x <-ℕ toℕ y)
+    isProp:<-𝔽 = record { force-≡ = force-≡-<-ℕ }
   
   instance
     isStrictOrder:<-𝔽 : ∀{n} -> isStrictOrder (_<-𝔽_ {n = n})
-    isStrictOrder:<-𝔽 = record { irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<-𝔽 }
+    isStrictOrder:<-𝔽 = record { irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<-𝔽 ; isProp:< = isProp:<-𝔽 }
 
   instance
     hasStrictOrder:𝔽 : ∀{n} -> hasStrictOrder (Fin n)
     hasStrictOrder:𝔽 = record { _<_ = _<-𝔽_ }
+
+
 
 --------------------------------------------------
 -- The sum of two types has a strict order by "concatenating" them
@@ -162,7 +177,10 @@ module _ {𝑖 𝑗 : Level} {A : Set 𝑖} {B : Set 𝑗} {{_ : hasStrictOrder 
                                             (inj₂ y) (inj₂ y₁) → map-Tri< {R = _<_} {S = _<-⊎_} inj₂ (λ { refl → refl})
                                                                                                 (λ {a0 a1 y₂ → inj₂ y₂})
                                                                                                 (λ {a0 a1 (inj₂ y₂) → y₂})
-                                                                                                (conn-< y y₁)  } }
+                                                                                                (conn-< y y₁)  } ;
+
+                      isProp:< = {!!}
+                                                                                                }
 
   instance
     hasStrictOrder:⊎ : hasStrictOrder (A ⊎ B)
@@ -178,7 +196,9 @@ instance
   isStrictOrder:<-⊤ = record {
                                 irrefl-< = λ ();
                                 trans-< = λ {() ()} ;
-                                conn-< = λ { tt tt → tri≡ (λ ()) refl (λ ()) } }
+                                conn-< = λ { tt tt → tri≡ (λ ()) refl (λ ()) } ;
+                                isProp:< = {!!}
+                                }
 
 instance
   hasStrictOrder:Unit : hasStrictOrder ⊤
