@@ -49,6 +49,23 @@ module _ {𝑖 : Level} {A : Set 𝑖} where
 
   ⊆∷ : ∀ {a : A} {as bs : List A} → (a ∷ as) ⊆ bs → as ⊆ bs
   ⊆∷ sf = λ x x₁ → sf x (there x₁)
+  
+  _∈?_ : {{_ : hasDecidableEquality A}} → (a : A) → (as : List A) → isDecidable (a ∈ as)
+  a ∈? [] = no λ ()
+  a ∈? (b ∷ as) with (a ≟ b) | a ∈? as
+  ...               | yes refl | _ = yes here
+  ...               | no _ | yes a∈as = yes (there a∈as)
+  ...               | no a≠b | no a∉as = no λ { here → refl ↯ a≠b; (there a∈as) → a∈as ↯ a∉as}
+
+
+  _⊆?_ : {{_ : hasDecidableEquality A}} → (as bs : List A) → isDecidable (as ⊆ bs)
+  [] ⊆? bs = yes (λ c ())
+  (a ∷ as) ⊆? [] = no λ { all → all a here ↯ ∉[]}
+  (a ∷ as) ⊆? bs with a ∈? bs | as ⊆? bs
+  ... | yes a∈bs | yes all = yes (λ { c here → a∈bs ; c (there x) → all c x})
+  ... | yes a∈bs | no as⊈bs = no (λ { all → (λ c c∈as → all c (there c∈as)) ↯ as⊈bs})
+  ... | no a∉bs | _ = no λ { all → all a here ↯ a∉bs}
+
 
 {-
   data _⊆_ : List A → List A → Set 𝑖  where
@@ -91,36 +108,6 @@ module _ {𝑖 : Level} {A : Set 𝑖} where
   ⊆∷ (keep a) = (drop (keep a))
 -}
 
---------------------------------------------------
--- sortedness
-
-module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
-
-  data isUniqueSorted : List A → Set 𝑖 where
-    []  : isUniqueSorted []
-    [-] : ∀ {x} → isUniqueSorted (x ∷ [])
-    _∷_ : ∀ {x y xs} → x < y → isUniqueSorted (y ∷ xs) → isUniqueSorted (x ∷ y ∷ xs)
-
-  popSort : {a : A} → {as : List A} → isUniqueSorted (a ∷ as) → isUniqueSorted as
-  popSort [-] = []
-  popSort (x ∷ x₁) = x₁
- 
-  _∈?_ : {{_ : hasDecidableEquality A}} → (a : A) → (as : List A) → isDecidable (a ∈ as)
-  a ∈? [] = no λ ()
-  a ∈? (b ∷ as) with (a ≟ b) | a ∈? as
-  ...               | yes refl | _ = yes here
-  ...               | no _ | yes a∈as = yes (there a∈as)
-  ...               | no a≠b | no a∉as = no λ { here → refl ↯ a≠b; (there a∈as) → a∈as ↯ a∉as}
-
-
-  _⊆?_ : {{_ : hasDecidableEquality A}} → (as bs : List A) → isDecidable (as ⊆ bs)
-  [] ⊆? bs = yes (λ c ())
-  (a ∷ as) ⊆? [] = no λ { all → all a here ↯ ∉[]}
-  (a ∷ as) ⊆? bs with a ∈? bs | as ⊆? bs
-  ... | yes a∈bs | yes all = yes (λ { c here → a∈bs ; c (there x) → all c x})
-  ... | yes a∈bs | no as⊈bs = no (λ { all → (λ c c∈as → all c (there c∈as)) ↯ as⊈bs})
-  ... | no a∉bs | _ = no λ { all → all a here ↯ a∉bs}
-
 {-
   _⊆?_ : {{_ : hasDecidableEquality A}} → (as bs : List A) → isDecidable (as ⊆ bs)
   [] ⊆? bs = yes []⊆
@@ -137,6 +124,8 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 --------------------------------------------------
 -- insertion
 
+module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
+
   insert : (a : A) → (as : List A) → List A
   insert a [] = a ∷ []
   insert a (b ∷ as) with conn-< a b
@@ -151,39 +140,6 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   all∷ : {a b : A} → {bs : List A} → a < b → a <* bs → a <* (b ∷ bs)
   all∷ a<b [] = a<b ∷ []
   all∷ a<b (a<b₁ ∷ a<*bs) = a<b ∷ a<b₁ ∷ a<*bs
-
-  allSort : {a : A} → {as : List A} → isUniqueSorted (a ∷ as) → a <* as
-  allSort [-] = []
-  allSort (x ∷ [-]) = all∷ x []
-  allSort (a<z ∷ (z<y ∷ usyxs)) = all∷ a<z (allSort (trans-< {𝑖} {A} a<z z<y ∷ usyxs))
-  
-  sortAll : {a : A} → {as : List A} → a <* as → isUniqueSorted as → isUniqueSorted (a ∷ as)
-  sortAll {a} [] x₁ = [-]
-  sortAll (x ∷ x₂) x₁ = x ∷ x₁
-  
-  insertAll : {a c : A} → {as : List A} → c < a → c <* as → isUniqueSorted as → c <* (insert a as)
-  insertAll {as = []} x x₁ usas = x ∷ x₁
-  insertAll {a} {c} {b ∷ as} c<a (c<b ∷ c<*as) usas with conn-< a b
-  ... | tri< _ _ _ = c<a ∷ (c<b ∷ c<*as)
-  ... | tri≡ _ _ _ = (c<b ∷ c<*as)
-  ... | tri> a≮b a≢b a>b = let
-      c<*aas = insertAll c<a c<*as (popSort usas)
-    in all∷ c<b c<*aas
-
-  insertSorted : {a : A} → {as : List A} → isUniqueSorted as → isUniqueSorted (insert a as)
-  insertSorted {a} {[]} usas = [-]
-  insertSorted {a} {(b ∷ as)} ([-]) with conn-< a b
-  ... | tri< a<b a≢b a≯b = a<b ∷ [-]
-  ... | tri≡ a≮b a≡b a≯b = [-]
-  ... | tri> a≮b a≢b a>b = a>b ∷ [-]
-  insertSorted {a} {(b ∷ as)} (b<y ∷ usas) with conn-< a b
-  ... | tri< a<b a≢b a≯b = a<b ∷ (b<y ∷ usas)
-  ... | tri≡ a≮b a≡b a≯b = (b<y ∷ usas)
-  ... | tri> a≮b a≢b a>b = let
-      b<*yas = allSort (b<y ∷ usas)
-      b<*y∷xs = insertAll a>b b<*yas usas
-      ins = insertSorted usas
-    in sortAll b<*y∷xs ins
 
 
   insertInserts : ∀ (a : A) → (as : List A) → a ∈ insert a as
@@ -210,6 +166,62 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   insertPreserves {c} {a} {b ∷ as} (there x) | tri> a≮b a≢b a>b with insertPreserves {c} {as = as} x
   ... | inj₁ x₁ = inj₁ x₁
   ... | inj₂ y = inj₂ (there y)
+
+--------------------------------------------------
+-- sortedness
+
+module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
+
+  data isUniqueSorted : List A → Set 𝑖 where
+    []  : isUniqueSorted []
+    [-] : ∀ {x} → isUniqueSorted (x ∷ [])
+    _∷_ : ∀ {x y xs} → x < y → isUniqueSorted (y ∷ xs) → isUniqueSorted (x ∷ y ∷ xs)
+
+  popSort : {a : A} → {as : List A} → isUniqueSorted (a ∷ as) → isUniqueSorted as
+  popSort [-] = []
+  popSort (x ∷ x₁) = x₁
+  
+  insertAll : {a c : A} → {as : List A} → c < a → c <* as → isUniqueSorted as → c <* (insert a as)
+  insertAll {as = []} x x₁ usas = x ∷ x₁
+  insertAll {a} {c} {b ∷ as} c<a (c<b ∷ c<*as) usas with conn-< a b
+  ... | tri< _ _ _ = c<a ∷ (c<b ∷ c<*as)
+  ... | tri≡ _ _ _ = (c<b ∷ c<*as)
+  ... | tri> a≮b a≢b a>b = let
+      c<*aas = insertAll c<a c<*as (popSort usas)
+    in all∷ c<b c<*aas
+  
+  sortAll : {a : A} → {as : List A} → a <* as → isUniqueSorted as → isUniqueSorted (a ∷ as)
+  sortAll {a} [] x₁ = [-]
+  sortAll (x ∷ x₂) x₁ = x ∷ x₁
+  
+  allSort : {a : A} → {as : List A} → isUniqueSorted (a ∷ as) → a <* as
+  allSort [-] = []
+  allSort (x ∷ [-]) = all∷ x []
+  allSort (a<z ∷ (z<y ∷ usyxs)) = all∷ a<z (allSort (trans-< {𝑖} {A} a<z z<y ∷ usyxs))
+
+  insertSorted : {a : A} → {as : List A} → isUniqueSorted as → isUniqueSorted (insert a as)
+  insertSorted {a} {[]} usas = [-]
+  insertSorted {a} {(b ∷ as)} ([-]) with conn-< a b
+  ... | tri< a<b a≢b a≯b = a<b ∷ [-]
+  ... | tri≡ a≮b a≡b a≯b = [-]
+  ... | tri> a≮b a≢b a>b = a>b ∷ [-]
+  insertSorted {a} {(b ∷ as)} (b<y ∷ usas) with conn-< a b
+  ... | tri< a<b a≢b a≯b = a<b ∷ (b<y ∷ usas)
+  ... | tri≡ a≮b a≡b a≯b = (b<y ∷ usas)
+  ... | tri> a≮b a≢b a>b = let
+      b<*yas = allSort (b<y ∷ usas)
+      b<*y∷xs = insertAll a>b b<*yas usas
+      ins = insertSorted usas
+    in sortAll b<*y∷xs ins
+
+  sort : List A → List A
+  sort [] = []
+  sort (x ∷ l) = insert x (sort l)
+
+  isUniqueSorted:sort : ∀ (l : List A) -> isUniqueSorted (sort l)
+  isUniqueSorted:sort [] = []
+  isUniqueSorted:sort (x ∷ l) = insertSorted {!isUniqueSorted:sort l!}
+
 
 --------------------------------------------------
 -- onions
