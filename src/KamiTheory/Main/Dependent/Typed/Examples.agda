@@ -73,7 +73,7 @@ module Examples where
   εε : Con (Term P) zero
   εε = ε
 
-  ttt = derive-Var (εε ∙ (NN / ▲ uu)) zero NN (▲ uu)
+  -- ttt = derive-Var (εε ∙ (NN / ▲ uu)) zero NN (▲ uu)
 
 {-
   -- P0 : all ∣ εε ∙ (NN / ▲ uu) ⊢ var zero ∶ NN / ▲ uu

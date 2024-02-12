@@ -104,7 +104,7 @@ module _ where
 
   instance
     isStrictOrder:<-ℕ : isStrictOrder _<-ℕ_
-    isStrictOrder:<-ℕ = record { irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<-ℕ ; isProp:< = isProp:<-ℕ }
+    isStrictOrder:<-ℕ = record { irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<-ℕ }
 
   instance
     hasStrictOrder:ℕ : hasStrictOrder Nat
@@ -141,7 +141,7 @@ module _ where
   
   instance
     isStrictOrder:<-𝔽 : ∀{n} -> isStrictOrder (_<-𝔽_ {n = n})
-    isStrictOrder:<-𝔽 = record { irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<-𝔽 ; isProp:< = isProp:<-𝔽 }
+    isStrictOrder:<-𝔽 = record { irrefl-< = irrefl-<-ℕ ; trans-< = trans-<-ℕ ; conn-< = conn-<-𝔽 }
 
   instance
     hasStrictOrder:𝔽 : ∀{n} -> hasStrictOrder (Fin n)
@@ -177,9 +177,7 @@ module _ {𝑖 𝑗 : Level} {A : Set 𝑖} {B : Set 𝑗} {{_ : hasStrictOrder 
                                             (inj₂ y) (inj₂ y₁) → map-Tri< {R = _<_} {S = _<-⊎_} inj₂ (λ { refl → refl})
                                                                                                 (λ {a0 a1 y₂ → inj₂ y₂})
                                                                                                 (λ {a0 a1 (inj₂ y₂) → y₂})
-                                                                                                (conn-< y y₁)  } ;
-
-                      isProp:< = {!!}
+                                                                                                (conn-< y y₁)  }
                                                                                                 }
 
   instance
@@ -196,8 +194,7 @@ instance
   isStrictOrder:<-⊤ = record {
                                 irrefl-< = λ ();
                                 trans-< = λ {() ()} ;
-                                conn-< = λ { tt tt → tri≡ (λ ()) refl (λ ()) } ;
-                                isProp:< = {!!}
+                                conn-< = λ { tt tt → tri≡ (λ ()) refl (λ ()) }
                                 }
 
 instance
