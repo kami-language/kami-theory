@@ -455,12 +455,13 @@ module _ {A : StrictOrder 𝑖} where
 
   instance
     isDecidablePreorder:≤-𝒫ᶠⁱⁿ : isDecidablePreorder (𝒫ᶠⁱⁿ A)
-    isDecidablePreorder:≤-𝒫ᶠⁱⁿ = record
-      { _≰_ = λ xs ys -> ∑ λ x -> x ∈ ⟨ xs ⟩ ×-𝒰 (x ∉ ⟨ ys ⟩)
-      ; impossible-≤ = {!!}
-      ; decide-≤ = {!!}
-      }
-    -- record { decide-≤ = decide-≤-𝒫ᶠⁱⁿ }
+    isDecidablePreorder:≤-𝒫ᶠⁱⁿ =
+      -- record
+      -- { _≰_ = λ xs ys -> ∑ λ x -> x ∈ ⟨ xs ⟩ ×-𝒰 (x ∉ ⟨ ys ⟩)
+      -- ; impossible-≤ = {!!}
+      -- ; decide-≤ = {!!}
+      -- }
+      record { decide-≤ = decide-≤-𝒫ᶠⁱⁿ }
 
 
 

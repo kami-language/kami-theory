@@ -41,8 +41,15 @@ module IB {X : 𝒰 𝑖} (independent : X -> X -> 𝒰 𝑗) where
 module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X ′}} {{_ : isDecidablePreorder ′ X ′}} where
   -- {{_ : DecidablePreorder 𝑗 on X}} where
 
+  private
+    _≰_ : X -> X -> 𝒰 _
+    _≰_ a b = ¬(a ≤ b)
+
+    impossible-≤ : ∀{a b} -> a ≰ b -> a ≤ b -> 𝟘-𝒰
+    impossible-≤ p q = p q
+
   independent : X -> X -> 𝒰 _
-  independent a b = (a ≰ b) ×-𝒰 (b ≰ a)
+  independent a b = (¬(a ≤ b)) ×-𝒰 (¬(b ≤ a))
 
   open IB independent public
 
@@ -200,27 +207,50 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
     ... | take p = take p
     ... | next p = next (preserves-∈:insert z x ys p ysp)
 
-    preserves-∈-r:merge : ∀ x u v -> x ∈-IB v -> isIndependentBase v -> x ∈-IB (mergeIB u v)
-    preserves-∈-r:merge x [] v p vp = p
-    preserves-∈-r:merge x (u ∷ us) v p vp = preserves-∈-r:merge x us (insertIB u v) (preserves-∈:insert x u v p vp ) (isIndependentBase:insertIB u v vp)
+  preserves-∈-r:merge : ∀ x u v -> x ∈-IB v -> isIndependentBase v -> x ∈-IB (mergeIB u v)
+  preserves-∈-r:merge x [] v p vp = p
+  preserves-∈-r:merge x (u ∷ us) v p vp = preserves-∈-r:merge x us (insertIB u v) (preserves-∈:insert x u v p vp ) (isIndependentBase:insertIB u v vp)
 
-    preserves-∈-l:merge : ∀ x u v -> x ∈-IB u -> isIndependentBase v -> x ∈-IB (mergeIB u v)
-    preserves-∈-l:merge x (u ∷ us) vs (take u≤x) vp = preserves-∈-r:merge x us _ (trans-∈-IB u≤x (insert-∈ u vs)) (isIndependentBase:insertIB u vs vp)
-    preserves-∈-l:merge x (u ∷ us) vs (next p) vp = preserves-∈-l:merge x us _ p (isIndependentBase:insertIB u vs vp)
+  preserves-∈-l:merge : ∀ x u v -> x ∈-IB u -> isIndependentBase v -> x ∈-IB (mergeIB u v)
+  preserves-∈-l:merge x (u ∷ us) vs (take u≤x) vp = preserves-∈-r:merge x us _ (trans-∈-IB u≤x (insert-∈ u vs)) (isIndependentBase:insertIB u vs vp)
+  preserves-∈-l:merge x (u ∷ us) vs (next p) vp = preserves-∈-l:merge x us _ p (isIndependentBase:insertIB u vs vp)
 
-    merge-ι₀ : ∀ v -> isIndependentBase v -> ∀ x u -> x ∈ u -> x ∈-IB mergeIB u v
-    merge-ι₀ vs vp x (.x ∷ us) here = preserves-∈-r:merge x us ((insertIB x vs)) (insert-∈ x vs) (isIndependentBase:insertIB x vs vp)
-    merge-ι₀ vs vp x (u ∷ us) (there p) = preserves-∈-l:merge x us (insertIB u vs) (map-∈-IndependentBase p) (isIndependentBase:insertIB u vs vp)
+  merge-ι₀ : ∀ v -> isIndependentBase v -> ∀ x u -> x ∈ u -> x ∈-IB mergeIB u v
+  merge-ι₀ vs vp x (.x ∷ us) here = preserves-∈-r:merge x us ((insertIB x vs)) (insert-∈ x vs) (isIndependentBase:insertIB x vs vp)
+  merge-ι₀ vs vp x (u ∷ us) (there p) = preserves-∈-l:merge x us (insertIB u vs) (map-∈-IndependentBase p) (isIndependentBase:insertIB u vs vp)
 
-    merge-ι₁ : ∀ v -> isIndependentBase v -> ∀ x u -> x ∈-IB v -> x ∈-IB mergeIB u v
-    merge-ι₁ v vp x [] p = p
-    merge-ι₁ v vp x (u ∷ us) p = merge-ι₁ (insertIB u v) (isIndependentBase:insertIB u v vp) x us (preserves-∈:insert x u v p vp)
+  merge-ι₁ : ∀ v -> isIndependentBase v -> ∀ x u -> x ∈-IB v -> x ∈-IB mergeIB u v
+  merge-ι₁ v vp x [] p = p
+  merge-ι₁ v vp x (u ∷ us) p = merge-ι₁ (insertIB u v) (isIndependentBase:insertIB u v vp) x us (preserves-∈:insert x u v p vp)
 
   ι₀-IndependentBase : ∀{u v : List X} -> isIndependentBase v -> u ≤-IB mergeIB u v
   ι₀-IndependentBase vp = ≤:byAllElements (λ p -> merge-ι₀ _ vp _ _ p)
 
   ι₁-IndependentBase : ∀{u v : List X} -> isIndependentBase v -> v ≤-IB mergeIB u v
   ι₁-IndependentBase {u = u} vp = ≤:byAllElements (λ p -> merge-ι₁ _ vp _ u (map-∈-IndependentBase p))
+
+
+  private
+
+    clear-≤ : ∀ x ys w -> x ∈-IB w -> ys ≤-IB w -> clearIB x ys ≤-IB w
+    clear-≤ x [] w p q = []
+    clear-≤ x (y ∷ ys) w x∈w yys≤w@(y∈w ∷ ys≤w) with decide-≤ x y
+    ... | just x≤y = clear-≤ x ys w x∈w ys≤w
+    ... | left x≰y with decide-≤ y x
+    ... | just y≤x = clear-≤ x ys w x∈w ys≤w
+    ... | left y≰x = y∈w ∷ (clear-≤ x ys w x∈w ys≤w)
+
+    insert-≤ : ∀ x v w -> x ∈-IB w -> v ≤-IB w -> insertIB x v ≤-IB w
+    insert-≤ x [] w x∈w v≤w = x∈w ∷ []
+    insert-≤ x (y ∷ ys) w x∈w yys≤w@(y∈w ∷ ys≤w) with decide-≤ x y
+    ... | just x≤y = x∈w ∷ clear-≤ x ys w x∈w ys≤w
+    ... | left x≰y with decide-≤ y x
+    ... | just y≤x = yys≤w
+    ... | left y≰x = y∈w ∷ insert-≤ x ys w x∈w ys≤w
+
+  [_,_]-∨-IndependentBase : ∀{u v w : List X} -> u ≤-IB w -> v ≤-IB w -> mergeIB u v ≤-IB w
+  [_,_]-∨-IndependentBase {u = []} p q = q
+  [_,_]-∨-IndependentBase {u = x ∷ u} (x∈w ∷ p) q = [ p , insert-≤ x _ _ x∈w q ]-∨-IndependentBase
 
 
   intoIB : (u : List X) -> List X :& isIndependentBase -- (𝒪ᶠⁱⁿ⁻ʷᵏ X)
@@ -234,13 +264,15 @@ macro
   𝒪ᶠⁱⁿ⁻ʷᵏ : DecidablePreorder 𝑖 -> _
   𝒪ᶠⁱⁿ⁻ʷᵏ X = #structureOn (IndependentBase X)
 
-module _ {X' : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X'}} where
+-- module _ {X' : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X'}} where
+
+module _ {X' : 𝒰 𝑖} {{_ : isSetoid {𝑗} X'}} {{_ : isPreorder 𝑘 ′ X' ′}} {{_ : isDecidablePreorder ′ X' ′}} where
 
   private
-    X : DecidablePreorder 𝑖
+    X : DecidablePreorder _
     X = ′ X' ′
 
-  record _≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ (u v : 𝒪ᶠⁱⁿ⁻ʷᵏ X) : 𝒰 𝑖 where
+  record _≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ (u v : 𝒪ᶠⁱⁿ⁻ʷᵏ X) : 𝒰 (𝑖 ､ 𝑗 ､ 𝑘) where
     constructor incl
     field ⟨_⟩ : ⟨ u ⟩ ≤-IndependentBase ⟨ v ⟩
 
@@ -252,7 +284,7 @@ module _ {X' : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X'}} where
   _⟡-≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ : ∀{u v w : 𝒪ᶠⁱⁿ⁻ʷᵏ X} -> u ≤-𝒪ᶠⁱⁿ⁻ʷᵏ v -> v ≤-𝒪ᶠⁱⁿ⁻ʷᵏ w -> u ≤-𝒪ᶠⁱⁿ⁻ʷᵏ w
   _⟡-≤-𝒪ᶠⁱⁿ⁻ʷᵏ_ = λ p q -> incl (⟨ p ⟩ ⟡-≤-IndependentBase ⟨ q ⟩)
 
-  _∼-𝒪ᶠⁱⁿ⁻ʷᵏ_ : (u v : 𝒪ᶠⁱⁿ⁻ʷᵏ X) -> 𝒰 𝑖
+  _∼-𝒪ᶠⁱⁿ⁻ʷᵏ_ : (u v : 𝒪ᶠⁱⁿ⁻ʷᵏ X) -> 𝒰 _
   _∼-𝒪ᶠⁱⁿ⁻ʷᵏ_ u v = (u ≤-𝒪ᶠⁱⁿ⁻ʷᵏ v) ×-𝒰 (v ≤-𝒪ᶠⁱⁿ⁻ʷᵏ u)
 
   instance
@@ -287,18 +319,128 @@ module _ {X' : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X'}} where
                               ; _∨_ = λ u v -> (mergeIB ⟨ u ⟩ ⟨ v ⟩ since isIndependentBase:mergeIB ⟨ u ⟩ (of v))
                               ; ι₀-∨ = incl (ι₀-IndependentBase it)
                               ; ι₁-∨ = λ {u} {v} -> incl (ι₁-IndependentBase {u = ⟨ u ⟩} it)
-                              ; [_,_]-∨ = {!!}
+                              ; [_,_]-∨ = λ ϕ ψ -> incl [ ⟨ ϕ ⟩ , ⟨ ψ ⟩ ]-∨-IndependentBase
                               }
-
-  instance
-    hasFiniteMeets:𝒪ᶠⁱⁿ⁻ʷᵏ : hasFiniteMeets (𝒪ᶠⁱⁿ⁻ʷᵏ X)
-    hasFiniteMeets:𝒪ᶠⁱⁿ⁻ʷᵏ = {!!}
-
 
   instance
     hasDecidableEquality:𝒪ᶠⁱⁿ⁻ʷᵏ : hasDecidableEquality (𝒪ᶠⁱⁿ⁻ʷᵏ X)
     hasDecidableEquality:𝒪ᶠⁱⁿ⁻ʷᵏ = {!!}
 
+module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X}} {{_ : hasFiniteJoins ′ X ′}} where
+
+  -- private
+  --   X : DecidablePreorder _
+  --   X = ′ X' ′
+
+  -- I have an element of X and I want ∨ all elements of a list with it, this is still an IB
+  private
+    restrictIB : X -> List X -> List X
+    restrictIB a as = map-List (a ∨_) as
+
+    _≤-IB_ = _≤-IndependentBase_
+    _∈-IB_ = _∈-IndependentBase_
+
+    π₀-∈,IB : ∀{x} -> ∀ a bs -> x ∈-IB restrictIB a bs -> (a ≤ x)
+    π₀-∈,IB a (x ∷ bs) (take p) = (ι₀-∨ ⟡ p)
+    π₀-∈,IB a (x ∷ bs) (next p) = π₀-∈,IB a bs p
+
+    π₁-≤,IB : ∀ a bs -> restrictIB a bs ≤-IB bs
+    π₁-≤,IB a [] = []
+    π₁-≤,IB a (x ∷ bs) = (take ι₁-∨) ∷ lift-≤-IB (π₁-≤,IB a bs)
+
+  intersectIB : List X -> List X -> List X
+  intersectIB [] bs = []
+  intersectIB (a ∷ as) bs = mergeIB (restrictIB a bs) (intersectIB as bs)
+
+  isIndependentBase:intersectIB : ∀ as bs -> isIndependentBase (intersectIB as bs)
+  isIndependentBase:intersectIB [] bs = IB.[]
+  isIndependentBase:intersectIB (x ∷ as) bs = isIndependentBase:mergeIB (restrictIB x bs) (isIndependentBase:intersectIB as bs)
+
+  head-≤ : ∀{x : X} {v xs : List X} -> (p : ∀{a} -> a ∈-IB v -> x ≤ a) -> v ≤-IB (x ∷ xs)
+  head-≤ {v = []} p = []
+  head-≤ {v = x ∷ v} p = (take (p (take refl-≤))) ∷ (head-≤ (λ q -> p (next q)))
+
+  π₀-IB : ∀ as bs -> intersectIB as bs ≤-IB as
+  π₀-IB [] bs = []
+  π₀-IB (x ∷ as) bs =
+    let p : restrictIB x bs ≤-IB (x ∷ as)
+        p = head-≤ λ a∈as -> π₀-∈,IB x _ a∈as
+        q : intersectIB as bs ≤-IB (x ∷ as)
+        q = lift-≤-IB (π₀-IB as bs)
+    in [ p , q ]-∨-IndependentBase
+
+  π₁-IB : ∀ as bs -> intersectIB as bs ≤-IB bs
+  π₁-IB [] bs = []
+  π₁-IB (x ∷ as) bs =
+    let p : restrictIB x bs ≤-IB (bs)
+        p = π₁-≤,IB x bs
+        q : intersectIB as bs ≤-IB bs
+        q = π₁-IB as bs
+    in [ p , q ]-∨-IndependentBase
+
+  terminal-IB : ∀ (v : List X) -> v ≤-IB (⊥ ∷ [])
+  terminal-IB [] = []
+  terminal-IB (x ∷ v) = (take initial-⊥) ∷ (terminal-IB v)
+
+  isIndependentBase:terminal-IB : isIndependentBase {X = X} (⊥ ∷ [])
+  isIndependentBase:terminal-IB = IB.[] IB.∷ IB.[]
+
+  preserves-∈:restrictIB : ∀{a x bs} -> x ∈-IB bs -> a ≤ x -> x ∈-IB restrictIB a bs
+  preserves-∈:restrictIB (take b≤x) a≤x = take [ a≤x , b≤x ]-∨
+  preserves-∈:restrictIB (next p) q = next (preserves-∈:restrictIB p q)
+
+  preserves-∈:intersectIB : ∀{x : X} -> ∀{as bs : List X} -> x ∈-IB as -> x ∈-IB bs -> x ∈-IB intersectIB as bs
+  preserves-∈:intersectIB {x = x} {as = a ∷ as} {bs} (take a≤x) x∈bs = preserves-∈-l:merge x (restrictIB a bs) (intersectIB as bs) (preserves-∈:restrictIB x∈bs a≤x) (isIndependentBase:intersectIB as bs)
+  preserves-∈:intersectIB {x = x} {as = a ∷ as} {bs} (next x∈as) x∈bs = preserves-∈-r:merge x (restrictIB a bs) (intersectIB as bs) (preserves-∈:intersectIB x∈as x∈bs) ((isIndependentBase:intersectIB as bs))
+
+  ⟨_,_⟩-∧-IndependentBase : ∀{u v w : List X} -> u ≤-IB v -> u ≤-IB w -> u ≤-IB intersectIB v w
+  ⟨_,_⟩-∧-IndependentBase {u = []} {v = v} p q = []
+  ⟨_,_⟩-∧-IndependentBase {u = u ∷ us} {v = v} (u∈v ∷ us≤v) (u∈w ∷ us≤w) = preserves-∈:intersectIB u∈v u∈w ∷ ⟨_,_⟩-∧-IndependentBase us≤v us≤w
+
+  instance
+    hasFiniteMeets:𝒪ᶠⁱⁿ⁻ʷᵏ : hasFiniteMeets (𝒪ᶠⁱⁿ⁻ʷᵏ ′ X ′)
+    hasFiniteMeets:𝒪ᶠⁱⁿ⁻ʷᵏ = record
+      { ⊤ = ⊥ ∷ [] since isIndependentBase:terminal-IB
+      ; terminal-⊤ = incl (terminal-IB _)
+      ; _∧_ = λ u v -> intersectIB ⟨ u ⟩ ⟨ v ⟩ since isIndependentBase:intersectIB ⟨ u ⟩ ⟨ v ⟩
+      ; π₀-∧ = incl (π₀-IB _ _)
+      ; π₁-∧ = λ {a b} -> incl (π₁-IB ⟨ a ⟩ ⟨ b ⟩)
+      ; ⟨_,_⟩-∧ = λ ϕ ψ -> incl ⟨ ⟨ ϕ ⟩ , ⟨ ψ ⟩ ⟩-∧-IndependentBase
+      }
+
+
+
+---------------------------------------------
+-- Building meets for 𝒪ᶠⁱⁿ⁻ʷᵏ
+--
+-- Idea: if we have (a ∨ b) ∧ (c ∨ d), this evaluates
+-- to ((a ∨ b) ∧ c) ∨ ((a ∨ b) ∧ d)
+-- to (a ∧ c) ∨ (b ∧ c) ∨ (a ∧ d) ∨ (b ∧ d)
+--
+-- this means that we require our underlying preorder to be
+-- closed under unions
+
+{-
+module TestExample where
+
+  open import Data.Fin using (#_ ; zero ; suc)
+  P : 𝒰 _
+  P = 𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 3))
+
+  uu : P
+  uu = (⦗ # 0 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])
+
+  vv : P
+  vv = (⦗ # 1 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])
+
+  ww : P
+  ww = (⦗ # 2 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])
+
+  all = uu ∨ vv ∨ ww
+
+  res = intersectIB (⟨ uu ⟩) (⟨ vv ⟩)
+
+-}
 
 
 module _ {X' : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X'}}
