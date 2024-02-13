@@ -51,5 +51,9 @@ module _ {X : StrictOrder 𝑖}  where
     hasStrictOrder:𝒫ᶠⁱⁿ : hasStrictOrder (𝒫ᶠⁱⁿ X)
     hasStrictOrder:𝒫ᶠⁱⁿ = record { _<_ = _<-𝒫ᶠⁱⁿ_ }
 
+  instance
+    hasDecidableEquality:𝒫ᶠⁱⁿ : hasDecidableEquality (𝒫ᶠⁱⁿ X)
+    hasDecidableEquality:𝒫ᶠⁱⁿ = hasDecidableEquality:byStrictOrder
+
 
 

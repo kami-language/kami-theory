@@ -49,6 +49,13 @@ module _ {A : Set 𝑖} where
   ... | yes a∈bs | no as⊈bs = no (λ { all → (λ c c∈as → all c (there c∈as)) ↯ as⊈bs})
   ... | no a∉bs | _ = no λ { all → all a here ↯ a∉bs}
 
+  open import Data.List.Base
+
+  instance
+    hasDecidableEquality:List : {{_ : hasDecidableEquality A}} -> hasDecidableEquality (List A)
+    hasDecidableEquality:List = {!it!}
+
+
 
 {-
   data _⊆_ : List A → List A → Set 𝑖  where
@@ -154,9 +161,9 @@ module _ {X : 𝒰 𝑖} where
 
   -- isInjective:transport-∈at : 
 
-  data _⊆ⁱⁿᵈ_ : (u : List X) -> (v : List X) -> 𝒰 𝑖 where
-    [] : ∀{vs} -> [] ⊆ⁱⁿᵈ vs
-    _∷_ : ∀{u us vs} -> u ∈ vs -> us ⊆ⁱⁿᵈ vs -> (u ∷ us) ⊆ⁱⁿᵈ vs
+  -- data _⊆ⁱⁿᵈ_ : (u : List X) -> (v : List X) -> 𝒰 𝑖 where
+  --   [] : ∀{vs} -> [] ⊆ⁱⁿᵈ vs
+  --   _∷_ : ∀{u us vs} -> u ∈ vs -> us ⊆ⁱⁿᵈ vs -> (u ∷ us) ⊆ⁱⁿᵈ vs
 
 
 

@@ -250,7 +250,7 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 open import Agora.Conventions using (
   _:&_; ⟨_⟩; _since_; ′_′; _on_;
   #structureOn; isSetoid; isSetoid:byId; _isUniverseOf[_]_;  _isUniverseOf[_]_:byBase;
-  𝑖 ; 𝑗
+  𝑖 ; 𝑗 ; _isUniverseOf[_]_:𝒰 ; _isUniverseOf[_]_:Exp ; isUniverseOf::&
   )
 open import Agora.Order.Preorder using
   (isPreorderData; isPreorder;
@@ -383,7 +383,7 @@ module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
 -- we show that isUniqueSorted is a proposition
 
 
-module _ {𝑖} {A : Set 𝑖} {{_ : hasStrictOrder A}} {{_ : ∀{a b : A} -> isProp (a < b)}} where
+module _ {𝑖} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
 
   force-≡-isUniqueSorted : ∀{xs : List A} -> (p q : isUniqueSorted xs) -> p ≡ q
   force-≡-isUniqueSorted [] [] = refl

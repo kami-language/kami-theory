@@ -12,6 +12,7 @@ open import Agora.Data.Normal.Definition
 open import Agora.Data.Normal.Instance.Setoid
 open import Agora.Data.Normal.Instance.Preorder
 open import Agora.Data.Normal.Instance.Lattice
+open import Agora.Data.Normal.Instance.DecidableEquality
 
 open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
@@ -23,38 +24,51 @@ open import KamiTheory.Data.Open.Definition
 open import KamiTheory.Data.UniqueSortedList.Definition
 open import KamiTheory.Order.StrictOrder.Base
 open import KamiTheory.Order.StrictOrder.Instances.UniqueSortedList
-
--- open import KamiTheory.ThirdParty.logrel-mltt.Tools.Fin
--- open import KamiTheory.ThirdParty.logrel-mltt.Tools.Nat
--- open import KamiTheory.ThirdParty.logrel-mltt.Tools.Product
+open import KamiTheory.Main.Dependent.Untyped.Definition
 
 
-
-
--- module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} {{_ : hasDecidableEquality P}} where
 
 
 module Examples where
+  -- instance
+  --   hasDecidableEquality:𝔽 : hasDecidableEquality (𝔽 n)
+  --   hasDecidableEquality:𝔽 = hasDecidableEquality:byStrictOrder
 
-  isStrictOrder:𝒫ᶠⁱⁿ𝔽3 : hasStrictOrder (𝒫ᶠⁱⁿ (𝔽 3))
-  isStrictOrder:𝒫ᶠⁱⁿ𝔽3 = it
+  -- isStrictOrder:𝒫ᶠⁱⁿ𝔽3 : hasStrictOrder (𝒫ᶠⁱⁿ (𝔽 3))
+  -- isStrictOrder:𝒫ᶠⁱⁿ𝔽3 = it
 
-  𝒫𝔽3 : SortableDecidablePreorder _
-  𝒫𝔽3 = 𝒫ᶠⁱⁿ (𝔽 3)
+  -- 𝒫𝔽3 : SortableDecidablePreorder _
+  -- 𝒫𝔽3 = 𝒫ᶠⁱⁿ (𝔽 3)
 
-  P : 𝒰 _
-  P = 𝒪ᶠⁱⁿ (𝒫𝔽3)
+  -- QQ : Preorder _
+  -- QQ = 𝒪ᶠⁱⁿ (𝒫𝔽3)
 
-  uu : P
+  -- {-# INLINE QQ #-}
+
+  PP : Preorder _
+  PP = -- QQ
+     ′_′ (Normalform ((𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 3))) since isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ)) {_} {{isPreorder:𝒩 {{isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ {{isSetoid:𝒫ᶠⁱⁿ}} {{isPreorder:𝒫ᶠⁱⁿ}} {{isDecidablePreorder:≤-𝒫ᶠⁱⁿ}}}}}}
+
+
+
+  uu : ⟨ PP ⟩
   uu = (((⦗ # 0 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
 
-  vv : P
+  vv : ⟨ PP ⟩
   vv = (((⦗ # 1 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
 
-  ww : P
+  ww : ⟨ PP ⟩
   ww = (((⦗ # 2 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
 
   all = uu ∨ vv ∨ ww
+
+  open Typecheck (PP) {{hasDecidableEquality:𝒩}}
+
+
+  P : 𝒰 _
+  P = ⟨ PP ⟩
+
+
 
   _⟶_ = _▹▹_
 
@@ -73,17 +87,25 @@ module Examples where
   εε : Con (Term P) zero
   εε = ε
 
-  -- ttt = derive-Var (εε ∙ (NN / ▲ uu)) zero NN (▲ uu)
+  ttt = derive-Var (εε ∙ (NN / ▲ uu)) zero NN (▲ uu)
+
+  P0 : all ∣ εε ∙ (NN / ▲ uu) ⊢ var zero ∶ NN / ▲ uu
+  P0 = proof
+
+  P1 : all ∣ εε ∙ (NN / ▲ uu) ∙ (NN / ▲ vv) ⊢ var (suc zero) ∶ NN / ▲ uu
+  P1 = proof
+
+  P2 : all ∣ εε ∙ (NN / ▲ U) ∙ wk (liftn (step id) n0) (NN / ▲ U) ⊢ var (suc zero) ∶ NN [ zeroₜ ] / ▲ U
+  P2 = {!proof!}
+
+  P2' : all ∣ ε ∙ (NN / ▲ U) ∙ (NN / ▲ U) ⊢ var (suc zero) ∶ NN / ▲ U
+  P2' = {!proof!}
+
+
+  -- +ₙ : all ∣ εε ⊢ lam (lam (natrec NN (var (suc zero)) _ _)) ∶ (NN / ▲ U) ▹▹ ((NN / ▲ U) ▹▹ NN) / ▲ U
+  -- +ₙ {U = U} = lamⱼ NNⱼ (lamⱼ NNⱼ (natrecⱼ {G = NN} NNⱼ proof (lamⱼ NNⱼ (lamⱼ NNⱼ (sucⱼ (var zero)))) (var zero)))
 
 {-
-  -- P0 : all ∣ εε ∙ (NN / ▲ uu) ⊢ var zero ∶ NN / ▲ uu
-  -- P0 = proof
-
-
-  -- +ₙ : all ∣ εε ⊢ _ ∶ (NN / ▲ U) ▹▹ ((NN / ▲ U) ▹▹ NN) / ▲ U
-  -- +ₙ {U = U} = lamⱼ NNⱼ (lamⱼ NNⱼ (natrecⱼ {G = NN} NNⱼ (var (suc zero)) (lamⱼ NNⱼ (lamⱼ NNⱼ (sucⱼ (var zero)))) (var zero)))
-  
-
   -- zerov :  all ∣ εε  ⊢ _ ∶ Π (NN / ▲ U) ▹ (Vec NN (var zero)) / ▲ U
   -- zerov = lamⱼ NNⱼ (natrecⱼ                   -- lets call this NNⱼ variable l
   --                     {G = Vec NN (var zero)} -- we want to produce a Vec NN l

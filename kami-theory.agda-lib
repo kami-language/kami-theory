@@ -1,4 +1,4 @@
 name: kami-theory
 depend: standard-library-2.1 agora agda-prelude
 include: ./src
-flags: -WnoUnsupportedIndexedMatch
+flags: -WnoUnsupportedIndexedMatch --no-qualified-instances

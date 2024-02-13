@@ -15,6 +15,7 @@ open import Agora.Order.Preorder
 open import Agora.Order.Lattice
 open import Agora.Data.Sum.Definition
 open import Agora.Data.Normal.Definition
+open import Agora.Data.List.Definition
 
 open import Data.List using (_++_ ; concatMap)
 
@@ -334,6 +335,24 @@ module _ {X : 𝒰 𝑖} {{_ : isSetoid {𝑗} X}} {{_ : isPreorder 𝑘 ′ X �
   transport-IndependentBase unique ϕ P = from-IBCharacter (transport-IBCharacter unique ϕ (into-IBCharacter P))
 
 
+  force-≡-independent : ∀{x y} -> (p q : independent x y) -> p ≡ q
+  force-≡-independent (p0 , p1) (q0 , q1) = {!!}
+
+  force-≡-isIndependent : ∀{x xs} -> (p q : isIndependent x xs) -> p ≡ q
+  force-≡-isIndependent IB.[] IB.[] = refl-≡
+  force-≡-isIndependent (x IB.∷ p) (y IB.∷ q) with force-≡-independent x y | force-≡-isIndependent p q
+  ... | refl | refl = refl
+
+  force-≡-isIndependentBase : ∀{xs} -> (p q : isIndependentBase xs) -> p ≡ q
+  force-≡-isIndependentBase IB.[] IB.[] = refl-≡
+  force-≡-isIndependentBase (x IB.∷ p) (y IB.∷ q) with force-≡-isIndependent x y | force-≡-isIndependentBase p q
+  ... | refl | refl = refl
+
+  instance
+    isProp:isIndependentBase : ∀{xs} -> isProp (isIndependentBase xs)
+    isProp:isIndependentBase = record { force-≡ = force-≡-isIndependentBase }
+
+
     -- getIndependent : ∀{x as} -> x ∈ as -> y ∈ as -> x ≤ y -> isIndependentBase as -> 𝟘-𝒰
     -- ↯:independentButSubset : ∀{x y as} -> x ∈ as -> y ∈ as -> x ≤ y -> (¬(y ≤ x)) -> isIndependentBase as -> 𝟘-𝒰
     -- ↯:independentButSubset here here x≤y P = {!!}
@@ -438,6 +457,16 @@ module _ {X' : 𝒰 𝑖} {{_ : isSetoid {𝑗} X'}} {{_ : isPreorder 𝑘 ′ X
                               ; [_,_]-∨ = λ ϕ ψ -> incl [ ⟨ ϕ ⟩ , ⟨ ψ ⟩ ]-∨-IndependentBase
                               }
 
+  module _ {{_ : hasDecidableEquality X'}} where
+    decide-≡-𝒪ᶠⁱⁿ⁻ʷᵏ : (x y : IndependentBase X) → isDecidable (x ≡ y)
+    decide-≡-𝒪ᶠⁱⁿ⁻ʷᵏ (x since xp) (y since yp) with x ≟-List y
+    ... | no x≢y = no λ {refl -> x≢y refl}
+    ... | yes refl-≡ with force-≡ xp yp
+    ... | refl = yes refl
+
+    instance
+      hasDecidableEquality:𝒪ᶠⁱⁿ⁻ʷᵏ : hasDecidableEquality (𝒪ᶠⁱⁿ⁻ʷᵏ X)
+      hasDecidableEquality:𝒪ᶠⁱⁿ⁻ʷᵏ = record { _≟_ = decide-≡-𝒪ᶠⁱⁿ⁻ʷᵏ }
 
 
 
@@ -534,6 +563,8 @@ SortableDecidablePreorder : ∀ (𝑖 : 𝔏 ^ 3) -> _
 SortableDecidablePreorder 𝑖 = 𝒰 (𝑖 ⌄ 0) :& (hasStrictOrder :, (isSetoid {𝑖 ⌄ 1} :> (isPreorder (𝑖 ⌄ 2) :> isDecidablePreorder)))
 
 
+-- {-# INLINE SortableDecidablePreorder #-}
+
 module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X}} {{_ : hasStrictOrder X}} where
   Normal-𝒪ᶠⁱⁿ⁻ʷᵏ : (𝒪ᶠⁱⁿ⁻ʷᵏ ′ X ′) -> 𝒰 _
   Normal-𝒪ᶠⁱⁿ⁻ʷᵏ (xs since _) = isUniqueSorted xs
@@ -551,6 +582,7 @@ module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X}} {{_ : hasStrictOrder X
 macro
   𝒪ᶠⁱⁿ : SortableDecidablePreorder 𝑖 -> _
   𝒪ᶠⁱⁿ X = #structureOn (Normalform (𝒪ᶠⁱⁿ⁻ʷᵏ ′ ⟨ X ⟩ ′))
+
 
 module Test (X : SortableDecidablePreorder 𝑖) where
 

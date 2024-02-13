@@ -14,7 +14,14 @@ open import KamiTheory.ThirdParty.logrel-mltt.Tools.Fin
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Product
 
 
-module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} {{_ : hasDecidableEquality P}} where
+-- module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} {{_ : hasDecidableEquality P}} where
+
+module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEquality ⟨ P' ⟩}} where
+-- {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} {{_ : hasDecidableEquality P}} where
+
+  private
+    P : 𝒰 _
+    P = ⟨ P' ⟩
 
   private variable
     -- n m : Nat

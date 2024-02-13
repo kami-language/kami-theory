@@ -84,10 +84,10 @@ record hasNotation-! (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗)
 
 open hasNotation-! {{...}} public
 
-record hasNotation-wk (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
-  field wk : (a : A) -> B a
+-- record hasNotation-wk (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
+--   field wk : (a : A) -> B a
 
-open hasNotation-wk {{...}} public
+-- open hasNotation-wk {{...}} public
 
 record hasNotation-𝕠 (A : 𝒰 𝑖) (B : A -> 𝒰 𝑗) : 𝒰 (𝑖 ､ 𝑗) where
   field 𝕠 : (a : A) -> B a
