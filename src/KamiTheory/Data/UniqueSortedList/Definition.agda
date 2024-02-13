@@ -11,6 +11,7 @@ open import Data.Empty.Irrelevant using (⊥-elim)
 open import Relation.Nullary using (¬_)
 open import Data.Sum.Base using (_⊎_; inj₁; inj₂; [_,_]′)
 open import Data.Product.Base using (_×_)
+open import Data.Fin.Base using (suc; zero)
 open import Agda.Builtin.Sigma using (Σ; _,_; fst)
 open import Agda.Builtin.List using (List; []; _∷_)
 open import Relation.Binary.PropositionalEquality using (subst; cong)
@@ -20,6 +21,7 @@ open import KamiTheory.Basics
 open import Agora.Conventions using (isDecidable ; yes ; no ; isProp ; force-≡)
 open import Agora.Conventions.Prelude.Classes.DecidableEquality
 open import KamiTheory.Data.List.Definition
+open import KamiTheory.Basics
 
 
 
@@ -131,13 +133,25 @@ module _ {𝑖 : Level} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
   isUniqueSorted:sort (x ∷ l) = insertSorted (isUniqueSorted:sort l)
 
   subsetSorted : ∀{l : List A} -> sort l ⊆ l
-  subsetSorted = {!!}
+  subsetSorted {[]} = λ x z → z
+  subsetSorted { a ∷ as } x x₁ with insertPreserves {a = a} {as = sort as} x₁
+  ... | inj₁ refl = here
+  ... | inj₂ y = there (subsetSorted x y)
 
   subsetSorted2 : ∀{l : List A} -> l ⊆ sort l
-  subsetSorted2 = {!!}
+  subsetSorted2 {[]} = λ x z → z
+  subsetSorted2 {x ∷ l} = λ { x₁ here → insertInserts x (sort l) ;
+                              x₁ (there x₂) → insertKeeps (subsetSorted2 x₁ x₂)}
+
+  lemma0 : {a b : A} → {as : List A} → isUniqueSorted (a ∷ as)  → b < a → ¬ (b ∈ (a ∷ as))
+  lemma0 l x₁ here = irrefl-< x₁
+  lemma0 (x ∷ x₃) x₁ (there x₂) = lemma0 x₃ (trans-< x₁ x) x₂
 
   cast-isUniqueSorted,isUnique : ∀{l : List A} -> isUniqueSorted l -> isUnique l
-  cast-isUniqueSorted,isUnique = {!!}
+  cast-isUniqueSorted,isUnique u here here = refl
+  cast-isUniqueSorted,isUnique (x ∷ x₁) here (there q) = q ↯ lemma0 x₁ x
+  cast-isUniqueSorted,isUnique (x ∷ x₁) (there p) here = p ↯ lemma0 x₁ x
+  cast-isUniqueSorted,isUnique (x ∷ x₁) (there p) (there q) = cong suc (cast-isUniqueSorted,isUnique x₁ p q)
 
 
 --------------------------------------------------
@@ -423,6 +437,3 @@ module _ {A : StrictOrder 𝑖} where
       -- ; decide-≤ = {!!}
       -- }
       record { decide-≤ = decide-≤-𝒫ᶠⁱⁿ }
-
-
-
