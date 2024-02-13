@@ -12,7 +12,10 @@ open import KamiTheory.Data.UniqueSortedList.Definition
 
 -- we show that 𝒫ᶠⁱⁿ has a strict order (inherited from list)
 
-module _ {X : StrictOrder 𝑖} {{_ : ∀{x y : ⟨ X ⟩} -> isProp (x < y)}} where
+
+module _ {X : StrictOrder 𝑖}  where
+  -- {{_ : ∀{x y : ⟨ X ⟩} -> isProp (x < y)}}
+
   record _<-𝒫ᶠⁱⁿ_ (u v : 𝒫ᶠⁱⁿ X) : 𝒰 𝑖 where
     constructor incl
     field ⟨_⟩ : ⟨ u ⟩ < ⟨ v ⟩
@@ -29,6 +32,13 @@ module _ {X : StrictOrder 𝑖} {{_ : ∀{x y : ⟨ X ⟩} -> isProp (x < y)}} w
     ψ u v (tri≡ a≮b a≡b a≯b) = tri≡ (λ p -> a≮b ⟨ p ⟩) (lift-≡ a≡b) (λ p -> a≯b ⟨ p ⟩)
     ψ u v (tri> a≮b a≢b a>b) = tri> (λ p -> a≮b ⟨ p ⟩) (λ {refl-≡ -> a≢b refl-≡}) (incl a>b)
 
+  force-≡-<-𝒫ᶠⁱⁿ : ∀{u v} -> (a b : u <-𝒫ᶠⁱⁿ v) → a ≡ b
+  force-≡-<-𝒫ᶠⁱⁿ (incl a) (incl b) = cong-≡ incl (force-≡ a b)
+
+  instance
+    isProp:<-𝒫ᶠⁱⁿ : ∀{u v : 𝒫ᶠⁱⁿ X} -> isProp (u <-𝒫ᶠⁱⁿ v)
+    isProp:<-𝒫ᶠⁱⁿ = record { force-≡ = force-≡-<-𝒫ᶠⁱⁿ }
+
   instance
     isStrictOrder:<-𝒫ᶠⁱⁿ : isStrictOrder _<-𝒫ᶠⁱⁿ_
     isStrictOrder:<-𝒫ᶠⁱⁿ = record
@@ -37,9 +47,9 @@ module _ {X : StrictOrder 𝑖} {{_ : ∀{x y : ⟨ X ⟩} -> isProp (x < y)}} w
       ; conn-< = λ a b -> ψ a b (conn-< ⟨ a ⟩ ⟨ b ⟩)
       }
 
-
   instance
     hasStrictOrder:𝒫ᶠⁱⁿ : hasStrictOrder (𝒫ᶠⁱⁿ X)
     hasStrictOrder:𝒫ᶠⁱⁿ = record { _<_ = _<-𝒫ᶠⁱⁿ_ }
+
 
 

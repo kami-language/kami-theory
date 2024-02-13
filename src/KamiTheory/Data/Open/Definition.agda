@@ -542,7 +542,7 @@ module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X}} {{_ : hasStrictOrder X
     isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ : isNormalizable _ (𝒪ᶠⁱⁿ⁻ʷᵏ ′ X ′)
     isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ = record
       { Normal = Normal-𝒪ᶠⁱⁿ⁻ʷᵏ
-      ; isProp:Normal = {!!}
+      ; isProp:Normal = it
       ; normalize = λ xs -> sort ⟨ xs ⟩ since transport-IndependentBase (cast-isUniqueSorted,isUnique (isUniqueSorted:sort ⟨ xs ⟩)) subsetSorted (of xs)
       ; normal = λ {xs} -> isUniqueSorted:sort ⟨ xs ⟩
       ; preserves-∼:normalize = λ {xs} -> (incl (≤:byAllElements λ x -> map-∈-IndependentBase (subsetSorted _ x))) , incl (≤:byAllElements λ x -> map-∈-IndependentBase (subsetSorted2 _ x))
@@ -561,7 +561,6 @@ module Test (X : SortableDecidablePreorder 𝑖) where
     isPreorder:𝒪ᶠⁱⁿ = isPreorder:𝒩
 
 
-{-
 {-
 module TestExample where
 
@@ -585,6 +584,7 @@ module TestExample where
 -}
 
 
+{-
 module _ {X' : 𝒰 _} {{_ : DecidablePreorder 𝑖 on X'}}
           {Y' : 𝒰 _} {{_ : DecidablePreorder 𝑗 on Y'}} where
 

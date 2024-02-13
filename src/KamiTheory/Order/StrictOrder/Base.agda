@@ -47,7 +47,7 @@ record isStrictOrder {𝑖} {A : Set 𝑖} (_<_ : A -> A -> Set 𝑖) : Set (lsu
     -- asym< : ∀ {a b : A} → a < b → ¬ (b < a) -- follows from trans and iref
     trans-< : ∀ {a b c : A} → a < b → b < c → a < c
     conn-< : ∀ (a b : A) → Tri (a < b) (a ≡ b) (b < a)
-    -- isProp:< : ∀{a b : A} -> isProp (a < b)
+    {{isProp:<}} : ∀{a b : A} -> isProp (a < b)
 
   asym-< : ∀ {a b : A} → a < b → ¬ (b < a) -- follows from trans and iref
   asym-< p q = irrefl-< (trans-< p q)
@@ -179,7 +179,8 @@ module _ {𝑖 𝑗 : Level} {A : Set 𝑖} {B : Set 𝑗} {{_ : hasStrictOrder 
                                             (inj₂ y) (inj₂ y₁) → map-Tri< {R = _<_} {S = _<-⊎_} inj₂ (λ { refl → refl})
                                                                                                 (λ {a0 a1 y₂ → inj₂ y₂})
                                                                                                 (λ {a0 a1 (inj₂ y₂) → y₂})
-                                                                                                (conn-< y y₁)  }
+                                                                                                (conn-< y y₁)  } ;
+                                isProp:< = {!!}
                                                                                                 }
 
   instance
@@ -196,7 +197,8 @@ instance
   isStrictOrder:<-⊤ = record {
                                 irrefl-< = λ ();
                                 trans-< = λ {() ()} ;
-                                conn-< = λ { tt tt → tri≡ (λ ()) refl (λ ()) }
+                                conn-< = λ { tt tt → tri≡ (λ ()) refl (λ ()) } ;
+                                isProp:< = {!!}
                                 }
 
 instance

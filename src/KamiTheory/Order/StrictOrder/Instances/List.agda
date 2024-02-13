@@ -49,6 +49,17 @@ module _ {A : 𝒰 𝑖} {{Ap : hasStrictOrder A}} where
   ... | tri≡ a≮b₁ refl-≡ a≯b₁ = tri≡ irrefl-<-List refl-≡ irrefl-<-List
   ... | tri> as≮bs as≢bs as>bs = tri> ((λ p → as≮bs (tail-<-List p))) ((λ p -> as≢bs (tail-≡ p))) (next as>bs)
 
+  force-≡-<-List : ∀{as bs} -> (a b : as <-List bs) → a ≡ b
+  force-≡-<-List empty empty = refl-≡
+  force-≡-<-List (take x) (take y) = cong-≡ take (force-≡ x y)
+  force-≡-<-List (take x) (next b) = ⊥-elim (irrefl-< x)
+  force-≡-<-List (next a) (take x) = ⊥-elim (irrefl-< x)
+  force-≡-<-List (next a) (next b) = cong-≡ next (force-≡-<-List a b)
+
+  instance
+    isProp:<-List : ∀{as bs : List A} -> isProp (as <-List bs)
+    isProp:<-List = record { force-≡ = force-≡-<-List }
+
   instance
     isStrictOrder:<-List : isStrictOrder _<-List_
     isStrictOrder:<-List = record
