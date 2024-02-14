@@ -76,30 +76,40 @@ module Examples where
     -- n m : Nat
     p q : Term P n
     t u : Term P n
-    Γ  : Con (Term P) n
+    Γ  : Con (Entry P) n
     A B C : Term P n
     U V W R : P
 
-  _∣_⊢_/_≔_ : (W : P) -> (Γ : Con (Term P) n) -> Term P n → Term P n -> Term P n → Set
-  W ∣ Γ ⊢ A / p ≔ t = W ∣ Γ ⊢ t ∶ A / p
+  _∣_⊢_≔_ : (W : P) -> (Γ : Con (Entry P) n) → Entry P n → Term P n → Set
+  W ∣ Γ ⊢ E ≔ t = W ∣ Γ ⊢ t ∶ E
 
 
-  εε : Con (Term P) zero
+  εε : Con (Entry P) zero
   εε = ε
 
-  ttt = derive-Var (εε ∙ (NN / ▲ uu)) zero NN (▲ uu)
+  -- easy, a variable in a context:
+  t0 : all ∣ εε ∙ (NN / `＠` U ⨾ id) ⊢ var zero ∶ NN / `＠` U ⨾ id
+  t0 = var zero
 
-  P0 : all ∣ εε ∙ (NN / ▲ uu) ⊢ var zero ∶ NN / ▲ uu
-  P0 = proof
+  -- not so easy, sending from uu to vv
+  t1 : all ∣ εε ⊢ (Modal NN (`＠` uu) / id) ▹▹ Modal NN (`＠` vv) / id
+     ≔ lam (recv (mod (send (unmod (var zero)))))
+  t1 = lamⱼ proof (recvⱼ uu (modⱼ (sendⱼ vv (unmodⱼ (var zero)))))
 
-  P1 : all ∣ εε ∙ (NN / ▲ uu) ∙ (NN / ▲ vv) ⊢ var (suc zero) ∶ NN / ▲ uu
-  P1 = proof
 
-  P2 : all ∣ εε ∙ (NN / ▲ U) ∙ wk (liftn (step id) n0) (NN / ▲ U) ⊢ var (suc zero) ∶ NN [ zeroₜ ] / ▲ U
-  P2 = {!proof!}
+  -- ttt = derive-Var (εε ∙ (NN / ▲ uu)) zero NN (▲ uu)
 
-  P2' : all ∣ ε ∙ (NN / ▲ U) ∙ (NN / ▲ U) ⊢ var (suc zero) ∶ NN / ▲ U
-  P2' = {!proof!}
+  -- P0 : all ∣ εε ∙ (NN / ▲ uu) ⊢ var zero ∶ NN / ▲ uu
+  -- P0 = proof
+
+  -- P1 : all ∣ εε ∙ (NN / ▲ uu) ∙ (NN / ▲ vv) ⊢ var (suc zero) ∶ NN / ▲ uu
+  -- P1 = proof
+
+  -- P2 : all ∣ εε ∙ (NN / ▲ U) ∙ wk (liftn (step id) n0) (NN / ▲ U) ⊢ var (suc zero) ∶ NN [ zeroₜ ] / ▲ U
+  -- P2 = {!proof!}
+
+  -- P2' : all ∣ ε ∙ (NN / ▲ U) ∙ (NN / ▲ U) ⊢ var (suc zero) ∶ NN / ▲ U
+  -- P2' = {!proof!}
 
 
   -- +ₙ : all ∣ εε ⊢ lam (lam (natrec NN (var (suc zero)) _ _)) ∶ (NN / ▲ U) ▹▹ ((NN / ▲ U) ▹▹ NN) / ▲ U

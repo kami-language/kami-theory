@@ -187,13 +187,13 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     -------------------
     -- Standard modality intro and "elim"
 
-    modⱼ : W ∣ Γ ⊢ t ∶ X / μ ⨾ μs -> W ∣ Γ ⊢ t ∶ Modal X μ / μs
-    unmodⱼ : W ∣ Γ ⊢ t ∶ Modal X μ / μs -> W ∣ Γ ⊢ t ∶ X / μ ⨾ μs
+    modⱼ : W ∣ Γ ⊢ t ∶ X / μ ⨾ μs -> W ∣ Γ ⊢ mod t ∶ Modal X μ / μs
+    unmodⱼ : W ∣ Γ ⊢ t ∶ Modal X μ / μs -> W ∣ Γ ⊢ unmod t ∶ X / μ ⨾ μs
 
     -------------------
     -- Interactions between modalities
-    sendⱼ : W ∣ Γ ⊢ t ∶ X / μs -> W ∣ Γ ⊢ t ∶ X / `＠` U ⨾ `[]` ⨾ μs
-    recvⱼ : W ∣ Γ ⊢ t ∶ X / `[]` ⨾ `＠` U ⨾ μs -> W ∣ Γ ⊢ t ∶ X / μs
+    sendⱼ : ∀ U -> W ∣ Γ ⊢ t ∶ X / μs -> W ∣ Γ ⊢ send t ∶ X / `＠` U ⨾ `[]` ⨾ μs
+    recvⱼ : ∀ U -> W ∣ Γ ⊢ t ∶ X / `[]` ⨾ `＠` U ⨾ μs -> W ∣ Γ ⊢ recv t ∶ X / μs
 
     narrowⱼ : (ϕ : U ≤ V)
                -> W ∣ Γ ⊢ t ∶ X / `＠` U ⨾ μs

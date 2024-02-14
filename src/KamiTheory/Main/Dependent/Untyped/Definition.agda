@@ -245,7 +245,7 @@ Entry P n = KindedTerm P n entry
 
 -- open Entry public
 
-infixl 25 _/_
+infixl 21 _/_
 
 -- pattern _/ₜ_ a b     = gen (main 𝓀-/) (a ∷ b ∷ [])
 -- pattern ◯           = (ML Global)

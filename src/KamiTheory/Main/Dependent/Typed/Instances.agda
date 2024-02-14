@@ -49,6 +49,13 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
     t′ <- derive-Term Γ t NN (μs)
     just (Vecⱼ A′ t′)
 
+  derive-Entry Γ (_/_ {k = k1}(gen (main 𝓀-Modal) (term A ∷ (basemod {l} {k0} μ ∷ []))) μs) with k0 ≟ k1
+  ... | no p = nothing
+  ... | yes refl-≡ = do
+          A' <- derive-Entry Γ (A / μ ⨾ μs)
+          just (Modalⱼ A')
+
+
   --derive-Entry Γ (Empty / μs) = map-Maybe (λ P -> Emptyⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   --derive-Entry Γ (Unit / μs)  = map-Maybe (λ P -> Unitⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   --derive-Entry Γ (L ＠ U / ◯)  = map-Maybe (Locⱼ U) (derive-Entry Γ (L / μs))
