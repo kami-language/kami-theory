@@ -72,9 +72,10 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
   private variable
     -- n m : Nat
-    k l o : Mode
+    k l o q r : Mode
     μs : Modality P k l
     ωs : Modality P l o
+    ηs : Modality P q r
     μ : BaseModality P k l
     ω : BaseModality P l o
     Γ  : Con (Entry P) n
@@ -237,40 +238,43 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
               → {{_ : isTrue (W ∣ Γ ∙ (A / μ) ⊢Sort B)}}
               → W ∣ Γ ⊢ t ∶ Σ (A / μ) ▹ B / μ
               → W ∣ Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / μ
-
+              -}
+               
     zeroⱼ     :  {{ΓP : isTrue (W ⊢Ctx Γ)}}
-              → W ∣ Γ ⊢ zeroₜ ∶ NN  / ▲ U
+              → W ∣ Γ ⊢ zeroₜ ∶ NN  / μs
+              
     sucⱼ      : ∀ {n}
-              → W ∣ Γ ⊢      n ∶ NN  / ▲ U
-              → W ∣ Γ ⊢ sucₜ n ∶ NN  / ▲ U
+              → W ∣ Γ ⊢      n ∶ NN  / μs
+              → W ∣ Γ ⊢ sucₜ n ∶ NN  / μs
 
     natrecⱼ   : ∀ {G s z n}
-              → W ∣ Γ ∙ (NN / ▲ U) ⊢Sort G
-              → W ∣ Γ       ⊢ z ∶ G [ zeroₜ ]  / ▲ U
-              → W ∣ Γ       ⊢ s ∶ Π (NN / ▲ U) ▹ ((G / ▲ U) ▹▹ G [ sucₜ (var x0) ]↑)  / ▲ U
-              → W ∣ Γ       ⊢ n ∶ NN  / ▲ U
-              → W ∣ Γ       ⊢ natrec G z s n ∶ G [ n ]  / ▲ U
-
+              → W ∣ Γ ∙ (NN / μs) ⊢Entry G / ηs
+              → W ∣ Γ       ⊢ z ∶ G [ zeroₜ ]  / ηs
+              → W ∣ Γ       ⊢ s ∶ Π (NN / μs) ▹ ((G / ηs) ▹▹ G [ sucₜ (var x0) ]↑)  / ηs
+              → W ∣ Γ       ⊢ n ∶ NN  / μs
+              → W ∣ Γ       ⊢ natrec G z s n ∶ G [ n ]  / ηs
+ 
     nilⱼ      : ∀ {A}
-              → W ∣ Γ ⊢ nilₜ ∶ Vec A zeroₜ  / ▲ U
+              → W ∣ Γ ⊢ nilₜ ∶ Vec A zeroₜ  / μs
     consⱼ     : ∀ {A v vs n}
-              → W ∣ Γ ⊢         v ∶ A  / ▲ U
-              → W ∣ Γ ⊢        vs ∶ Vec A n  / ▲ U
-              → W ∣ Γ ⊢ consₜ v vs ∶ Vec A (sucₜ n)  / ▲ U
+              → W ∣ Γ ⊢         v ∶ A  / μs
+              → W ∣ Γ ⊢        vs ∶ Vec A n  / μs
+              → W ∣ Γ ⊢ consₜ v vs ∶ Vec A (sucₜ n)  / μs
 
-    vecrecⱼ   : ∀ {G A s z l v n}
-              → {{_ : isTrue (W ∣ Γ ∙ (Vec A l / ▲ U) ⊢Sort G)}}
-              → W ∣ Γ           ⊢ z ∶ G [ nilₜ ]  / ▲ U
-              → W ∣ Γ           ⊢ v ∶ A  / ▲ U
-              → W ∣ Γ           ⊢ s ∶ Π (Vec A l) ▹ ((G / ▲ U) ▹▹ G [ consₜ (wk1 v) (var x0) ]↑)  / ▲ U
-              → W ∣ Γ           ⊢ vecrec G z s n ∶ G [ n ]  / ▲ U
-
-
-
+    vecrecⱼ   : ∀ {G A s z l vs}
+              → W ∣ Γ ∙ (NN / μs) ∙ (Vec A (var x0) / μs) ⊢Entry G / ηs
+              → W ∣ Γ ⊢ z ∶ (G [ zeroₜ ] [ nilₜ ]) / ηs
+              → W ∣ Γ ⊢ s ∶ Π (NN / μs) ▹ Π (Vec A (var x0) / μs) ▹ Π (wk1 A / μs) ▹ ({!G!} ▹▹ ((var x0) [ var (({!!} +1) +1) ] [ {!!} ])) / ηs
+              → W ∣ Γ ⊢ l ∶ NN / μs
+              → W ∣ Γ ⊢ vs ∶ Vec (A [ l ]) l / μs
+              → W ∣ Γ ⊢ vecrec {!!} {!!} {!!} {!!} ∶ G [ wk1 l ] [ vs ]  / ηs
 
 
 
--}
+
+
+
+
 
 
 {-
