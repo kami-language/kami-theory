@@ -25,6 +25,8 @@
 
 -- {-# OPTIONS --without-K #-}
 
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module KamiTheory.Main.Dependent.Typed.Definition where
 
 open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
@@ -70,13 +72,17 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
   private variable
     -- n m : Nat
-    p q : Term P n
-    Γ  : Con (Term P) n
+    k l o : Mode
+    μs : Modality P k l
+    ωs : Modality P l o
+    μ : BaseModality P k l
+    ω : BaseModality P l o
+    Γ  : Con (Entry P) n
     A B : Term P n
     a b : Term P n
     X Y : Term P n
     L K : Term P n
-    E F : Term P n
+    E F : Entry P n
     t s : Term P n
     f g : Term P n
     G : Term P (1+ n)
@@ -84,27 +90,40 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     U V R : P
 
 
+  -- wk1-Mod : Mod P n -> Mod P (suc n)
+  -- wk1-Mod (ML x) = ML x
+  -- wk1-Mod (⇄ R A) = ⇄ R (wk1 A)
+
+  wk1-Entry : Entry P n -> Entry P (suc n)
+  wk1-Entry (A / μ) = wk1 A / μ
+
 
   -- Well-typed variables
-  data _∶_∈_ : (x : Fin n) (E : Term P n) (Γ : Con (Term P) n) → Set where
-    zero :                       x0 ∶ wk1 E ∈ (Γ ∙ E)
-    suc  : (h : x ∶ E ∈ Γ) → (x +1) ∶ wk1 E ∈ (Γ ∙ F)
+  data _∶_∈_ : (x : Fin n) (E : Entry P n) (Γ : Con (Entry P) n) → Set where
+    zero :                       x0 ∶ wk1-Entry E ∈ (Γ ∙ E)
+    suc  : (h : x ∶ E ∈ Γ) → (x +1) ∶ wk1-Entry E ∈ (Γ ∙ F)
 
 
-  data _⊢Ctx_ (W : P) : Con (Term P) n → Set
-  data _∣_⊢Sort_ (W : P) (Γ : Con (Term P) n) : Term P n -> Set
-  data _∣_⊢Entry_ (W : P) (Γ : Con (Term P) n) : Term P n -> Set
-  data _∣_⊢_∶_/_ (W : P) (Γ : Con (Term P) n) : Term P n → Term P n -> Term P n → Set
 
-  _⊢Sort_ : {W : P} (Γ : Con (Term P) n) -> Term P n -> Set
+
+
+  data _⊢Ctx_ (W : P) : Con (Entry P) n → Set
+  data _∣_⊢Sort_ (W : P) (Γ : Con (Entry P) n) : Term P n -> Set
+  data _∣_⊢Entry_ (W : P) (Γ : Con (Entry P) n) : Entry P n -> Set
+  data _∣_⊢_∶_ (W : P) (Γ : Con (Entry P) n) : Term P n → Entry P n → Set
+
+  -- data _∣_⊢Mod_ (W : P) (Γ : Con (Entry P) n) : Mod P n -> Set where
+  --   MLⱼ : ∀{m} -> W ∣ Γ ⊢Mod (ML m)
+  --   ⇄ⱼ : W ∣ Γ ⊢Sort A -> W ∣ Γ ⊢Mod ⇄ R A
+
+  _⊢Sort_ : {W : P} (Γ : Con (Entry P) n) -> Term P n -> Set
   _⊢Sort_ {W = W} = W ∣_⊢Sort_
 
-  _⊢Entry_ : {W : P} (Γ : Con (Term P) n) -> Term P n -> Set
+  _⊢Entry_ : {W : P} (Γ : Con (Entry P) n) -> Entry P n -> Set
   _⊢Entry_ {W = W} = W ∣_⊢Entry_
 
-  _⊢_∶_/_ : {W : P} (Γ : Con (Term P) n) -> Term P n → Term P n -> Term P n → Set
-  _⊢_∶_/_ {W = W} = W ∣_⊢_∶_/_
-
+  _⊢_∶_ : {W : P} (Γ : Con (Entry P) n) -> Term P n → Entry P n → Set
+  _⊢_∶_ {W = W} = W ∣_⊢_∶_
 
 
   -- Well-formed context
@@ -115,184 +134,124 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
         → W ⊢Ctx Γ ∙ E
 
 
+
   -- Well-formed type
   data _∣_⊢Sort_ W Γ where
     UUⱼ    : {{ΓP : isTrue (W ⊢Ctx Γ)}} → Γ ⊢Sort UU
     NNⱼ    : {{ΓP : isTrue (W ⊢Ctx Γ)}} → Γ ⊢Sort NN
-    Vecⱼ   : W ∣ Γ ⊢Sort A → W ∣ Γ ⊢ t ∶ NN / ▲ U → Γ ⊢Sort Vec A t
+    -- Vecⱼ   : W ∣ Γ ⊢Sort A → W ∣ Γ ⊢ t ∶ NN / ▲ U → Γ ⊢Sort Vec A t
     Emptyⱼ : {{ΓP : isTrue (W ⊢Ctx Γ)}} → Γ ⊢Sort Empty
     Unitⱼ  : {{ΓP : isTrue (W ⊢Ctx Γ)}} → Γ ⊢Sort Unit
 
-    Πⱼ_▹_  : W ∣ Γ ⊢Entry E → W ∣ Γ ∙ E ⊢Sort B → W ∣ Γ ⊢Sort Π E ▹ B
-    Σⱼ_▹_  : W ∣ Γ ⊢Entry F → W ∣ Γ ∙ F ⊢Sort G → W ∣ Γ ⊢Sort Σ F ▹ G
+    Πⱼ_▹_  : W ∣ Γ ⊢Entry (A / μs) → W ∣ Γ ∙ E ⊢Sort B → W ∣ Γ ⊢Sort Π (A / μs) ▹ B
+    Σⱼ_▹_  : W ∣ Γ ⊢Entry (A / μs) → W ∣ Γ ∙ F ⊢Sort G → W ∣ Γ ⊢Sort Σ (A / μs) ▹ G
     -- univ   : Γ ⊢Sort A ∶ UU
     --       → Γ ⊢Sort A
 
     -- Kami types
-    Locⱼ : (U : P) -> W ∣ Γ ⊢Sort L -> Γ ⊢Sort (L ＠ U)
+    -- Locⱼ : (U : P) -> W ∣ Γ ⊢Sort L -> Γ ⊢Sort (L ＠ U)
 
     -- Well-formed entry
   data _∣_⊢Entry_ W Γ where
-    UUⱼ    : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (UU / ▲ U)
-    NNⱼ    : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (NN / ▲ U)
-    Vecⱼ   : W ∣ Γ ⊢Entry (A / ▲ U) → W ∣ Γ ⊢ t ∶ NN / ▲ U → Γ ⊢Entry (Vec A t / ▲ U)
-    Emptyⱼ : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (Empty / ▲ U)
-    Unitⱼ  : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (Unit / ▲ U)
+    NNⱼ    : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (NN / μs)
+    -- Emptyⱼ : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (Empty / ▲ U)
+    -- Unitⱼ  : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (Unit / ▲ U)
+    -- Leafⱼ : ∀{l} -> {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (gen (leaf l) [] / ▲ U) -- leafs are NN, Unit, Empty
 
-    Πⱼ_▹_  : ∀{p q} -> W ∣ Γ ⊢Entry (A / ML p)
-              → W ∣ Γ ∙ (A / ML p) ⊢Entry (B / ML q)
-              → W ∣ Γ ⊢Entry ((Π (A / ML p) ▹ B) / ML q)
+    -- UUⱼ    : {{ΓP : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢Entry (UU / ▲ U)
 
-    Σⱼ_▹_  : ∀{q} -> W ∣ Γ ⊢Entry (A / ML q)
-            → W ∣ Γ ∙ (A / ML q) ⊢Entry (B / ML q)
-            → W ∣ Γ ⊢Entry ((Σ (A / ML q) ▹ B) / ML q)
+    Vecⱼ   : W ∣ Γ ⊢Entry (A / μs) → W ∣ Γ ⊢ t ∶ NN / μs  → Γ ⊢Entry (Vec A t / μs)
+
+    Πⱼ_▹_  : W ∣ Γ ⊢Entry (A / μs)
+              → W ∣ Γ ∙ (A / μs) ⊢Entry (B / ωs)
+              → W ∣ Γ ⊢Entry ((Π (A / μs) ▹ B) / ωs)
+
+    -- Σⱼ_▹_  : ∀{q} -> W ∣ Γ ⊢Entry (A / ωs)
+    --         → W ∣ Γ ∙ (A / ωs) ⊢Entry (B / ωs)
+    --         → W ∣ Γ ⊢Entry ((Σ (A / ωs) ▹ B) / ωs)
 
     -------------------
     -- Kami universes
 
-    Univ-Comⱼ : W ∣ Γ ⊢ X ∶ Univ-Com R A / ◯
-              → W ∣ Γ ⊢Entry (X / ⇄ R A)
+    -- Univ-⇄ⱼ : W ∣ Γ ⊢ X ∶ Univ-⇄ R A / ◯
+    --           → W ∣ Γ ⊢Entry (X / ⇄ R A)
 
     -------------------
     -- Kami types (global ◯)
-    Locⱼ : (U : P) -> W ∣ Γ ⊢Entry (L / ▲ U) -> W ∣ Γ ⊢Entry (L ＠ U / ◯)
-    Comⱼ : W ∣ Γ ⊢Entry (A / ◯) -> W ∣ Γ ⊢Entry (Com R A / ◯)
+    -- Locⱼ : (U : P) -> W ∣ Γ ⊢Entry (L / ▲ U) -> W ∣ Γ ⊢Entry ((L ＠ U) / ◯)
+    -- Comⱼ : W ∣ Γ ⊢Entry (A / ◯) -> W ∣ Γ ⊢Entry (Com R A / ◯)
+
+    -------------------
+    -- Kami modality system
+    Modalⱼ : W ∣ Γ ⊢Entry (A / μ ⨾ μs) -> W ∣ Γ ⊢Entry Modal A μ / μs
+
 
     -------------------
     -- Kami types (communication ⇄)
 
     -- The identity communication
-    Endⱼ : W ∣ Γ ⊢Entry (A / ◯) -> W ∣ Γ ⊢Entry (End / ⇄ R A)
+    -- Endⱼ : W ∣ Γ ⊢Entry (A / ◯) -> W ∣ Γ ⊢Entry (End / ⇄ R A)
 
     -- We concatenate two communications
-    _≫ⱼ_ : W ∣ Γ ⊢Entry (X / ⇄ R A)
-          -> W ∣ Γ ∙ (A / ◯) ⊢Entry (F / ⇄ R (wk1 B))
-          -> W ∣ Γ ⊢Entry (X ≫ F / ⇄ R B)
+    -- _≫ⱼ_ : W ∣ Γ ⊢Entry (X / ⇄ R A)
+    --       -> W ∣ Γ ∙ (A / ◯) ⊢Entry (Y / ⇄ R (wk1 B))
+    --       -> W ∣ Γ ⊢Entry (X ≫ Y / ⇄ R B)
 
     -- We share a local value of type "A ＠ U" to be "A ＠ V"
-    Shareⱼ : ∀ (U V : P)
-            -> (ϕ : V ≤ U)
-            -> W ∣ Γ ⊢Entry (A / ▲ V)
-            -> W ∣ Γ ⊢Entry (Share A U V / ⇄ R (A ＠ V))
+    -- Shareⱼ : ∀ (U V : P)
+    --         -> (ϕ : V ≤ U)
+    --         -> W ∣ Γ ⊢Entry (A / ▲ V)
+    --         -> W ∣ Γ ⊢Entry (Share A U V / ⇄ R (A ＠ V))
 
 
   -- Well-formed term of a type
-  data _∣_⊢_∶_/_ W Γ where
+  data _∣_⊢_∶_ W Γ where
+
+    modⱼ : W ∣ Γ ⊢ t ∶ X / μ ⨾ μs -> W ∣ Γ ⊢ t ∶ Modal X μ / μs
+    unmodⱼ : W ∣ Γ ⊢ t ∶ Modal X μ / μs -> W ∣ Γ ⊢ t ∶ X / μ ⨾ μs
 
     -------------------
-    -- Interaction of Communication with global types
-
-    -- If we have a communication value, we can create a global value
-    -- by packing the comm-type and the comm-value into a "tuple" with `com`
-    comⱼ : W ∣ Γ ⊢Entry (X / ⇄ R A)
-            -> W ∣ Γ ⊢ t ∶ X / ⇄ R A
-            -> W ∣ Γ ⊢ com X t ∶ Com R A / ◯
-
-    -- we can project to the first (type) component
-    comtypeⱼ : W ∣ Γ ⊢Entry (A / ◯)
-            -> W ∣ Γ ⊢ a ∶ Com R A / ◯
-            -> W ∣ Γ ⊢ comtype a ∶ Univ-Com R A / ◯
-
-    -- we can project to the second (value) component
-    comvalⱼ : W ∣ Γ ⊢Entry (A / ◯)
-            -> W ∣ Γ ⊢ a ∶ Com R A / ◯
-            -> W ∣ Γ ⊢ comval a ∶ comtype a / ⇄ R A
-
-    -------------------
-    -- Communication
-
-    -- We end a communication by giving a value of the
-    -- required type
-    endⱼ : W ∣ Γ ⊢ a ∶ A / ◯ -> W ∣ Γ ⊢ end a ∶ End / ⇄ R A
-
-    -- If we have:
-    --  - `a`: a com of type `X` which gives us a value of type A
-    --  - `b`: a com of type `Y` which (assuming a : A) gives us B,
-    -- we can compose these communications to get one of type `X ≫ Y`
-    _>ⱼ_ : W ∣ Γ ⊢ a ∶ X / ⇄ R A
-          -> W ∣ Γ ∙ (A / ◯) ⊢ b ∶ Y / ⇄ R (wk1 B)
-          -> W ∣ Γ ⊢ (a > b) ∶ X ≫ Y / ⇄ R B
-
-    -- If we have a value (a ∶ A ＠ U) then we can share it so it is
-    -- available at V.
-    shareⱼ : W ∣ Γ ⊢Entry (A / ▲ V)
-          -> W ∣ Γ ⊢ a ∶ (A ＠ U) / ◯
-          -> (ϕ : V ≤ U)
-          -> W ∣ Γ ⊢ share a ∶ Share A U V / ⇄ R (A ＠ V)
+    -- Interactions between modalities
+    sendⱼ : W ∣ Γ ⊢ t ∶ X / μs -> W ∣ Γ ⊢ t ∶ X / `＠` U ⨾ `[]` ⨾ μs
+    recvⱼ : W ∣ Γ ⊢ t ∶ X / `[]` ⨾ `＠` U ⨾ μs -> W ∣ Γ ⊢ t ∶ X / μs
 
 
-    -------------------
-    -- Location
 
-
-    -- If we have a value of a local type `A` (i.e. with ▲ U annotation), we can view it
-    -- as `(A ＠ U)` which is a global type (with ◯ annotation). Note that if U is not subset
-    -- of the currently implemented locations, it is not allowed to give a term here. Instead,
-    -- the `locskip` constructor has to be used
-    locⱼ : (U ≤ W)
-         -> W ∣ Γ ⊢ t ∶ A / ▲ U
-         -> W ∣ Γ ⊢ loc U t ∶ (A ＠ U) / ◯
-
-    -- If the currently to be implemented type (`A ＠ U`) is not part of the currently to
-    -- be implemented locations (U ≰ W), then we can trivially give a term by using `locskip`.
-    locskipⱼ : ¬(U ≤ W) -> W ∣ Γ ⊢ locskip ∶ (A ＠ U) / ◯
-
-    -- If we have a global term `A ＠ U` we can view it as a local term.
-    unlocⱼ : W ∣ Γ ⊢ t ∶ (A ＠ U) / ◯ -> W ∣ Γ ⊢ unloc t ∶ A / ▲ U
-
-    -------------------
-    -- Generic
-
-    -- Πⱼ_▹_     : ∀ {F G}
-    --           → Γ     ⊢ F ∶ U
-    --           → Γ ∙ F ⊢ G ∶ U
-    --           → Γ     ⊢ Π F ▹ G ∶ U
-    -- Σⱼ_▹_     : ∀ {F G}
-    --           → Γ     ⊢ F ∶ U
-    --           → Γ ∙ F ⊢ G ∶ U
-    --           → Γ     ⊢ Σ F ▹ G ∶ U
-    ℕⱼ        : {{_ : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢ NN ∶ UU / p
-    Vecⱼ      : ∀ {F l}
-              → W ∣ Γ ⊢ F ∶ UU / p
-              → W ∣ Γ ⊢ l ∶ NN / p
-              → W ∣ Γ ⊢ Vec F l ∶ UU / p
-
-    -- Emptyⱼ    : ⊢ Γ → Γ ⊢Sort Empty ∶ U
-    -- Unitⱼ     : ⊢ Γ → Γ ⊢Sort Unit ∶ U
 
     var       : ∀ {A x}
               -> {{ΓP : isTrue (W ⊢Ctx Γ)}}
-              → x ∶ (A / p) ∈ Γ
-              → W ∣ Γ ⊢ (Term.var x) ∶ A / p
+              → x ∶ (A / μs) ∈ Γ
+              → W ∣ Γ ⊢ (Term.var x) ∶ A / μs
 
-    lamⱼ      : ∀ {t q}
+    lamⱼ      : ∀ {t}
               → W ∣ Γ ⊢Entry E
-              → W ∣ Γ ∙ E ⊢ t ∶ B / ML q
-              → W ∣ Γ     ⊢ lam t ∶ Π E ▹ B / ML q
+              → W ∣ Γ ∙ E ⊢ t ∶ B / μs
+              → W ∣ Γ     ⊢ lam t ∶ Π E ▹ B / μs
 
-    _∘ⱼ_      : ∀ {g a p q}
-              → W ∣ Γ ⊢ g ∶ Π (A / ML p) ▹ B / ML q
-              → W ∣ Γ ⊢ a ∶ A / ML p
-              → W ∣ Γ ⊢ g ∘ a ∶ B [ a ] / ML q
+    _∘ⱼ_      : ∀ {g a}
+              → W ∣ Γ ⊢ g ∶ Π (A / ωs) ▹ B / μs
+              → W ∣ Γ ⊢ a ∶ A / ωs
+              → W ∣ Γ ⊢ g ∘ a ∶ B [ a ] / μs
 
+{-
     prodⱼ     : ∀ A B -> ∀{t u}
-              → {{_ : isTrue (W ∣ Γ ⊢Entry (A / p))}}
-              → {{_ : isTrue (W ∣ Γ ∙ (A / p) ⊢Sort B)}}
-              → W ∣ Γ ⊢ t ∶ A / p
-              → W ∣ Γ ⊢ u ∶ G [ t ] / p
-              → W ∣ Γ ⊢ t ,ₜ u ∶ Σ F ▹ G / p
+              → {{_ : isTrue (W ∣ Γ ⊢Entry (A / μ))}}
+              → {{_ : isTrue (W ∣ Γ ∙ (A / μ) ⊢Sort B)}}
+              → W ∣ Γ ⊢ t ∶ A / μ
+              → W ∣ Γ ⊢ u ∶ G [ t ] / μ
+              → W ∣ Γ ⊢ t ,ₜ u ∶ Σ F ▹ G / μ
 
     fstⱼ      : ∀ A B -> ∀{t}
-              → {{_ : isTrue (W ∣ Γ ⊢Entry (A / p))}}
-              → {{_ : isTrue (W ∣ Γ ∙ (A / p) ⊢Sort B)}}
-              → W ∣ Γ ⊢ t ∶ Σ (A / p) ▹ B / p
-              → W ∣ Γ ⊢ fstₜ t ∶ A / p
+              → {{_ : isTrue (W ∣ Γ ⊢Entry (A / μ))}}
+              → {{_ : isTrue (W ∣ Γ ∙ (A / μ) ⊢Sort B)}}
+              → W ∣ Γ ⊢ t ∶ Σ (A / μ) ▹ B / μ
+              → W ∣ Γ ⊢ fstₜ t ∶ A / μ
 
     sndⱼ      : ∀ A B -> ∀{t}
-              → {{_ : isTrue (W ∣ Γ ⊢Entry (A / p))}}
-              → {{_ : isTrue (W ∣ Γ ∙ (A / p) ⊢Sort B)}}
-              → W ∣ Γ ⊢ t ∶ Σ (A / p) ▹ B / p
-              → W ∣ Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / p
+              → {{_ : isTrue (W ∣ Γ ⊢Entry (A / μ))}}
+              → {{_ : isTrue (W ∣ Γ ∙ (A / μ) ⊢Sort B)}}
+              → W ∣ Γ ⊢ t ∶ Σ (A / μ) ▹ B / μ
+              → W ∣ Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / μ
 
     zeroⱼ     :  {{ΓP : isTrue (W ⊢Ctx Γ)}}
               → W ∣ Γ ⊢ zeroₜ ∶ NN  / ▲ U
@@ -323,6 +282,102 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
 
 
+
+
+
+-}
+
+
+{-
+{-
+    -------------------
+    -- Interaction of Communication with global types
+
+    -- If we have a communication value, we can create a global value
+    -- by packing the comm-type and the comm-value into a "tuple" with `com`
+    -- comⱼ : W ∣ Γ ⊢Entry (X / ⇄ R A)
+    --         -> W ∣ Γ ⊢ t ∶ X / ⇄ R A
+    --         -> W ∣ Γ ⊢ com X t ∶ Com R A / ◯
+
+    -- -- we can project to the first (type) component
+    -- comtypeⱼ : W ∣ Γ ⊢Entry (A / ◯)
+    --         -> W ∣ Γ ⊢ a ∶ Com R A / ◯
+    --         -> W ∣ Γ ⊢ comtype a ∶ Univ-⇄ R A / ◯
+
+    -- -- we can project to the second (value) component
+    -- comvalⱼ : W ∣ Γ ⊢Entry (A / ◯)
+    --         -> W ∣ Γ ⊢ a ∶ Com R A / ◯
+    --         -> W ∣ Γ ⊢ comval a ∶ comtype a / ⇄ R A
+
+-}
+    -------------------
+    -- Communication
+
+    -- We end a communication by giving a value of the
+    -- required type
+    -- endⱼ : W ∣ Γ ⊢ a ∶ A / ◯ -> W ∣ Γ ⊢ end a ∶ End / ⇄ R A
+
+{-
+    -- If we have:
+    --  - `a`: a com of type `X` which gives us a value of type A
+    --  - `b`: a com of type `Y` which (assuming a : A) gives us B,
+    -- we can compose these communications to get one of type `X ≫ Y`
+    -- _>ⱼ_ : W ∣ Γ ⊢ a ∶ X / ⇄ R A
+    --       -> W ∣ Γ ∙ (A / ◯) ⊢ b ∶ Y / ⇄ R (wk1 B)
+    --       -> W ∣ Γ ⊢ (a > b) ∶ X ≫ Y / ⇄ R B
+
+    -- -- If we have a value (a ∶ A ＠ U) then we can share it so it is
+    -- -- available at V.
+    -- shareⱼ : W ∣ Γ ⊢Entry (A / ▲ V)
+    --       -> W ∣ Γ ⊢ a ∶ (A ＠ U) / ◯
+    --       -> (ϕ : V ≤ U)
+    --       -> W ∣ Γ ⊢ share a ∶ Share A U V / ⇄ R (A ＠ V)
+-}
+
+    -------------------
+    -- Location
+
+
+    -- If we have a value of a local type `A` (i.e. with ▲ U annotation), we can view it
+    -- as `(A ＠ U)` which is a global type (with ◯ annotation). Note that if U is not subset
+    -- of the currently implemented locations, it is not allowed to give a term here. Instead,
+    -- the `locskip` constructor has to be used
+    -- locⱼ : (U ≤ W)
+    --      -> W ∣ Γ ⊢ t ∶ A / ▲ U
+    --      -> W ∣ Γ ⊢ loc U t ∶ (A ＠ U) / ◯
+
+    -- locskipⱼ : ¬(U ≤ W)
+    --      -> W ∣ Γ ⊢ loc U star ∶ (A ＠ U) / ◯
+
+{-
+    -- If the currently to be implemented type (`A ＠ U`) is not part of the currently to
+    -- be implemented locations (U ≰ W), then we can trivially give a term by using `locskip`.
+    -- locskipⱼ : ¬(U ≤ W) -> W ∣ Γ ⊢ locskip ∶ (A ＠ U) / ◯
+
+    -- If we have a global term `A ＠ U` we can view it as a local term.
+    -- unlocⱼ : W ∣ Γ ⊢ t ∶ (A ＠ U) / ◯ -> W ∣ Γ ⊢ unloc t ∶ A / ▲ U
+
+    -------------------
+    -- Generic
+
+    -- Πⱼ_▹_     : ∀ {F G}
+    --           → Γ     ⊢ F ∶ U
+    --           → Γ ∙ F ⊢ G ∶ U
+    --           → Γ     ⊢ Π F ▹ G ∶ U
+    -- Σⱼ_▹_     : ∀ {F G}
+    --           → Γ     ⊢ F ∶ U
+    --           → Γ ∙ F ⊢ G ∶ U
+    --           → Γ     ⊢ Σ F ▹ G ∶ U
+    ℕⱼ        : {{_ : isTrue (W ⊢Ctx Γ)}} → W ∣ Γ ⊢ NN ∶ UU / μ
+    Vecⱼ      : ∀ {F l}
+              → W ∣ Γ ⊢ F ∶ UU / μ
+              → W ∣ Γ ⊢ l ∶ NN / μ
+              → W ∣ Γ ⊢ Vec F l ∶ UU / μ
+
+    -- Emptyⱼ    : ⊢ Γ → Γ ⊢Sort Empty ∶ U
+    -- Unitⱼ     : ⊢ Γ → Γ ⊢Sort Unit ∶ U
+-}
+
 {-
 
       -- zeroⱼ     : ⊢ Γ
@@ -348,7 +403,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
       --           → Γ ⊢Sort t ∶ B
 
     -- Type equality
-    -- data _⊢_≡_ (Γ : Con (Term P) n) : Term P n → Term P n → Set where
+    -- data _⊢_≡_ (Γ : Con (Entry P) n) : Term P n → Term P n → Set where
     --   univ   : ∀ {A B}
     --         → Γ ⊢Sort A ≡ B ∶ U
     --         → Γ ⊢Sort A ≡ B
@@ -374,7 +429,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     --         → Γ     ⊢ Σ F ▹ G ≡ Σ H ▹ E
 
     -- Term equality
-  --   data _⊢_≡_∶_ (Γ : Con (Term P) n) : Term P n → Term P n → Term P n → Set where
+  --   data _⊢_≡_∶_ (Γ : Con (Entry P) n) : Term P n → Term P n → Term P n → Set where
   --     refl          : ∀ {t A}
   --                   → Γ ⊢Sort t ∶ A
   --                   → Γ ⊢Sort t ≡ t ∶ A
@@ -475,7 +530,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   --                   → Γ ⊢Sort e ≡ e' ∶ Unit
 
   -- -- Term reduction
-  -- data _⊢_⇒_∶_ (Γ : Con (Term P) n) : Term P n → Term P n → Term P n → Set where
+  -- data _⊢_⇒_∶_ (Γ : Con (Entry P) n) : Term P n → Term P n → Term P n → Set where
   --   conv           : ∀ {A B t u}
   --                 → Γ ⊢Sort t ⇒ u ∶ A
   --                 → Γ ⊢Sort A ≡ B
@@ -535,13 +590,13 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   --                 → Γ     ⊢ Emptyrec A n ⇒ Emptyrec A n′ ∶ A
 
   -- Type reduction
-  data _⊢_⇒_ (Γ : Con (Term P) n) : Term P n → Term P n → Set where
+  data _⊢_⇒_ (Γ : Con (Entry P) n) : Term P n → Term P n → Set where
     univ : ∀ {A B}
         → Γ ⊢Sort A ⇒ B ∶ U
         → Γ ⊢Sort A ⇒ B
 
   -- Term reduction closure
-  data _⊢_⇒*_∶_ (Γ : Con (Term P) n) : Term P n → Term P n → Term P n → Set where
+  data _⊢_⇒*_∶_ (Γ : Con (Entry P) n) : Term P n → Term P n → Term P n → Set where
     id  : ∀ {A t}
         → Γ ⊢Sort t ∶ A
         → Γ ⊢Sort t ⇒* t ∶ A
@@ -551,7 +606,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
         → Γ ⊢Sort t  ⇒* u  ∶ A
 
   -- Type reduction closure
-  data _⊢_⇒*_ (Γ : Con (Term P) n) : Term P n → Term P n → Set where
+  data _⊢_⇒*_ (Γ : Con (Entry P) n) : Term P n → Term P n → Set where
     id  : ∀ {A}
         → Γ ⊢Sort A
         → Γ ⊢Sort A ⇒* A
@@ -561,23 +616,23 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
         → Γ ⊢Sort A  ⇒* B
 
   -- Type reduction to whnf
-  _⊢_↘_ : (Γ : Con (Term P) n) → Term P n → Term P n → Set
+  _⊢_↘_ : (Γ : Con (Entry P) n) → Term P n → Term P n → Set
   Γ ⊢Sort A ↘ B = Γ ⊢Sort A ⇒* B × Whnf B
 
   -- Term reduction to whnf
-  _⊢_↘_∶_ : (Γ : Con (Term P) n) → Term P n → Term P n → Term P n → Set
+  _⊢_↘_∶_ : (Γ : Con (Entry P) n) → Term P n → Term P n → Term P n → Set
   Γ ⊢Sort t ↘ u ∶ A = Γ ⊢Sort t ⇒* u ∶ A × Whnf u
 
   -- Type equality with well-formed types
-  _⊢_:≡:_ : (Γ : Con (Term P) n) → Term P n → Term P n → Set
+  _⊢_:≡:_ : (Γ : Con (Entry P) n) → Term P n → Term P n → Set
   Γ ⊢Sort A :≡: B = Γ ⊢Sort A × Γ ⊢Sort B × (Γ ⊢Sort A ≡ B)
 
   -- Term equality with well-formed terms
-  _⊢_:≡:_∶_ : (Γ : Con (Term P) n) → Term P n → Term P n → Term P n → Set
+  _⊢_:≡:_∶_ : (Γ : Con (Entry P) n) → Term P n → Term P n → Term P n → Set
   Γ ⊢Sort t :≡: u ∶ A = (Γ ⊢Sort t ∶ A) × (Γ ⊢Sort u ∶ A) × (Γ ⊢Sort t ≡ u ∶ A)
 
   -- Type reduction closure with well-formed types
-  record _⊢_:⇒*:_ (Γ : Con (Term P) n) (A B : Term P n) : Set where
+  record _⊢_:⇒*:_ (Γ : Con (Entry P) n) (A B : Term P n) : Set where
     constructor [_,_,_]
     field
       ⊢A : Γ ⊢Sort A
@@ -587,7 +642,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   open _⊢_:⇒*:_ using () renaming (D to red; ⊢A to ⊢A-red; ⊢B to ⊢B-red) public
 
   -- Term reduction closure with well-formed terms
-  record _⊢_:⇒*:_∶_ (Γ : Con (Term P) n) (t u A : Term P n) : Set where
+  record _⊢_:⇒*:_∶_ (Γ : Con (Entry P) n) (t u A : Term P n) : Set where
     constructor [_,_,_]
     field
       ⊢t : Γ ⊢Sort t ∶ A
@@ -597,7 +652,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   open _⊢_:⇒*:_∶_ using () renaming (d to redₜ; ⊢t to ⊢t-redₜ; ⊢u to ⊢u-redₜ) public
 
   -- Well-formed substitutions.
-  data _⊢ˢ_∶_ (Δ : Con Term m) : (σ : Subst m n) (Γ : Con (Term P) n) → Set where
+  data _⊢ˢ_∶_ (Δ : Con Term m) : (σ : Subst m n) (Γ : Con (Entry P) n) → Set where
     id  : ∀ {σ} → Δ ⊢ˢ σ ∶ ε
     _,_ : ∀ {A σ}
         → Δ ⊢ˢ tail σ ∶ Γ
@@ -605,7 +660,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
         → Δ ⊢ˢ σ      ∶ Γ ∙ A
 
   -- Conversion of well-formed substitutions.
-  data _⊢ˢ_≡_∶_ (Δ : Con Term m) : (σ σ′ : Subst m n) (Γ : Con (Term P) n) → Set where
+  data _⊢ˢ_≡_∶_ (Δ : Con Term m) : (σ σ′ : Subst m n) (Γ : Con (Entry P) n) → Set where
     id  : ∀ {σ σ′} → Δ ⊢ˢ σ ≡ σ′ ∶ ε
     _,_ : ∀ {A σ σ′}
         → Δ ⊢ˢ tail σ ≡ tail σ′ ∶ Γ
@@ -631,5 +686,4 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
   -}
 
-
-
+-}

@@ -65,11 +65,20 @@ private
   variable
     n m ℓ : Nat
 
+-- data SubtermLevel : Set where
+--   entry : Nat -> Arity
+--   sort : Nat -> Arity
+--   mod : Nat -> Arity
+--   location : Arity
+
+data Metakind : Set where
+  term entry location basemod : Metakind
+
 -- Representation of sub terms using a list of binding levels
 
-data GenTs (A : Nat → Set) : Nat → List Nat → Set where
+data GenTs (A : Nat -> Metakind → Set) : Nat → List (Metakind × Nat) → Set where
   []  : {n : Nat} → GenTs A n []
-  _∷_ : {n b : Nat} {bs : List Nat} (t : A (b + n)) (ts : GenTs A n bs) → GenTs A n (b ∷ bs)
+  _∷_ : ∀{k : Metakind} -> {n b : Nat} {bs : List (Metakind × Nat)} (t : A (b + n) k) (ts : GenTs A n bs) → GenTs A n ((k , b) ∷ bs)
 
 -- Kinds are indexed on the number of expected sub terms
 -- and the number of new variables bound by each sub term
@@ -80,106 +89,176 @@ open import Data.Nat using (suc ; zero)
 pattern n0 = zero
 pattern n1 = suc (zero)
 
-data MainKind : (ns : List Nat) → Set where
+data MainKind : (ns : List (Metakind × Nat)) → Set where
   Ukind : MainKind []
 
-  Pikind  : MainKind (n0 ∷ n1 ∷ [])
-  Lamkind : MainKind (n1 ∷ [])
-  Appkind : MainKind (n0 ∷ n0 ∷ [])
+  Pikind  : MainKind ((entry , n0) ∷ (term , n1) ∷ [])
+  Lamkind : MainKind ((term , n1) ∷ [])
+  Appkind : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
-  Sigmakind : MainKind (n0 ∷ n1 ∷ [])
-  Prodkind  : MainKind (n0 ∷ n0 ∷ [])
-  Fstkind   : MainKind (n0 ∷ [])
-  Sndkind   : MainKind (n0 ∷ [])
+  Sigmakind : MainKind ((entry , n0) ∷ (term , n1) ∷ [])
+  Prodkind  : MainKind ((term , n0) ∷ (term , n0) ∷ [])
+  Fstkind   : MainKind ((term , n0) ∷ [])
+  Sndkind   : MainKind ((term , n0) ∷ [])
 
-  Natkind    : MainKind []
   Zerokind   : MainKind []
-  Suckind    : MainKind (n0 ∷ [])
-  Natreckind : MainKind (n1 ∷ n0 ∷ n0 ∷ n0 ∷ [])
+  Suckind    : MainKind ((term , n0) ∷ [])
+  Natreckind : MainKind ((term , n1) ∷ (term , n0) ∷ (term , n0) ∷ (term , n0) ∷ [])
 
-  Veckind    : MainKind (n0 ∷ n0 ∷ [])
+  Veckind    : MainKind ((term , n0) ∷ (term , n0) ∷ [])
   Nilkind    : MainKind []
-  Conskind   : MainKind (n0 ∷ n0 ∷ [])
-  Vecreckind : MainKind (n1 ∷ n0 ∷ n0 ∷ n0 ∷ [])
+  Conskind   : MainKind ((term , n0) ∷ (term , n0) ∷ [])
+  Vecreckind : MainKind ((term , n1) ∷ (term , n0) ∷ (term , n0) ∷ (term , n0) ∷ [])
 
-  Unitkind : MainKind []
   Starkind : MainKind []
 
-  Emptykind    : MainKind []
-  Emptyreckind : MainKind (n0 ∷ n0 ∷ [])
+  Emptyreckind : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
   -- Kami modality system
-  𝓀-/ : MainKind (n0 ∷ n0 ∷ [])
+  -- 𝓀-/ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
   -- Kami modalities
-  𝓀-⇄ : MainKind (n0 ∷ n0 ∷ []) -- Com : Γ ⊢WFSort (A / Global) -> Γ ⊢WFMod Com R A
+  -- 𝓀-⇄ : MainKind ((location , n0) ∷ (term , n0) ∷ []) -- Com : Γ ⊢WFSort (A / Global) -> Γ ⊢WFMod Com R A
 
   -------------------
   -- Kami universe types
-  𝓀-Univ-Com : MainKind (n0 ∷ n0 ∷ [])
+  -- 𝓀-Univ-⇄ : MainKind ((location , n0) ∷ (term , n0) ∷ [])
 
   -------------------
   -- Kami types (global)
-  𝓀-＠ : MainKind (n0 ∷ n0 ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
-  𝓀-Com : MainKind (n0 ∷ n0 ∷ []) -- Com : ⟨ P ⟩ -> Γ ⊢Global -> Γ ⊢Global
+  𝓀-Modal : MainKind ((term , n0) ∷ (basemod , n0) ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
+  -- 𝓀-＠ : MainKind ((term , n0) ∷ (location , n0) ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
+  -- 𝓀-Com : MainKind ((location , n0) ∷ (term , n0) ∷ []) -- Com : ⟨ P ⟩ -> Γ ⊢Global -> Γ ⊢Global
+
+  -- Kami modality terms
+  𝓀-mod : MainKind ((term , n0) ∷ [])
+  𝓀-unmod : MainKind ((term , n0) ∷ [])
+  𝓀-send : MainKind ((term , n0) ∷ [])
+  𝓀-recv : MainKind ((term , n0) ∷ [])
 
   -------------------
   -- Kami types (Com)
-  𝓀-End : MainKind [] -- End : Γ ⊢Com U
-  𝓀-≫ : MainKind (n0 ∷ n1 ∷ []) -- new (monadic?) composition operation
-  𝓀-Share : MainKind (n0 ∷ n0 ∷ n0 ∷ []) -- [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / Global ] ⊢Com R) -> Γ ⊢Com R
+  -- 𝓀-End : MainKind [] -- End : Γ ⊢Com U
+  -- 𝓀-≫ : MainKind ((term , n0) ∷ (term , n1) ∷ []) -- new (monadic?) composition operation
+  -- 𝓀-Share : MainKind ((term , n0) ∷ (location , n0) ∷ (location , n0) ∷ []) -- [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / Global ] ⊢Com R) -> Γ ⊢Com R
 
   ---------------------------------------------
   -- Kami terms (com related)
 
   -- packing and unpacking communication into global types
-  𝓀-com : MainKind (n0 ∷ n0 ∷ []) -- the tuple constructor
-  𝓀-comtype : MainKind (n0 ∷ []) -- the first projection
-  𝓀-comval : MainKind (n0 ∷ [])  -- the second projection
+  -- 𝓀-com : MainKind ((term , n0) ∷ (term , n0) ∷ []) -- the tuple constructor
+  -- 𝓀-comtype : MainKind ((term , n0) ∷ []) -- the first projection
+  -- 𝓀-comval : MainKind ((term , n0) ∷ [])  -- the second projection
 
   -- the three communication primitives
-  𝓀-end : MainKind (n0 ∷ [])   -- pure
-  𝓀-> : MainKind (n0 ∷ n1 ∷ []) -- bind
-  𝓀-share : MainKind (n0 ∷ []) -- generator
+  -- 𝓀-end : MainKind ((term , n0) ∷ [])   -- pure
+  -- 𝓀-> : MainKind ((term , n0) ∷ (term , n1) ∷ []) -- bind
+  -- 𝓀-share : MainKind ((term , n0) ∷ []) -- generator
 
   -------------------
   -- Kami terms (location related)
-  -- 𝓀-loc : MainKind (n0 ∷ n0 ∷ []) THIS ONE IS NOT A MAINKIND
-  𝓀-locskip : MainKind [] -- not implementing a term because we don't need the current location
-  𝓀-unloc : MainKind (n0 ∷ []) -- [_]unloc : (ϕ : U ≤ V) -> Γ ⊢ (L ＠ U) / Global -> Γ ⊢ L / Local V
+  -- 𝓀-loc : MainKind ((term , n0) ∷ (term , n0) ∷ []) THIS ONE IS NOT A MAINKIND
+  -- 𝓀-locskip : MainKind [] -- not implementing a term because we don't need the current location
+  𝓀-unloc : MainKind ((term , n0) ∷ []) -- [_]unloc : (ϕ : U ≤ V) -> Γ ⊢ (L ＠ U) / Global -> Γ ⊢ L / Local V
 
-data Kind : (ns : List Nat) → Set where
+-- local leafs get their own kind
+
+data LeafKind : Set where
+  Natkind    : LeafKind
+  Emptykind  : LeafKind
+  Unitkind   : LeafKind
+
+data Kind : (ns : List (Metakind × Nat)) → Set where
   main : ∀{ns} -> MainKind ns -> Kind ns
-  𝓀-loc : Kind (n0 ∷ n0 ∷ []) -- loc : (U ≤ W -> (Γ ⊢ L / Local U)) -> Γ ⊢ (L ＠ U) / Global
+  leaf : LeafKind -> Kind []
+  𝓀-loc : Kind ((location , n0) ∷ (term , n0) ∷ []) -- loc : (U ≤ W -> (Γ ⊢ L / Local U)) -> Γ ⊢ (L ＠ U) / Global
 
 -- Term Ps are indexed by its number of unbound variables and are either:
 -- de Bruijn style variables or
 -- generic terms, formed by their kind and sub terms
 
-data MLMod (P : Set) : Set where
-  Global : MLMod P
-  Local : (U : P) -> MLMod P
 
--- Kami: A set of special constₜant terms
-data ConstTerm P : Set where
-  -- Kami: A location is also a valid term
-  location : (U : P) -> ConstTerm P
+------------------------------------------------------------------------
+-- The new modality system
 
-  -- Kami: A special constₜructor for
-  mlmod : MLMod P -> ConstTerm P
+-- modes are "copies" of MLTT inside our type theory
+data Mode : Set where
+  ▲ : Mode -- the local mode
+  ◯ : Mode -- the global mode
 
-data Term (P : Set) (n : Nat) : Set where
+-- modalities are morphisms between modes,
+-- they are generated by the following two
+-- base modalities.
+data BaseModality P : (m n : Mode) -> Set where
+  `＠` : ∀(U : P) -> BaseModality P ▲ ◯
+  `[]` : BaseModality P ◯ ▲
+
+-- in general, modalities are concatenations
+-- of base modalities
+data Modality P : (m n : Mode) -> Set where
+  id : ∀{m} -> Modality P m m
+  _⨾_ : ∀{m n o} -> BaseModality P m n  -> Modality P n o -> Modality P m o
+
+infixr 80 _⨾_
+
+-- data MLMod (P : Set) : Set where
+--   Global : MLMod P
+--   Local : (U : P) -> MLMod P
+
+
+-- data Mod (P : Set) (n : Nat) : Set
+
+-- -- Kami: A set of special constₜant terms
+-- data BaseTerm P : Set where
+--   -- Kami: A location is also a valid term
+--   location : (U : P) -> BaseTerm P
+
+--   -- Kami: A special constₜructor for modalities
+--   mod : ∀{m n} -> Modality P m n -> BaseTerm P
+
+data Term (P : Set) (n : Nat) : Set
+
+data KindedTerm (P : Set) (n : Nat) : (k : Metakind) -> Set where
+  term : Term P n -> KindedTerm P n term
+  location : (U : P) -> KindedTerm P n location
+  basemod : ∀{k l} -> BaseModality P k l -> KindedTerm P n basemod
+  _/_ : ∀{k l} -> Term P n -> Modality P k l -> KindedTerm P n entry
+
+data Term P n where
+  gen : {bs : List (Metakind × Nat)} (k : Kind bs) (c : GenTs (KindedTerm P) n bs) → Term P n
+  -- base : (U : BaseTerm P n) -> Term P n
   var : (x : Fin n) → Term P n
-  gen : {bs : List Nat} (k : Kind bs) (c : GenTs (Term P) n bs) → Term P n
 
-  constₜ : ConstTerm P -> Term P n
+-- data Mod P n where
+--   ML : MLMod P -> Mod P n
+--   ⇄ : P -> (Term P n) -> Mod P n
+
+
+Entry : (P : Set) (n : Nat) -> Set
+Entry P n = KindedTerm P n entry
+
+-- record Entry (P : Set) (n : Nat) : Set where
+--   constructor _/_
+--   field getSort : Term P n
+--   field getMod : Mod P n
+
+-- open Entry public
+
+infixl 25 _/_
+
+-- pattern _/ₜ_ a b     = gen (main 𝓀-/) (a ∷ b ∷ [])
+-- pattern ◯           = (ML Global)
+-- pattern ▲ U         = (ML (Local U))
+-- pattern ⇄ R A       = gen (main 𝓀-⇄) ((location R) ∷ A ∷ [])
+-- pattern ML p        = base (mlmod p)
 
 
 
 private
   variable
-    A F H t u v : Term P n
-    B E G       : Term P (1+ n)
+    A B C D t u v : Term P n
+    -- B        : Term P (1+ n)
+    F E G H : Entry P n
 
 -- The Grammar of our language.
 
@@ -192,100 +271,102 @@ private
 pattern UU = gen (main Ukind) []
 
 -- Π_▹_ : (A : Term P n) (B : Term P (1+ n)) → Term P n  -- Dependent function type (B is a binder).
-pattern Π_▹_ A B = gen (main Pikind) (A ∷ B ∷ [])
+pattern Π_▹_ A B = gen (main Pikind) (A ∷ term B ∷ [])
 
 -- Σ_▹_ : (A : Term P n) (B : Term P (1+ n)) → Term P n  -- Dependent sum type (B is a binder).
-pattern Σ_▹_ A B = gen (main Sigmakind) (A ∷ B ∷ [])
+pattern Σ_▹_ A B = gen (main Sigmakind) (A ∷ term B ∷ [])
 
 -- NN      : Term P n                      -- Type of natural numbers.
-pattern NN = gen (main Natkind) []
+pattern NN = gen (leaf Natkind) []
 
 -- Vec : (m : Term n) (t : Term n) → Term n -- Vector type.
-pattern Vec m t = gen (main Veckind) (m ∷ t ∷ [])
+pattern Vec m t = gen (main Veckind) (term m ∷ term t ∷ [])
 
 -- Empty : Term P n                       -- Empty type
-pattern Empty = gen (main Emptykind) []
+pattern Empty = gen (leaf Emptykind) []
 
 -- Unit  : Term P n                       -- Unit type
-pattern Unit = gen (main Unitkind) []
+pattern Unit = gen (leaf Unitkind) []
 
 -- lam    : (t : Term P (1+ n)) → Term P n  -- Function abstraction (binder).
-pattern lam t = gen (main Lamkind) (t ∷ [])
+pattern lam t = gen (main Lamkind) (term t ∷ [])
 
 -- _∘_    : (t u : Term P n) → Term P n     -- Application.
-pattern _∘_ t u = gen (main Appkind) (t ∷ u ∷ [])
+pattern _∘_ t u = gen (main Appkind) (term t ∷ term u ∷ [])
 
 
 prod : (t u : Term P n) → Term P n       -- Dependent products
-prod t u = gen (main Prodkind) (t ∷ u ∷ [])
-pattern _,ₜ_ t u = gen (main Prodkind) (t ∷ u ∷ [])
+prod t u = gen (main Prodkind) (term t ∷ term u ∷ [])
+pattern _,ₜ_ t u = gen (main Prodkind) (term t ∷ term u ∷ [])
 
 fstₜ : (t : Term P n) → Term P n          -- First projection
-fstₜ t = gen (main Fstkind) (t ∷ [])
+fstₜ t = gen (main Fstkind) (term t ∷ [])
 
 sndₜ : (t : Term P n) → Term P n          -- Second projection
-sndₜ t = gen (main Sndkind) (t ∷ [])
+sndₜ t = gen (main Sndkind) (term t ∷ [])
 
 -- Introduction and elimination of natural numbers.
 zeroₜ   : Term P n                      -- Natural number zero.
 zeroₜ = gen (main Zerokind) []
 
 sucₜ    : (t : Term P n)       → Term P n -- Successor.
-sucₜ t = gen (main Suckind) (t ∷ [])
+sucₜ t = gen (main Suckind) (term t ∷ [])
 
 natrec : (A : Term P (1+ n)) (t u v : Term P n) → Term P n  -- Natural number recursor (A is a binder).
-natrec A t u v = gen (main Natreckind) (A ∷ t ∷ u ∷ v ∷ [])
+natrec A t u v = gen (main Natreckind) (term A ∷ term t ∷ term u ∷ term v ∷ [])
 
 -- Introduction and elimination of vectors.
 nilₜ : Term P n                         -- Empty vector.
 nilₜ = gen (main Nilkind) []
 
 consₜ : (v : Term P n) → (vs : Term P n) → Term P n -- Append.
-consₜ v vs = gen (main Conskind) (v ∷ vs ∷ [])
+consₜ v vs = gen (main Conskind) (term v ∷ term vs ∷ [])
 
 vecrec : (A : Term P (1+ n)) (t u v : Term P n) → Term P n  -- Vector recursor (A is a binder).
-vecrec A t u v = gen (main Vecreckind) (A ∷ t ∷ u ∷ v ∷ [])
+vecrec A t u v = gen (main Vecreckind) (term A ∷ term t ∷ term u ∷ term v ∷ [])
 
 
 star : Term P n                        -- Unit element
 star = gen (main Starkind) []
 
 Emptyrec : (A e : Term P n) → Term P n   -- Empty type recursor
-Emptyrec A e = gen (main Emptyreckind) (A ∷ e ∷ [])
-
-pattern _/_ a b     = gen (main 𝓀-/) (a ∷ b ∷ [])
-pattern ◯           = constₜ (mlmod Global)
-pattern ▲ U         = constₜ (mlmod (Local U))
-pattern ⇄ R A       = gen (main 𝓀-⇄) (constₜ (location R) ∷ A ∷ [])
-pattern ML p        = constₜ (mlmod p)
-
-pattern Univ-Com R A = gen (main 𝓀-Univ-Com) (constₜ (location R) ∷ A ∷ [])
-
-pattern Com R A      = gen (main 𝓀-Com) (constₜ (location R) ∷ A ∷ [])
-pattern com T a      = gen (main 𝓀-com) (T ∷ a ∷ [])
-pattern comtype a    = gen (main 𝓀-comtype) (a ∷ [])
-pattern comval a     = gen (main 𝓀-comval) (a ∷ [])
-
-pattern _＠_ L U     = gen (main 𝓀-＠) (L ∷ constₜ (location U) ∷ [])
-pattern loc U t      = gen 𝓀-loc (constₜ (location U) ∷ t ∷ []) -- NOTE, this one is *not* wrapped in `main`
-pattern unloc t      = gen (main 𝓀-unloc) (t ∷ [])
-pattern locskip      = gen (main 𝓀-locskip) []
-
-pattern _≫_ x f     = gen (main 𝓀-≫) (x ∷ f ∷ [])
-pattern _>_ x f     = gen (main 𝓀->) (x ∷ f ∷ [])
-
-pattern Share A U V  = gen (main 𝓀-Share) (A ∷ constₜ (location U) ∷ constₜ (location V) ∷ [])
-pattern share a      = gen (main 𝓀-share) (a ∷ [])
-
-pattern End          = gen (main 𝓀-End) []
-pattern end a        = gen (main 𝓀-end) (a ∷ [])
+Emptyrec A e = gen (main Emptyreckind) (term A ∷ term e ∷ [])
 
 
+-- pattern Univ-⇄ R A = gen (main 𝓀-Univ-⇄) ((location R) ∷ term A ∷ [])
+
+-- pattern Com R A      = gen (main 𝓀-Com) ((location R) ∷ term A ∷ [])
+-- pattern com T a      = gen (main 𝓀-com) (term T ∷ term a ∷ [])
+-- pattern comtype a    = gen (main 𝓀-comtype) (term a ∷ [])
+-- pattern comval a     = gen (main 𝓀-comval) (term a ∷ [])
+
+pattern Modal A μ     = gen (main 𝓀-Modal) (term A ∷ (basemod μ) ∷ [])
+-- pattern _＠_ L U     = gen (main 𝓀-＠) (term L ∷ (location U) ∷ [])
+pattern loc U t      = gen 𝓀-loc ((location U) ∷ term t ∷ []) -- NOTE, this one is *not* wrapped in `main`
+pattern unloc t      = gen (main 𝓀-unloc) (term t ∷ [])
 
 
-infixl 40 _≫_
-infixl 50 _＠_
-infixl 25 _/_
+pattern send t        = gen (main 𝓀-send) (term t ∷ [])
+pattern recv t      = gen (main 𝓀-recv) (term t ∷ [])
+pattern mod t        = gen (main 𝓀-mod) (term t ∷ [])
+pattern unmod t      = gen (main 𝓀-unmod) (term t ∷ [])
+
+-- pattern locskip      = gen (main 𝓀-locskip) []
+
+-- pattern _≫_ x f     = gen (main 𝓀-≫) (term x ∷ term f ∷ [])
+-- pattern _>_ x f     = gen (main 𝓀->) (term x ∷ term f ∷ [])
+
+-- pattern Share A U V  = gen (main 𝓀-Share) (term A ∷ (location U) ∷ (location V) ∷ [])
+-- pattern share a      = gen (main 𝓀-share) (term a ∷ [])
+
+-- pattern End          = gen (main 𝓀-End) []
+-- pattern end a        = gen (main 𝓀-end) (term a ∷ [])
+
+
+
+
+-- infixl 40 _≫_
+-- infixl 50 _＠_
 
 
 
@@ -295,7 +376,7 @@ data BindingType : Set where
   BΠ : BindingType
   BΣ : BindingType
 
-⟦_⟧_▹_ : BindingType → Term P n → Term P (1+ n) → Term P n
+⟦_⟧_▹_ : BindingType → Entry P n → Term P (1+ n) → Term P n
 ⟦ BΠ ⟧ F ▹ G = Π F ▹ G
 ⟦ BΣ ⟧ F ▹ G = Σ F ▹ G
 
@@ -303,7 +384,7 @@ data BindingType : Set where
 
 -- If  W F G = W H E  then  F = H  and  G = E.
 
-B-PE-injectivity : ∀ W → ⟦ W ⟧ F ▹ G PE.≡ ⟦ W ⟧ H ▹ E → F PE.≡ H × G PE.≡ E
+B-PE-injectivity : ∀ W → ⟦ W ⟧ F ▹ A PE.≡ ⟦ W ⟧ E ▹ B → F PE.≡ E × A PE.≡ B
 B-PE-injectivity BΠ PE.refl = PE.refl , PE.refl
 B-PE-injectivity BΣ PE.refl = PE.refl , PE.refl
 
@@ -318,15 +399,16 @@ suc-PE-injectivity PE.refl = PE.refl
 -- A term is neutral if it has a variable in head position.
 -- The variable blocks reduction of such terms.
 
-data Neutral (P : Set) : Term P n → Set where
-  var       : (x : Fin n) → Neutral P (var x)
-  ∘ₙ        : Neutral P t   → Neutral P (t ∘ u)
-  fstₙ      : Neutral P t   → Neutral P (fstₜ t)
-  sndₙ      : Neutral P t   → Neutral P (sndₜ t)
-  natrecₙ   : Neutral P v   → Neutral P (natrec G t u v)
-  vecrecₙ   : Neutral P v   → Neutral P (vecrec G t u v)
-  Emptyrecₙ : Neutral P t   → Neutral P (Emptyrec A t)
+data Neutral (P : Set) : KindedTerm P n term → Set where
+  -- var       : (x : Fin n) → Neutral P (var x)
+  -- ∘ₙ        : Neutral P t   → Neutral P (t ∘ u)
+  -- fstₙ      : Neutral P t   → Neutral P (fstₜ t)
+  -- sndₙ      : Neutral P t   → Neutral P (sndₜ t)
+  -- natrecₙ   : Neutral P v   → Neutral P (natrec G t u v)
+  -- vecrecₙ   : Neutral P v   → Neutral P (vecrec G t u v)
+  -- Emptyrecₙ : Neutral P t   → Neutral P (Emptyrec A t)
 
+{-
 
 -- Weak head normal forms (whnfs).
 
@@ -476,6 +558,7 @@ productWhnf (ne x) = ne x
 ⟦_⟧ₙ BΠ = Πₙ
 ⟦_⟧ₙ BΣ = Σₙ
 
+-}
 
 ------------------------------------------------------------------------
 -- Weakening
@@ -525,14 +608,23 @@ wkVar (lift ρ) (x +1) = (wkVar ρ x) +1
   -- If η : Γ ≤ Δ and Δ ⊢ t : A then Γ ⊢ wk η t : wk η A.
 
 mutual
-  wkGen : {m n : Nat} {bs : List Nat} (ρ : Wk m n) (c : GenTs (Term P) n bs) → GenTs (Term P) m bs
+  wkGen : {m n : Nat} {bs : List (Metakind × Nat)} (ρ : Wk m n) (c : GenTs (KindedTerm P) n bs) → GenTs (KindedTerm P) m bs
   wkGen ρ []                = []
-  wkGen ρ (_∷_ {b = b} t c) = (wk (liftn ρ b) t) ∷ (wkGen ρ c)
+  wkGen ρ (_∷_ {b = b} t c) = (wk-Kinded (liftn ρ b) t) ∷ (wkGen ρ c)
+
+  -- wk-Mod : {m n : Nat} (ρ : Wk m n) (t : Mod P n) → Mod P m
+  -- wk-Mod ρ (ML x) = ML x
+  -- wk-Mod ρ (⇄ R A) = ⇄ R (wk ρ A)
+
+  wk-Kinded : ∀{k : Metakind} -> {m n : Nat} (ρ : Wk m n) (t : KindedTerm P n k) → KindedTerm P m k
+  wk-Kinded ρ (term x) = term (wk ρ x)
+  wk-Kinded ρ (location U) = location U
+  wk-Kinded ρ (basemod μ) = basemod μ
+  wk-Kinded ρ (x / p) = wk ρ x / p
 
   wk : {m n : Nat} (ρ : Wk m n) (t : Term P n) → Term P m
   wk ρ (var x)   = var (wkVar ρ x)
   wk ρ (gen k c) = gen k (wkGen ρ c)
-  wk ρ (constₜ U) = constₜ U
 
 
 -- Adding one variable to the context requires wk1.
@@ -543,6 +635,7 @@ wk1 = wk (step id)
 
 -- Weakening of a neutral term.
 
+{-
 wkNeutral : ∀ ρ → Neutral P t → Neutral P {n} (wk ρ t)
 wkNeutral ρ (var n)       = var (wkVar ρ n)
 wkNeutral ρ (∘ₙ n)        = ∘ₙ (wkNeutral ρ n)
@@ -594,15 +687,16 @@ wkWhnf ρ nilₙ    = nilₙ
 wkWhnf ρ consₙ   = consₙ
 wkWhnf ρ starₙ   = starₙ
 wkWhnf ρ (ne x)  = ne (wkNeutral ρ x)
+-}
 
 -- Non-dependent version of Π.
 
-_▹▹_ : Term P n → Term P n → Term P n
+_▹▹_ : Entry P n → Term P n → Term P n
 A ▹▹ B = Π A ▹ wk1 B
 
 -- Non-dependent products.
 
-_××_ : Term P n → Term P n → Term P n
+_××_ : Entry P n → Term P n → Term P n
 A ×× B = Σ A ▹ wk1 B
 
 ------------------------------------------------------------------------
@@ -689,14 +783,23 @@ toSubst pr x = var (wkVar pr x)
 -- If Γ ⊢ σ : Δ and Δ ⊢ t : A then Γ ⊢ subst σ t : subst σ A.
 
 mutual
-  substGen : {bs : List Nat} (σ : Subst P m n) (g : GenTs (Term P) n bs) → GenTs (Term P) m bs
+  substGen : {bs : List (Metakind × Nat)} (σ : Subst P m n) (g : GenTs (KindedTerm P) n bs) → GenTs (KindedTerm P) m bs
   substGen σ  []      = []
-  substGen σ (_∷_ {b = b} t ts) = subst (liftSubstn σ b) t ∷ (substGen σ ts)
+  substGen σ (_∷_ {b = b} t ts) = subst-Kinded (liftSubstn σ b) t ∷ (substGen σ ts)
+
+  -- subst-Mod : (σ : Subst P m n) (t : Mod P n) → Mod P m
+  -- subst-Mod σ (ML x) = ML x
+  -- subst-Mod σ (⇄ R A) = ⇄ R (subst σ A)
+
+  subst-Kinded : ∀{k : Metakind} (σ : Subst P m n) (t : KindedTerm P n k) → KindedTerm P m k
+  subst-Kinded σ (term x) = term (subst σ x)
+  subst-Kinded σ (location U) = location U
+  subst-Kinded σ (basemod μ) = basemod μ
+  subst-Kinded σ (x / p) = subst σ x / p
 
   subst : (σ : Subst P m n) (t : Term P n) → Term P m
   subst σ (var x)   = substVar σ x
   subst σ (gen x c) = gen x (substGen σ c)
-  subst σ (constₜ U) = constₜ U
 
 -- Extend a substitution by adding a term as
 -- the first variable substitution and shift the rest.
@@ -749,8 +852,7 @@ _[_]↑ : (t : Term P (1+ n)) (s : Term P (1+ n)) → Term P (1+ n)
 t [ s ]↑ = subst (consSubst (wk1Subst idSubst) s) t
 
 
-B-subst : (σ : Subst P m n) (W : BindingType) (F : Term P n) (G : Term P (1+ n))
-        → subst σ (⟦ W ⟧ F ▹ G) PE.≡ ⟦ W ⟧ (subst σ F) ▹ (subst (liftSubst σ) G)
-B-subst σ BΠ F G = PE.refl
-B-subst σ BΣ F G = PE.refl
-
+-- B-subst : (σ : Subst P m n) (W : BindingType) (F : Term P n) (G : Term P (1+ n))
+--         → subst σ (⟦ W ⟧ F ▹ G) PE.≡ ⟦ W ⟧ (subst σ F) ▹ (subst (liftSubst σ) G)
+-- B-subst σ BΠ F G = PE.refl
+-- B-subst σ BΣ F G = PE.refl
