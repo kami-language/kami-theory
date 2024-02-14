@@ -135,6 +135,7 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   𝓀-unmod : MainKind ((term , n0) ∷ [])
   𝓀-send : MainKind ((term , n0) ∷ [])
   𝓀-recv : MainKind ((term , n0) ∷ [])
+  𝓀-narrow : MainKind ((term , n0) ∷ [])
 
   -------------------
   -- Kami types (Com)
@@ -346,10 +347,11 @@ pattern loc U t      = gen 𝓀-loc ((location U) ∷ term t ∷ []) -- NOTE, th
 pattern unloc t      = gen (main 𝓀-unloc) (term t ∷ [])
 
 
-pattern send t        = gen (main 𝓀-send) (term t ∷ [])
-pattern recv t      = gen (main 𝓀-recv) (term t ∷ [])
+pattern send t       = gen (main 𝓀-send) (term t ∷ [])
+pattern recv t       = gen (main 𝓀-recv) (term t ∷ [])
 pattern mod t        = gen (main 𝓀-mod) (term t ∷ [])
 pattern unmod t      = gen (main 𝓀-unmod) (term t ∷ [])
+pattern narrow t     = gen (main 𝓀-narrow) (term t ∷ [])
 
 -- pattern locskip      = gen (main 𝓀-locskip) []
 

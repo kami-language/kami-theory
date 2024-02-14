@@ -90,10 +90,6 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     U V R : P
 
 
-  -- wk1-Mod : Mod P n -> Mod P (suc n)
-  -- wk1-Mod (ML x) = ML x
-  -- wk1-Mod (⇄ R A) = ⇄ R (wk1 A)
-
   wk1-Entry : Entry P n -> Entry P (suc n)
   wk1-Entry (A / μ) = wk1 A / μ
 
@@ -111,10 +107,6 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   data _∣_⊢Sort_ (W : P) (Γ : Con (Entry P) n) : Term P n -> Set
   data _∣_⊢Entry_ (W : P) (Γ : Con (Entry P) n) : Entry P n -> Set
   data _∣_⊢_∶_ (W : P) (Γ : Con (Entry P) n) : Term P n → Entry P n → Set
-
-  -- data _∣_⊢Mod_ (W : P) (Γ : Con (Entry P) n) : Mod P n -> Set where
-  --   MLⱼ : ∀{m} -> W ∣ Γ ⊢Mod (ML m)
-  --   ⇄ⱼ : W ∣ Γ ⊢Sort A -> W ∣ Γ ⊢Mod ⇄ R A
 
   _⊢Sort_ : {W : P} (Γ : Con (Entry P) n) -> Term P n -> Set
   _⊢Sort_ {W = W} = W ∣_⊢Sort_
@@ -186,26 +178,13 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     Modalⱼ : W ∣ Γ ⊢Entry (A / μ ⨾ μs) -> W ∣ Γ ⊢Entry Modal A μ / μs
 
 
-    -------------------
-    -- Kami types (communication ⇄)
-
-    -- The identity communication
-    -- Endⱼ : W ∣ Γ ⊢Entry (A / ◯) -> W ∣ Γ ⊢Entry (End / ⇄ R A)
-
-    -- We concatenate two communications
-    -- _≫ⱼ_ : W ∣ Γ ⊢Entry (X / ⇄ R A)
-    --       -> W ∣ Γ ∙ (A / ◯) ⊢Entry (Y / ⇄ R (wk1 B))
-    --       -> W ∣ Γ ⊢Entry (X ≫ Y / ⇄ R B)
-
-    -- We share a local value of type "A ＠ U" to be "A ＠ V"
-    -- Shareⱼ : ∀ (U V : P)
-    --         -> (ϕ : V ≤ U)
-    --         -> W ∣ Γ ⊢Entry (A / ▲ V)
-    --         -> W ∣ Γ ⊢Entry (Share A U V / ⇄ R (A ＠ V))
 
 
   -- Well-formed term of a type
   data _∣_⊢_∶_ W Γ where
+
+    -------------------
+    -- Standard modality intro and "elim"
 
     modⱼ : W ∣ Γ ⊢ t ∶ X / μ ⨾ μs -> W ∣ Γ ⊢ t ∶ Modal X μ / μs
     unmodⱼ : W ∣ Γ ⊢ t ∶ Modal X μ / μs -> W ∣ Γ ⊢ t ∶ X / μ ⨾ μs
@@ -215,8 +194,13 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     sendⱼ : W ∣ Γ ⊢ t ∶ X / μs -> W ∣ Γ ⊢ t ∶ X / `＠` U ⨾ `[]` ⨾ μs
     recvⱼ : W ∣ Γ ⊢ t ∶ X / `[]` ⨾ `＠` U ⨾ μs -> W ∣ Γ ⊢ t ∶ X / μs
 
+    narrowⱼ : (ϕ : U ≤ V)
+               -> W ∣ Γ ⊢ t ∶ X / `＠` U ⨾ μs
+               -> W ∣ Γ ⊢ narrow t ∶ X / `＠` V ⨾ μs
 
 
+    -------------------
+    -- normal terms
 
     var       : ∀ {A x}
               -> {{ΓP : isTrue (W ⊢Ctx Γ)}}
@@ -232,6 +216,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
               → W ∣ Γ ⊢ g ∶ Π (A / ωs) ▹ B / μs
               → W ∣ Γ ⊢ a ∶ A / ωs
               → W ∣ Γ ⊢ g ∘ a ∶ B [ a ] / μs
+
 
 {-
     prodⱼ     : ∀ A B -> ∀{t u}
