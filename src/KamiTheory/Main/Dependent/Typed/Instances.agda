@@ -31,6 +31,7 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
     t u : Term P n
     Γ  : Con (Entry P) n
     A B : Term P n
+    E F : Entry P n
     W : P
 
   private
@@ -87,10 +88,9 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
 
   derive-Var : ∀ Γ -> (t : Fin n) -> (A : Term P n) → (p : Modality P k l) -> Maybe (t ∶ A / p ∈ Γ)
   derive-Var Γ t A p with infer-Var Γ t
-  ... | ((B / q) , Ep) with A ≟ B | p ≟ q
-  ... | no x | Y = nothing
-  ... | yes x | no x₁ = nothing
-  ... | yes refl-≡ | yes refl-≡ = yes Ep
+  ... | (E , Ep) with E ≟ (A / p)
+  ... | no p = nothing
+  ... | yes refl-≡ = yes Ep
   derive-Var Γ t A p | _ = nothing
 
   derive-Term Γ (var x) A p = do
@@ -104,7 +104,7 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
     isDerivable:Con = record { derive = derive-Ctx _ }
 
   instance
-    isDerivable:Entry : isDerivable (W ∣ Γ ⊢Entry A)
+    isDerivable:Entry : isDerivable (W ∣ Γ ⊢Entry E)
     isDerivable:Entry = record { derive = derive-Entry _ _ }
 {-
   instance
@@ -112,7 +112,7 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
     isDerivable:Sort = record { derive = derive-Sort _ _ }
 -}
   instance
-    isDerivable:Term : isDerivable (W ∣ Γ ⊢ t ∶ A / p)
+    isDerivable:Term : isDerivable (W ∣ Γ ⊢ t ∶ A / μs)
     isDerivable:Term = record { derive = derive-Term _ _ _ _ }
 
 

@@ -300,4 +300,8 @@ module _ {P : 𝒰₀} {{_ : hasDecidableEquality P}} where
     hasDecidableEquality:Term : ∀{n} -> hasDecidableEquality (Term P n)
     hasDecidableEquality:Term = record { _≟_ = _≟-Term_ }
 
+  instance
+    hasDecidableEquality:KindedTerm : ∀{n k} -> hasDecidableEquality (KindedTerm P n k)
+    hasDecidableEquality:KindedTerm = record { _≟_ = _≟-KindedTerm_ }
+
 
