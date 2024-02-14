@@ -25,9 +25,11 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
 
   private variable
     -- n m : Nat
+    k l : Mode
+    μs : Modality P k l
     p q : Term P n
     t u : Term P n
-    Γ  : Con (Term P) n
+    Γ  : Con (Entry P) n
     A B : Term P n
     W : P
 
@@ -35,21 +37,22 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
     _>>=_ = bind-Maybe
 
   {-# TERMINATING #-}
-  derive-Entry : ∀ (Γ : Con (Term P) n) E -> Maybe (W ∣ Γ ⊢Entry E)
-  derive-Ctx : ∀ (Γ : Con (Term P) n) -> Maybe (W ⊢Ctx Γ)
-  derive-Term : ∀ Γ -> (t A p : Term P n) -> Maybe (W ∣ Γ ⊢ t ∶ A / p)
+  derive-Entry : ∀ (Γ : Con (Entry P) n) E -> Maybe (W ∣ Γ ⊢Entry E)
+  derive-Ctx : ∀ (Γ : Con (Entry P) n) -> Maybe (W ⊢Ctx Γ)
+  derive-Term : ∀ Γ -> (t A : Term P n) → (p : Modality P k l) -> Maybe (W ∣ Γ ⊢ t ∶ A / p)
 
-  derive-Entry Γ (UU / ▲ U)    = map-Maybe (λ P -> UUⱼ {{ΓP = because P}}) (derive-Ctx Γ)
-  derive-Entry Γ (NN / ▲ U)    = map-Maybe (λ P -> NNⱼ {{ΓP = because P}}) (derive-Ctx Γ)
-  derive-Entry Γ (Vec A t / ▲ U) = do
-    A′ <- derive-Entry Γ (A / ▲ U )
-    t′ <- derive-Term Γ t NN (▲ U)
+  --derive-Entry Γ (UU / μs)    = map-Maybe (λ P -> UUⱼ {{ΓP = because P}}) (derive-Ctx Γ)
+  derive-Entry Γ (NN / μs)    = map-Maybe (λ P -> NNⱼ {{ΓP = because P}}) (derive-Ctx Γ)
+  derive-Entry Γ (Vec A t / μs) = do
+    A′ <- derive-Entry Γ (A / μs )
+    t′ <- derive-Term Γ t NN (μs)
     just (Vecⱼ A′ t′)
-  derive-Entry Γ (Empty / ▲ U) = map-Maybe (λ P -> Emptyⱼ {{ΓP = because P}}) (derive-Ctx Γ)
-  derive-Entry Γ (Unit / ▲ U)  = map-Maybe (λ P -> Unitⱼ {{ΓP = because P}}) (derive-Ctx Γ)
-  derive-Entry Γ (L ＠ U / ◯)  = map-Maybe (Locⱼ U) (derive-Entry Γ (L / ▲ U))
-  derive-Entry Γ (Com R A / ◯)  = map-Maybe Comⱼ (derive-Entry Γ (A / ◯))
-  derive-Entry Γ (Σ (A / ML p) ▹ B / ML q) with p ≟ q
+
+  --derive-Entry Γ (Empty / μs) = map-Maybe (λ P -> Emptyⱼ {{ΓP = because P}}) (derive-Ctx Γ)
+  --derive-Entry Γ (Unit / μs)  = map-Maybe (λ P -> Unitⱼ {{ΓP = because P}}) (derive-Ctx Γ)
+  --derive-Entry Γ (L ＠ U / ◯)  = map-Maybe (Locⱼ U) (derive-Entry Γ (L / μs))
+  --derive-Entry Γ (Com R A / ◯)  = map-Maybe Comⱼ (derive-Entry Γ (A / ◯))
+  {- derive-Entry Γ (Σ (A / ML p) ▹ B / ML q) with p ≟ q
   ... | left x = nothing
   ... | just refl-≡ = do
     A' <- derive-Entry Γ (A / ML p)
@@ -59,6 +62,7 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
     A' <- derive-Entry Γ (A / ML p)
     B' <- derive-Entry (Γ ∙ (A / ML p)) (B / ML q)
     just (Πⱼ A' ▹ B')
+    -}
   derive-Entry Γ E = nothing
 
 
@@ -67,21 +71,21 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
     E' <- derive-Entry Γ E
     Γ' <- derive-Ctx Γ
     just (Γ' ∙ E')
-
+{-
   derive-Sort : ∀ (Γ : Con (Term P) n) E -> Maybe (W ∣ Γ ⊢Sort E)
   derive-Sort Γ (UU)    = map-Maybe (λ P -> UUⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Sort Γ (NN)    = map-Maybe (λ P -> NNⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Sort Γ (Empty) = map-Maybe (λ P -> Emptyⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Sort Γ (Unit)  = map-Maybe (λ P -> Unitⱼ {{ΓP = because P}}) (derive-Ctx Γ)
-  derive-Sort Γ (L ＠ U)  = map-Maybe (Locⱼ U) (derive-Sort Γ (L))
+  -- derive-Sort Γ (L ＠ U)  = map-Maybe (Locⱼ U) (derive-Sort Γ (L))
   derive-Sort Γ E = nothing
+-}
 
-
-  infer-Var : ∀ Γ -> (t : Fin n) -> ∑ λ (E : Term P n) -> (t ∶ E ∈ Γ)
+  infer-Var : ∀ Γ -> (t : Fin n) -> ∑ λ (E : Entry P n) -> (t ∶ E ∈ Γ)
   infer-Var (Γ ∙ x) x0 = _ , zero
   infer-Var (Γ ∙ x) (_+1 t) with (E , Ep) <- infer-Var Γ t = _ , suc Ep
 
-  derive-Var : ∀ Γ -> (t : Fin n) -> (A p : Term P n) -> Maybe (t ∶ A / p ∈ Γ)
+  derive-Var : ∀ Γ -> (t : Fin n) -> (A : Term P n) → (p : Modality P k l) -> Maybe (t ∶ A / p ∈ Γ)
   derive-Var Γ t A p with infer-Var Γ t
   ... | ((B / q) , Ep) with A ≟ B | p ≟ q
   ... | no x | Y = nothing
@@ -102,11 +106,11 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
   instance
     isDerivable:Entry : isDerivable (W ∣ Γ ⊢Entry A)
     isDerivable:Entry = record { derive = derive-Entry _ _ }
-
+{-
   instance
     isDerivable:Sort : isDerivable (W ∣ Γ ⊢Sort A)
     isDerivable:Sort = record { derive = derive-Sort _ _ }
-
+-}
   instance
     isDerivable:Term : isDerivable (W ∣ Γ ⊢ t ∶ A / p)
     isDerivable:Term = record { derive = derive-Term _ _ _ _ }
