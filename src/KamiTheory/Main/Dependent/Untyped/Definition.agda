@@ -202,6 +202,8 @@ data Modality P : (m n : Mode) -> Set where
 
 infixr 80 _⨾_
 
+
+
 -- data MLMod (P : Set) : Set where
 --   Global : MLMod P
 --   Local : (U : P) -> MLMod P
@@ -216,6 +218,9 @@ infixr 80 _⨾_
 
 --   -- Kami: A special constₜructor for modalities
 --   mod : ∀{m n} -> Modality P m n -> BaseTerm P
+
+data WrappedMod P : Set where
+  wrappedMod : ∀{k l} -> Modality P k l -> WrappedMod P
 
 data Term (P : Set) (n : Nat) : Set
 

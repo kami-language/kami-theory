@@ -99,10 +99,43 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
   ... | no p = nothing
   ... | yes refl-≡ = yes Ep
 
+
+  ---------------------------------------------
+  -- Terms (infering Sort, infering Mod)
+
+  derive-Term-Sort↑,Mod↑ : ∀ Γ -> (t : Term P n) -> Maybe (∑ λ (E : Entry P n) -> W ∣ Γ ⊢ t ∶ E)
+  derive-Term-Sort↑,Mod↑ Γ (var x) with ((A / p) , Ep) <- infer-Var Γ x = do
+    G' <- derive-Ctx Γ
+    just ((A / p) , var {{ΓP = because G'}} Ep)
+
+  derive-Term-Sort↑,Mod↑ Γ t = nothing
+
+  ---------------------------------------------
+  -- Terms (checking Sort, infering Mod)
+  derive-Term-Sort↓,Mod↑ : ∀ Γ -> (t A : Term P n) -> Maybe (∑ λ (μs : WrappedMod P) -> W ∣ Γ ⊢ t ∶ (A / μs))
+
+
+  ---------------------------------------------
+  -- Terms (checking Sort, checking Mod)
+
+  -------------------
+  -- modalities
+  derive-Term Γ (mod t) (Modal A q) p = nothing
+
+  -- modality interactions
+  derive-Term Γ (narrow t) A (`＠` VV ⨾ μs) = nothing
+
+  -------------------
+  -- standard MLTT
   derive-Term Γ (var x) A p = do
     A' <- (derive-Var Γ x A p)
     G' <- derive-Ctx Γ
     just (var {{ΓP = because G'}} A')
+  derive-Term Γ (lam t) (Π (A / p) ▹ B) q = do
+    A' <- derive-Entry Γ (A / p)
+    t' <- derive-Term (Γ ∙ (A / p)) t B q
+    just (lamⱼ A' t')
+  derive-Term Γ (t ∘ s) B p = nothing -- for checking an application we need `infer-Term`
   derive-Term Γ _ A p = nothing
 
   instance
