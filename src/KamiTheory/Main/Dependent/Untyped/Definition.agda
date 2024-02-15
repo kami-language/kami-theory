@@ -108,7 +108,7 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   Veckind    : MainKind ((term , n0) ∷ (term , n0) ∷ [])
   Nilkind    : MainKind []
   Conskind   : MainKind ((term , n0) ∷ (term , n0) ∷ [])
-  Vecreckind : MainKind ((term , n1) ∷ (term , n0) ∷ (term , n0) ∷ (term , n0) ∷ [])
+  Vecreckind : MainKind ((term , (suc n1)) ∷ (term , n0) ∷ (term , n0) ∷ (term , n0) ∷ (term , n0) ∷ [])
 
   Starkind : MainKind []
 
@@ -323,8 +323,8 @@ nilₜ = gen (main Nilkind) []
 consₜ : (v : Term P n) → (vs : Term P n) → Term P n -- Append.
 consₜ v vs = gen (main Conskind) (term v ∷ term vs ∷ [])
 
-vecrec : (A : Term P (1+ n)) (t u v : Term P n) → Term P n  -- Vector recursor (A is a binder).
-vecrec A t u v = gen (main Vecreckind) (term A ∷ term t ∷ term u ∷ term v ∷ [])
+vecrec : (G : Term P (1+ (1+ n))) (z s l vs : Term P n) → Term P n  -- Vector recursor ( is a binder).
+vecrec G z s l vs = gen (main Vecreckind) (term G ∷ term z ∷ term s ∷ term l ∷ term vs ∷ [])
 
 
 star : Term P n                        -- Unit element

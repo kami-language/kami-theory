@@ -96,6 +96,16 @@ module Examples where
      ≔ lam (recv (mod (send (unmod (var zero)))))
   t1 = lamⱼ proof (recvⱼ uu (modⱼ (sendⱼ vv (unmodⱼ (var zero)))))
 
+  +ₙ : all ∣ εε ⊢ lam (lam (natrec NN (var (suc zero)) _ _)) ∶ (NN /  `＠` U ⨾ id) ▹▹ ((NN /  `＠` U ⨾ id) ▹▹ NN) /  `＠` U ⨾ id
+  +ₙ = lamⱼ NNⱼ (lamⱼ NNⱼ (natrecⱼ NNⱼ (var (suc zero)) (lamⱼ NNⱼ (lamⱼ NNⱼ (sucⱼ (var zero)))) (var zero)))
+
+  zerov : all ∣ εε  ⊢ lam (natrec (Vec NN (var zero)) nilₜ (lam (lam (consₜ zeroₜ (var zero)))) (var zero)) ∶ Π (NN / `＠` U ⨾ id) ▹ (Vec NN (var zero)) / `＠` U ⨾ id
+  zerov = lamⱼ NNⱼ (natrecⱼ (Vecⱼ NNⱼ (var zero)) nilⱼ ( (lamⱼ NNⱼ (lamⱼ                     -- now lets call this NNⱼ variable n
+                                   (Vecⱼ NNⱼ (var zero))   -- and this vec variable vv (it has length n)
+                                   (consⱼ -- we want to append to vv
+                                          {!zeroⱼ!} -- we want to append zero (ugh)
+                                          {!var zero!}))) -- we want to append to vv, yes!
+                                  ) (var zero))
 
   -- ttt = derive-Var (εε ∙ (NN / ▲ uu)) zero NN (▲ uu)
 

@@ -256,25 +256,24 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
  
     nilⱼ      : ∀ {A}
               → W ∣ Γ ⊢ nilₜ ∶ Vec A zeroₜ  / μs
+ 
     consⱼ     : ∀ {A v vs n}
               → W ∣ Γ ⊢         v ∶ A  / μs
               → W ∣ Γ ⊢        vs ∶ Vec A n  / μs
               → W ∣ Γ ⊢ consₜ v vs ∶ Vec A (sucₜ n)  / μs
 
-    vecrecⱼ   : ∀ {G A s z l vs}
-              → W ∣ Γ ∙ (NN / μs) ∙ (Vec A (var x0) / μs) ⊢Entry G / ηs
-              → W ∣ Γ ⊢ z ∶ (G [ zeroₜ ] [ nilₜ ]) / ηs
-              → W ∣ Γ ⊢ s ∶ Π (NN / μs) ▹ Π (Vec A (var x0) / μs) ▹ Π (wk1 A / μs) ▹ ({!G!} ▹▹ ((var x0) [ var (({!!} +1) +1) ] [ {!!} ])) / ηs
+    vecrecⱼ   : ∀ {G A z s l vs}
+              → W ∣ Γ ∙ (NN / μs) ∙ (Vec (wk1 A) (var x0) / μs) ⊢Entry G / ηs -- note l and vs don't have to be in the same location as G
+              → W ∣ Γ ⊢ z ∶ (G [ zeroₜ ] [ nilₜ ]) / ηs -- we have a proof of G for zero vector
+              → W ∣ Γ ⊢ s ∶ Π (NN / μs) ▹ -- for all vector lengths l
+                            Π (Vec (wk1 A) (var x0) / μs) ▹ -- for all vectors vs of that length
+                            Π (wk1 (wk1 A) / μs) ▹ -- for all v : A
+                              (((wk1 G) / ηs) ▹▹ -- given a proof of G we get a proof of G [ l+1 ] [ v :: vs ]
+                                (wk1 (wk1 (wk1 G)) [ sucₜ (var (((x0 +1) +1 ) +1)) ] -- length is suc of outermost NN var l
+                                                   [ consₜ (var (x0 +1)) (var ((x0 +1) +1)) ])) / ηs -- vector is innermost A var v appended to Vec var vs
               → W ∣ Γ ⊢ l ∶ NN / μs
-              → W ∣ Γ ⊢ vs ∶ Vec (A [ l ]) l / μs
-              → W ∣ Γ ⊢ vecrec {!!} {!!} {!!} {!!} ∶ G [ wk1 l ] [ vs ]  / ηs
-
-
-
-
-
-
-
+              → W ∣ Γ ⊢ vs ∶ Vec A l / μs
+              → W ∣ Γ ⊢ vecrec G z s l vs ∶ G [ wk1 l ] [ vs ]  / ηs
 
 
 {-
