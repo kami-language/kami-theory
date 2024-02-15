@@ -102,10 +102,12 @@ module Examples where
   P2 : all ∣ εε ∙ (NN / `＠` uu ⨾ id) ∙ (wk (liftn (step id) n0) NN / `＠` uu ⨾ id) ⊢ var (zero) ∶ NN [ zeroₜ ] / `＠` uu ⨾ id
   P2 = proof
 
+  -- P3 : εε ∙ (NN // ▲ ↝ ◯ ∋ `＠` (uu ∧-𝒩 vv) ⨾ id) ∙ (Vec NN (narrow (var zero)) ⊢Entry 
+
   -------------------
   -- deriving functions
-  P3 : all ∣ εε ⊢ lam (var zero) ∶ (NN / `＠` uu ⨾ id) ▹▹ NN / `＠` uu ⨾ id
-  P3 = proof
+  PF0 : all ∣ εε ⊢ lam (var zero) ∶ (NN / `＠` uu ⨾ id) ▹▹ NN / `＠` uu ⨾ id
+  PF0 = proof
 
 
 
@@ -113,15 +115,15 @@ module Examples where
   -- manual examples
   sendvec1 : all ∣ εε ⊢
              Π (NN / `＠` (uu ∧ vv) ⨾ id) ▹
-             Π (Vec NN (narrow (var zero)) / `＠` (uu) ⨾ id) ▹
-             Vec NN (narrow (var (suc zero))) / `＠` vv ⨾ id
+             Π (Vec NN (var zero) / `＠` (uu) ⨾ id) ▹
+             Vec NN (var (suc zero)) / `＠` vv ⨾ id
              ≔ {!!}
   sendvec1 = lamⱼ {!!} (lamⱼ {!!} (vecrecⱼ
-             (Vecⱼ NNⱼ {!(var (suc (zero)))!}) -- = G
+             (narrowⱼ {!!} (Vecⱼ NNⱼ {!(var (suc (zero)))!})) -- = G
              {!!} -- = z
              {!!} -- = s
-             (narrowⱼ (π₀-∧ {a = uu} {b = vv}) (var (suc zero))) -- = n
-             (var zero))) -- = v
+             ((var {{ΓP = {!!}}} (suc zero))) -- = n
+             (var {{ΓP = {!!}}} {!!}))) -- = v
 
 
 

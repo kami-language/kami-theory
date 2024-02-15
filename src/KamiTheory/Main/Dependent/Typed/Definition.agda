@@ -31,6 +31,7 @@ module KamiTheory.Main.Dependent.Typed.Definition where
 
 open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
 open import Agora.Order.Preorder
+open import Agora.Order.Lattice
 
 open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
@@ -44,7 +45,7 @@ open import KamiTheory.ThirdParty.logrel-mltt.Tools.Product
 
 
 -- module _ {P : 𝒰 _} {{_ : Preorder (ℓ₀ , ℓ₀ , ℓ₀) on P}} {{_ : hasDecidableEquality P}} where
-module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} where
+module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} {{_ : hasFiniteMeets ′ P ′ }} where
        -- {{_ : hasDecidableEquality P}} where
 
   -- open DUN.KamiUntyped P hiding (_∷_)
@@ -178,6 +179,9 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     -- Kami modality system
     Modalⱼ : W ∣ Γ ⊢Entry (A / μ ⨾ μs) -> W ∣ Γ ⊢Entry Modal A μ / μs
 
+    narrowⱼ : (ϕ : U ≤ V)
+               -> W ∣ Γ ⊢Entry X / `＠` U ⨾ μs
+               -> W ∣ Γ ⊢Entry X / `＠` V ⨾ μs
 
 
 
@@ -197,7 +201,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
     narrowⱼ : (ϕ : U ≤ V)
                -> W ∣ Γ ⊢ t ∶ X / `＠` U ⨾ μs
-               -> W ∣ Γ ⊢ narrow t ∶ X / `＠` V ⨾ μs
+               -> W ∣ Γ ⊢ t ∶ X / `＠` V ⨾ μs
 
 
     -------------------
@@ -263,17 +267,17 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
               → W ∣ Γ ⊢ consₜ v vs ∶ Vec A (sucₜ n)  / μs
 
     vecrecⱼ   : ∀ {G A z s l vs}
-              → W ∣ Γ ∙ (NN / μs) ∙ (Vec (wk1 A) (var x0) / μs) ⊢Entry G / ηs -- note l and vs don't have to be in the same location as G
-              → W ∣ Γ ⊢ z ∶ (G [ zeroₜ ] [ nilₜ ]) / ηs -- we have a proof of G for zero vector
-              → W ∣ Γ ⊢ s ∶ Π (NN / μs) ▹ -- for all vector lengths l
-                            Π (Vec (wk1 A) (var x0) / μs) ▹ -- for all vectors vs of that length
-                            Π (wk1 (wk1 A) / μs) ▹ -- for all v : A
-                              (((wk1 G) / ηs) ▹▹ -- given a proof of G we get a proof of G [ l+1 ] [ v :: vs ]
+              → W ∣ Γ ∙ (NN / `＠` (U ∧ V) ⨾ μs) ∙ (Vec (wk1 A) (var x0) / `＠` U ⨾ μs) ⊢Entry G / `＠` V ⨾ ηs -- note l and vs don't have to be in the same location as G
+              → W ∣ Γ ⊢ z ∶ (G [ zeroₜ ] [ nilₜ ]) / `＠` V ⨾ ηs -- we have a proof of G for zero vector
+              → W ∣ Γ ⊢ s ∶ Π (NN / `＠` (U ∧ V) ⨾ μs) ▹ -- for all vector lengths l
+                            Π (Vec (wk1 A) (var x0) / `＠` U ⨾ μs) ▹ -- for all vectors vs of that length
+                            Π (wk1 (wk1 A) / `＠` U ⨾ μs) ▹ -- for all v : A
+                              (((wk1 G) / `＠` V ⨾ ηs) ▹▹ -- given a proof of G we get a proof of G [ l+1 ] [ v :: vs ]
                                 (wk1 (wk1 (wk1 G)) [ sucₜ (var (((x0 +1) +1 ) +1)) ] -- length is suc of outermost NN var l
-                                                   [ consₜ (var (x0 +1)) (var ((x0 +1) +1)) ])) / ηs -- vector is innermost A var v appended to Vec var vs
-              → W ∣ Γ ⊢ l ∶ NN / μs
-              → W ∣ Γ ⊢ vs ∶ Vec A l / μs
-              → W ∣ Γ ⊢ vecrec G z s l vs ∶ G [ wk1 l ] [ vs ]  / ηs
+                                                   [ consₜ (var (x0 +1)) (var ((x0 +1) +1)) ])) / `＠` V ⨾ ηs -- vector is innermost A var v appended to Vec var vs
+              → W ∣ Γ ⊢ l ∶ NN / `＠` (U ∧ V) ⨾ μs
+              → W ∣ Γ ⊢ vs ∶ Vec A l / `＠` U ⨾ μs
+              → W ∣ Γ ⊢ vecrec G z s l vs ∶ G [ (wk1 l) ] [ vs ]  / `＠` V ⨾ ηs
 
 
 {-

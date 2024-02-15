@@ -3,6 +3,7 @@ module KamiTheory.Main.Dependent.Typed.Instances where
 
 open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
 open import Agora.Order.Preorder
+open import Agora.Order.Lattice
 
 open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
@@ -16,7 +17,7 @@ open import KamiTheory.ThirdParty.logrel-mltt.Tools.Product
 
 -- module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} {{_ : hasDecidableEquality P}} where
 
-module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEquality ⟨ P' ⟩}} {{_ : isDecidablePreorder ′ ⟨ P' ⟩ ′}} where
+module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEquality ⟨ P' ⟩}} {{_ : isDecidablePreorder ′ ⟨ P' ⟩ ′}} {{_ : hasFiniteMeets ′ ⟨ P' ⟩ ′}} where
 -- {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} {{_ : hasDecidableEquality P}} where
 
   private
@@ -135,17 +136,17 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
   derive-Term-Sort↓,Mod↓ Γ (mod t) (Modal A q) p = nothing
 
   -- modality interactions
-  derive-Term-Sort↓,Mod↓ Γ (narrow t) A (k ↝ l ∋ (`＠` V ⨾ μs)) with derive-Term-Sort↓,Mod↑ Γ t A
-  ... | nothing = nothing
-  ... | yes (m ↝ m ∋ id , t') = nothing
-  ... | yes (.◯ ↝ n ∋ `[]` ⨾ ηs , t') = nothing
-  ... | yes (.▲ ↝ n ∋ `＠` U ⨾ ηs , t') with n ≟ l
-  ... | no p = nothing
-  ... | yes refl with μs ≟ ηs
-  ... | no p = nothing
-  ... | yes refl with decide-≤ U V
-  ... | no p = nothing
-  ... | yes ϕ = yes (narrowⱼ ϕ t')
+  -- derive-Term-Sort↓,Mod↓ Γ (narrow t) A (k ↝ l ∋ (`＠` V ⨾ μs)) with derive-Term-Sort↓,Mod↑ Γ t A
+  -- ... | nothing = nothing
+  -- ... | yes (m ↝ m ∋ id , t') = nothing
+  -- ... | yes (.◯ ↝ n ∋ `[]` ⨾ ηs , t') = nothing
+  -- ... | yes (.▲ ↝ n ∋ `＠` U ⨾ ηs , t') with n ≟ l
+  -- ... | no p = nothing
+  -- ... | yes refl with μs ≟ ηs
+  -- ... | no p = nothing
+  -- ... | yes refl with decide-≤ U V
+  -- ... | no p = nothing
+  -- ... | yes ϕ = yes (narrowⱼ ϕ t')
 
   -------------------
   -- standard MLTT
