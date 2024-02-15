@@ -98,7 +98,6 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
   ... | (E , Ep) with E ≟ (A / p)
   ... | no p = nothing
   ... | yes refl-≡ = yes Ep
-  derive-Var Γ t A p | _ = nothing
 
   derive-Term Γ (var x) A p = do
     A' <- (derive-Var Γ x A p)
