@@ -116,7 +116,12 @@ module Examples where
              Π (Vec NN (narrow (var zero)) / `＠` (uu) ⨾ id) ▹
              Vec NN (narrow (var (suc zero))) / `＠` vv ⨾ id
              ≔ {!!}
-  sendvec1 = lamⱼ {!!} (lamⱼ {!!} (vecrecⱼ {!!} {!!} {!!} (var (suc zero)) {!!}))
+  sendvec1 = lamⱼ {!!} (lamⱼ {!!} (vecrecⱼ
+             (Vecⱼ NNⱼ {!(var (suc (zero)))!}) -- = G
+             {!!} -- = z
+             {!!} -- = s
+             (narrowⱼ (π₀-∧ {a = uu} {b = vv}) (var (suc zero))) -- = n
+             (var zero))) -- = v
 
 
 
