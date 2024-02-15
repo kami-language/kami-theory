@@ -73,9 +73,9 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   private variable
     -- n m : Nat
     k l o q r : Mode
-    μs : Modality P k l
-    ωs : Modality P l o
-    ηs : Modality P q r
+    μs : ModalityHom P k l
+    ωs : ModalityHom P l o
+    ηs : ModalityHom P q r
     μ : BaseModality P k l
     ω : BaseModality P l o
     Γ  : Con (Entry P) n

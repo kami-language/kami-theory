@@ -132,25 +132,43 @@ instance
   Eq:BaseModality = record { _==_ = eqBaseModality }
 
 ---------------------------------------------
--- Deriving eq for Modality using Prelude
+-- Deriving eq for ModalityHom using Prelude
 
 -- eqConstTerm : {l : List ℕ} (k k₁ : ConstTerm l) → Dec-Prelude (StrId k k₁)
-_≟-Modality_ : ∀{P m n} -> {{_ : hasDecidableEquality P}} -> (k l : Modality P m n) -> isDecidable (k ≡ l)
-_≟-Modality_ {P} id id = yes refl-≡
-_≟-Modality_ {P} id (x ⨾ l) = no (λ ())
-_≟-Modality_ {P} (x ⨾ k) id = no (λ ())
-_≟-Modality_ {P} (_⨾_ {n = n} x k) (_⨾_ {n = n₁} y l) with n ≟ n₁
+_≟-ModalityHom_ : ∀{P m n} -> {{_ : hasDecidableEquality P}} -> (k l : ModalityHom P m n) -> isDecidable (k ≡ l)
+_≟-ModalityHom_ {P} id id = yes refl-≡
+_≟-ModalityHom_ {P} id (x ⨾ l) = no (λ ())
+_≟-ModalityHom_ {P} (x ⨾ k) id = no (λ ())
+_≟-ModalityHom_ {P} (_⨾_ {n = n} x k) (_⨾_ {n = n₁} y l) with n ≟ n₁
 ... | no p = no λ {refl -> p refl}
 ... | yes refl with x ≟ y
 ... | no p = no λ {refl -> p refl}
-... | yes refl with k ≟-Modality l
+... | yes refl with k ≟-ModalityHom l
 ... | no p = no λ {refl -> p refl}
 ... | yes refl = yes refl
 
 instance
-  hasDecidableEquality:Modality : ∀{P m n} {{_ : hasDecidableEquality P}} -> hasDecidableEquality (Modality P m n)
-  hasDecidableEquality:Modality = record { _≟_ = _≟-Modality_ }
+  hasDecidableEquality:ModalityHom : ∀{P m n} {{_ : hasDecidableEquality P}} -> hasDecidableEquality (ModalityHom P m n)
+  hasDecidableEquality:ModalityHom = record { _≟_ = _≟-ModalityHom_ }
 
+
+---------------------------------------------
+-- Deriving eq for Modality using Prelude
+
+-- eqConstTerm : {l : List ℕ} (k k₁ : ConstTerm l) → Dec-Prelude (StrId k k₁)
+_≟-Modality_ : ∀{P} -> {{_ : hasDecidableEquality P}} -> (k l : Modality P) -> isDecidable (k ≡ l)
+(k₁ ↝ l₁ ∋ hom₁) ≟-Modality (k₂ ↝ l₂ ∋ hom₂) with k₁ ≟ k₂
+... | no p = no λ {refl -> p refl}
+... | yes refl with l₁ ≟ l₂
+... | no p = no λ {refl -> p refl }
+... | yes refl with hom₁ ≟ hom₂
+... | no p = no λ {refl -> p refl }
+... | yes refl = yes refl-≡
+
+
+instance
+  hasDecidableEquality:Modality : ∀{P} {{_ : hasDecidableEquality P}} -> hasDecidableEquality (Modality P)
+  hasDecidableEquality:Modality = record { _≟_ = _≟-Modality_ }
 
 
 ---------------------------------------------
@@ -285,15 +303,11 @@ module _ {P : 𝒰₀} {{_ : hasDecidableEquality P}} where
   ... | yes refl with x ≟ y
   ... | no p = no λ {refl -> p refl}
   ... | yes refl = yes refl
-  (x / p) ≟-KindedTerm (y / q) with x ≟-Term y
+  (x // p) ≟-KindedTerm (y // q) with x ≟-Term y
   ... | no p = no λ {refl -> p refl}
-  (_/_ {k} {l} x p ≟-KindedTerm _/_ {k₁} {l₁} x q) | yes refl-≡ with k ≟ k₁
-  ... | no p = no λ {refl -> p refl}
-  ... | yes refl with l ≟ l₁
-  ... | no p = no λ {refl -> p refl }
   ... | yes refl with p ≟ q
-  ... | no p = no λ {refl -> p refl }
-  ... | yes refl = yes refl-≡
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl = yes refl
 
 
   instance

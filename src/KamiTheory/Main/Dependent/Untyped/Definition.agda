@@ -196,12 +196,20 @@ data BaseModality P : (m n : Mode) -> Set where
 
 -- in general, modalities are concatenations
 -- of base modalities
-data Modality P : (m n : Mode) -> Set where
-  id : ∀{m} -> Modality P m m
-  _⨾_ : ∀{m n o} -> BaseModality P m n  -> Modality P n o -> Modality P m o
+data ModalityHom P : (m n : Mode) -> Set where
+  id : ∀{m} -> ModalityHom P m m
+  _⨾_ : ∀{m n o} -> BaseModality P m n  -> ModalityHom P n o -> ModalityHom P m o
 
 infixr 80 _⨾_
 
+
+record Modality P : Set where
+  constructor _↝_∋_
+  field dom : Mode
+  field cod : Mode
+  field hom : ModalityHom P dom cod
+
+open Modality public
 
 
 -- data MLMod (P : Set) : Set where
@@ -219,8 +227,6 @@ infixr 80 _⨾_
 --   -- Kami: A special constₜructor for modalities
 --   mod : ∀{m n} -> Modality P m n -> BaseTerm P
 
-data WrappedMod P : Set where
-  wrappedMod : ∀{k l} -> Modality P k l -> WrappedMod P
 
 data Term (P : Set) (n : Nat) : Set
 
@@ -228,7 +234,7 @@ data KindedTerm (P : Set) (n : Nat) : (k : Metakind) -> Set where
   term : Term P n -> KindedTerm P n term
   location : (U : P) -> KindedTerm P n location
   basemod : ∀{k l} -> BaseModality P k l -> KindedTerm P n basemod
-  _/_ : ∀{k l} -> Term P n -> Modality P k l -> KindedTerm P n entry
+  _//_ : Term P n -> Modality P -> KindedTerm P n entry
 
 data Term P n where
   gen : {bs : List (Metakind × Nat)} (k : Kind bs) (c : GenTs (KindedTerm P) n bs) → Term P n
@@ -250,7 +256,10 @@ Entry P n = KindedTerm P n entry
 
 -- open Entry public
 
-infixl 21 _/_
+pattern _/_ A μs = A // _ ↝ _ ∋ μs
+
+infixl 21 _//_ _/_
+infixl 40 _↝_∋_
 
 -- pattern _/ₜ_ a b     = gen (main 𝓀-/) (a ∷ b ∷ [])
 -- pattern ◯           = (ML Global)
@@ -357,6 +366,8 @@ pattern recv t       = gen (main 𝓀-recv) (term t ∷ [])
 pattern mod t        = gen (main 𝓀-mod) (term t ∷ [])
 pattern unmod t      = gen (main 𝓀-unmod) (term t ∷ [])
 pattern narrow t     = gen (main 𝓀-narrow) (term t ∷ [])
+
+
 
 -- pattern locskip      = gen (main 𝓀-locskip) []
 

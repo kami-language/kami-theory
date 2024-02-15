@@ -62,7 +62,7 @@ module Examples where
 
   all = uu ∨ vv ∨ ww
 
-  open Typecheck (PP) {{hasDecidableEquality:𝒩}}
+  open Typecheck (PP) {{hasDecidableEquality:𝒩}} {{isDecidablePreorder:𝒩}}
 
 
   P : 𝒰 _
@@ -116,7 +116,7 @@ module Examples where
              Π (Vec NN (narrow (var zero)) / `＠` (uu) ⨾ id) ▹
              Vec NN (narrow (var (suc zero))) / `＠` vv ⨾ id
              ≔ {!!}
-  sendvec1 = lamⱼ {!!} (lamⱼ {!!} (vecrecⱼ {!!} {!!} {!!} {!var (suc zero)!} {!!}))
+  sendvec1 = lamⱼ {!!} (lamⱼ {!!} (vecrecⱼ {!!} {!!} {!!} (var (suc zero)) {!!}))
 
 
 
