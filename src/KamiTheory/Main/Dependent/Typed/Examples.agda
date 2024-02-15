@@ -87,6 +87,40 @@ module Examples where
   εε : Con (Entry P) zero
   εε = ε
 
+
+  ---------------------------------------------
+  -- automatic derivation
+
+  -------------------
+  -- deriving variables in a context
+  P0 : all ∣ εε ∙ (NN / `＠` uu ⨾ id) ⊢ var zero ∶ NN / `＠` uu ⨾ id
+  P0 = proof
+
+  P1 : all ∣ εε ∙ (NN / `＠` uu ⨾ id) ∙ (NN / `＠` vv ⨾ id) ⊢ var (suc zero) ∶ NN / `＠` uu ⨾ id
+  P1 = proof
+
+  P2 : all ∣ εε ∙ (NN / `＠` uu ⨾ id) ∙ (wk (liftn (step id) n0) NN / `＠` uu ⨾ id) ⊢ var (zero) ∶ NN [ zeroₜ ] / `＠` uu ⨾ id
+  P2 = proof
+
+  -------------------
+  -- deriving functions
+  P3 : all ∣ εε ⊢ lam (var zero) ∶ (NN / `＠` uu ⨾ id) ▹▹ NN / `＠` uu ⨾ id
+  P3 = proof
+
+
+
+  ---------------------------------------------
+  -- manual examples
+  sendvec1 : all ∣ εε ⊢
+             Π (NN / `＠` (uu ∧ vv) ⨾ id) ▹
+             Π (Vec NN (narrow (var zero)) / `＠` (uu) ⨾ id) ▹
+             Vec NN (narrow (var (suc zero))) / `＠` vv ⨾ id
+             ≔ {!!}
+  sendvec1 = lamⱼ {!!} (lamⱼ {!!} (vecrecⱼ {!!} {!!} {!!} {!var (suc zero)!} {!!}))
+
+
+
+{-
   -- easy, a variable in a context:
   t0 : all ∣ εε ∙ (NN / `＠` U ⨾ id) ⊢ var zero ∶ NN / `＠` U ⨾ id
   t0 = var zero
@@ -99,27 +133,21 @@ module Examples where
   +ₙ : all ∣ εε ⊢ lam (lam (natrec NN (var (suc zero)) _ _)) ∶ (NN /  `＠` U ⨾ id) ▹▹ ((NN /  `＠` U ⨾ id) ▹▹ NN) /  `＠` U ⨾ id
   +ₙ = lamⱼ NNⱼ (lamⱼ NNⱼ (natrecⱼ NNⱼ (var (suc zero)) (lamⱼ NNⱼ (lamⱼ NNⱼ (sucⱼ (var zero)))) (var zero)))
 
-  zerov : all ∣ εε  ⊢ lam (natrec (Vec NN (var zero)) nilₜ (lam (lam (consₜ zeroₜ (var zero)))) (var zero)) ∶ Π (NN / `＠` U ⨾ id) ▹ (Vec NN (var zero)) / `＠` U ⨾ id
+-}
+
+{-
+  zerov : all ∣ εε  ⊢ lam (natrec (Vec NN (var zero)) nilₜ (lam (lam (consₜ zeroₜ (var zero)))) (var zero)) ∶ Π (NN / `＠` uu ⨾ id) ▹ (Vec NN (var zero)) / `＠` uu ⨾ id
   zerov = lamⱼ NNⱼ (natrecⱼ (Vecⱼ NNⱼ (var zero)) nilⱼ ( (lamⱼ NNⱼ (lamⱼ                     -- now lets call this NNⱼ variable n
                                    (Vecⱼ NNⱼ (var zero))   -- and this vec variable vv (it has length n)
                                    (consⱼ -- we want to append to vv
-                                          {!zeroⱼ!} -- we want to append zero (ugh)
-                                          {!var zero!}))) -- we want to append to vv, yes!
+                                          (zeroⱼ ) -- we want to append zero (ugh)
+                                          (var zero)))) -- we want to append to vv, yes!
                                   ) (var zero))
+
+  -}
 
   -- ttt = derive-Var (εε ∙ (NN / ▲ uu)) zero NN (▲ uu)
 
-  -- P0 : all ∣ εε ∙ (NN / ▲ uu) ⊢ var zero ∶ NN / ▲ uu
-  -- P0 = proof
-
-  -- P1 : all ∣ εε ∙ (NN / ▲ uu) ∙ (NN / ▲ vv) ⊢ var (suc zero) ∶ NN / ▲ uu
-  -- P1 = proof
-
-  -- P2 : all ∣ εε ∙ (NN / ▲ U) ∙ wk (liftn (step id) n0) (NN / ▲ U) ⊢ var (suc zero) ∶ NN [ zeroₜ ] / ▲ U
-  -- P2 = {!proof!}
-
-  -- P2' : all ∣ ε ∙ (NN / ▲ U) ∙ (NN / ▲ U) ⊢ var (suc zero) ∶ NN / ▲ U
-  -- P2' = {!proof!}
 
 
   -- +ₙ : all ∣ εε ⊢ lam (lam (natrec NN (var (suc zero)) _ _)) ∶ (NN / ▲ U) ▹▹ ((NN / ▲ U) ▹▹ NN) / ▲ U
