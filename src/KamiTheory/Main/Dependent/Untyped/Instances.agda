@@ -7,6 +7,7 @@ open import Agora.Conventions
 
 open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
+open import KamiTheory.Main.Dependent.Modality.Definition
 
 open import Prelude.Equality using (Eq)
 open import Prelude.Decidable using () renaming (Dec to Dec-Prelude)
@@ -110,46 +111,46 @@ instance
   hasDecidableEquality:Kind = record { _≟_ = _≟-Kind_ }
 
 ---------------------------------------------
--- Deriving eq for BaseModality using Prelude
+-- Deriving eq for BaseModeHom using Prelude
 
 -- eqConstTerm : {l : List ℕ} (k k₁ : ConstTerm l) → Dec-Prelude (StrId k k₁)
-eqBaseModality : deriveEqType BaseModality
-unquoteDef eqBaseModality = deriveEqDef eqBaseModality (quote BaseModality)
+eqBaseModeHom : deriveEqType BaseModeHom
+unquoteDef eqBaseModeHom = deriveEqDef eqBaseModeHom (quote BaseModeHom)
 
-_≟-BaseModality_ : ∀{P m n} -> {{_ : hasDecidableEquality P}} -> (k l : BaseModality P m n) -> isDecidable (k ≡ l)
-_≟-BaseModality_ {P} = λ k l -> cast-Dec-Prelude (eqBaseModality k l)
+_≟-BaseModeHom_ : ∀{P m n} -> {{_ : hasDecidableEquality P}} -> (k l : BaseModeHom P m n) -> isDecidable (k ≡ l)
+_≟-BaseModeHom_ {P} = λ k l -> cast-Dec-Prelude (eqBaseModeHom k l)
   where
     instance
       _ : Eq P
       _ = record { _==_ = λ x y -> cast⁻¹-Dec-Prelude (x ≟ y) }
 
 instance
-  hasDecidableEquality:BaseModality : ∀{P m n} {{_ : hasDecidableEquality P}} -> hasDecidableEquality (BaseModality P m n)
-  hasDecidableEquality:BaseModality = record { _≟_ = _≟-BaseModality_ }
+  hasDecidableEquality:BaseModeHom : ∀{P m n} {{_ : hasDecidableEquality P}} -> hasDecidableEquality (BaseModeHom P m n)
+  hasDecidableEquality:BaseModeHom = record { _≟_ = _≟-BaseModeHom_ }
 
 instance
-  Eq:BaseModality : ∀{P m n} -> {{_ : Eq P}} -> Eq (BaseModality P m n)
-  Eq:BaseModality = record { _==_ = eqBaseModality }
+  Eq:BaseModeHom : ∀{P m n} -> {{_ : Eq P}} -> Eq (BaseModeHom P m n)
+  Eq:BaseModeHom = record { _==_ = eqBaseModeHom }
 
 ---------------------------------------------
--- Deriving eq for ModalityHom using Prelude
+-- Deriving eq for ModeHom using Prelude
 
 -- eqConstTerm : {l : List ℕ} (k k₁ : ConstTerm l) → Dec-Prelude (StrId k k₁)
-_≟-ModalityHom_ : ∀{P m n} -> {{_ : hasDecidableEquality P}} -> (k l : ModalityHom P m n) -> isDecidable (k ≡ l)
-_≟-ModalityHom_ {P} id id = yes refl-≡
-_≟-ModalityHom_ {P} id (x ⨾ l) = no (λ ())
-_≟-ModalityHom_ {P} (x ⨾ k) id = no (λ ())
-_≟-ModalityHom_ {P} (_⨾_ {n = n} x k) (_⨾_ {n = n₁} y l) with n ≟ n₁
+_≟-ModeHom_ : ∀{P m n} -> {{_ : hasDecidableEquality P}} -> (k l : ModeHom P m n) -> isDecidable (k ≡ l)
+_≟-ModeHom_ {P} id id = yes refl-≡
+_≟-ModeHom_ {P} id (x ⨾ l) = no (λ ())
+_≟-ModeHom_ {P} (x ⨾ k) id = no (λ ())
+_≟-ModeHom_ {P} (_⨾_ {n = n} x k) (_⨾_ {n = n₁} y l) with n ≟ n₁
 ... | no p = no λ {refl -> p refl}
 ... | yes refl with x ≟ y
 ... | no p = no λ {refl -> p refl}
-... | yes refl with k ≟-ModalityHom l
+... | yes refl with k ≟-ModeHom l
 ... | no p = no λ {refl -> p refl}
 ... | yes refl = yes refl
 
 instance
-  hasDecidableEquality:ModalityHom : ∀{P m n} {{_ : hasDecidableEquality P}} -> hasDecidableEquality (ModalityHom P m n)
-  hasDecidableEquality:ModalityHom = record { _≟_ = _≟-ModalityHom_ }
+  hasDecidableEquality:ModeHom : ∀{P m n} {{_ : hasDecidableEquality P}} -> hasDecidableEquality (ModeHom P m n)
+  hasDecidableEquality:ModeHom = record { _≟_ = _≟-ModeHom_ }
 
 
 ---------------------------------------------

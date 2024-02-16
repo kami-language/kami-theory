@@ -25,6 +25,7 @@ open import KamiTheory.Data.UniqueSortedList.Definition
 open import KamiTheory.Order.StrictOrder.Base
 open import KamiTheory.Order.StrictOrder.Instances.UniqueSortedList
 open import KamiTheory.Main.Dependent.Untyped.Definition
+open import KamiTheory.Main.Dependent.Modality.Definition
 
 
 
@@ -118,12 +119,12 @@ module Examples where
              Π (Vec NN (var zero) / `＠` (uu) ⨾ id) ▹
              Vec NN (var (suc zero)) / `＠` vv ⨾ id
              ≔ {!!}
-  sendvec1 = lamⱼ {!!} (lamⱼ {!!} (vecrecⱼ
-             (narrowⱼ {!!} (Vecⱼ NNⱼ {!(var (suc (zero)))!})) -- = G
-             {!!} -- = z
+  sendvec1 = lamⱼ proof (lamⱼ proof (vecrecⱼ {U = uu} {V = vv} {μs = id} {ηs = id}
+             ((Vecⱼ NNⱼ ((var (suc (zero)) proof)))) -- = G
+             nilⱼ -- = z
              {!!} -- = s
-             ((var {{ΓP = {!!}}} (suc zero))) -- = n
-             (var {{ΓP = {!!}}} {!!}))) -- = v
+             ((var (suc zero) proof)) -- = n
+             (var zero proof))) -- = v
 
 
 

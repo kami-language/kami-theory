@@ -9,6 +9,7 @@ open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
 open import KamiTheory.Main.Dependent.Untyped.Instances
 open import KamiTheory.Main.Dependent.Typed.Definition
+open import KamiTheory.Main.Dependent.Modality.Definition
 
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Fin
 -- open import KamiTheory.ThirdParty.logrel-mltt.Tools.Nat
@@ -27,7 +28,7 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
   private variable
     -- n m : Nat
     k l : Mode
-    μs : ModalityHom P k l
+    μs : ModeHom P k l
     p q : Term P n
     t u : Term P n
     Γ  : Con (Entry P) n
@@ -110,23 +111,23 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
   ------------------------------------------------------------------------
   -- Terms (infering Sort, infering Mod)
 
-  derive-Term-Sort↑,Mod↑ : ∀ Γ -> (t : Term P n) -> Maybe (∑ λ (E : Entry P n) -> W ∣ Γ ⊢ t ∶ E)
-  derive-Term-Sort↑,Mod↑ Γ (var x) with ((A / p) , Ep) <- infer-Var Γ x = do
-    G' <- derive-Ctx Γ
-    just ((A / p) , var {{ΓP = because G'}} Ep)
+  -- derive-Term-Sort↑,Mod↑ : ∀ Γ -> (t : Term P n) -> Maybe (∑ λ (E : Entry P n) -> W ∣ Γ ⊢ t ∶ E)
+  -- derive-Term-Sort↑,Mod↑ Γ (var x) with ((A / p) , Ep) <- infer-Var Γ x = do
+  --   G' <- derive-Ctx Γ
+  --   just ((A / p) , var {{ΓP = because G'}} Ep)
 
-  derive-Term-Sort↑,Mod↑ Γ t = nothing
+  -- derive-Term-Sort↑,Mod↑ Γ t = nothing
 
   ------------------------------------------------------------------------
   -- Terms (checking Sort, infering Mod)
-  derive-Term-Sort↓,Mod↑ : ∀ Γ -> (t A : Term P n) -> Maybe (∑ λ (μs : Modality P) -> W ∣ Γ ⊢ t ∶ (A // μs))
-  derive-Term-Sort↓,Mod↑ Γ (var x) A with derive-Var-Sort↓,Mod↑ Γ x A
-  ... | nothing = nothing
-  ... | yes (μs , Ap) = do
-    G' <- derive-Ctx Γ
-    yes (μs , var {{ΓP = because G'}} Ap)
+  -- derive-Term-Sort↓,Mod↑ : ∀ Γ -> (t A : Term P n) -> Maybe (∑ λ (μs : Modality P) -> W ∣ Γ ⊢ t ∶ (A // μs))
+  -- derive-Term-Sort↓,Mod↑ Γ (var x) A with derive-Var-Sort↓,Mod↑ Γ x A
+  -- ... | nothing = nothing
+  -- ... | yes (μs , Ap) = do
+  --   G' <- derive-Ctx Γ
+  --   yes (μs , var {{ΓP = because G'}} Ap)
 
-  derive-Term-Sort↓,Mod↑ Γ t A = nothing
+  -- derive-Term-Sort↓,Mod↑ Γ t A = nothing
 
   ------------------------------------------------------------------------
   -- Terms (checking Sort, checking Mod)
@@ -150,10 +151,17 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
 
   -------------------
   -- standard MLTT
-  derive-Term-Sort↓,Mod↓ Γ (var x) A p = do
-    A' <- (derive-Var-Sort↓,Mod↓ Γ x A p)
+  derive-Term-Sort↓,Mod↓ Γ (var x) A (k ↝ l ∋ p) with (derive-Var-Sort↓,Mod↑ Γ x A)
+  ... | nothing = nothing
+  ... | yes (m ↝ n ∋ q , A') with k ≟ m
+  ... | no p = nothing
+  ... | yes refl with l ≟ n
+  ... | no p = nothing
+  ... | yes refl = do
     G' <- derive-Ctx Γ
-    just (var {{ΓP = because G'}} A')
+    ξ <- derive-ModeTrans q p
+    just (var {{ΓP = because G'}} A' ξ)
+
   derive-Term-Sort↓,Mod↓ Γ (lam t) (Π (A / p) ▹ B) q = do
     A' <- derive-Entry Γ (A / p)
     t' <- derive-Term-Sort↓,Mod↓ (Γ ∙ (A / p)) t B q
@@ -176,5 +184,9 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
   instance
     isDerivable:Term : isDerivable (W ∣ Γ ⊢ t ∶ A / μs)
     isDerivable:Term = record { derive = derive-Term-Sort↓,Mod↓ _ _ _ _ }
+
+  instance
+    isDerivable:ModeTrans : ∀{m n} -> {μs ηs : ModeHom P m n} -> isDerivable (ModeTrans μs ηs)
+    isDerivable:ModeTrans = record { derive = derive-ModeTrans _ _ }
 
 

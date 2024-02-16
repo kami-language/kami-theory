@@ -65,10 +65,29 @@ module _ {P : 𝒰 _} {{_ : Preorder (ℓ₀ , ℓ₀ , ℓ₀) on P }} where
 
   data ModeTrans : {m n : Mode} (μs ηs : ModeHom P m n) -> Set where
     id : ∀{m n} -> {μs : ModeHom P m n} -> ModeTrans μs μs
+    base : ∀{m n} -> {α β : ModeHom P m n}
+          -> BaseModeTrans α β
+          -> ModeTrans α β
     _⨾_ : ∀{m n k} -> {α₀ α₁ : ModeHom P m n} -> {β₀ β₁ : ModeHom P n k}
           -> ModeTrans α₀ α₁
           -> ModeTrans β₀ β₁
           -> ModeTrans (α₀ ◆ β₀) (α₁ ◆ β₁)
+
+  module _ {{_ : isDecidablePreorder ′ P ′}} where
+
+    derive-ModeTrans : {m n : Mode} (μs ηs : ModeHom P m n)
+                      -> Maybe (ModeTrans μs ηs)
+    derive-ModeTrans id id = yes id
+    derive-ModeTrans id (x ⨾ q) = nothing
+    derive-ModeTrans (x ⨾ p) id = nothing
+    derive-ModeTrans (`＠` U ⨾ p) (`＠` V ⨾ q) with decide-≤ U V
+    ... | no x = nothing
+    ... | yes ϕ with derive-ModeTrans p q
+    ... | no x = nothing
+    ... | yes ξ = yes (base (narrow ϕ) ⨾ ξ)
+    derive-ModeTrans (`[]` ⨾ p) (`[]` ⨾ q) with derive-ModeTrans p q
+    ... | nothing = nothing
+    ... | yes ξ = yes (id ⨾ ξ)
 
 
 
