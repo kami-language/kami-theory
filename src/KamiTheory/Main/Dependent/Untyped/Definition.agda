@@ -74,7 +74,7 @@ private
 --   location : Arity
 
 data Metakind : Set where
-  term entry location basemod : Metakind
+  term entry location basemod modehom transitions : Metakind
 
 -- Representation of sub terms using a list of binding levels
 
@@ -116,7 +116,7 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
 
   Emptyreckind : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
-  -- Kami modality system
+  -- Kami modehom system
   -- 𝓀-/ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
   -- Kami modalities
@@ -132,12 +132,28 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   -- 𝓀-＠ : MainKind ((term , n0) ∷ (location , n0) ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
   -- 𝓀-Com : MainKind ((location , n0) ∷ (term , n0) ∷ []) -- Com : ⟨ P ⟩ -> Γ ⊢Global -> Γ ⊢Global
 
-  -- Kami modality terms
+  -- Kami modehom terms
   𝓀-mod : MainKind ((term , n0) ∷ [])
   𝓀-unmod : MainKind ((term , n0) ∷ [])
   𝓀-send : MainKind ((term , n0) ∷ [])
   𝓀-recv : MainKind ((term , n0) ∷ [])
-  𝓀-narrow : MainKind ((term , n0) ∷ [])
+  -- 𝓀-narrow : MainKind ((term , n0) ∷ [])
+
+  ---------------------------------------------
+  -- Mode transformations (transitions)
+
+  -- The type of transition spaces
+  𝓀-Tr : MainKind []
+
+  -- Constructing a transition space with a single transition
+  𝓀-tr : MainKind ((term , n0) ∷ (modehom , n0) ∷ (modehom , n0) ∷ [])
+
+  -- Constructing a space from multiple transitions
+  -- 𝓀-transitions : MainKind ((transitions , n0) ∷ [])
+
+  -- Concatenating two spaces
+  𝓀-≫ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
+
 
   -------------------
   -- Kami types (Com)
@@ -205,6 +221,7 @@ data KindedTerm (P : Set) (n : Nat) : (k : Metakind) -> Set where
   term : Term P n -> KindedTerm P n term
   location : (U : P) -> KindedTerm P n location
   basemod : ∀{k l} -> BaseModeHom P k l -> KindedTerm P n basemod
+  modehom : ∀{k l} -> ModeHom P k l -> KindedTerm P n modehom
   _//_ : Term P n -> Modality P -> KindedTerm P n entry
 
 data Term P n where
@@ -335,8 +352,12 @@ pattern send t       = gen (main 𝓀-send) (term t ∷ [])
 pattern recv t       = gen (main 𝓀-recv) (term t ∷ [])
 pattern mod t        = gen (main 𝓀-mod) (term t ∷ [])
 pattern unmod t      = gen (main 𝓀-unmod) (term t ∷ [])
--- pattern narrow t     = gen (main 𝓀-narrow) (term t ∷ [])
 
+
+-- Transformations / Transitions
+pattern Tr           = gen (main 𝓀-Tr) ([])
+pattern tr A μ η     = gen (main 𝓀-tr) (term A ∷ modehom μ ∷ modehom η ∷ [])
+pattern _≫_ m n     = gen (main 𝓀-≫) (term m ∷ term n ∷ [])
 
 
 -- pattern locskip      = gen (main 𝓀-locskip) []
@@ -608,6 +629,7 @@ mutual
   wk-Kinded ρ (term x) = term (wk ρ x)
   wk-Kinded ρ (location U) = location U
   wk-Kinded ρ (basemod μ) = basemod μ
+  wk-Kinded ρ (modehom μ) = modehom μ
   wk-Kinded ρ (x / p) = wk ρ x / p
 
   wk : {m n : Nat} (ρ : Wk m n) (t : Term P n) → Term P m
@@ -783,6 +805,7 @@ mutual
   subst-Kinded σ (term x) = term (subst σ x)
   subst-Kinded σ (location U) = location U
   subst-Kinded σ (basemod μ) = basemod μ
+  subst-Kinded σ (modehom μ) = modehom μ
   subst-Kinded σ (x / p) = subst σ x / p
 
   subst : (σ : Subst P m n) (t : Term P n) → Term P m

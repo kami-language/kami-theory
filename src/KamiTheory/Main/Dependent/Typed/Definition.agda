@@ -183,6 +183,12 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
                -> W ∣ Γ ⊢Entry X / `＠` U ⨾ μs
                -> W ∣ Γ ⊢Entry X / `＠` V ⨾ μs
 
+    -------------------
+    -- Mode transformations (transitions)
+
+    Trⱼ : W ∣ Γ ⊢Entry Tr // ◯ ↝ ◯ ∋ id
+
+
 
 
   -- Well-formed term of a type
@@ -194,14 +200,19 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     modⱼ : W ∣ Γ ⊢ t ∶ X / μ ⨾ μs -> W ∣ Γ ⊢ mod t ∶ Modal X μ / μs
     unmodⱼ : W ∣ Γ ⊢ t ∶ Modal X μ / μs -> W ∣ Γ ⊢ unmod t ∶ X / μ ⨾ μs
 
+
+    -------------------
+    -- Transformations between modehoms (transitions)
+    trⱼ : W ∣ Γ ⊢Entry A / μs
+        → ModeTrans μs ηs
+        →  W ∣ Γ ⊢ tr A μs ηs ∶ Tr // ◯ ↝ ◯ ∋ id
+
+
+
     -------------------
     -- Interactions between modalities
-    sendⱼ : ∀ U -> W ∣ Γ ⊢ t ∶ X / μs -> W ∣ Γ ⊢ send t ∶ X / `＠` U ⨾ `[]` ⨾ μs
-    recvⱼ : ∀ U -> W ∣ Γ ⊢ t ∶ X / `[]` ⨾ `＠` U ⨾ μs -> W ∣ Γ ⊢ recv t ∶ X / μs
-
-    -- narrowⱼ : (ϕ : U ≤ V)
-    --            -> W ∣ Γ ⊢ t ∶ X / `＠` U ⨾ μs
-    --            -> W ∣ Γ ⊢ t ∶ X / `＠` V ⨾ μs
+    -- sendⱼ : ∀ U -> W ∣ Γ ⊢ t ∶ X / μs -> W ∣ Γ ⊢ send t ∶ X / `＠` U ⨾ `[]` ⨾ μs
+    -- recvⱼ : ∀ U -> W ∣ Γ ⊢ t ∶ X / `[]` ⨾ `＠` U ⨾ μs -> W ∣ Γ ⊢ recv t ∶ X / μs
 
 
     -------------------
@@ -275,10 +286,10 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
                             Π (Vec (wk1 A) (var x0) / `＠` U ⨾ μs) ▹ -- for all vectors vs of that length
                             Π (wk1 (wk1 A) / `＠` U ⨾ μs) ▹ -- for all v : A
                               (((wk1 G) / `＠` V ⨾ ηs) ▹▹ -- given a proof of G we get a proof of G [ l+1 ] [ v :: vs ]
-                                (wk1 (wk1 (wk1 G)) [ consₜ (var (x0 +1)) (var ((x0 +1) +1 +1)) ])) / `＠` V ⨾ ηs -- vector is innermost A var v appended to Vec var vs
-                                                   [ sucₜ (var (((x0 +1) +1 ))) ] -- length is suc of outermost NN var l
-                                -- (wk1 (wk1 (wk1 G)) [ sucₜ (var (((x0 +1) +1 ) +1)) ] -- length is suc of outermost NN var l
-                                --                    [ consₜ (var (x0 +1)) (var ((x0 +1) +1)) ])) / `＠` V ⨾ ηs -- vector is innermost A var v appended to Vec var vs
+                                -- (wk1 (wk1 (wk1 G)) [ consₜ (var (x0 +1)) (var ((x0 +1) +1 +1)) ])) / `＠` V ⨾ ηs -- vector is innermost A var v appended to Vec var vs
+                                --                    [ sucₜ (var (((x0 +1) +1 ))) ] -- length is suc of outermost NN var l
+                                (wk1 (wk1 (wk1 G)) [ sucₜ (var (((x0 +1) +1 ) +1)) ] -- length is suc of outermost NN var l
+                                                   [ consₜ (var (x0 +1)) (var ((x0 +1) +1)) ])) / `＠` V ⨾ ηs -- vector is innermost A var v appended to Vec var vs
               → W ∣ Γ ⊢ l ∶ NN / `＠` (U ∧ V) ⨾ μs
               → W ∣ Γ ⊢ vs ∶ Vec A l / `＠` U ⨾ μs
               → W ∣ Γ ⊢ vecrec G z s l vs ∶ G [ wk1 vs ] [ l ]  / `＠` V ⨾ ηs
