@@ -35,11 +35,11 @@ open import Agora.Order.Lattice
 
 open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
+open import KamiTheory.Main.Dependent.Modality.Definition
 
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Fin
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Nat
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Product
-
 
 
 
@@ -74,11 +74,11 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   private variable
     -- n m : Nat
     k l o q r : Mode
-    μs : ModalityHom P k l
-    ωs : ModalityHom P l o
-    ηs : ModalityHom P q r
-    μ : BaseModality P k l
-    ω : BaseModality P l o
+    μs : ModeHom P k l
+    ωs : ModeHom P l o
+    ηs : ModeHom P q r
+    μ : BaseModeHom P k l
+    ω : BaseModeHom P l o
     Γ  : Con (Entry P) n
     A B : Term P n
     a b : Term P n
