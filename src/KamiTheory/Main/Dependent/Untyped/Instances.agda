@@ -309,7 +309,9 @@ module _ {P : 𝒰₀} {{_ : hasDecidableEquality P}} where
   ... | yes refl with p ≟ q
   ... | no p = no λ {refl -> p refl}
   ... | yes refl = yes refl
-
+  modehom y ≟-KindedTerm modehom x with (_ ↝ _ ∋ x) ≟ (_ ↝ _ ∋ y)
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl = yes refl
 
   instance
     hasDecidableEquality:Term : ∀{n} -> hasDecidableEquality (Term P n)

@@ -1,4 +1,6 @@
 
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module KamiTheory.Main.Dependent.Modality.Definition where
 
 open import Agora.Conventions
@@ -55,39 +57,50 @@ id ◆ q = q
 open import Agora.Order.Preorder
 open import Agora.Order.Lattice
 
+data Visibility : Set where
+  vis : Visibility
+  invis : Visibility
+
+_⋆_ : (v w : Visibility) -> Visibility
+vis ⋆ w = vis
+invis ⋆ w = w
+
 module _ {P : 𝒰 _} {{_ : Preorder (ℓ₀ , ℓ₀ , ℓ₀) on P }} where
 
   private variable
     U V : P
 
-  data BaseModeTrans : {m n : Mode} (μs ηs : ModeHom P m n) -> Set where
-    narrow : U ≤ V -> BaseModeTrans (`＠` U ⨾ id) (`＠` V ⨾ id)
+  data BaseModeTrans : {m n : Mode} (μs ηs : ModeHom P m n) -> Visibility -> Set where
+    narrow : U ≤ V -> BaseModeTrans (`＠` U ⨾ id) (`＠` V ⨾ id) invis
+    send : ∀ U -> BaseModeTrans id (`＠` U ⨾ `[]` ⨾ id) vis
+    recv : ∀ U -> BaseModeTrans (`[]` ⨾ `＠` U ⨾ id) id vis
 
-  data ModeTrans : {m n : Mode} (μs ηs : ModeHom P m n) -> Set where
-    id : ∀{m n} -> {μs : ModeHom P m n} -> ModeTrans μs μs
-    base : ∀{m n} -> {α β : ModeHom P m n}
-          -> BaseModeTrans α β
-          -> ModeTrans α β
-    _⨾_ : ∀{m n k} -> {α₀ α₁ : ModeHom P m n} -> {β₀ β₁ : ModeHom P n k}
-          -> ModeTrans α₀ α₁
-          -> ModeTrans β₀ β₁
-          -> ModeTrans (α₀ ◆ β₀) (α₁ ◆ β₁)
+  data ModeTrans : {m n : Mode} (μs ηs : ModeHom P m n) -> Visibility -> Set where
+    id : ∀{m n} -> {μs : ModeHom P m n} -> ModeTrans μs μs invis
+    base : ∀{m n v} -> {α β : ModeHom P m n}
+          -> BaseModeTrans α β v
+          -> ModeTrans α β v
+    _⨾_ : ∀{m n k v w} -> {α₀ α₁ : ModeHom P m n} -> {β₀ β₁ : ModeHom P n k}
+          -> ModeTrans α₀ α₁ v
+          -> ModeTrans β₀ β₁ w
+          -> ModeTrans (α₀ ◆ β₀) (α₁ ◆ β₁) (v ⋆ w)
 
   module _ {{_ : isDecidablePreorder ′ P ′}} where
 
-    derive-ModeTrans : {m n : Mode} (μs ηs : ModeHom P m n)
-                      -> Maybe (ModeTrans μs ηs)
-    derive-ModeTrans id id = yes id
-    derive-ModeTrans id (x ⨾ q) = nothing
-    derive-ModeTrans (x ⨾ p) id = nothing
-    derive-ModeTrans (`＠` U ⨾ p) (`＠` V ⨾ q) with decide-≤ U V
-    ... | no x = nothing
-    ... | yes ϕ with derive-ModeTrans p q
-    ... | no x = nothing
-    ... | yes ξ = yes (base (narrow ϕ) ⨾ ξ)
-    derive-ModeTrans (`[]` ⨾ p) (`[]` ⨾ q) with derive-ModeTrans p q
-    ... | nothing = nothing
-    ... | yes ξ = yes (id ⨾ ξ)
+    derive-ModeTrans : {m n : Mode} {v : Visibility} (μs ηs : ModeHom P m n)
+                      -> Maybe (ModeTrans μs ηs v)
+    derive-ModeTrans = {!!}
+    -- derive-ModeTrans id id = yes id
+    -- derive-ModeTrans id (x ⨾ q) = nothing
+    -- derive-ModeTrans (x ⨾ p) id = nothing
+    -- derive-ModeTrans (`＠` U ⨾ p) (`＠` V ⨾ q) with decide-≤ U V
+    -- ... | no x = nothing
+    -- ... | yes ϕ with derive-ModeTrans p q
+    -- ... | no x = nothing
+    -- ... | yes ξ = yes (base (narrow ϕ) ⨾ ξ)
+    -- derive-ModeTrans (`[]` ⨾ p) (`[]` ⨾ q) with derive-ModeTrans p q
+    -- ... | nothing = nothing
+    -- ... | yes ξ = yes (id ⨾ ξ)
 
 
 

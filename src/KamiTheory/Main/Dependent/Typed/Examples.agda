@@ -81,8 +81,8 @@ module Examples where
     A B C : Term P n
     U V W R : P
 
-  _∣_⊢_≔_ : (W : P) -> (Γ : Con (Entry P) n) → Entry P n → Term P n → Set
-  W ∣ Γ ⊢ E ≔ t = W ∣ Γ ⊢ t ∶ E
+  _⊢_≔_ : (Γ : Con (Entry P) n) → Entry P n → Term P n → Set
+  Γ ⊢ E ≔ t = Γ ⊢ t ∶ E
 
 
   εε : Con (Entry P) zero
@@ -94,37 +94,49 @@ module Examples where
 
   -------------------
   -- deriving variables in a context
-  P0 : all ∣ εε ∙ (NN / `＠` uu ⨾ id) ⊢ var zero ∶ NN / `＠` uu ⨾ id
-  P0 = proof
+  -- P0 : all ∣ εε ∙ (NN / `＠` uu ⨾ id) ⊢ var zero ∶ NN / `＠` uu ⨾ id
+  -- P0 = proof
 
-  P1 : all ∣ εε ∙ (NN / `＠` uu ⨾ id) ∙ (NN / `＠` vv ⨾ id) ⊢ var (suc zero) ∶ NN / `＠` uu ⨾ id
-  P1 = proof
+  -- P1 : all ∣ εε ∙ (NN / `＠` uu ⨾ id) ∙ (NN / `＠` vv ⨾ id) ⊢ var (suc zero) ∶ NN / `＠` uu ⨾ id
+  -- P1 = proof
 
-  P2 : all ∣ εε ∙ (NN / `＠` uu ⨾ id) ∙ (wk (liftn (step id) n0) NN / `＠` uu ⨾ id) ⊢ var (zero) ∶ NN [ zeroₜ ] / `＠` uu ⨾ id
-  P2 = proof
+  -- P2 : all ∣ εε ∙ (NN / `＠` uu ⨾ id) ∙ (wk (liftn (step id) n0) NN / `＠` uu ⨾ id) ⊢ var (zero) ∶ NN [ zeroₜ ] / `＠` uu ⨾ id
+  -- P2 = proof
 
-  -- P3 : εε ∙ (NN // ▲ ↝ ◯ ∋ `＠` (uu ∧-𝒩 vv) ⨾ id) ∙ (Vec NN (narrow (var zero)) ⊢Entry 
 
-  -------------------
-  -- deriving functions
-  PF0 : all ∣ εε ⊢ lam (var zero) ∶ (NN / `＠` uu ⨾ id) ▹▹ NN / `＠` uu ⨾ id
-  PF0 = proof
+  -- -------------------
+  -- -- deriving functions
+  -- PF0 : all ∣ εε ⊢ lam (var zero) ∶ (NN / `＠` uu ⨾ id) ▹▹ NN / `＠` uu ⨾ id
+  -- PF0 = proof
 
 
 
   ---------------------------------------------
   -- manual examples
-  sendvec1 : all ∣ εε ⊢
-             Π (NN / `＠` (uu ∧ vv) ⨾ id) ▹
-             Π (Vec NN (var zero) / `＠` (uu) ⨾ id) ▹
-             Vec NN (var (suc zero)) / `＠` vv ⨾ id
-             ≔ {!!}
-  sendvec1 = lamⱼ proof (lamⱼ proof (vecrecⱼ {U = uu} {V = vv} {μs = id} {ηs = id}
-             ((Vecⱼ NNⱼ ((var (suc (zero)) proof)))) -- = G
-             nilⱼ -- = z
-             {!!} -- = s
-             ((var (suc zero) proof)) -- = n
-             (var zero proof))) -- = v
+
+  com : εε ⊢ (Modal NN (`＠` uu) / id) ▹▹ [ _ ]▹ (Modal NN (`＠` vv)) / id
+     ≔ {!!}
+     -- lam (recv (mod (send (unmod (var zero)))))
+  com = lamⱼ proof (prepareⱼ (modⱼ (let-inⱼ (unmodⱼ (var zero id))
+                                   ()
+                                   )))
+
+
+
+
+
+
+  -- sendvec1 : all ∣ εε ⊢
+  --            Π (NN / `＠` (uu ∧ vv) ⨾ id) ▹
+  --            Π (Vec NN (var zero) / `＠` (uu) ⨾ id) ▹
+  --            Vec NN (var (suc zero)) / `＠` vv ⨾ id
+  --            ≔ {!!}
+  -- sendvec1 = lamⱼ proof (lamⱼ proof (vecrecⱼ {U = uu} {V = vv} {μs = id} {ηs = id}
+  --            ((Vecⱼ NNⱼ ((var (suc (zero)) proof)))) -- = G
+  --            nilⱼ -- = z
+  --            {!!} -- = s
+  --            ((var (suc zero) proof)) -- = n
+  --            (var zero proof))) -- = v
 
 
 

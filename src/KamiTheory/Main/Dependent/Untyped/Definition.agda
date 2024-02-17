@@ -135,8 +135,8 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   -- Kami modehom terms
   𝓀-mod : MainKind ((term , n0) ∷ [])
   𝓀-unmod : MainKind ((term , n0) ∷ [])
-  𝓀-send : MainKind ((term , n0) ∷ [])
-  𝓀-recv : MainKind ((term , n0) ∷ [])
+  -- 𝓀-send : MainKind ((term , n0) ∷ [])
+  -- 𝓀-recv : MainKind ((term , n0) ∷ [])
   -- 𝓀-narrow : MainKind ((term , n0) ∷ [])
 
   ---------------------------------------------
@@ -146,13 +146,35 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   𝓀-Tr : MainKind []
 
   -- Constructing a transition space with a single transition
-  𝓀-tr : MainKind ((term , n0) ∷ (modehom , n0) ∷ (modehom , n0) ∷ [])
+  𝓀-tr : MainKind ((term , n0) ∷ (modehom , n0) ∷ (modehom , n0) ∷ (term , n1) ∷ [])
+
+  -- identity transition
+  𝓀-id-Tr : MainKind []
 
   -- Constructing a space from multiple transitions
   -- 𝓀-transitions : MainKind ((transitions , n0) ∷ [])
 
   -- Concatenating two spaces
   𝓀-≫ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
+
+  ---------------------------------------------
+  -- Combining transition spaces with types
+  𝓀-[]▹ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
+  𝓀-exec : MainKind ((term , n0) ∷ [])
+  𝓀-prepare : MainKind ((term , n0) ∷ [])
+  𝓀-transform : MainKind ((term , n0) ∷ [])
+
+
+  ---------------------------------------------
+  -- Applying Mode transformations (transitions)
+
+  -- "apply the transformation from ηs to μs to t and put the result
+  --  into the context, such that s can use it"
+  --
+  -- let a = let-tr t μs ηs
+  -- in s
+  𝓀-let-tr : MainKind ((term , n0) ∷ (term , n1) ∷ [])
+  𝓀-let-in : MainKind ((term , n0) ∷ (term , n1) ∷ [])
 
 
   -------------------
@@ -348,16 +370,27 @@ pattern loc U t      = gen 𝓀-loc ((location U) ∷ term t ∷ []) -- NOTE, th
 pattern unloc t      = gen (main 𝓀-unloc) (term t ∷ [])
 
 
-pattern send t       = gen (main 𝓀-send) (term t ∷ [])
-pattern recv t       = gen (main 𝓀-recv) (term t ∷ [])
+-- pattern send t       = gen (main 𝓀-send) (term t ∷ [])
+-- pattern recv t       = gen (main 𝓀-recv) (term t ∷ [])
 pattern mod t        = gen (main 𝓀-mod) (term t ∷ [])
 pattern unmod t      = gen (main 𝓀-unmod) (term t ∷ [])
 
 
 -- Transformations / Transitions
 pattern Tr           = gen (main 𝓀-Tr) ([])
-pattern tr A μ η     = gen (main 𝓀-tr) (term A ∷ modehom μ ∷ modehom η ∷ [])
+pattern id-Tr        = gen (main 𝓀-id-Tr) ([])
+pattern _/_⇒_>_ A μ η B = gen (main 𝓀-tr) (term A ∷ modehom μ ∷ modehom η ∷ term B ∷ [])
 pattern _≫_ m n     = gen (main 𝓀-≫) (term m ∷ term n ∷ [])
+pattern [_]▹_ T A    = gen (main 𝓀-[]▹) (term T ∷ term A ∷ [])
+infixr 30 [_]▹_
+
+pattern exec t       = gen (main 𝓀-exec) (term t ∷ [])
+pattern prepare t       = gen (main 𝓀-prepare) (term t ∷ [])
+pattern transform t  = gen (main 𝓀-transform) (term t ∷ [])
+
+
+pattern let-tr t s   = gen (main 𝓀-let-tr) (term t ∷ term s ∷ [])
+pattern let-in t s   = gen (main 𝓀-let-in) (term t ∷ term s ∷ [])
 
 
 -- pattern locskip      = gen (main 𝓀-locskip) []

@@ -79,6 +79,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     ηs : ModeHom P q r
     μ : BaseModeHom P k l
     ω : BaseModeHom P l o
+    τ σ : Term P n -- Transitions
     Γ  : Con (Entry P) n
     A B : Term P n
     a b : Term P n
@@ -108,16 +109,11 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
   data ⊢Ctx_ : Con (Entry P) n → Set
   data _⊢Sort_ (Γ : Con (Entry P) n) : Term P n -> Set
   data _⊢Entry_ (Γ : Con (Entry P) n) : Entry P n -> Set
-  data _⊢_∶_ (Γ : Con (Entry P) n) : Term P n → Entry P n → Set
+  data _⊢[_]_∶_ (Γ : Con (Entry P) n) : Term P n -> Term P n → Entry P n → Set
 
-  -- _⊢Sort_ : {W : P} (Γ : Con (Entry P) n) -> Term P n -> Set
-  -- _⊢Sort_ {W = W} = W ∣_⊢Sort_
+  _⊢_∶_ : (Γ : Con (Entry P) n) -> Term P n -> Entry P n -> Set
+  _⊢_∶_ Γ t A = Γ ⊢[ id-Tr ] t ∶ A
 
-  -- _⊢Entry_ : {W : P} (Γ : Con (Entry P) n) -> Entry P n -> Set
-  -- _⊢Entry_ {W = W} = W ∣_⊢Entry_
-
-  -- _⊢_∶_ : {W : P} (Γ : Con (Entry P) n) -> Term P n → Entry P n → Set
-  -- _⊢_∶_ {W = W} = W ∣_⊢_∶_
 
 
   -- Well-formed context
@@ -187,26 +183,42 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     -- Mode transformations (transitions)
 
     Trⱼ : Γ ⊢Entry Tr // ◯ ↝ ◯ ∋ id
+    []▹ⱼ : Γ ⊢Entry [ τ ]▹ A / μs
 
 
 
 
   -- Well-formed term of a type
-  data _⊢_∶_ Γ where
+  data _⊢[_]_∶_ Γ where
 
     -------------------
     -- Standard modality intro and "elim"
 
-    modⱼ : Γ ⊢ t ∶ X / μ ⨾ μs -> Γ ⊢ mod t ∶ Modal X μ / μs
-    unmodⱼ : Γ ⊢ t ∶ Modal X μ / μs -> Γ ⊢ unmod t ∶ X / μ ⨾ μs
+    modⱼ : Γ ⊢[ τ ] t ∶ X / μ ⨾ μs -> Γ ⊢[ τ ] mod t ∶ Modal X μ / μs
+    unmodⱼ : Γ ⊢[ τ ] t ∶ Modal X μ / μs -> Γ ⊢[ τ ] unmod t ∶ X / μ ⨾ μs
 
 
     -------------------
     -- Transformations between modehoms (transitions)
     trⱼ : Γ ⊢Entry A / μs
-        → ModeTrans μs ηs
-        →  Γ ⊢ tr A μs ηs ∶ Tr // ◯ ↝ ◯ ∋ id
+        → ModeTrans μs ηs vis
+        → Γ ∙ (A / ηs) ⊢ B ∶ Tr // ◯ ↝ ◯ ∋ id
+        →  Γ ⊢ A / μs ⇒ ηs > B ∶ Tr // ◯ ↝ ◯ ∋ id
 
+    execⱼ : Γ ⊢[ σ ] t ∶ [ τ ]▹ A / μs
+             → Γ ⊢[ σ ≫ τ ] exec t ∶ (A / μs)
+
+    prepareⱼ : Γ ⊢[ σ ] t ∶ A / μs
+             → Γ ⊢ prepare t ∶ [ σ ]▹ A / μs
+
+
+    let-inⱼ : Γ ⊢ t ∶ A / ηs
+            → Γ ∙ (A / ηs) ⊢[ σ ] s ∶ B / ωs
+            → Γ ⊢[ σ [ t ] ] let-in t s ∶ B [ t ] / ωs
+
+    let-trⱼ : Γ ⊢ t ∶ A / μs
+            → Γ ∙ (A / ηs) ⊢[ σ ] s ∶ B / ωs
+            → Γ ⊢[ A / μs ⇒ ηs > σ ] let-tr t s ∶ B [ t ] / ωs
 
 
     -------------------
@@ -222,7 +234,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     var       : ∀ {A x}
               -> {{ΓP : isTrue (⊢Ctx Γ)}}
               → x ∶ (A // k ↝ l ∋ μs) ∈ Γ
-              → ModeTrans μs ηs
+              → ModeTrans μs ηs invis
               → Γ ⊢ (Term.var x) ∶ A // k ↝ l ∋ ηs
 
     lamⱼ      : ∀ {t}

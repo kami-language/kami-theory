@@ -40,9 +40,9 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
     _>>=_ = bind-Maybe
 
   {-# TERMINATING #-}
-  derive-Entry : ∀ (Γ : Con (Entry P) n) E -> Maybe (W ∣ Γ ⊢Entry E)
-  derive-Ctx : ∀ (Γ : Con (Entry P) n) -> Maybe (W ⊢Ctx Γ)
-  derive-Term-Sort↓,Mod↓ : ∀ Γ -> (t A : Term P n) → (p : Modality P) -> Maybe (W ∣ Γ ⊢ t ∶ A // p)
+  derive-Entry : ∀ (Γ : Con (Entry P) n) E -> Maybe (Γ ⊢Entry E)
+  derive-Ctx : ∀ (Γ : Con (Entry P) n) -> Maybe (⊢Ctx Γ)
+  derive-Term-Sort↓,Mod↓ : ∀ Γ -> (t A : Term P n) → (p : Modality P) -> Maybe (Γ ⊢ t ∶ A // p)
 
   --derive-Entry Γ (UU / μs)    = map-Maybe (λ P -> UUⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Entry Γ (NN / μs)    = map-Maybe (λ P -> NNⱼ {{ΓP = because P}}) (derive-Ctx Γ)
@@ -82,7 +82,7 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
     Γ' <- derive-Ctx Γ
     just (Γ' ∙ E')
 {-
-  derive-Sort : ∀ (Γ : Con (Term P) n) E -> Maybe (W ∣ Γ ⊢Sort E)
+  derive-Sort : ∀ (Γ : Con (Term P) n) E -> Maybe (Γ ⊢Sort E)
   derive-Sort Γ (UU)    = map-Maybe (λ P -> UUⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Sort Γ (NN)    = map-Maybe (λ P -> NNⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Sort Γ (Empty) = map-Maybe (λ P -> Emptyⱼ {{ΓP = because P}}) (derive-Ctx Γ)
@@ -111,7 +111,7 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
   ------------------------------------------------------------------------
   -- Terms (infering Sort, infering Mod)
 
-  -- derive-Term-Sort↑,Mod↑ : ∀ Γ -> (t : Term P n) -> Maybe (∑ λ (E : Entry P n) -> W ∣ Γ ⊢ t ∶ E)
+  -- derive-Term-Sort↑,Mod↑ : ∀ Γ -> (t : Term P n) -> Maybe (∑ λ (E : Entry P n) -> Γ ⊢ t ∶ E)
   -- derive-Term-Sort↑,Mod↑ Γ (var x) with ((A / p) , Ep) <- infer-Var Γ x = do
   --   G' <- derive-Ctx Γ
   --   just ((A / p) , var {{ΓP = because G'}} Ep)
@@ -120,7 +120,7 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
 
   ------------------------------------------------------------------------
   -- Terms (checking Sort, infering Mod)
-  -- derive-Term-Sort↓,Mod↑ : ∀ Γ -> (t A : Term P n) -> Maybe (∑ λ (μs : Modality P) -> W ∣ Γ ⊢ t ∶ (A // μs))
+  -- derive-Term-Sort↓,Mod↑ : ∀ Γ -> (t A : Term P n) -> Maybe (∑ λ (μs : Modality P) -> Γ ⊢ t ∶ (A // μs))
   -- derive-Term-Sort↓,Mod↑ Γ (var x) A with derive-Var-Sort↓,Mod↑ Γ x A
   -- ... | nothing = nothing
   -- ... | yes (μs , Ap) = do
@@ -170,23 +170,23 @@ module Typecheck (P' : Preorder (ℓ₀ , ℓ₀ , ℓ₀)) {{_ : hasDecidableEq
   derive-Term-Sort↓,Mod↓ Γ _ A p = nothing
 
   instance
-    isDerivable:Con : isDerivable (W ⊢Ctx Γ)
+    isDerivable:Con : isDerivable (⊢Ctx Γ)
     isDerivable:Con = record { derive = derive-Ctx _ }
 
   instance
-    isDerivable:Entry : isDerivable (W ∣ Γ ⊢Entry E)
+    isDerivable:Entry : isDerivable (Γ ⊢Entry E)
     isDerivable:Entry = record { derive = derive-Entry _ _ }
 {-
   instance
-    isDerivable:Sort : isDerivable (W ∣ Γ ⊢Sort A)
+    isDerivable:Sort : isDerivable (Γ ⊢Sort A)
     isDerivable:Sort = record { derive = derive-Sort _ _ }
 -}
   instance
-    isDerivable:Term : isDerivable (W ∣ Γ ⊢ t ∶ A / μs)
+    isDerivable:Term : isDerivable (Γ ⊢ t ∶ A / μs)
     isDerivable:Term = record { derive = derive-Term-Sort↓,Mod↓ _ _ _ _ }
 
   instance
-    isDerivable:ModeTrans : ∀{m n} -> {μs ηs : ModeHom P m n} -> isDerivable (ModeTrans μs ηs)
+    isDerivable:ModeTrans : ∀{m n v} -> {μs ηs : ModeHom P m n} -> isDerivable (ModeTrans μs ηs v)
     isDerivable:ModeTrans = record { derive = derive-ModeTrans _ _ }
 
 
