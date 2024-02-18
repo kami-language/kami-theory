@@ -84,6 +84,10 @@ module _ {P : 𝒰 _} {{_ : Preorder (ℓ₀ , ℓ₀ , ℓ₀) on P }} where
           -> ModeTrans α₀ α₁ v
           -> ModeTrans β₀ β₁ w
           -> ModeTrans (α₀ ◆ β₀) (α₁ ◆ β₁) (v ⋆ w)
+    _◇_ : ∀{m n v w} -> {α β γ : ModeHom P m n}
+          -> ModeTrans α β v
+          -> ModeTrans β γ w
+          -> ModeTrans α γ (v ⋆ w)
 
   module _ {{_ : isDecidablePreorder ′ P ′}} where
 

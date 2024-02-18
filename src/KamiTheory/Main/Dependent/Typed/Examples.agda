@@ -109,28 +109,58 @@ module Examples where
   -- PF0 : all ∣ εε ⊢ lam (var zero) ∶ (NN / `＠` uu ⨾ id) ▹▹ NN / `＠` uu ⨾ id
   -- PF0 = proof
 
+  Com : ∀ (U V : P) -> ModeTrans (`＠` U ⨾ id) (`＠` V ⨾ id) vis
+  Com U V = {!!} --  {!id ⨾ base (send V)!} ◇ {!!}
 
 
   ---------------------------------------------
   -- manual examples
 
-  com : εε ⊢ (Modal NN (`＠` uu) / id) ▹▹ [ _ ]▹ (Modal NN (`＠` vv)) / id
-     ≔ {!!}
-     -- lam (recv (mod (send (unmod (var zero)))))
-  com = lamⱼ proof (prepareⱼ (modⱼ (let-inⱼ (unmodⱼ (var zero id))
-                                   ()
-                                   )))
+  com : εε ⊢ (Modal NN (`＠` uu) / id) ▹▹[ {!!} ] (Modal NN (`＠` vv)) / id
+     ≔ lam (mod (transform (unmod (var zero))))
+  com = lamⱼ proof (modⱼ (transformⱼ (Com uu vv) (unmodⱼ (var zero id))))
+
+
+  SendingVector : ℕ
+  SendingVector = 1
+    where
+
+      SendVec-Term = lam (natrec Tr
+                              end
+                              (lam (lam ((NN / (`＠` uu ⨾ id) ⇒ (`＠` vv ⨾ id)) ≫ var zero)))
+                              (unmod (var zero)))
+
+      postulate
+        SendVec : εε ⊢ ((Modal NN (`＠` uu) / id-◯) ▹▹ Tr / id-◯)
+
+                  ≔ SendVec-Term
+
+      -- SendVec = lamⱼ proof (natrecⱼ Trⱼ endⱼ (lamⱼ proof (lamⱼ Trⱼ (trⱼ NNⱼ (Com uu ((uu ∧ vv))) ≫ⱼ var zero id))) (unmodⱼ (var zero id)))
+
+
+      -- sendvec1 : εε ⊢
+      --           Π (NN / `＠` (uu ∧ vv) ⨾ id) ▹
+      --           Π (Vec NN (var zero) / `＠` (uu) ⨾ id) ▹[ wk1 (wk1 (SendVec-Term)) ∘ var (suc zero) ]
+      --           Vec NN (var (suc zero)) / `＠` vv ⨾ id
+      --           ≔ {!!}
+      -- sendvec1 = lamⱼ proof (lamⱼ (Vecⱼ NNⱼ (var zero {!!}))
+      --            {!vecrecⱼ ? ? ? ? ?!}
+      --            )
+
+      sendvec2 : εε ∙ (
+                Π (NN / `＠` (uu ∧ vv) ⨾ id) ▹
+                Π (Vec NN (var zero) / `＠` (uu) ⨾ id) ▹[ wk1 (wk1 (SendVec-Term)) ∘ var (suc zero) ]
+                Vec NN (var (suc zero)) / `＠` vv ⨾ id
+                ) ⊢
+                Π (NN / `＠` uu ⨾ id) ▹
+                Π (Vec NN (var zero) / `＠` (uu) ⨾ id) ▹[ (NN / (`＠` uu ⨾ id) ⇒ (`＠` (uu ∧ vv) ⨾ id)) ≫ (wk1 (wk1 (wk1 (SendVec-Term))) ∘ var (suc zero)) ]
+                Vec NN (transform (var (suc zero))) / `＠` vv ⨾ id
+                ≔ {!!}
+      sendvec2 = lamⱼ {!!} (lamⱼ {!!} (castⱼ {!!} ((var {{ΓP = {!!}}} (suc (suc zero)) id ∘ⱼ transformⱼ {!!} (var {{ΓP = {!!}}} (suc zero) id)) ∘ⱼ {!!})))
 
 
 
 
-
-
-  -- sendvec1 : all ∣ εε ⊢
-  --            Π (NN / `＠` (uu ∧ vv) ⨾ id) ▹
-  --            Π (Vec NN (var zero) / `＠` (uu) ⨾ id) ▹
-  --            Vec NN (var (suc zero)) / `＠` vv ⨾ id
-  --            ≔ {!!}
   -- sendvec1 = lamⱼ proof (lamⱼ proof (vecrecⱼ {U = uu} {V = vv} {μs = id} {ηs = id}
   --            ((Vecⱼ NNⱼ ((var (suc (zero)) proof)))) -- = G
   --            nilⱼ -- = z

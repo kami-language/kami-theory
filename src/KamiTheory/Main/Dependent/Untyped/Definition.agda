@@ -46,7 +46,9 @@ private variable
 
 infixl 30 _∙_
 infix 30 Π_▹_
+infix 30 Π_▹[_]_
 infixr 22 _▹▹_
+infixr 22 _▹▹[_]_
 infix 30 Σ_▹_
 infixr 22 _××_
 infix 30 ⟦_⟧_▹_
@@ -74,7 +76,7 @@ private
 --   location : Arity
 
 data Metakind : Set where
-  term entry location basemod modehom transitions : Metakind
+  term entry location basemod modehom modetrans : Metakind
 
 -- Representation of sub terms using a list of binding levels
 
@@ -94,7 +96,7 @@ pattern n1 = suc (zero)
 data MainKind : (ns : List (Metakind × Nat)) → Set where
   Ukind : MainKind []
 
-  Pikind  : MainKind ((entry , n0) ∷ (term , n1) ∷ [])
+  Pikind  : MainKind ((entry , n0) ∷ (term , n1) ∷ (term , n1) ∷ [])
   Lamkind : MainKind ((term , n1) ∷ [])
   Appkind : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
@@ -146,22 +148,23 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   𝓀-Tr : MainKind []
 
   -- Constructing a transition space with a single transition
-  𝓀-tr : MainKind ((term , n0) ∷ (modehom , n0) ∷ (modehom , n0) ∷ (term , n1) ∷ [])
+  𝓀-tr : MainKind ((term , n0) ∷ (modehom , n0) ∷ (modehom , n0) ∷ [])
 
   -- identity transition
-  𝓀-id-Tr : MainKind []
+  𝓀-end : MainKind []
 
   -- Constructing a space from multiple transitions
   -- 𝓀-transitions : MainKind ((transitions , n0) ∷ [])
 
   -- Concatenating two spaces
   𝓀-≫ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
+  𝓀-∥ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
   ---------------------------------------------
   -- Combining transition spaces with types
-  𝓀-[]▹ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
-  𝓀-exec : MainKind ((term , n0) ∷ [])
-  𝓀-prepare : MainKind ((term , n0) ∷ [])
+  -- 𝓀-[]▹ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
+  -- 𝓀-exec : MainKind ((term , n0) ∷ [])
+  -- 𝓀-prepare : MainKind ((term , n0) ∷ [])
   𝓀-transform : MainKind ((term , n0) ∷ [])
 
 
@@ -173,7 +176,7 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   --
   -- let a = let-tr t μs ηs
   -- in s
-  𝓀-let-tr : MainKind ((term , n0) ∷ (term , n1) ∷ [])
+  -- 𝓀-let-tr : MainKind ((term , n0) ∷ (term , n1) ∷ [])
   𝓀-let-in : MainKind ((term , n0) ∷ (term , n1) ∷ [])
 
 
@@ -294,8 +297,11 @@ private
 -- UU      : Term P n                      -- Universe.
 pattern UU = gen (main Ukind) []
 
+pattern end        = gen (main 𝓀-end) ([])
+
 -- Π_▹_ : (A : Term P n) (B : Term P (1+ n)) → Term P n  -- Dependent function type (B is a binder).
-pattern Π_▹_ A B = gen (main Pikind) (A ∷ term B ∷ [])
+pattern Π_▹_ A B = gen (main Pikind) (A ∷ term end ∷ term B ∷ [])
+pattern Π_▹[_]_ A ξ B = gen (main Pikind) (A ∷ term ξ ∷ term B ∷ [])
 
 -- Σ_▹_ : (A : Term P n) (B : Term P (1+ n)) → Term P n  -- Dependent sum type (B is a binder).
 pattern Σ_▹_ A B = gen (main Sigmakind) (A ∷ term B ∷ [])
@@ -378,19 +384,24 @@ pattern unmod t      = gen (main 𝓀-unmod) (term t ∷ [])
 
 -- Transformations / Transitions
 pattern Tr           = gen (main 𝓀-Tr) ([])
-pattern id-Tr        = gen (main 𝓀-id-Tr) ([])
-pattern _/_⇒_>_ A μ η B = gen (main 𝓀-tr) (term A ∷ modehom μ ∷ modehom η ∷ term B ∷ [])
+pattern _/_⇒_ A μ η = gen (main 𝓀-tr) (term A ∷ modehom μ ∷ modehom η ∷ [])
 pattern _≫_ m n     = gen (main 𝓀-≫) (term m ∷ term n ∷ [])
-pattern [_]▹_ T A    = gen (main 𝓀-[]▹) (term T ∷ term A ∷ [])
-infixr 30 [_]▹_
+pattern _∥_ m n     = gen (main 𝓀-∥) (term m ∷ term n ∷ [])
+-- pattern [_]▹_ T A    = gen (main 𝓀-[]▹) (term T ∷ term A ∷ [])
+-- infixr 30 [_]▹_
 
-pattern exec t       = gen (main 𝓀-exec) (term t ∷ [])
-pattern prepare t       = gen (main 𝓀-prepare) (term t ∷ [])
+infixl 40 _≫_
+infixl 30 _∥_
+
+-- pattern exec t       = gen (main 𝓀-exec) (term t ∷ [])
+-- pattern prepare t       = gen (main 𝓀-prepare) (term t ∷ [])
 pattern transform t  = gen (main 𝓀-transform) (term t ∷ [])
 
 
-pattern let-tr t s   = gen (main 𝓀-let-tr) (term t ∷ term s ∷ [])
+-- pattern let-tr t s   = gen (main 𝓀-let-tr) (term t ∷ term s ∷ [])
 pattern let-in t s   = gen (main 𝓀-let-in) (term t ∷ term s ∷ [])
+
+infixl 30 _/_⇒_
 
 
 -- pattern locskip      = gen (main 𝓀-locskip) []
@@ -732,10 +743,14 @@ wkWhnf ρ starₙ   = starₙ
 wkWhnf ρ (ne x)  = ne (wkNeutral ρ x)
 -}
 
+
 -- Non-dependent version of Π.
 
 _▹▹_ : Entry P n → Term P n → Term P n
 A ▹▹ B = Π A ▹ wk1 B
+
+_▹▹[_]_ : Entry P n → Term P n -> Term P n → Term P n
+A ▹▹[ ξ ] B = Π A ▹[ wk1 ξ ] wk1 B
 
 -- Non-dependent products.
 

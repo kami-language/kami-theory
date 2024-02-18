@@ -80,6 +80,7 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     μ : BaseModeHom P k l
     ω : BaseModeHom P l o
     τ σ : Term P n -- Transitions
+    ξ ξ₀ ξ₁ : Term P n -- Transitions
     Γ  : Con (Entry P) n
     A B : Term P n
     a b : Term P n
@@ -107,13 +108,20 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
 
   data ⊢Ctx_ : Con (Entry P) n → Set
+  data _⊢Tr_ (Γ : Con (Entry P) n) : Term P n -> Set
   data _⊢Sort_ (Γ : Con (Entry P) n) : Term P n -> Set
   data _⊢Entry_ (Γ : Con (Entry P) n) : Entry P n -> Set
   data _⊢[_]_∶_ (Γ : Con (Entry P) n) : Term P n -> Term P n → Entry P n → Set
 
   _⊢_∶_ : (Γ : Con (Entry P) n) -> Term P n -> Entry P n -> Set
-  _⊢_∶_ Γ t A = Γ ⊢[ id-Tr ] t ∶ A
+  _⊢_∶_ Γ t A = Γ ⊢[ end ] t ∶ A
 
+
+  id-◯ : ModeHom P ◯ ◯
+  id-◯ = id
+
+  data _⊢Tr_＝_ (Γ : Con (Entry P) n) : Term P n -> Term P n -> Set where
+    tt : Γ ⊢Tr ξ₀ ＝ ξ₁
 
 
   -- Well-formed context
@@ -123,6 +131,11 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
         → Γ ⊢Entry E
         → ⊢Ctx Γ ∙ E
 
+  data _⊢Tr_ Γ where
+    trⱼ : Γ ⊢Entry A / μs
+          -> (ξ : ModeTrans μs ηs vis)
+          -> Γ ⊢Tr A / μs ⇒ ηs
+    _≫ⱼ_ : Γ ⊢Tr ξ₀ -> Γ ⊢Tr ξ₁ -> Γ ⊢Tr (ξ₀ ≫ ξ₁)
 
 
   -- Well-formed type
@@ -182,8 +195,8 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     -------------------
     -- Mode transformations (transitions)
 
-    Trⱼ : Γ ⊢Entry Tr // ◯ ↝ ◯ ∋ id
-    []▹ⱼ : Γ ⊢Entry [ τ ]▹ A / μs
+    Trⱼ : Γ ⊢Entry Tr / id-◯
+    -- []▹ⱼ : Γ ⊢Entry [ τ ]▹ A / μs
 
 
 
@@ -200,25 +213,42 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
     -------------------
     -- Transformations between modehoms (transitions)
+
     trⱼ : Γ ⊢Entry A / μs
-        → ModeTrans μs ηs vis
-        → Γ ∙ (A / ηs) ⊢ B ∶ Tr // ◯ ↝ ◯ ∋ id
-        →  Γ ⊢ A / μs ⇒ ηs > B ∶ Tr // ◯ ↝ ◯ ∋ id
+          → (ξ : ModeTrans μs ηs vis)
+          → Γ ⊢ A / μs ⇒ ηs ∶ Tr / id-◯
 
-    execⱼ : Γ ⊢[ σ ] t ∶ [ τ ]▹ A / μs
-             → Γ ⊢[ σ ≫ τ ] exec t ∶ (A / μs)
+    _≫ⱼ_ : Γ ⊢ ξ₀ ∶ Tr / μs
+         → Γ ⊢ ξ₁ ∶ Tr / μs
+         → Γ ⊢ (ξ₀ ≫ ξ₁) ∶ Tr / μs
 
-    prepareⱼ : Γ ⊢[ σ ] t ∶ A / μs
-             → Γ ⊢ prepare t ∶ [ σ ]▹ A / μs
+    endⱼ : Γ ⊢ end ∶ Tr / id-◯
+
+    transformⱼ : ModeTrans μs ηs vis
+                 -> Γ ⊢[ ξ ] t ∶ A / μs
+                 -> Γ ⊢[ ξ ≫ A / μs ⇒ ηs ] transform t ∶ A / ηs
+
+    castⱼ : Γ ⊢Tr ξ₀ ＝ ξ₁
+            -> Γ ⊢[ ξ₀ ] t ∶ A / μs
+            -> Γ ⊢[ ξ₁ ] t ∶ A / μs
 
 
-    let-inⱼ : Γ ⊢ t ∶ A / ηs
-            → Γ ∙ (A / ηs) ⊢[ σ ] s ∶ B / ωs
-            → Γ ⊢[ σ [ t ] ] let-in t s ∶ B [ t ] / ωs
+    -- trⱼ : Γ ⊢Entry A / μs
+    --     → ModeTrans μs ηs vis
+    --     → Γ ∙ (A / ηs) ⊢ B ∶ Tr // ◯ ↝ ◯ ∋ id
+    --     →  Γ ⊢ A / μs ⇒ ηs > B ∶ Tr // ◯ ↝ ◯ ∋ id
+    -- execⱼ : Γ ⊢[ σ ] t ∶ [ τ ]▹ A / μs
+    --          → Γ ⊢[ σ ≫ τ ] exec t ∶ (A / μs)
+    -- prepareⱼ : Γ ⊢[ σ ] t ∶ A / μs
+    --          → Γ ⊢ prepare t ∶ [ σ ]▹ A / μs
 
-    let-trⱼ : Γ ⊢ t ∶ A / μs
-            → Γ ∙ (A / ηs) ⊢[ σ ] s ∶ B / ωs
-            → Γ ⊢[ A / μs ⇒ ηs > σ ] let-tr t s ∶ B [ t ] / ωs
+    -- let-inⱼ : Γ ⊢ t ∶ A / ηs
+    --         → Γ ∙ (A / ηs) ⊢[ σ ] s ∶ B / ωs
+    --         → Γ ⊢[ σ [ t ] ] let-in t s ∶ B [ t ] / ωs
+
+    -- let-trⱼ : Γ ⊢ t ∶ A / μs
+    --         → Γ ∙ (A / ηs) ⊢[ σ ] s ∶ B / ωs
+    --         → Γ ⊢[ A / μs ⇒ ηs > σ ] let-tr t s ∶ B [ t ] / ωs
 
 
     -------------------
@@ -239,13 +269,13 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
     lamⱼ      : ∀ {t}
               → Γ ⊢Entry E
-              → Γ ∙ E ⊢ t ∶ B / μs
-              → Γ     ⊢ lam t ∶ Π E ▹ B / μs
+              → Γ ∙ E ⊢[ ξ ] t ∶ B / μs
+              → Γ     ⊢ lam t ∶ Π E ▹[ ξ ] B / μs
 
     _∘ⱼ_      : ∀ {g a}
-              → Γ ⊢ g ∶ Π (A / ωs) ▹ B / μs
-              → Γ ⊢ a ∶ A / ωs
-              → Γ ⊢ g ∘ a ∶ B [ a ] / μs
+              → Γ ⊢[ ξ₀ ] g ∶ Π (A / ωs) ▹[ ξ ] B / μs
+              → Γ ⊢[ ξ₁ ] a ∶ A / ωs
+              → Γ ⊢[ (ξ₀ ∥ ξ₁) ≫ (ξ [ a ]) ] g ∘ a ∶ B [ a ] / μs
 
 
 {-
