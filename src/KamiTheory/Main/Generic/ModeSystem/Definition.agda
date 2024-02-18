@@ -4,6 +4,7 @@
 module KamiTheory.Main.Generic.ModeSystem.Definition where
 
 open import Agora.Conventions
+open import KamiTheory.Basics
 
 
 ------------------------------------------------------------------------
@@ -40,9 +41,13 @@ data Visibility : Set where
   vis : Visibility
   invis : Visibility
 
-_⋆_ : (v w : Visibility) -> Visibility
-vis ⋆ w = vis
-invis ⋆ w = w
+_⋆-Visibility_ : (v w : Visibility) -> Visibility
+vis ⋆-Visibility w = vis
+invis ⋆-Visibility w = w
+
+instance
+  hasNotation-⋆:Visibility : hasNotation-⋆ Visibility (λ _ -> Visibility) (λ _ _ -> Visibility)
+  hasNotation-⋆:Visibility = record { _⋆_ = _⋆-Visibility_ }
 
 ---------------------------------------------
 -- Input data for a free strict 2-category,
@@ -117,30 +122,14 @@ ModeTrans : (G : 2Graph 𝑖) -> ∀{m n} -> (μ η : ModeHom G m n) -> Visibili
 ModeTrans G = 2Cell G
 
 
----------------------------------------------
--- A modality is a mode morphism with arbitrary
--- domain and codomain
 
-record Modality (G : 2Graph 𝑖) : 𝒰 (𝑖 ⌄ 0 ⊔ 𝑖 ⌄ 1) where
-  constructor _↝_∋_
-  field dom : Mode G
-  field cod : Mode G
-  field hom : ModeHom G dom cod
+------------------------------------------------------------------------
+-- Decidability
 
-infixl 40 _↝_∋_
+record isDecidable2Graph (G : 2Graph 𝑖) : 𝒰 𝑖 where
+  field decide-≡-Point : (a b : Point G) -> isDecidable (a ≡ b)
+  field decide-≡-Edge : ∀{a b} -> (p q : Edge G a b) -> isDecidable (p ≡ q)
+  field decide-≡-Face : ∀{a b} -> {p q : Path (Edge G) a b} -> ∀{v} -> {s t : Face G p q v} -> isDecidable (s ≡ t)
 
-open Modality public
-
-
----------------------------------------------
--- A transition is a mode transformation with arbitrary
--- domain and codomain
-
-record Transition (G : 2Graph 𝑖) (v : Visibility) : 𝒰 𝑖 where
-  constructor _⇒_∋_
-  field {dom-Mode} : Mode G
-  field {cod-Mode} : Mode G
-  field dom : ModeHom G dom-Mode cod-Mode
-  field cod : ModeHom G dom-Mode cod-Mode
-  field trans : ModeTrans G dom cod v
+open isDecidable2Graph {{...}} public
 

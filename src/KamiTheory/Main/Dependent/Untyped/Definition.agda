@@ -211,7 +211,7 @@ infixl 21 _//_ _/_
 
 data Term P n where
   gen : {bs : List (Metakind × Nat)} (k : Kind bs) (c : GenTs (KindedTerm P) n bs) → Term P n
-  var : (x : Fin n) → Term P n
+  var : ∀{v} -> (x : Fin n) → Transition P v → Term P n
 
 
 Entry : (P : 2Graph 𝑖) (n : Nat) -> 𝒰 𝑖
@@ -616,7 +616,7 @@ mutual
   wk-Kinded ρ (x / p) = wk ρ x / p
 
   wk : {m n : Nat} (ρ : Wk m n) (t : Term P n) → Term P m
-  wk ρ (var x)   = var (wkVar ρ x)
+  wk ρ (var x ξ)   = var (wkVar ρ x) ξ
   wk ρ (gen k c) = gen k (wkGen ρ c)
 
 
@@ -696,6 +696,25 @@ A ▹▹[ ξ ] B = Π A ▹[ wk1 ξ ] wk1 B
 _××_ : Entry P n → Term P n → Term P n
 A ×× B = Σ A ▹ wk1 B
 
+
+------------------------------------------------------------------------
+-- Pushing transitions
+--
+
+
+-- Pushes a transition down the term. We push it until the next
+-- `transform` term or variable.
+push : ∀{v} -> Transition P v -> Term P n -> Term P n
+push ξ (gen k c) = {!!}
+push ξ (var x ζ) = {!!}
+
+
+untransform-Term : Term P n -> Term P n
+untransform-Term (gen (main x) c) = {!!}
+untransform-Term (gen (leaf x) c) = {!!}
+untransform-Term (gen 𝓀-transform c) = {!!}
+untransform-Term (var x ξ) = {!!}
+
 ------------------------------------------------------------------------
 -- Substitution
 
@@ -747,7 +766,7 @@ substVar σ x = σ x
 -- Γ ⊢ idSubst : Γ.
 
 idSubst : Subst P n n
-idSubst = var
+idSubst x = var x ({!!} ⇒ {!!} ∋ {!!})
 
 -- Weaken a substitution by one.
 --
@@ -761,7 +780,7 @@ wk1Subst σ x = wk1 (σ x)
 -- If Γ ⊢ σ : Δ then Γ∙A ⊢ liftSubst σ : Δ∙A.
 
 liftSubst : (σ : Subst P m n) → Subst P (1+ m) (1+ n)
-liftSubst σ x0     = var x0
+liftSubst σ x0     = var x0 {!!}
 liftSubst σ (x +1) = wk1Subst σ x
 
 liftSubstn : {k m : Nat} → Subst P k m → (n : Nat) → Subst P (n + k) (n + m)
@@ -773,7 +792,7 @@ liftSubstn σ (1+ n)   = liftSubst (liftSubstn σ n)
 -- If ρ : Γ ≤ Δ then Γ ⊢ toSubst ρ : Δ.
 
 toSubst :  Wk m n → Subst P m n
-toSubst pr x = var (wkVar pr x)
+toSubst pr x = var (wkVar pr x) {!!}
 
 -- Apply a substitution to a term.
 --
@@ -784,10 +803,6 @@ mutual
   substGen σ  []      = []
   substGen σ (_∷_ {b = b} t ts) = subst-Kinded (liftSubstn σ b) t ∷ (substGen σ ts)
 
-  -- subst-Mod : (σ : Subst P m n) (t : Mod P n) → Mod P m
-  -- subst-Mod σ (ML x) = ML x
-  -- subst-Mod σ (⇄ R A) = ⇄ R (subst σ A)
-
   subst-Kinded : ∀{k : Metakind} (σ : Subst P m n) (t : KindedTerm P n k) → KindedTerm P m k
   subst-Kinded σ (term x) = term (subst σ x)
   subst-Kinded σ (transition v) = transition v
@@ -795,7 +810,7 @@ mutual
   subst-Kinded σ (x / p) = subst σ x / p
 
   subst : (σ : Subst P m n) (t : Term P n) → Term P m
-  subst σ (var x)   = substVar σ x
+  subst σ (var x ξ) = push ξ (substVar σ x) -- if we substitute a variable with an annotation, we have to push this annotation down the term
   subst σ (gen x c) = gen x (substGen σ c)
 
 -- Extend a substitution by adding a term as
