@@ -69,15 +69,11 @@ private
   variable
     n m ℓ : Nat
 
--- data SubtermLevel : Set where
---   entry : Nat -> Arity
---   sort : Nat -> Arity
---   mod : Nat -> Arity
---   location : Arity
 
 data Metakind : Set where
   term entry location basemod modehom modetrans : Metakind
 
+{-
 -- Representation of sub terms using a list of binding levels
 
 data GenTs (A : Nat -> Metakind → Set) : Nat → List (Metakind × Nat) → Set where
@@ -173,37 +169,12 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
 
   -- "apply the transformation from ηs to μs to t and put the result
   --  into the context, such that s can use it"
-  --
-  -- let a = let-tr t μs ηs
-  -- in s
-  -- 𝓀-let-tr : MainKind ((term , n0) ∷ (term , n1) ∷ [])
-  𝓀-let-in : MainKind ((term , n0) ∷ (term , n1) ∷ [])
 
 
-  -------------------
-  -- Kami types (Com)
-  -- 𝓀-End : MainKind [] -- End : Γ ⊢Com U
-  -- 𝓀-≫ : MainKind ((term , n0) ∷ (term , n1) ∷ []) -- new (monadic?) composition operation
-  -- 𝓀-Share : MainKind ((term , n0) ∷ (location , n0) ∷ (location , n0) ∷ []) -- [_from_to_[_⨾_]on_]►_ : (L : Γ ⊢Local) -> ∀ U₀ U₁ -> (ϕ : R ≤ U₁) -> (ψ : U₁ ≤ U₀) -> ∀ W -> (C : Γ ,[ L ＠ U₁ / Global ] ⊢Com R) -> Γ ⊢Com R
 
-  ---------------------------------------------
-  -- Kami terms (com related)
+  -- 𝓀-let-in : MainKind ((term , n0) ∷ (term , n1) ∷ [])
 
-  -- packing and unpacking communication into global types
-  -- 𝓀-com : MainKind ((term , n0) ∷ (term , n0) ∷ []) -- the tuple constructor
-  -- 𝓀-comtype : MainKind ((term , n0) ∷ []) -- the first projection
-  -- 𝓀-comval : MainKind ((term , n0) ∷ [])  -- the second projection
 
-  -- the three communication primitives
-  -- 𝓀-end : MainKind ((term , n0) ∷ [])   -- pure
-  -- 𝓀-> : MainKind ((term , n0) ∷ (term , n1) ∷ []) -- bind
-  -- 𝓀-share : MainKind ((term , n0) ∷ []) -- generator
-
-  -------------------
-  -- Kami terms (location related)
-  -- 𝓀-loc : MainKind ((term , n0) ∷ (term , n0) ∷ []) THIS ONE IS NOT A MAINKIND
-  -- 𝓀-locskip : MainKind [] -- not implementing a term because we don't need the current location
-  𝓀-unloc : MainKind ((term , n0) ∷ []) -- [_]unloc : (ϕ : U ≤ V) -> Γ ⊢ (L ＠ U) / Global -> Γ ⊢ L / Local V
 
 -- local leafs get their own kind
 
@@ -221,23 +192,6 @@ data Kind : (ns : List (Metakind × Nat)) → Set where
 -- de Bruijn style variables or
 -- generic terms, formed by their kind and sub terms
 
-
-
-
--- data MLMod (P : Set) : Set where
---   Global : MLMod P
---   Local : (U : P) -> MLMod P
-
-
--- data Mod (P : Set) (n : Nat) : Set
-
--- -- Kami: A set of special constₜant terms
--- data BaseTerm P : Set where
---   -- Kami: A location is also a valid term
---   location : (U : P) -> BaseTerm P
-
---   -- Kami: A special constₜructor for modalities
---   mod : ∀{m n} -> Modality P m n -> BaseTerm P
 
 
 data Term (P : Set) (n : Nat) : Set
@@ -915,3 +869,8 @@ t [ s ]↑ = subst (consSubst (wk1Subst idSubst) s) t
 --         → subst σ (⟦ W ⟧ F ▹ G) PE.≡ ⟦ W ⟧ (subst σ F) ▹ (subst (liftSubst σ) G)
 -- B-subst σ BΠ F G = PE.refl
 -- B-subst σ BΣ F G = PE.refl
+
+
+
+
+-}
