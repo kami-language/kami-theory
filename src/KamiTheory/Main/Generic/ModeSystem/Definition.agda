@@ -28,6 +28,8 @@ _◆_ : ∀{X : 𝒰 𝑖} -> ∀{R : X -> X -> 𝒰 𝑗} -> ∀{m n k} -> Path
 id ◆ q = q
 (x ⨾ p) ◆ q = x ⨾ (p ◆ q)
 
+infixr 30 _◆_
+
 ---------------------------------------------
 -- Visibility parametrization
 --
@@ -56,11 +58,11 @@ instance
 record 2Graph (𝑖 : 𝔏 ^ 3) : 𝒰 (𝑖 ⁺) where
   field Point : 𝒰 (𝑖 ⌄ 0)
   field Edge : Point -> Point -> 𝒰 (𝑖 ⌄ 1)
-  field Face : ∀{p q : Point} -> (a b : Path Edge p q) -> Visibility -> 𝒰 (𝑖 ⌄ 2)
+  field Face : Visibility -> ∀{p q : Point} -> (a b : Path Edge p q) -> 𝒰 (𝑖 ⌄ 2)
 
   field {{decide-≡-Point}} : hasDecidableEquality Point
   field {{decide-≡-Edge}} : ∀{a b} -> hasDecidableEquality (Edge a b)
-  field {{decide-≡-Face}} : ∀{a b} -> {p q : Path Edge a b} -> ∀{v} -> hasDecidableEquality (Face p q v)
+  field {{decide-≡-Face}} : ∀{a b} -> {p q : Path Edge a b} -> ∀{v} -> hasDecidableEquality (Face v p q)
 
 open 2Graph public
 
@@ -85,24 +87,6 @@ open 2Graph public
 -- We describe the 2-cells
 
 
-module _ (G : 2Graph 𝑖) where
-
-  data 2Cell : {m n : Point G} (μs ηs : Path (Edge G) m n) -> Visibility -> 𝒰 𝑖 where
-    id : ∀{m n} -> {μs : 1Cell G m n} -> 2Cell μs μs invis
-
-    gen : ∀{m n v} -> {α β : 1Cell G m n}
-          -> Face G α β v
-          -> 2Cell α β v
-
-    _⨾_ : ∀{m n k v w} -> {α₀ α₁ : 1Cell G m n} -> {β₀ β₁ : 1Cell G n k}
-          -> 2Cell α₀ α₁ v
-          -> 2Cell β₀ β₁ w
-          -> 2Cell (α₀ ◆ β₀) (α₁ ◆ β₁) (v ⋆ w)
-
-    _◇_ : ∀{m n v w} -> {α β γ : 1Cell G m n}
-          -> 2Cell α β v
-          -> 2Cell β γ w
-          -> 2Cell α γ (v ⋆ w)
 
 
 ------------------------------------------------------------------------
@@ -122,8 +106,8 @@ Mode G = Point G
 ModeHom : (G : 2Graph 𝑖) -> (m n : Mode G) -> 𝒰 _
 ModeHom G = Path (Edge G)
 
-ModeTrans : (G : 2Graph 𝑖) -> ∀{m n} -> (μ η : ModeHom G m n) -> Visibility -> 𝒰 _
-ModeTrans G = 2Cell G
+-- ModeTrans : (G : 2Graph 𝑖) -> ∀{m n} -> (μ η : ModeHom G m n) -> Visibility -> 𝒰 _
+-- ModeTrans G = 2Cell G
 
 
 
@@ -136,4 +120,6 @@ ModeTrans G = 2Cell G
 --   field decide-≡-Face : ∀{a b} -> {p q : Path (Edge G) a b} -> ∀{v} -> {s t : Face G p q v} -> isDecidable (s ≡ t)
 
 -- open isDecidable2Graph {{...}} public
+
+
 
