@@ -1,10 +1,12 @@
 
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
 module KamiTheory.Main.Generic.ModeSystem.Definition where
 
 open import Agora.Conventions
 open import KamiTheory.Basics
+
+{-# BUILTIN REWRITE _≡_ #-}
 
 
 ------------------------------------------------------------------------
@@ -24,11 +26,20 @@ data Path {X : 𝒰 𝑖} (R : X -> X -> 𝒰 𝑗) : X -> X -> 𝒰 (𝑖 ､ �
 
 infixr 80 _⨾_
 
-_◆_ : ∀{X : 𝒰 𝑖} -> ∀{R : X -> X -> 𝒰 𝑗} -> ∀{m n k} -> Path R m n -> Path R n k -> Path R m k
-id ◆ q = q
-(x ⨾ p) ◆ q = x ⨾ (p ◆ q)
 
-infixr 30 _◆_
+module _ {X : 𝒰 𝑖} {R : X -> X -> 𝒰 𝑗} where
+  _◆_ : ∀{m n k} -> Path R m n -> Path R n k -> Path R m k
+  id ◆ q = q
+  (x ⨾ p) ◆ q = x ⨾ (p ◆ q)
+
+  infixr 30 _◆_
+
+  assoc-◆ : ∀{m n k l} -> (p : Path R m n) -> (q : Path R n k) -> (r : Path R k l)
+          -> (p ◆ q) ◆ r ≡ p ◆ q ◆ r
+  assoc-◆ id q r = refl
+  assoc-◆ (x ⨾ p) q r = cong-≡ (x ⨾_) (assoc-◆ p q r)
+
+  {-# REWRITE assoc-◆ #-}
 
 ---------------------------------------------
 -- Visibility parametrization

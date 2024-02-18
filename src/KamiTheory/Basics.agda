@@ -13,6 +13,7 @@ open import Agda.Builtin.Nat using (Nat; zero; suc)
 
 open import Agora.Conventions using (_≡_ ; refl-≡)
 
+
 -- we say refl instead of refl-≡
 pattern refl = refl-≡
 

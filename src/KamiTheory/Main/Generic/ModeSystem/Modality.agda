@@ -1,5 +1,5 @@
 
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
 module KamiTheory.Main.Generic.ModeSystem.Modality where
 
