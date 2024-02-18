@@ -57,7 +57,7 @@ infixr 22 _▹▹_
 infixr 22 _▹▹[_]_
 infix 30 Σ_▹_
 infixr 22 _××_
-infix 30 ⟦_⟧_▹_
+-- infix 30 ⟦_⟧_▹_
 infixl 30 _ₛ•ₛ_ _•ₛ_ _ₛ•_
 infix 25 _[_]
 infix 25 _[_]↑
@@ -85,7 +85,7 @@ data Metakind : Set where
 data GenTs (T : Nat -> 𝒰 𝑗) (A : Nat -> Metakind → 𝒰 𝑖) : Nat → List (Metakind × Nat) → 𝒰 (𝑖 ､ 𝑗) where
   []  : {n : Nat} → GenTs T A n []
   _⦊_∷_ : ∀{k : Metakind} -> {n b : Nat} {bs : List (Metakind × Nat)}
-            -> (ξs : T b) -> (t : A (b + n) k) -> (ts : GenTs T A n bs)
+            -> (μs : T b) -> (t : A (b + n) k) -> (ts : GenTs T A n bs)
             → GenTs T A n ((k , b) ∷ bs)
 
 infixr 20 _⦊_∷_
@@ -621,7 +621,7 @@ wkVar (lift ρ) (x +1) = (wkVar ρ x) +1
 mutual
   wkGen : {m n : Nat} {bs : List (Metakind × Nat)} (ρ : Wk m n) (c : GenTs (StdVec (Modality P)) (KindedTerm P) n bs) → GenTs (StdVec (Modality P)) (KindedTerm P) m bs
   wkGen ρ []                = []
-  wkGen ρ (_⦊_∷_ {b = b} ξs t c) = {!!} ⦊ (wk-Kinded (liftn ρ b) t) ∷ (wkGen ρ c)
+  wkGen ρ (_⦊_∷_ {b = b} ξs t c) = ξs ⦊ (wk-Kinded (liftn ρ b) t) ∷ (wkGen ρ c)
 
   -- wk-Mod : {m n : Nat} (ρ : Wk m n) (t : Mod P n) → Mod P m
   -- wk-Mod ρ (ML x) = ML x
@@ -736,16 +736,26 @@ Transitions P n v = Fin n -> Transition P v
 uniformTransitions : ∀{v} -> Transition P v -> Transitions P n v
 uniformTransitions ξ _ = ξ
 
+liftTransitions : ∀{v b} -> (StdVec (Modality P) b) -> Transitions P n v -> Transitions P (b + n) v
+liftTransitions = {!!}
+
 
 -- Pushes a transition down the term. We push it until the next
 -- `transform` term or variable.
 mutual
   push-Gen : ∀{v bs} -> Transitions P n v -> GenTs (StdVec (Modality P)) (KindedTerm P) n bs -> GenTs (StdVec (Modality P)) (KindedTerm P) n bs
-  push-Gen = {!!}
+  push-Gen ξs [] = []
+  push-Gen ξs (μs ⦊ t ∷ ts) = μs ⦊ push-Kinded (liftTransitions μs ξs) t ∷ push-Gen ξs ts
+
+  push-Kinded : ∀{v k} -> Transitions P n v -> KindedTerm P n k -> KindedTerm P n k
+  push-Kinded ξs (term x) = term (push ξs x)
+  push-Kinded ξs (modality x) = {!!}
+  push-Kinded ξs (transition x) = {!!}
+  push-Kinded ξs (x // x₁) = {!!}
 
   push : ∀{v} -> Transitions P n v -> Term P n -> Term P n
-  push ξ (gen k c) = {!!}
-  push ξ (var x ζ) = var x (ζ ⋆-Transition ξ x)
+  push ξs (gen k c) = gen k (push-Gen ξs c) -- NOTE: NEED SPECIAL CASE FOR TRANSFORM
+  push ξs (var x ζ) = var x (ζ ⋆-Transition ξs x)
 
 
 untransform-Term : Term P n -> Term P n
@@ -840,7 +850,7 @@ toSubst pr x = var (wkVar pr x) id
 mutual
   substGen : {bs : List (Metakind × Nat)} (σ : Subst P m n) (g : GenTs (StdVec (Modality P)) (KindedTerm P) n bs) → GenTs (StdVec (Modality P)) (KindedTerm P) m bs
   substGen σ  []      = []
-  substGen σ (_⦊_∷_ {b = b} ξs t ts) = {!!} ⦊ subst-Kinded (liftSubstn σ b) t ∷ (substGen σ ts)
+  substGen σ (_⦊_∷_ {b = b} ξs t ts) = ξs ⦊ subst-Kinded (liftSubstn σ b) t ∷ (substGen σ ts)
 
   subst-Kinded : ∀{k : Metakind} (σ : Subst P m n) (t : KindedTerm P n k) → KindedTerm P m k
   subst-Kinded σ (term x) = term (subst σ x)
