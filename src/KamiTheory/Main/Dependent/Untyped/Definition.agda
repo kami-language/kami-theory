@@ -37,12 +37,15 @@ open import KamiTheory.ThirdParty.logrel-mltt.Tools.Product
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.List
 import KamiTheory.ThirdParty.logrel-mltt.Tools.PropositionalEquality as PE
 
-open import KamiTheory.Main.Dependent.Modality.Definition
+-- open import KamiTheory.Main.Dependent.Modality.Definition
+open import KamiTheory.Main.Generic.ModeSystem.Definition
+
+open import Agora.Conventions using (𝑖 ; 𝒰)
 
 -- Kami: We additionally parametrize over a set P, describing the set of locations
--- module KamiUntyped (P : Set) where
+-- module KamiUntyped (P : 2Graph 𝑖) where
 private variable
-  P : Set
+  P : 2Graph 𝑖
 
 infixl 30 _∙_
 infix 30 Π_▹_
@@ -71,12 +74,12 @@ private
 
 
 data Metakind : Set where
-  term entry location basemod modehom modetrans : Metakind
+  term entry modality : Metakind
+  transition : Visibility -> Metakind
 
-{-
 -- Representation of sub terms using a list of binding levels
 
-data GenTs (A : Nat -> Metakind → Set) : Nat → List (Metakind × Nat) → Set where
+data GenTs (A : Nat -> Metakind → 𝒰 𝑖) : Nat → List (Metakind × Nat) → 𝒰 𝑖 where
   []  : {n : Nat} → GenTs A n []
   _∷_ : ∀{k : Metakind} -> {n b : Nat} {bs : List (Metakind × Nat)} (t : A (b + n) k) (ts : GenTs A n bs) → GenTs A n ((k , b) ∷ bs)
 
@@ -114,7 +117,7 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
 
   Emptyreckind : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
-  -- Kami modehom system
+  -- Kami modality system
   -- 𝓀-/ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
   -- Kami modalities
@@ -126,11 +129,11 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
 
   -------------------
   -- Kami types (global)
-  𝓀-Modal : MainKind ((term , n0) ∷ (basemod , n0) ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
+  𝓀-Modal : MainKind ((term , n0) ∷ (modality , n0) ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
   -- 𝓀-＠ : MainKind ((term , n0) ∷ (location , n0) ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
   -- 𝓀-Com : MainKind ((location , n0) ∷ (term , n0) ∷ []) -- Com : ⟨ P ⟩ -> Γ ⊢Global -> Γ ⊢Global
 
-  -- Kami modehom terms
+  -- Kami modality terms
   𝓀-mod : MainKind ((term , n0) ∷ [])
   𝓀-unmod : MainKind ((term , n0) ∷ [])
   -- 𝓀-send : MainKind ((term , n0) ∷ [])
@@ -144,7 +147,7 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   𝓀-Tr : MainKind []
 
   -- Constructing a transition space with a single transition
-  𝓀-tr : MainKind ((term , n0) ∷ (modehom , n0) ∷ (modehom , n0) ∷ [])
+  𝓀-tr : MainKind ((term , n0) ∷ (modality , n0) ∷ (modality , n0) ∷ [])
 
   -- identity transition
   𝓀-end : MainKind []
@@ -186,7 +189,7 @@ data LeafKind : Set where
 data Kind : (ns : List (Metakind × Nat)) → Set where
   main : ∀{ns} -> MainKind ns -> Kind ns
   leaf : LeafKind -> Kind []
-  𝓀-loc : Kind ((location , n0) ∷ (term , n0) ∷ []) -- loc : (U ≤ W -> (Γ ⊢ L / Local U)) -> Γ ⊢ (L ＠ U) / Global
+  𝓀-transform : Kind ((transition vis , n0) ∷ (term , n0) ∷ [])
 
 -- Term Ps are indexed by its number of unbound variables and are either:
 -- de Bruijn style variables or
@@ -194,44 +197,27 @@ data Kind : (ns : List (Metakind × Nat)) → Set where
 
 
 
-data Term (P : Set) (n : Nat) : Set
+data Term (P : 2Graph 𝑖) (n : Nat) : 𝒰 𝑖
 
-data KindedTerm (P : Set) (n : Nat) : (k : Metakind) -> Set where
+data KindedTerm (P : 2Graph 𝑖) (n : Nat) : (k : Metakind) -> 𝒰 𝑖 where
   term : Term P n -> KindedTerm P n term
-  location : (U : P) -> KindedTerm P n location
-  basemod : ∀{k l} -> BaseModeHom P k l -> KindedTerm P n basemod
-  modehom : ∀{k l} -> ModeHom P k l -> KindedTerm P n modehom
+  modality : Modality P -> KindedTerm P n modality
+  transition : ∀{v} -> Transition P v -> KindedTerm P n (transition v)
   _//_ : Term P n -> Modality P -> KindedTerm P n entry
+
+pattern _/_ A μs = A // _ ↝ _ ∋ μs
+infixl 21 _//_ _/_
+
 
 data Term P n where
   gen : {bs : List (Metakind × Nat)} (k : Kind bs) (c : GenTs (KindedTerm P) n bs) → Term P n
-  -- base : (U : BaseTerm P n) -> Term P n
   var : (x : Fin n) → Term P n
 
--- data Mod P n where
---   ML : MLMod P -> Mod P n
---   ⇄ : P -> (Term P n) -> Mod P n
 
-
-Entry : (P : Set) (n : Nat) -> Set
+Entry : (P : 2Graph 𝑖) (n : Nat) -> 𝒰 𝑖
 Entry P n = KindedTerm P n entry
 
--- record Entry (P : Set) (n : Nat) : Set where
---   constructor _/_
---   field getSort : Term P n
---   field getMod : Mod P n
 
--- open Entry public
-
-pattern _/_ A μs = A // _ ↝ _ ∋ μs
-
-infixl 21 _//_ _/_
-
--- pattern _/ₜ_ a b     = gen (main 𝓀-/) (a ∷ b ∷ [])
--- pattern ◯           = (ML Global)
--- pattern ▲ U         = (ML (Local U))
--- pattern ⇄ R A       = gen (main 𝓀-⇄) ((location R) ∷ A ∷ [])
--- pattern ML p        = base (mlmod p)
 
 
 
@@ -324,10 +310,10 @@ Emptyrec A e = gen (main Emptyreckind) (term A ∷ term e ∷ [])
 -- pattern comtype a    = gen (main 𝓀-comtype) (term a ∷ [])
 -- pattern comval a     = gen (main 𝓀-comval) (term a ∷ [])
 
-pattern Modal A μ     = gen (main 𝓀-Modal) (term A ∷ (basemod μ) ∷ [])
+pattern Modal A μ     = gen (main 𝓀-Modal) (term A ∷ (modality μ) ∷ [])
 -- pattern _＠_ L U     = gen (main 𝓀-＠) (term L ∷ (location U) ∷ [])
-pattern loc U t      = gen 𝓀-loc ((location U) ∷ term t ∷ []) -- NOTE, this one is *not* wrapped in `main`
-pattern unloc t      = gen (main 𝓀-unloc) (term t ∷ [])
+-- pattern loc U t      = gen 𝓀-loc ((location U) ∷ term t ∷ []) -- NOTE, this one is *not* wrapped in `main`
+-- pattern unloc t      = gen (main 𝓀-unloc) (term t ∷ [])
 
 
 -- pattern send t       = gen (main 𝓀-send) (term t ∷ [])
@@ -338,7 +324,7 @@ pattern unmod t      = gen (main 𝓀-unmod) (term t ∷ [])
 
 -- Transformations / Transitions
 pattern Tr           = gen (main 𝓀-Tr) ([])
-pattern _/_⇒_ A μ η = gen (main 𝓀-tr) (term A ∷ modehom μ ∷ modehom η ∷ [])
+pattern _/_⇒_ A μ η = gen (main 𝓀-tr) (term A ∷ modality μ ∷ modality η ∷ [])
 pattern _≫_ m n     = gen (main 𝓀-≫) (term m ∷ term n ∷ [])
 pattern _∥_ m n     = gen (main 𝓀-∥) (term m ∷ term n ∷ [])
 -- pattern [_]▹_ T A    = gen (main 𝓀-[]▹) (term T ∷ term A ∷ [])
@@ -353,7 +339,7 @@ pattern transform t  = gen (main 𝓀-transform) (term t ∷ [])
 
 
 -- pattern let-tr t s   = gen (main 𝓀-let-tr) (term t ∷ term s ∷ [])
-pattern let-in t s   = gen (main 𝓀-let-in) (term t ∷ term s ∷ [])
+-- pattern let-in t s   = gen (main 𝓀-let-in) (term t ∷ term s ∷ [])
 
 infixl 30 _/_⇒_
 
@@ -406,7 +392,7 @@ suc-PE-injectivity PE.refl = PE.refl
 -- A term is neutral if it has a variable in head position.
 -- The variable blocks reduction of such terms.
 
-data Neutral (P : Set) : KindedTerm P n term → Set where
+data Neutral (P : 2Graph 𝑖) : KindedTerm P n term → Set where
   -- var       : (x : Fin n) → Neutral P (var x)
   -- ∘ₙ        : Neutral P t   → Neutral P (t ∘ u)
   -- fstₙ      : Neutral P t   → Neutral P (fstₜ t)
@@ -421,7 +407,7 @@ data Neutral (P : Set) : KindedTerm P n term → Set where
 
 -- These are the (lazy) values of our language.
 
-data Whnf {P : Set} {n : Nat} : Term P n → Set where
+data Whnf {P : 2Graph 𝑖} {n : Nat} : Term P n → Set where
 
   -- Type constₜructors are whnfs.
   Uₙ     : Whnf UU
@@ -498,7 +484,7 @@ cons≢ne () PE.refl
 
 -- A whnf of type ℕ is either zero, suc t, or neutral.
 
-data Natural {P : Set} {n : Nat} : Term P n → Set where
+data Natural {P : 2Graph 𝑖} {n : Nat} : Term P n → Set where
   zeroₙ :             Natural zeroₜ
   sucₙ  :             Natural (sucₜ t)
   nilₙ  :             Natural nilₜ
@@ -509,7 +495,7 @@ data Natural {P : Set} {n : Nat} : Term P n → Set where
 -- A (small) type in whnf is either Π A B, Σ A B, ℕ, Empty, Unit or neutral.
 -- Large types could also be U.
 
-data Type {P : Set} {n : Nat} : Term P n → Set where
+data Type {P : 2Graph 𝑖} {n : Nat} : Term P n → Set where
   Πₙ     :             Type (Π A ▹ B)
   Σₙ     :             Type (Σ A ▹ B)
   ℕₙ     :             Type NN
@@ -524,13 +510,13 @@ data Type {P : Set} {n : Nat} : Term P n → Set where
 
 -- A whnf of type Π A ▹ B is either lam t or neutral.
 
-data Function {P : Set} {n : Nat} : Term P n → Set where
+data Function {P : 2Graph 𝑖} {n : Nat} : Term P n → Set where
   lamₙ : Function (lam t)
   ne   : Neutral P t → Function t
 
 -- A whnf of type Σ A ▹ B is either prod t u or neutral.
 
-data Product {P : Set} {n : Nat} : Term P n → Set where
+data Product {P : 2Graph 𝑖} {n : Nat} : Term P n → Set where
   prodₙ : Product (prod t u)
   ne    : Neutral P t → Product t
 
@@ -625,9 +611,8 @@ mutual
 
   wk-Kinded : ∀{k : Metakind} -> {m n : Nat} (ρ : Wk m n) (t : KindedTerm P n k) → KindedTerm P m k
   wk-Kinded ρ (term x) = term (wk ρ x)
-  wk-Kinded ρ (location U) = location U
-  wk-Kinded ρ (basemod μ) = basemod μ
-  wk-Kinded ρ (modehom μ) = modehom μ
+  wk-Kinded ρ (transition v) = transition v
+  wk-Kinded ρ (modality μ) = modality μ
   wk-Kinded ρ (x / p) = wk ρ x / p
 
   wk : {m n : Nat} (ρ : Wk m n) (t : Term P n) → Term P m
@@ -719,7 +704,7 @@ A ×× B = Σ A ▹ wk1 B
 
 -- The substitution σ itself is a map from natural numbers to terms.
 
-Subst : (P : Set) -> Nat → Nat → Set
+Subst : (P : 2Graph 𝑖) -> Nat → Nat → 𝒰 𝑖
 Subst P m n = Fin n → Term P m
 
 -- Given closed contexts ⊢ Γ and ⊢ Δ,
@@ -805,9 +790,8 @@ mutual
 
   subst-Kinded : ∀{k : Metakind} (σ : Subst P m n) (t : KindedTerm P n k) → KindedTerm P m k
   subst-Kinded σ (term x) = term (subst σ x)
-  subst-Kinded σ (location U) = location U
-  subst-Kinded σ (basemod μ) = basemod μ
-  subst-Kinded σ (modehom μ) = modehom μ
+  subst-Kinded σ (transition v) = transition v
+  subst-Kinded σ (modality μ) = modality μ
   subst-Kinded σ (x / p) = subst σ x / p
 
   subst : (σ : Subst P m n) (t : Term P n) → Term P m
@@ -873,4 +857,3 @@ t [ s ]↑ = subst (consSubst (wk1Subst idSubst) s) t
 
 
 
--}

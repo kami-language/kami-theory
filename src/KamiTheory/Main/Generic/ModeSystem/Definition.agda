@@ -133,10 +133,10 @@ open Modality public
 
 
 ---------------------------------------------
--- A transformation is a mode transformation with arbitrary
+-- A transition is a mode transformation with arbitrary
 -- domain and codomain
 
-record Transformation (G : 2Graph 𝑖) (v : Visibility) : 𝒰 𝑖 where
+record Transition (G : 2Graph 𝑖) (v : Visibility) : 𝒰 𝑖 where
   constructor _⇒_∋_
   field {dom-Mode} : Mode G
   field {cod-Mode} : Mode G
