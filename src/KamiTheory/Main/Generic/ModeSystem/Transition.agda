@@ -51,7 +51,7 @@ data Transition (G : 2Graph 𝑖) : (v : Visibility) -> 𝒰 𝑖 where
 
 -- Monoid structure on transitions
 
-module _ {G : 2Graph 𝑖} {{_ : isDecidable2Graph G}} where
+module _ {G : 2Graph 𝑖} where
 
   _⋆-Transition_ : Transition G v -> Transition G w -> Transition G (v ⋆ w)
   id ⋆-Transition s = s

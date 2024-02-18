@@ -29,7 +29,7 @@ open Modality public
 ------------------------------------------------------------------------
 -- Decidability
 
-module _ {G : 2Graph 𝑖} {{_ : isDecidable2Graph G}} where
+module _ {G : 2Graph 𝑖} where
 
   ---------------------------------------------
   -- ModeHoms have decidable equality
@@ -38,9 +38,10 @@ module _ {G : 2Graph 𝑖} {{_ : isDecidable2Graph G}} where
   _≟-ModeHom_ id id = yes refl-≡
   _≟-ModeHom_ id (x ⨾ l) = no (λ ())
   _≟-ModeHom_ (x ⨾ k) id = no (λ ())
-  _≟-ModeHom_ (_⨾_ {n = n} x k) (_⨾_ {n = n₁} y l) with decide-≡-Point n n₁
+  _≟-ModeHom_ (_⨾_ {n = n} x k) (_⨾_ {n = n₁} y l) with n ≟ n₁
+  -- _≟-ModeHom_ (_⨾_ {n = n} x k) (_⨾_ {n = n₁} y l) with decide-≡-Point n n₁
   ... | no p = no λ {refl -> p refl}
-  ... | yes refl with decide-≡-Edge x y
+  ... | yes refl with x ≟ y
   ... | no p = no λ {refl -> p refl}
   ... | yes refl with k ≟-ModeHom l
   ... | no p = no λ {refl -> p refl}
@@ -56,9 +57,9 @@ module _ {G : 2Graph 𝑖} {{_ : isDecidable2Graph G}} where
 
 
   _≟-Modality_ : (μ η : Modality G) -> isDecidable (μ ≡ η)
-  (m₁ ↝ n₁ ∋ μ) ≟-Modality (m₂ ↝ n₂ ∋ η) with decide-≡-Point m₁ m₂
+  (m₁ ↝ n₁ ∋ μ) ≟-Modality (m₂ ↝ n₂ ∋ η) with m₁ ≟ m₂
   ... | no p = no λ {refl -> p refl}
-  ... | yes refl with decide-≡-Point n₁ n₂
+  ... | yes refl with n₁ ≟ n₂
   ... | no p = no λ {refl -> p refl}
   ... | yes refl with μ ≟ η
   ... | no p = no λ {refl -> p refl}

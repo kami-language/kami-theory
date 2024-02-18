@@ -51,12 +51,16 @@ instance
 
 ---------------------------------------------
 -- Input data for a free strict 2-category,
--- thus a 2-graph
+-- thus a 2-graph. We require the graph to be decidable.
 
 record 2Graph (𝑖 : 𝔏 ^ 3) : 𝒰 (𝑖 ⁺) where
   field Point : 𝒰 (𝑖 ⌄ 0)
   field Edge : Point -> Point -> 𝒰 (𝑖 ⌄ 1)
   field Face : ∀{p q : Point} -> (a b : Path Edge p q) -> Visibility -> 𝒰 (𝑖 ⌄ 2)
+
+  field {{decide-≡-Point}} : hasDecidableEquality Point
+  field {{decide-≡-Edge}} : ∀{a b} -> hasDecidableEquality (Edge a b)
+  field {{decide-≡-Face}} : ∀{a b} -> {p q : Path Edge a b} -> ∀{v} -> hasDecidableEquality (Face p q v)
 
 open 2Graph public
 
@@ -126,10 +130,10 @@ ModeTrans G = 2Cell G
 ------------------------------------------------------------------------
 -- Decidability
 
-record isDecidable2Graph (G : 2Graph 𝑖) : 𝒰 𝑖 where
-  field decide-≡-Point : (a b : Point G) -> isDecidable (a ≡ b)
-  field decide-≡-Edge : ∀{a b} -> (p q : Edge G a b) -> isDecidable (p ≡ q)
-  field decide-≡-Face : ∀{a b} -> {p q : Path (Edge G) a b} -> ∀{v} -> {s t : Face G p q v} -> isDecidable (s ≡ t)
+-- record isDecidable2Graph (G : 2Graph 𝑖) : 𝒰 𝑖 where
+--   field decide-≡-Point : (a b : Point G) -> isDecidable (a ≡ b)
+--   field decide-≡-Edge : ∀{a b} -> (p q : Edge G a b) -> isDecidable (p ≡ q)
+--   field decide-≡-Face : ∀{a b} -> {p q : Path (Edge G) a b} -> ∀{v} -> {s t : Face G p q v} -> isDecidable (s ≡ t)
 
-open isDecidable2Graph {{...}} public
+-- open isDecidable2Graph {{...}} public
 
