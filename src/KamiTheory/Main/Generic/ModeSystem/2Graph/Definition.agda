@@ -1,7 +1,7 @@
 
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
-module KamiTheory.Main.Generic.ModeSystem.Definition where
+module KamiTheory.Main.Generic.ModeSystem.2Graph.Definition where
 
 open import Agora.Conventions
 open import KamiTheory.Basics

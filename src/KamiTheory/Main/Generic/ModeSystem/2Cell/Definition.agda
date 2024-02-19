@@ -2,7 +2,7 @@
 
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
-module KamiTheory.Main.Generic.ModeSystem.2Cell where
+module KamiTheory.Main.Generic.ModeSystem.2Cell.Definition where
 
 open import Agora.Conventions
 open import KamiTheory.Basics
@@ -75,6 +75,9 @@ module _ (G : 2Graph 𝑖) where
   ⌞_ : ∀{A : 𝒰 𝑖} -> A -> A
   ⌞_ a = a
 
+  ---------------------------------------------
+  -- ∃Partitions
+
   record ∃Partition {a b : 0Cell G} (μ : 1Cell G a b) : 𝒰 𝑖 where
     constructor incl
     field {size} : ℕ
@@ -82,6 +85,11 @@ module _ (G : 2Graph 𝑖) where
     field get : Partition size freeParts μ
 
   open ∃Partition public
+
+
+  data _≤-∃Partition_ : ∀{a b : 0Cell G} {μ : 1Cell G a b}
+                        -> (π σ : ∃Partition μ)
+                        -> 𝒰 𝑖 where
 
 
   join-FreeParts : (ϕs : FreeParts a b) -> (ψs : FreeParts b c) -> FreeParts a c
@@ -112,24 +120,30 @@ module _ (G : 2Graph 𝑖) where
 
 
 
-  data _≤-∃Partition_ : ∀{a b : 0Cell G} {μ : 1Cell G a b}
-                        -> (π σ : ∃Partition μ)
-                        -> 𝒰 𝑖 where
+  ---------------------------------------------
+  -- Patterns
+  --
+  -- Reduction rules are given by patterns.
+
+
+
+
+
 
 
 
   -- If we have a μ₁ part of a 1Cell μ, and a partition of it, then we can
   -- get the subpartition which belongs to the μ₁
 
-  extract : {a b c d : 0Cell G}
-            (μ₀ : 1Cell G a b)
-            (μ₁ : 1Cell G b c)
-            (μ₂ : 1Cell G c d)
-            (π : ∃Partition (μ₀ ◆ μ₁ ◆ μ₂))
-            -> ∑ λ (π₁ : ∃Partition μ₁)
-              -> (μ₀ ⋊ π₁ ⋉ μ₂) ≤-∃Partition π
-  extract id μ₁ μ₂ π = {!!}
-  extract (x ⨾ μ₀) μ₁ μ₂ π = {!!}
+  -- extract : {a b c d : 0Cell G}
+  --           (μ₀ : 1Cell G a b)
+  --           (μ₁ : 1Cell G b c)
+  --           (μ₂ : 1Cell G c d)
+  --           (π : ∃Partition (μ₀ ◆ μ₁ ◆ μ₂))
+  --           -> ∑ λ (π₁ : ∃Partition μ₁)
+  --             -> (μ₀ ⋊ π₁ ⋉ μ₂) ≤-∃Partition π
+  -- extract id μ₁ μ₂ π = {!!}
+  -- extract (x ⨾ μ₀) μ₁ μ₂ π = {!!}
 
 
 {-
