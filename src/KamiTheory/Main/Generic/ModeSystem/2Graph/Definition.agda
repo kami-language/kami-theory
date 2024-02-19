@@ -41,6 +41,30 @@ module _ {X : 𝒰 𝑖} {R : X -> X -> 𝒰 𝑗} where
 
   {-# REWRITE assoc-◆ #-}
 
+  unit-r-◆ : ∀{m n} -> (p : Path R m n) -> p ◆ id ≡ p
+  unit-r-◆ id = refl
+  unit-r-◆ (x ⨾ p) = cong-≡ (x ⨾_) (unit-r-◆ p)
+
+  {-# REWRITE unit-r-◆ #-}
+
+  module _ {{_ : hasDecidableEquality X}} {{_ : ∀{m n : X} -> hasDecidableEquality (R m n)}} where
+
+    decide-≡-Path : ∀{m n} -> (x y : Path R m n) → isDecidable (x ≡ y)
+    decide-≡-Path id id = yes refl-≡
+    decide-≡-Path id (x ⨾ l) = no (λ ())
+    decide-≡-Path (x ⨾ k) id = no (λ ())
+    decide-≡-Path (_⨾_ {n = n} x k) (_⨾_ {n = n₁} y l) with n ≟ n₁
+    ... | no p = no λ {refl -> p refl}
+    ... | yes refl with x ≟ y
+    ... | no p = no λ {refl -> p refl}
+    ... | yes refl with decide-≡-Path k l
+    ... | no p = no λ {refl -> p refl}
+    ... | yes refl = yes refl
+
+    instance
+      hasDecidableEquality:Path : ∀{m n} -> hasDecidableEquality (Path R m n)
+      hasDecidableEquality:Path = record { _≟_ = decide-≡-Path }
+
 ---------------------------------------------
 -- Visibility parametrization
 --

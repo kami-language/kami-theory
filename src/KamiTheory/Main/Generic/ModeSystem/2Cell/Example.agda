@@ -69,7 +69,79 @@ module SendReceiveNarrow-2Cells (P : Preorder 𝑖) {{_ : hasDecidableEquality �
                     ∷ []
 
 
+module Examples where
+
+  open import Data.Fin using (#_ ; zero ; suc)
+  open import Data.List using (_∷_ ; [])
+
+  open import Agora.Order.Preorder
+  open import Agora.Order.Lattice
+  open import Agora.Data.Normal.Definition
+  open import Agora.Data.Normal.Instance.Setoid
+  open import Agora.Data.Normal.Instance.Preorder
+  open import Agora.Data.Normal.Instance.Lattice
+  open import Agora.Data.Normal.Instance.DecidableEquality
+
+  open import KamiTheory.Data.Open.Definition
+  open import KamiTheory.Data.UniqueSortedList.Definition
+  open import KamiTheory.Order.StrictOrder.Base
+  open import KamiTheory.Order.StrictOrder.Instances.UniqueSortedList
+
+  PP : Preorder _
+  PP = -- QQ
+    ′_′ (Normalform ((𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 3))) since isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ)) {_} {{isPreorder:𝒩 {{isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ {{isSetoid:𝒫ᶠⁱⁿ}} {{isPreorder:𝒫ᶠⁱⁿ}} {{isDecidablePreorder:≤-𝒫ᶠⁱⁿ}}}}}}
+
+  instance
+    isProp:≤ : ∀{a b : ⟨ PP ⟩} -> isProp (a ≤ b)
+    isProp:≤ = {!!}
+
+  open Ex.SendReceiveNarrow-2Graph PP {{{!isProp:≤!}}}
 
 
+  uu : ⟨ PP ⟩
+  uu = (((⦗ # 0 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
 
+  vv : ⟨ PP ⟩
+  vv = (((⦗ # 1 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
+
+  ww : ⟨ PP ⟩
+  ww = (((⦗ # 2 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
+
+  G : 2Graph _
+  G = (SRN {{isProp:≤}})
+
+  pat : 2CellLinePattern G vis _ 1
+  pat = record { State = S ; start = tt ; step = s }
+    where
+      S : ℕ -> 𝒰₀
+      S zero = 𝟙-𝒰
+      S (suc i) = 𝟙-𝒰
+
+      s : {i : ℕ} → S i → {a b : 0Cell G} (ξ : SingleFace G vis a b) →
+          Maybe (SubSingleFace G vis ξ ×-𝒰 𝟙-𝒰)
+      s st (idₗ₁ ⌟[ send U ]⌞ idᵣ₁) with U ≟ vv
+      ... | no p = nothing
+      ... | yes p = yes (record
+                          { extₗ = idₗ₁
+                          ; keepₗ = id
+                          ; keepᵣ = id
+                          ; extᵣ = idᵣ₁
+                          ; proofₗ = {!!}
+                          ; proofᵣ = {!!}
+                          } , tt)
+      s st (idₗ₁ ⌟[ recv U ]⌞ idᵣ₁) = nothing
+      -- s st (idₗ₁ ⌟[ narrow x ]⌞ idᵣ₁) = nothing
+
+
+  ξ₀ : Some2CellGen G vis id _
+  ξ₀ = incl ((id) ⌟[ send uu ]⌞ (id) ⌟[ send vv ]⌞ (id) ⌟)
+
+  -- We try to find the send vv face
+  result = findNext G pat _ (get ξ₀)
+
+  ξ : 2Cell G vis (`＠` vv ⨾ id) (`＠` vv ⨾ id)
+  ξ = SendReceiveNarrow-2Cells.RewriteCells.SR-eval-dom PP {{{!!}}} vv
+
+  -- now lets try to find sth in a 2cell
+  result2 = findAll G pat ξ
 
