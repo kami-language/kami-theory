@@ -6,7 +6,7 @@ module KamiTheory.Main.Generic.ModeSystem.2Cell.Definition where
 
 open import Agora.Conventions
 open import KamiTheory.Basics
-open import KamiTheory.Main.Generic.ModeSystem.Definition
+open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
 open import KamiTheory.Main.Generic.ModeSystem.Modality
 
 data Normal? : Set where
@@ -27,6 +27,7 @@ module _ (G : 2Graph 𝑖) where
     a b c d e f : 0Cell G
     μ : 1Cell G a b
     η : 1Cell G b c
+    ω : 1Cell G c d
     η₀ η₁ : 1Cell G b c
     τ₀ τ₁ : 1Cell G e f
     ξ₀ ξ₁ : 1Cell G e f
@@ -69,7 +70,7 @@ module _ (G : 2Graph 𝑖) where
 
   infixr 40 _⌟[_]⌞_
 
-  infixr 40 _⌟
+  infixr 42 _⌟
   infixl 38 ⌞_
 
   ⌞_ : ∀{A : 𝒰 𝑖} -> A -> A
@@ -146,38 +147,52 @@ module _ (G : 2Graph 𝑖) where
   -- extract (x ⨾ μ₀) μ₁ μ₂ π = {!!}
 
 
-{-
 
 
 
   -- A generator for the 2cells has a domain and codomain given by two partitions
   -- with the same free parts
   data 2CellGen (v : Visibility) :
-                   {a b : 0Cell G} (ϕs : FreeParts) {μ η : 1Cell G a b}
+                   {a b : 0Cell G} (ϕs : FreeParts a b) {μ η : 1Cell G a b}
                 -> (μp : Partition n ϕs μ)
                 -> (ηp : Partition n ϕs η)
                 -> 𝒰 𝑖 where
-    _⌟ : (μ : 1Cell G a b) -> 2CellGen v [ a ↝ b ∋ μ ] (⌞ μ ⌟) (⌞ μ ⌟)
+    _⌟ : (μ : 1Cell G a b) -> 2CellGen v [ μ ] (⌞ μ ⌟) (⌞ μ ⌟)
     _⌟[_]⌞_ : (ϕ : 1Cell G a b)
              -> (ξ : Face G v ξ₀ ξ₁)
              -> ∀{ϕs}
              -> {μp : Partition n ϕs μ}
              -> {ηp : Partition n ϕs η}
              -> 2CellGen v ϕs {μ} {η} μp ηp
-             -> 2CellGen v (a ↝ b ∋ ϕ ∷ ϕs)
+             -> 2CellGen v (ϕ ∷ ϕs)
                          (ϕ ⌟[ ξ₀ ]⌞ μp)
                          (ϕ ⌟[ ξ₁ ]⌞ ηp)
 
+  gen←base : ∀{v} -> (ξ : Face G v ξ₀ ξ₁)  -> 2CellGen v _ _ _
+  gen←base ξ = ⌞ id ⌟[ ξ ]⌞ id ⌟
+
+  record Some2CellGen (v : Visibility) {a b : 0Cell G}
+                (μ : 1Cell G a b)
+                (η : 1Cell G a b)
+                : 𝒰 𝑖 where
+    constructor incl
+    field {size} : ℕ
+    field {freeParts} : FreeParts a b
+    field {domPartition} : Partition size freeParts μ
+    field {codPartition} : Partition size freeParts η
+    field get : 2CellGen v freeParts domPartition codPartition
+
+
   -- A (normal) 2cell is a sequence of matching 2CellGen(erators)
   data Normal2Cell (v : Visibility) {a b : 0Cell G} :
-                {μ : 1Cell G a b} {ϕs : FreeParts}
+                {μ : 1Cell G a b} {ϕs : FreeParts a b}
                 (μp : Partition n ϕs μ)
                 (η : 1Cell G a b)
                 -> 𝒰 𝑖 where
 
     id : Normal2Cell v (μ ⌟) μ
     [_by_]∷_ :
-           {μ η ω : 1Cell G a b} {ϕs ψs : FreeParts}
+           {μ η ω : 1Cell G a b} {ϕs ψs : FreeParts a b}
            {μp  : Partition n ϕs μ}
            {η₀p : Partition n ϕs η}
            {η₁p : Partition m ψs η}
@@ -186,6 +201,20 @@ module _ (G : 2Graph 𝑖) where
            -> Normal2Cell v μp ω
 
 
+  data 2Cell (v : Visibility) {a b : 0Cell G} :
+                (μ : 1Cell G a b)
+                (η : 1Cell G a b)
+                -> 𝒰 𝑖 where
+    [] : 2Cell v μ μ
+    _∷_ : Some2CellGen v μ η -> 2Cell v η ω -> 2Cell v μ ω
+
+  _◆₂_ : ∀{v} -> 2Cell v μ η -> 2Cell v η ω -> 2Cell v μ ω
+  [] ◆₂ b = b
+  (x ∷ a) ◆₂ b = x ∷ (a ◆₂ b)
+
+
+
+{-
 
 {-
 

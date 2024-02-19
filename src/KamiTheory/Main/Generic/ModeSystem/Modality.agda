@@ -5,7 +5,7 @@ module KamiTheory.Main.Generic.ModeSystem.Modality where
 
 open import Agora.Conventions
 open import KamiTheory.Basics
-open import KamiTheory.Main.Generic.ModeSystem.Definition
+open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
 
 
 
