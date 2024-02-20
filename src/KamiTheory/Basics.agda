@@ -7,6 +7,7 @@ open import Relation.Nullary using (¬_)
 open import Data.List.Base using (List; []; _∷_)
 open import Data.Sum.Base
 open import Agda.Builtin.Nat using (Nat; zero; suc)
+open import Data.Nat using () renaming (_≟_ to _≟-ℕ_)
 
 --------------------------------------------------
 -- equality
@@ -19,6 +20,17 @@ pattern refl = refl-≡
 
 --------------------------------------------------
 -- decidable equality
+
+open import Agora.Conventions using (hasDecidableEquality ; isDecidable)
+open import Agora.System.Marshall.Data.DecidableEquality
+
+decide-≡-ℕ : (x y : Nat) → isDecidable (x ≡ y)
+decide-≡-ℕ x y with x ≟-ℕ y
+... | X = cast-Dec-Std X
+
+instance
+  hasDecidableEquality:ℕ : hasDecidableEquality Nat
+  hasDecidableEquality:ℕ = record { _≟_ = decide-≡-ℕ }
 
 
 

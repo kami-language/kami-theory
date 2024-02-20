@@ -1,14 +1,13 @@
 
-
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
-module KamiTheory.Main.Generic.ModeSystem.2Cell.Definition where
+module KamiTheory.Main.Generic.ModeSystem.2Cell.Definition-EasyReplace where
 
 open import Agora.Conventions
 open import KamiTheory.Basics
 open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
 open import KamiTheory.Main.Generic.ModeSystem.Modality
-open import KamiTheory.Main.Generic.ModeSystem.LinearFSM.Definition
+-- open import KamiTheory.Main.Generic.ModeSystem.LinearFSM.Definition
 open import KamiTheory.Order.StrictOrder.Base
 
 open import Data.Fin using (Fin ; zero ; suc)
@@ -261,101 +260,51 @@ module _ (G : 2Graph 𝑖) where
 
   open SubSingleFace public
 
-  PatInput : (v : Visibility) -> 𝒰 _
-  PatInput v = ∑ λ a -> ∑ λ b -> SingleFace v a b
+  record Some2CellGenOnPoints v (a b : 0Cell G) : 𝒰 𝑖 where
+    field top : 1Cell G a b
+    field bottom : 1Cell G a b
+    field get : Some2CellGen v top bottom
 
-  PatOutput : ∀ v -> PatInput v -> 𝒰 _
-  PatOutput v (_ , _ , ξ) = SubSingleFace v ξ
-
-  -- A pattern allows us to match existing 2cells with
-  -- others, while having "free variables". We currently
-  -- only support "line" patterns, where there is only single
-  -- face in each row.
-  2CellLinePattern : ∀ v 𝑗 (n : ℕ) -> 𝒰 (𝑗 ⁺ ､ 𝑖)
-  2CellLinePattern v 𝑗 n = LFSMState 𝑗 (PatInput v) (PatOutput v) n
+  open Some2CellGenOnPoints public
 
 
-  2CellLineHistory : ∀{v 𝑗 n} -> 2CellLinePattern v 𝑗 n -> 𝒰 _
-  2CellLineHistory = LFSMHistory
 
-  getPatternDomCod : {pat : 2CellLinePattern v 𝑗 n} -> Fin n -> 2CellLineHistory pat -> (0Cell G ×-𝒰 0Cell G)
-  getPatternDomCod i H = let ((a , b , _) , _) = getEntry i H in (a , b)
-
-  getPatternInput : {pat : 2CellLinePattern v 𝑗 n} -> (i : Fin n) -> (H : 2CellLineHistory pat) -> let (a , b) = getPatternDomCod i H in (SingleFace v a b)
-  getPatternInput i H = let ((a , b , ξ) , _) = getEntry i H in ξ
-
-  getFirstFaceTop : {pat : 2CellLinePattern v 𝑗 (suc n)} -> (H : 2CellLineHistory pat) -> let (a , b) = getPatternDomCod zero H in (1Cell G a b)
-  getFirstFaceTop H = {!let ((a , b , ξ) , _) = getEntry zero H in ξ .!}
-
-  -- record 2CellLineReplacement {v} (pat : 2CellLinePattern v 𝑗 n) : 𝒰 (𝑗 ､ 𝑖) where
-  --   field domCodEquality : ∀{i j : Fin n} -> getPatternDomCod i ≡ getPatternDomCod j
-    -- field getReplacement : 
-
-
-{-
   record 2CellLinePattern v 𝑗 (n : ℕ) : 𝒰 (𝑗 ⁺ ､ 𝑖) where
     field State : ℕ -> 𝒰 𝑗
     field start : State zero
     field step : ∀{i} -> (s : State i)
                  -> ∀{a b}
                  -> (ξ : SingleFace v a b)
-                 -> Maybe (SubSingleFace v ξ ×-𝒰 State (suc i))
+                 -- -> Maybe (SubSingleFace v ξ ×-𝒰 State (suc i))
+                 -> Maybe (Some2CellGenOnPoints v a b ×-𝒰 State (suc i))
 
   open 2CellLinePattern public
 
 
-  data PatternHistoryInd {v} (pat : 2CellLinePattern v 𝑗 n) : (start end : ℕ) -> (curState : pat .State start) -> 𝒰 (𝑗 ､ 𝑖) where
-    [] : ∀ {st} -> PatternHistoryInd pat n n st
-    nextHistoryEntry : ∀{a b} -> (ξ : SingleFace v a b) -> (ξ' : SubSingleFace v ξ)
-         -> ∀{start end}
-         -> ∀{st st2} -> pat .step st ξ ≡ just (ξ' , st2)
-         -> PatternHistoryInd pat (suc start) end st2
-         -> PatternHistoryInd pat start end st
-
-  record PatternHistory {v} (pat : 2CellLinePattern v 𝑗 n) : 𝒰 (𝑗 ､ 𝑖) where
-    constructor incl
-    field {start end} : ℕ
-    field {curState} : pat .State start
-    field hasHistory : start < end
-    field get : PatternHistoryInd pat start end curState
-
-  open PatternHistory public
-
-  getHistoryDomCod : ∀{v} -> {pat : 2CellLinePattern v 𝑗 n} -> (hist : PatternHistory pat) -> (0Cell G ×-𝒰 0Cell G)
-  getHistoryDomCod (incl p []) = ⊥-elim (irrefl-< p)
-  getHistoryDomCod (incl _ (nextHistoryEntry {a} {b} ξ ξ' x hist)) = (a , b)
-
-  getLastFaceBottom : ∀{v} -> {pat : 2CellLinePattern v 𝑗 n} -> (hist : PatternHistory pat)
-                      -> 1Cell G (getHistoryDomCod hist .fst) (getHistoryDomCod hist .snd)
-  getLastFaceBottom = {!!}
-
--}
-
-    -- field 
 
 
 
-{-
 
   ----------------------------------------------------------
   -- Splits
 
-  record SplitGen v {a d : 0Cell G} (μ η : 1Cell G a d) : 𝒰 𝑖 where
-    constructor _⧓⌞_⌟⧓_[_,_]
+  record SplitGen v (a d : 0Cell G) : 𝒰 𝑖 where -- (μ η : 1Cell G a d) : 𝒰 𝑖 where
+    constructor _⧓⌞_⌟⧓_ -- [_,_]
     field {pb pc} : 0Cell G
     field {left₀ left₁} : 1Cell G a pb
     field {right₀ right₁} : 1Cell G pc d
     field leftξ : Some2CellGen v left₀ left₁
-    field center : SingleFace v pb pc
+    field center : Some2CellGenOnPoints v pb pc
     field rightξ : Some2CellGen v right₀ right₁
-    field proof₀ : left₀ ◆ (center .idₗ ◆ center .cξ₀ ◆ center .idᵣ) ◆ right₀ ≡ μ
-    field proof₁ : left₁ ◆ (center .idₗ ◆ center .cξ₁ ◆ center .idᵣ) ◆ right₁ ≡ η
+    -- field proof₀ : left₀ ◆ (center .top) ◆ right₀ ≡ μ
+    -- field proof₁ : left₁ ◆ (center .bottom) ◆ right₁ ≡ η
 
   open SplitGen
 
 
-  _↷-SplitGen_ : ∀{v} -> {ω₀ ω₁ : 1Cell G a b} -> (ξ : Some2CellGen v ω₀ ω₁) -> ∀{μ η : 1Cell G b c} -> SplitGen v μ η -> SplitGen v (ω₀ ◆ μ) (ω₁ ◆ η)
-  _↷-SplitGen_ {ω₀ = ω₀} {ω₁} ξ (leftξ ⧓⌞ center ⌟⧓ rightξ [ proof₀ , proof₁ ]) = (ξ ⧓ leftξ) ⧓⌞ center ⌟⧓ rightξ [ cong-≡ (ω₀ ◆_) proof₀ , cong-≡ (ω₁ ◆_) proof₁ ]
+  _↷-SplitGen_ : ∀{v} -> {ω₀ ω₁ : 1Cell G a b} -> (ξ : Some2CellGen v ω₀ ω₁) -> SplitGen v b c -> SplitGen v a c
+  _↷-SplitGen_ {ω₀ = ω₀} {ω₁} ξ (leftξ ⧓⌞ center ⌟⧓ rightξ) = (ξ ⧓ leftξ) ⧓⌞ center ⌟⧓ rightξ
+  -- _↷-SplitGen_ = {!!} -- {ω₀ = ω₀} {ω₁} ξ (leftξ ⧓⌞ center ⌟⧓ rightξ [ proof₀ , proof₁ ]) = (ξ ⧓ leftξ) ⧓⌞ center ⌟⧓ rightξ [ cong-≡ (ω₀ ◆_) proof₀ , cong-≡ (ω₁ ◆_) proof₁ ]
 
 
 
@@ -367,25 +316,31 @@ module _ (G : 2Graph 𝑖) where
              -> {μp : Partition m ϕs μ}
              -> {ηp : Partition m ϕs η}
              -> 2CellGen v ϕs μp ηp
-             -> Maybe (SplitGen v μ η ×-𝒰 2CellLinePattern v 𝑗 n)
+             -> Maybe (SplitGen v a b ×-𝒰 2CellLinePattern v 𝑗 n)
   findNext pat ([ ϕ ]) (ϕ ⌟) = nothing
   findNext pat (ϕ ∷ [ ψ ]) (ϕ ⌟[ ξ ]⌞ .ψ ⌟) with (pat .step (pat .start) (ϕ ⌟[ ξ ]⌞ ψ))
 
   ... | no x = nothing
-  ... | yes (ξ₊ , s) = yes ((incl (ξ₊ .extₗ ⌟) ⧓⌞ ξ₊ .keepₗ ⌟[ ξ ]⌞ ξ₊ .keepᵣ ⌟⧓ incl (ξ₊ .extᵣ ⌟) [ {!!} , {!!} ])
+  ... | yes (ξ₊ , s) = yes ( (incl (id ⌟) ⧓⌞ ξ₊ ⌟⧓ incl (id ⌟))
                            , record { State = λ i → pat .State (suc i) ; start = s ; step = λ s -> pat .step s })
+  -- yes ((incl (ξ₊ .extₗ ⌟) ⧓⌞ ξ₊ .keepₗ ⌟[ ξ ]⌞ ξ₊ .keepᵣ ⌟⧓ incl (ξ₊ .extᵣ ⌟) [ {!!} , {!!} ])
+  --                          , record { State = λ i → pat .State (suc i) ; start = s ; step = λ s -> pat .step s })
+
+  -- ... | yes (ξ₊ , s) = yes ((incl (ξ₊ .extₗ ⌟) ⧓⌞ ξ₊ .keepₗ ⌟[ ξ ]⌞ ξ₊ .keepᵣ ⌟⧓ incl (ξ₊ .extᵣ ⌟) [ {!!} , {!!} ])
+  --                          , record { State = λ i → pat .State (suc i) ; start = s ; step = λ s -> pat .step s })
 
   findNext pat (ϕ ∷ (ψ ∷ ψs)) (ϕ ⌟[ ξ ]⌞ ξs) with (pat .step (pat .start) (ϕ ⌟[ ξ ]⌞ ψ))
 
-  findNext pat (ϕ ∷ (ψ ∷ ψs)) (ϕ ⌟[ ξ ]⌞ .ψ ⌟[ ζ ]⌞ ξs) | yes (ξ₊ , s) =
+  findNext pat (ϕ ∷ (ψ ∷ ψs)) (ϕ ⌟[ ξ ]⌞ .ψ ⌟[ ζ ]⌞ ξs) | yes (ξ₊ , s) = yes (((incl (id ⌟) ⧓⌞ ξ₊ ⌟⧓ incl (id ⌟[ ζ ]⌞ ξs)))
+                                                                         , record { State = λ i → pat .State (suc i) ; start = s ; step = λ s -> pat .step s })
 
-        yes ((incl (ξ₊ .extₗ ⌟) ⧓⌞ ξ₊ .keepₗ ⌟[ ξ ]⌞ ξ₊ .keepᵣ ⌟⧓ (incl ((ξ₊ .extᵣ ) ⌟[ ζ ]⌞ ξs)) [ {!!} , {!!} ])
+      --   yes ((incl (ξ₊ .extₗ ⌟) ⧓⌞ ξ₊ .keepₗ ⌟[ ξ ]⌞ ξ₊ .keepᵣ ⌟⧓ (incl ((ξ₊ .extᵣ ) ⌟[ ζ ]⌞ ξs)) [ {!!} , {!!} ])
 
-      , record { State = λ i → pat .State (suc i) ; start = s ; step = λ s -> pat .step s })
+      -- , record { State = λ i → pat .State (suc i) ; start = s ; step = λ s -> pat .step s })
 
   ... | nothing with findNext pat _ ξs
   ... | nothing = nothing
-  ... | yes ((incl leftξ ⧓⌞ center ⌟⧓ rightξ [ pf₀ , pf₁ ]) , nextpat) = yes ((incl (ϕ ⌟[ ξ ]⌞ leftξ) ⧓⌞ center ⌟⧓ rightξ [ {!!} , {!!} ])
+  ... | yes ((incl leftξ ⧓⌞ center ⌟⧓ rightξ ) , nextpat) = yes ((incl (ϕ ⌟[ ξ ]⌞ leftξ) ⧓⌞ center ⌟⧓ rightξ )
                                                                    , nextpat
                                                                    )
 
@@ -427,7 +382,7 @@ module _ (G : 2Graph 𝑖) where
 
 
 
-  record Split v {a d : 0Cell G} (μ η : 1Cell G a d) : 𝒰 𝑖 where
+  record Split v (a d : 0Cell G) : 𝒰 𝑖 where -- (μ η : 1Cell G a d) : 𝒰 𝑖 where
     constructor _⧓⌞_⌟⧓_
     field {pb pc} : 0Cell G
     field {left₀ left₁} : 1Cell G a pb
@@ -439,10 +394,10 @@ module _ (G : 2Graph 𝑖) where
 
   open Split
 
-  splitFromGen : ∀{v} -> SplitGen v μ η -> (Split v μ η)
-  splitFromGen (leftξ ⧓⌞ center ⌟⧓ rightξ [ proof₀ , proof₁ ]) = (leftξ ∷ []) ⧓⌞ (as2CellGen center ∷ []) ⌟⧓ (rightξ ∷ [])
+  splitFromGen : ∀{v} -> SplitGen v a b -> (Split v a b)
+  splitFromGen (leftξ ⧓⌞ center ⌟⧓ rightξ) = (leftξ ∷ []) ⧓⌞ (center .get ∷ []) ⌟⧓ (rightξ ∷ [])
 
-  tryMergeSplit : ∀{v} -> SplitGen v μ η -> Split v η ω -> Maybe (Split v μ ω)
+  tryMergeSplit : ∀{v} -> SplitGen v a b -> Split v a b -> Maybe (Split v a b)
   tryMergeSplit g s with pb s ≟ pb g | pc s ≟ pc g
   ... | no _ | Y = nothing
   ... | yes refl | no _ = nothing
@@ -450,12 +405,11 @@ module _ (G : 2Graph 𝑖) where
   ... | no x = nothing
   ... | yes refl with decide-≡-Path (g .right₁) (s .right₀)
   ... | no x = nothing
-  ... | yes refl with decide-≡-Path (g .center .idₗ ◆ g .center .cξ₁ ◆ g .center .idᵣ) (s .center₀)
+  -- ... | yes refl = {!!} -- with decide-≡-Path (g .center .idₗ ◆ g .center .cξ₁ ◆ g .center .idᵣ) (s .center₀)
+  ... | yes refl with decide-≡-Path (g .center .bottom) (s .center₀)
   ... | no x = nothing
-  ... | yes refl = yes ((g .leftξ ∷ s .leftξ) ⧓⌞ as2CellGen (g .center) ∷ s .centerξ ⌟⧓ (g .rightξ ∷ s .rightξ))
+  ... | yes refl = yes ((g .leftξ ∷ s .leftξ) ⧓⌞ (g .center) .get ∷ s .centerξ ⌟⧓ (g .rightξ ∷ s .rightξ))
 
-  -- _↷-Split_ : ∀{v} -> {ω₀ ω₁ : 1Cell G a b} -> (ξ : Some2CellGen v ω₀ ω₁) -> ∀{μ η : 1Cell G b c} -> Split v μ η -> Split v (ω₀ ◆ μ) (ω₁ ◆ η)
-  -- _↷-Split_ = {!!}
 
 
 
@@ -467,7 +421,8 @@ module _ (G : 2Graph 𝑖) where
   --
   record Result:findAllLocked v (overfind bottom : 1Cell G a d) : 𝒰 𝑖 where
     field underfind : 1Cell G a d
-    field split : Split v overfind underfind
+    field split : Split v a d
+    -- field split : Split v overfind underfind
     field bottomξ : 2Cell v underfind bottom
 
   open Result:findAllLocked
@@ -500,8 +455,9 @@ module _ (G : 2Graph 𝑖) where
 
             -- Next, we have the rest of the 2cell which is still left "downwards"
             -- (ω is the target 1cell of this whole 2cell)
-            -> {ω : 1Cell G a c}
-            -> 2Cell v (μ₁ ◆ η₁) ω
+            -> {ω₀ ω : 1Cell G a c}
+            -> 2Cell v ω₀ ω
+            -- -> 2Cell v (μ₁ ◆ η₁) ω
 
             -- We return a split of the upsteam 2cell if we find the pattern
             -> String +-𝒰 (Result:findAllLocked v (μ₀ ◆ η₀) (ω))
@@ -547,7 +503,7 @@ module _ (G : 2Graph 𝑖) where
   --
   -- Case 2.2.2.2: We have a rest, and we can take a ζ-new with which to
   --               initialize the recursive call. We also use the new pattern `pat2`
-  findAllLocked (suc n) {v = v} pat {μ₁ = μ₁} {η₁ = η₁} ξ (_ ⌟[ ξ₁ ]⌞ ζ) (_∷_ {η = η} ζ-new rest) | yes (sp@(_⧓⌞_⌟⧓_[_,_] {left₁ = left₁} {right₁ = right₁} foundₗ found foundᵣ pf₀ pf₁ ) , pat2) with findAllLocked n pat2 (id ⌟) (ζ-new .get) rest
+  findAllLocked (suc n) {v = v} pat {μ₁ = μ₁} {η₁ = η₁} ξ (_ ⌟[ ξ₁ ]⌞ ζ) (_∷_ {η = η} ζ-new rest) | yes (sp@(_⧓⌞_⌟⧓_ {left₁ = left₁} {right₁ = right₁} foundₗ found foundᵣ ) , pat2) with findAllLocked n pat2 (id ⌟) (ζ-new .get) rest
   --
   -- Case 2.2.2.2.1: The recursive call was successful!
   --                 That means that we have to merge the recursive Split with the currently gotten SplitGen
@@ -564,16 +520,16 @@ module _ (G : 2Graph 𝑖) where
   -- Case 2.2.2.2.1.2: The merging was not successful, back to the drawing board! We do the same thing as in
   --                   case 2.2.2.2.2
   findAllLocked (suc n) {v = v} pat {μ₀ = μ₀} {μ₁ = μ₁} {η₁ = η₁} ξ (_ ⌟[ ξ₁ ]⌞ ζ) (_∷_ {η = η} ζ-new rest)
-    | yes (sp@(_⧓⌞_⌟⧓_[_,_] {left₀ = left₀} {left₁ = left₁} {right₀ = right₀} {right₁ = right₁} foundₗ found foundᵣ pf₀ pf₁ ) , pat2)
+    | yes (sp@(_⧓⌞_⌟⧓_ {left₀ = left₀} {left₁ = left₁} {right₀ = right₀} {right₁ = right₁} foundₗ found foundᵣ ) , pat2)
     | yes res
-    | no p with findAllLocked (suc n) pat (get (incl ξ ⧓ (foundₗ ⧓ as2CellGen found ))) (foundᵣ .get) (ζ-new' ∷ rest)
+    | no p with findAllLocked (suc n) pat (get (incl ξ ⧓ (foundₗ ⧓ found .get ))) (foundᵣ .get) (ζ-new ∷ rest)
 
-    where ζ-new' : Some2CellGen _ (μ₁ ◆ left₁ ◆ found .idₗ ◆ found .cξ₁ ◆ found .idᵣ ◆ right₁) _
-          ζ-new' = transp-≡ (cong-≡ (λ ξ -> Some2CellGen v (μ₁ ◆ ξ) η) (sym-≡ pf₁)) ζ-new
+    -- where ζ-new' : Some2CellGen _ (μ₁ ◆ left₁ ◆ found .idₗ ◆ found .cξ₁ ◆ found .idᵣ ◆ right₁) _
+    --       ζ-new' = transp-≡ (cong-≡ (λ ξ -> Some2CellGen v (μ₁ ◆ ξ) η) (sym-≡ pf₁)) ζ-new
 
   ... | no x = no "end 2.2.2.2.1.2"
-  ... | yes res = yes (record { underfind = _ ; split = split-new ; bottomξ = res .bottomξ })
-    where split-new = transp-≡ (cong-≡ (λ ξ -> Split v (μ₀ ◆ ξ) (underfind res)) (pf₀)) (res .split)
+  ... | yes res = yes (record { underfind = _ ; split = res .split ; bottomξ = res .bottomξ })
+    -- where split-new = transp-≡ (cong-≡ (λ ξ -> Split v (μ₀ ◆ ξ) (underfind res)) (pf₀)) (res .split)
   --
   -- Case 2.2.2.2.2: The recursive call wasn't successful. But this is no reason
   --                 to be sad because as noted in 2.2, there is still a chance that
@@ -583,18 +539,18 @@ module _ (G : 2Graph 𝑖) where
   --                 Note that agda doesn't see that this call terminates because it doesn't know that
   --                 the foundᵣ is going to be smaller than ζ
   findAllLocked (suc n) {v = v} pat {μ₀ = μ₀} {μ₁ = μ₁} {η₁ = η₁} ξ (_ ⌟[ ξ₁ ]⌞ ζ) (_∷_ {η = η} ζ-new rest)
-    | yes (sp@(_⧓⌞_⌟⧓_[_,_] {left₁ = left₁} {right₁ = right₁} foundₗ found foundᵣ pf₀ pf₁ ) , pat2)
-    | no p with findAllLocked (suc n) pat (get (incl ξ ⧓ (foundₗ ⧓ as2CellGen found ))) (foundᵣ .get) (ζ-new' ∷ rest)
+    | yes (sp@(_⧓⌞_⌟⧓_ {left₁ = left₁} {right₁ = right₁} foundₗ found foundᵣ ) , pat2)
+    | no p with findAllLocked (suc n) pat (get (incl ξ ⧓ (foundₗ ⧓ found .get ))) (foundᵣ .get) (ζ-new ∷ rest)
 
-    where ζ-new' : Some2CellGen _ (μ₁ ◆ left₁ ◆ found .idₗ ◆ found .cξ₁ ◆ found .idᵣ ◆ right₁) _
-          ζ-new' = transp-≡ (cong-≡ (λ ξ -> Some2CellGen v (μ₁ ◆ ξ) η) (sym-≡ pf₁)) ζ-new
+    -- where ζ-new' : Some2CellGen _ (μ₁ ◆ left₁ ◆ found .idₗ ◆ found .cξ₁ ◆ found .idᵣ ◆ right₁) _
+    --       ζ-new' = transp-≡ (cong-≡ (λ ξ -> Some2CellGen v (μ₁ ◆ ξ) η) (sym-≡ pf₁)) ζ-new
   --
   -- Case 2.2.2.2.2.1: We are still not successful in this row. This means that we can stop trying now.
   ... | no x = no "end 2.2.2.2.2.1"
   --
   -- Case 2.2.2.2.2.2: We were actually successful! So update the result.
-  ... | yes res = yes (record { underfind = _ ; split = split-new ; bottomξ = res .bottomξ })
-    where split-new = transp-≡ (cong-≡ (λ ξ -> Split v (μ₀ ◆ ξ) (underfind res)) (pf₀)) (res .split)
+  ... | yes res = yes (record { underfind = _ ; split = res .split ; bottomξ = res .bottomξ })
+    -- where split-new = transp-≡ (cong-≡ (λ ξ -> Split v (μ₀ ◆ ξ) (underfind res)) (pf₀)) (res .split)
 
 
 
@@ -677,6 +633,5 @@ module _ (G : 2Graph 𝑖) where
 -}
 
 {-
--}
 -}
 -}
