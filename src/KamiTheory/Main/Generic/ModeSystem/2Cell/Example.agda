@@ -76,7 +76,8 @@ module SendReceiveNarrow-2Cells (P : Preorder 𝑖) {{_ : hasDecidableEquality �
 
 module Examples where
 
-  open import Data.Fin using (#_ ; zero ; suc)
+  open import Data.Fin.Base using (zero ; suc)
+  open import Data.Fin using (#_)
   open import Data.List using (_∷_ ; [])
 
   open import Agora.Order.Preorder
@@ -94,7 +95,8 @@ module Examples where
 
   PP : Preorder _
   PP = -- QQ
-    ′_′ (Normalform ((𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 3))) since isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ)) {_} {{isPreorder:𝒩 {{isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ {{isSetoid:𝒫ᶠⁱⁿ}} {{isPreorder:𝒫ᶠⁱⁿ}} {{isDecidablePreorder:≤-𝒫ᶠⁱⁿ}}}}}}
+    -- ′_′ (Normalform ((𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 3))) since isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ)) {_} {{isPreorder:𝒩 {{isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ {{isSetoid:𝒫ᶠⁱⁿ}} {{isPreorder:𝒫ᶠⁱⁿ}} {{isDecidablePreorder:≤-𝒫ᶠⁱⁿ}}}}}}
+    ′_′ (𝒫ᶠⁱⁿ (𝔽 3)) {_} {{isPreorder:𝒫ᶠⁱⁿ}}
 
   instance
     isProp:≤ : ∀{a b : ⟨ PP ⟩} -> isProp (a ≤ b)
@@ -104,13 +106,11 @@ module Examples where
 
 
   uu : ⟨ PP ⟩
-  uu = (((⦗ # 0 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
-
+  uu = ⦗ # 0 ⦘
+  -- (((⦗ # 0 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
   vv : ⟨ PP ⟩
-  vv = (((⦗ # 1 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
+  vv = ⦗ # 1 ⦘
 
-  ww : ⟨ PP ⟩
-  ww = (((⦗ # 2 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
 
   G : 2Graph _
   G = (SRN {{isProp:≤}})
@@ -124,7 +124,7 @@ module Examples where
 
       s : {i : ℕ} → S i → {a b : 0Cell G} (ξ : SingleFace G vis a b) →
           Maybe (Some2CellGenOnPoints G vis a b ×-𝒰 𝟙-𝒰)
-      s st (ϕ ⌟[ send U n ]⌞ ψ) with U ≟ vv
+      s st (ϕ ⌟[ send U n ]⌞ ψ) with U ≟ uu
       ... | no p = nothing
       ... | yes p = yes ( record { top = _ ; bottom = _ ; get = incl (ϕ ⌟[ send U (suc n) ]⌞ ψ ⌟) }
                           , tt)
@@ -142,6 +142,17 @@ module Examples where
   ξ : 2Cell G vis (`＠` vv ⨾ id) (`＠` vv ⨾ id)
   ξ = SendReceiveNarrow-2Cells.RewriteCells.SR-eval-dom PP {{{!!}}} vv
 
+  ξ' : 2Cell G vis _ _ -- (`＠` vv ⨾ id) (`＠` vv ⨾ `[]` ⨾ `＠` uu ⨾ id)
+  ξ' = incl (id ⌟[ send vv 1 ]⌞ (`＠` vv ⨾ `[]` ⨾ `＠` uu ⨾ id) ⌟)
+      ∷ incl ((`＠` vv ⨾ id) ⌟[ recv vv ]⌞ `[]` ⨾ `＠` uu ⨾ id ⌟)
+      ∷ incl ((`＠` vv ⨾ `[]` ⨾ id) ⌟[ send uu 2 ]⌞ (`＠` uu ⨾ id) ⌟)
+      ∷ []
+
+
   -- now lets try to find sth in a 2cell
-  result2 = findAll G pat ξ
+  result2 = findAll G pat ξ'
+
+
+
+
 
