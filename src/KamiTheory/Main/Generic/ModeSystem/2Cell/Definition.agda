@@ -258,39 +258,93 @@ module 2CellDefinition (G : 2Graph 𝑖) where
 
 
 
+  ----------------------------------------------------------
+  -- Merging 2CellGen's
+
+  data 2CellGenSubst (v : Visibility) : FreeParts a b -> 𝒰 𝑖 where
+
+
+  -- Compute the freeparts of the bottom cellgen, which should be less
+  -- than before
+  -- bottomFreeParts : (η : 1Cell G a b) {ϕs ψs : FreeParts a b}
+  --                   (η₀p : Partition n ϕs η)
+  --                   (η₁p : Partition m ψs η)
+  --                   -> FreeParts a b
+  -- bottomFreeParts η (.η ⌟) (.η ⌟) = {!!}
+  -- bottomFreeParts .(μ ◆ τ ◆ _) (.(μ ◆ τ ◆ _) ⌟) (μ ⌟[ τ ]⌞ y) = {!!}
+  -- bottomFreeParts .(μ ◆ τ ◆ _) (μ ⌟[ τ ]⌞ x) y = {!!}
+
+
+  -- Given a cellgen and a face with a 1cell-prefix, we
+  -- try to insert it
+  insertFace : {v : Visibility}
+           -- the 2cellgen into which we want to insert
+           {μ η : 1Cell G a d} {ϕs : FreeParts a d}
+           {μp  : Partition n ϕs μ}
+           {ηp : Partition n ϕs η}
+           (ζ : 2CellGen v ϕs μp ηp)
+
+           -- the prefix of the face
+           (εₗ : 1Cell G a b)
+           -- the top and bottom boundaries
+           {top bottom : 1Cell G b c}
+           -- the face itself
+           (ξ : Face G v top bottom)
+
+           -- We only return a value if we are succesfull
+           -> Maybe (Some2CellGen v μ η)
+  insertFace (_ ⌟) εₗ ξ = {!!}
+  insertFace (ϕ ⌟[ ξ₁ ]⌞ ζ) εₗ ξ = {!!}
+
+
+  -- Given two 2cellgens, we can push down all taken parts which fit into
+  -- the bottom cellgen.
+  pushDownTaken : {v : Visibility} ->
+        -- μₗ (ηₗ) is the top (bottom) boundary of the already processed cell
+        -- We iterate over a partition of ξᵣ between μᵣ and ηᵣ
+        {μₗ : 1Cell G a b} {μᵣ : 1Cell G b c}
+        {ηₗ : 1Cell G a b} {ηᵣ : 1Cell G b c}
+        -- Our current result is in ξₗ
+        (ξₗ : Some2CellGen v μₗ ηₗ)
+        -- Our todo list is in ξᵣ
+        {ϕs : FreeParts b c}
+        {μᵣp : Partition n ϕs μᵣ}
+        {ηᵣp : Partition n ϕs ηᵣ}
+        (ξᵣ : 2CellGen v ϕs μᵣp ηᵣp)
+        -- The bottom cell into which we insert goes from
+        -- ηₗ ◆ ηᵣ to ω
+        (ζ : Some2CellGen v (ηₗ ◆ ηᵣ) ω)
+        -- We return two new cells
+        -> (Some2CellGen v (μₗ ◆ μᵣ) (ηₗ ◆ ηᵣ)
+          ×-𝒰 Some2CellGen v (ηₗ ◆ ηᵣ) ω)
+  pushDownTaken ξₗ (_ ⌟) ζ = {!!}
+  -- Case 2: We have a taken face ξ in ξᵣ.
+  --         Thus we try to insert ξ down into ζ.
+  pushDownTaken ξₗ (ϕ ⌟[ ξ ]⌞ ξᵣ) ζ = {!!}
+
+-- {μ η ω : 1Cell G a b} {ϕs ψs : FreeParts a b}
+--            {μp  : Partition n ϕs μ}
+--            {η₀p : Partition n ϕs η}
+--            {η₁p : Partition m ψs η}
+--            {ωp  : Partition m ψs ω}
+--            -> 2CellGen v ϕs μp η₀p
+--            -> 2CellGen v ψs η₁p ωp
+--            -> 
+
+
+
+
+
+  ----------------------------------------------------------
+  -- Commutation
+
   -- We can commute the visibile and invisible cells. This is required
   -- for substitution under `transform` terms in our type theory.
-  commute-vis : (ξ : 2Cell vis μ η) -> (ζ : 2Cell invis η ω) ->
-                ∑ λ η' -> (2Cell invis μ η' ×-𝒰 2Cell vis η' ω)
-  commute-vis = {!!}
+  -- commute-vis : (ξ : 2Cell vis μ η) -> (ζ : 2Cell invis η ω) ->
+  --               ∑ λ η' -> (2Cell invis μ η' ×-𝒰 2Cell vis η' ω)
+  -- commute-vis = {!!}
 
 
 
 
 
-{-
-
-{-
-
-  data 2Cell : {m n : Point G} (μs ηs : Path (Edge G) m n) -> Visibility -> 𝒰 𝑖 where
-    id : ∀{m n} -> {μs : 1Cell G m n} -> 2Cell μs μs invis
-
-    gen : ∀{m n v} -> {α β : 1Cell G m n}
-          -> Face G α β v
-          -> 2Cell α β v
-
-    _⨾_ : ∀{m n k v w} -> {α₀ α₁ : 1Cell G m n} -> {β₀ β₁ : 1Cell G n k}
-          -> 2Cell α₀ α₁ v
-          -> 2Cell β₀ β₁ w
-          -> 2Cell (α₀ ◆ β₀) (α₁ ◆ β₁) (v ⋆ w)
-
-    _◇_ : ∀{m n v w} -> {α β γ : 1Cell G m n}
-          -> 2Cell α β v
-          -> 2Cell β γ w
-          -> 2Cell α γ (v ⋆ w)
-
--}
-
-{-
--}
--}
