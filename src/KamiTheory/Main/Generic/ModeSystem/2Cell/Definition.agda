@@ -8,6 +8,7 @@ open import Agora.Conventions
 open import KamiTheory.Basics
 open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
 open import KamiTheory.Main.Generic.ModeSystem.Modality
+open import KamiTheory.Order.StrictOrder.Base
 
 open import Data.Fin using (Fin ; zero ; suc)
 
@@ -230,7 +231,7 @@ module _ (G : 2Graph 𝑖) where
 
 
 
-  -------------------
+  ------------------------------------------------------------------------
   -- 2Cell patterns
 
   record SingleFace v (a d : 0Cell G) : 𝒰 𝑖 where
@@ -246,8 +247,6 @@ module _ (G : 2Graph 𝑖) where
   as2CellGen : ∀{v} -> (ξ : SingleFace v a d) -> Some2CellGen v ((ξ .idₗ) ◆ (ξ .cξ₀) ◆ (ξ .idᵣ)) ((ξ .idₗ) ◆ (ξ .cξ₁) ◆ (ξ .idᵣ))
   as2CellGen (μ ⌟[ ξ ]⌞ η) = incl (μ ⌟[ ξ ]⌞ η ⌟)
 
-  -- ⌞_◆_◆_⌟ : 1Cell G a b -> SingleFace b c -> 1Cell G c d -> SingleFace a d
-  -- ⌞_◆_◆_⌟ = {!!}
 
   record SubSingleFace v {a d : 0Cell G} (ξ : SingleFace v a d) : 𝒰 𝑖 where
     field {a' d'} : 0Cell G
@@ -259,10 +258,6 @@ module _ (G : 2Graph 𝑖) where
     field proofᵣ : keepᵣ ◆ extᵣ ≡ ξ .idᵣ
 
   open SubSingleFace public
-
-    -- field extᵣ : 1Cell G pc d
-    -- field proofₗ :
-    -- ⌞ extₗ ◆ subface ◆ extᵣ ⌟ ≡ ξ
 
   -- A pattern allows us to match existing 2cells with
   -- others, while having "free variables". We currently
@@ -277,6 +272,42 @@ module _ (G : 2Graph 𝑖) where
                  -> Maybe (SubSingleFace v ξ ×-𝒰 State (suc i))
 
   open 2CellLinePattern public
+
+
+  data PatternHistoryInd {v} (pat : 2CellLinePattern v 𝑗 n) : (start end : ℕ) -> (curState : pat .State start) -> 𝒰 (𝑗 ､ 𝑖) where
+    [] : ∀ {st} -> PatternHistoryInd pat n n st
+    nextHistoryEntry : ∀{a b} -> (ξ : SingleFace v a b) -> (ξ' : SubSingleFace v ξ)
+         -> ∀{start end}
+         -> ∀{st st2} -> pat .step st ξ ≡ just (ξ' , st2)
+         -> PatternHistoryInd pat (suc start) end st2
+         -> PatternHistoryInd pat start end st
+
+  record PatternHistory {v} (pat : 2CellLinePattern v 𝑗 n) : 𝒰 (𝑗 ､ 𝑖) where
+    constructor incl
+    field {start end} : ℕ
+    field {curState} : pat .State start
+    field hasHistory : start < end
+    field get : PatternHistoryInd pat start end curState
+
+  open PatternHistory public
+
+  getHistoryDomCod : ∀{v} -> {pat : 2CellLinePattern v 𝑗 n} -> (hist : PatternHistory pat) -> (0Cell G ×-𝒰 0Cell G)
+  getHistoryDomCod (incl p []) = ⊥-elim (irrefl-< p)
+  getHistoryDomCod (incl _ (nextHistoryEntry {a} {b} ξ ξ' x hist)) = (a , b)
+
+  getLastFaceBottom : ∀{v} -> {pat : 2CellLinePattern v 𝑗 n} -> (hist : PatternHistory pat)
+                      -> 1Cell G (getHistoryDomCod hist .fst) (getHistoryDomCod hist .snd)
+  getLastFaceBottom = {!!}
+
+  record 2CellLinePatternReplacement {v} (pat : 2CellLinePattern v 𝑗 n) : 𝒰 (𝑗 ､ 𝑖) where
+    -- field 
+
+
+
+{-
+
+  ----------------------------------------------------------
+  -- Splits
 
   record SplitGen v {a d : 0Cell G} (μ η : 1Cell G a d) : 𝒰 𝑖 where
     constructor _⧓⌞_⌟⧓_[_,_]
@@ -615,5 +646,6 @@ module _ (G : 2Graph 𝑖) where
 -}
 
 {-
+-}
 -}
 -}
