@@ -8,10 +8,15 @@ open import Agora.Order.Preorder
 open import KamiTheory.Basics
 open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
 open import KamiTheory.Main.Generic.ModeSystem.Modality
-open import KamiTheory.Main.Generic.ModeSystem.2Cell.Definition
 
+open import KamiTheory.Main.Generic.ModeSystem.2Cell.Definition
+open 2CellDefinition
+
+open import KamiTheory.Main.Generic.ModeSystem.2Cell.Rewriting
+open 2CellRewriting
 
 import KamiTheory.Main.Generic.ModeSystem.2Graph.Example as Ex
+
 
 --
 -- We state some 2cells as examples.
@@ -33,7 +38,7 @@ module SendReceiveNarrow-2Cells (P : Preorder 𝑖) {{_ : hasDecidableEquality �
     -------------------
     -- send comes first
     SR-eval-dom : (U : ⟨ P ⟩) -> 2Cell SRN vis (`＠` U ⨾ id) (`＠` U ⨾ id)
-    SR-eval-dom U = incl (id ⌟[ send U ]⌞ (`＠` U ⨾ id) ⌟)
+    SR-eval-dom U = incl (id ⌟[ send U 1 ]⌞ (`＠` U ⨾ id) ⌟)
                   ∷ incl ((`＠` U ⨾ id) ⌟[ recv U ]⌞ id ⌟)
                   ∷ []
 
@@ -44,7 +49,7 @@ module SendReceiveNarrow-2Cells (P : Preorder 𝑖) {{_ : hasDecidableEquality �
     -------------------
     -- recv comes first
     RS-eval-dom : (U : ⟨ P ⟩) -> 2Cell SRN vis (`[]` ⨾ id) (`[]` ⨾ id)
-    RS-eval-dom U = incl ((`[]` ⨾ id) ⌟[ send U ]⌞ id ⌟)
+    RS-eval-dom U = incl ((`[]` ⨾ id) ⌟[ send U 1 ]⌞ id ⌟)
                   ∷ incl (id ⌟[ recv U ]⌞ (`[]` ⨾ id) ⌟)
                   ∷ []
 
@@ -118,23 +123,18 @@ module Examples where
       S (suc i) = 𝟙-𝒰
 
       s : {i : ℕ} → S i → {a b : 0Cell G} (ξ : SingleFace G vis a b) →
-          Maybe (SubSingleFace G vis ξ ×-𝒰 𝟙-𝒰)
-      s st (idₗ₁ ⌟[ send U ]⌞ idᵣ₁) with U ≟ vv
+          Maybe (Some2CellGenOnPoints G vis a b ×-𝒰 𝟙-𝒰)
+      s st (ϕ ⌟[ send U n ]⌞ ψ) with U ≟ vv
       ... | no p = nothing
-      ... | yes p = yes (record
-                          { extₗ = idₗ₁
-                          ; keepₗ = id
-                          ; keepᵣ = id
-                          ; extᵣ = idᵣ₁
-                          ; proofₗ = {!!}
-                          ; proofᵣ = {!!}
-                          } , tt)
+      ... | yes p = yes ( record { top = _ ; bottom = _ ; get = incl (ϕ ⌟[ send U (suc n) ]⌞ ψ ⌟) }
+                          , tt)
       s st (idₗ₁ ⌟[ recv U ]⌞ idᵣ₁) = nothing
       -- s st (idₗ₁ ⌟[ narrow x ]⌞ idᵣ₁) = nothing
 
 
   ξ₀ : Some2CellGen G vis id _
-  ξ₀ = incl ((id) ⌟[ send uu ]⌞ (id) ⌟[ send vv ]⌞ (id) ⌟)
+  ξ₀ = incl ((id) ⌟[ send uu 1 ]⌞ (id) ⌟[ send vv 2 ]⌞ (id) ⌟)
+
 
   -- We try to find the send vv face
   result = findNext G pat _ (get ξ₀)
