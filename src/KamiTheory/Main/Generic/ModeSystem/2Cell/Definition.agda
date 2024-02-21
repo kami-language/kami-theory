@@ -20,6 +20,8 @@ module 2CellDefinition (G : 2Graph 𝑖) where
   private variable
     a b c d e f : 0Cell G
     μ : 1Cell G a b
+    μ₀ : 1Cell G c d
+    μ₁ : 1Cell G e f
     η : 1Cell G b c
     ω : 1Cell G c d
     η₀ η₁ : 1Cell G b c
@@ -274,6 +276,72 @@ module 2CellDefinition (G : 2Graph 𝑖) where
   -- bottomFreeParts .(μ ◆ τ ◆ _) (.(μ ◆ τ ◆ _) ⌟) (μ ⌟[ τ ]⌞ y) = {!!}
   -- bottomFreeParts .(μ ◆ τ ◆ _) (μ ⌟[ τ ]⌞ x) y = {!!}
 
+  isLeftSub1Cell : (μ₀ : 1Cell G a b) (μ : 1Cell G a c) -> 𝒰 _
+  isLeftSub1Cell μ₀ μ = ∑ λ μ₁ -> μ₀ ◆ μ₁ ≡ μ
+
+  record _⊴_ (μ₀ : 1Cell G a b) (μ : 1Cell G a c) : 𝒰 𝑖 where
+    constructor incl
+    field ⟨_⟩ : isLeftSub1Cell μ₀ μ
+
+  open _⊴_ public
+
+  refl-⊴ : μ ⊴ μ
+  refl-⊴ = incl (id , refl)
+
+  _⟡-⊴_ : μ ⊴ η -> η ⊴ ω -> μ ⊴ ω
+  _⟡-⊴_ (incl (μ' , refl)) (incl (η' , refl)) = incl (μ' ◆ η' , refl)
+
+  _↷-⊴_ : ∀ (μ : 1Cell G a b) -> η₀ ⊴ η₁ -> μ ◆ η₀ ⊴ μ ◆ η₁
+  _↷-⊴_ μ (incl (η₀' , refl)) = incl (η₀' , refl)
+
+
+  cancelₗ-⨾-head : ∀{x y : Edge G a b} -> x ⨾ μ ≡ y ⨾ η -> x ≡ y
+  cancelₗ-⨾-head refl = refl
+
+  cancelₗ-⨾-tail : ∀{x y : Edge G a b} -> x ⨾ μ ≡ y ⨾ η -> μ ≡ η
+  cancelₗ-⨾-tail refl = refl
+
+  cancelₗ-⨾-point : ∀{x : Edge G a b} {y : Edge G a c} -> x ⨾ μ ≡ y ⨾ η -> b ≡ c
+  cancelₗ-⨾-point refl = refl
+
+
+  cancelₗ-◆ : ∀ (μ : 1Cell G a b) -> (μ ◆ η₀ ≡ μ ◆ η₁) -> η₀ ≡ η₁
+  cancelₗ-◆ id p = p
+  cancelₗ-◆ (x ⨾ μ) p = cancelₗ-◆ μ (cancelₗ-⨾-tail p)
+
+
+  cancelₗ-⊴ : ∀ (μ₀ : 1Cell G a b) -> (μ₀ ◆ μ₁) ⊴ (μ₀ ◆ η) -> μ₁ ⊴ η
+  cancelₗ-⊴ μ₀ (incl (μ' , p)) = incl (μ' , cancelₗ-◆ μ₀ p)
+
+  private
+    decide-⊴-ind : ∀{b₀ b₁ : 0Cell G} -> (μ₀ : 1Cell G a b₀) -> (μ₁ : 1Cell G a b₁)
+                   -> (μ₀' : 1Cell G b₀ c) -> (μ₁' : 1Cell G b₁ c)
+                   -> (p : μ₀ ◆ μ₀' ≡ μ₁ ◆ μ₁')
+                   -> ((¬(μ₀ ⊴ μ₁)) ×-𝒰 (μ₁ ⊴ μ₀)) +-𝒰 (μ₀ ⊴ μ₁)
+    decide-⊴-ind id id μ₀' μ₁' p = yes refl-⊴
+    decide-⊴-ind id (x ⨾ μ₁) μ₀' μ₁' p = yes (incl (_ , refl))
+    decide-⊴-ind (x ⨾ μ₀) id μ₀' μ₁' p = no ((λ {(incl (_ , ()))}) , incl (_ , refl))
+    decide-⊴-ind (_⨾_ {n = n} x μ₀) (_⨾_ {n = n₁} x₁ μ₁) μ₀' μ₁' p
+      with refl <- cancelₗ-⨾-point p
+      with refl <- cancelₗ-⨾-head p
+      with p <- cancelₗ-⨾-tail p
+      with decide-⊴-ind μ₀ μ₁ μ₀' μ₁' p
+    ... | no (P , Q) = no ((λ xμ₀⊴xμ₁ -> P (cancelₗ-⊴ (x ⨾ id) xμ₀⊴xμ₁)) , ((x ⨾ id) ↷-⊴ Q))
+    ... | yes X = yes ((x ⨾ id) ↷-⊴ X)
+
+  decide-⊴ : μ₀ ⊴ μ -> μ₁ ⊴ μ -> ((¬(μ₀ ⊴ μ₁)) ×-𝒰 (μ₁ ⊴ μ₀)) +-𝒰 (μ₀ ⊴ μ₁)
+  decide-⊴ (incl (μ₀' , μ₀'p)) (incl (μ₁' , refl)) = decide-⊴-ind _ _ μ₀' μ₁' μ₀'p
+
+
+  _◆[_] : ∀ (μ : 1Cell G a b) -> ∀ (η : 1Cell G b c) -> μ ⊴ (μ ◆ η)
+  _◆[_] μ η = incl (η , refl)
+
+  infixr 30 _◆[_]
+
+
+
+
+
 
   -- Given a cellgen and a face with a 1cell-prefix, we
   -- try to insert it
@@ -288,13 +356,67 @@ module 2CellDefinition (G : 2Graph 𝑖) where
            (εₗ : 1Cell G a b)
            -- the top and bottom boundaries
            {top bottom : 1Cell G b c}
+           -- a proof that the prefix and the bottom part of
+           -- the face are a subcell of μ
+           (P : (εₗ ◆ bottom) ⊴ μ)
            -- the face itself
            (ξ : Face G v top bottom)
 
            -- We only return a value if we are succesfull
-           -> Maybe (Some2CellGen v μ η)
-  insertFace (_ ⌟) εₗ ξ = {!!}
-  insertFace (ϕ ⌟[ ξ₁ ]⌞ ζ) εₗ ξ = {!!}
+           -> Maybe (Some2CellGen v (εₗ ◆ top ◆ ⟨ P ⟩ .fst) η)
+
+  -- Case 1: There is only a single free part left of ζ.
+  --         Then we can take our face and insert it after
+  --         the prefix εₗ. We know that there exists a proper
+  --         suffix εᵣ because of P.
+  insertFace (ϕ ⌟) εₗ (incl (εᵣ , refl)) ξ = yes (incl (εₗ ⌟[ ξ ]⌞ εᵣ ⌟))
+
+  -- Case 2: 
+  insertFace (_⌟[_]⌞_ {ξ₀ = ξ₀} {μ = μ}  ϕ ξ' ζ) εₗ {top} {bottom} P@(incl (εᵣ , εₗ◆bottom◆εᵣ=μ)) ξ
+
+    -- we check whether εₗ or ϕ is contained in the other
+    with decide-⊴ (ϕ ◆[ ξ₀ ◆ μ ]) (εₗ ◆[ bottom ] ⟡-⊴ P)
+
+  -- Case 2.1: we have εₗ⊴ϕ. This means that `bottom` has to fit between the
+  --           end of εₗ and the end of ϕ
+  ... | no (_ , εₗ⊴ϕ@(incl (εₗ' , refl)))
+
+    -- we check whether bottom fits into εₗ'
+    with decide-⊴ (cancelₗ-⊴ εₗ (P)) (εₗ' ◆[ ξ₀ ◆ μ ])
+
+  -- Case 2.1.1: It does, this means we found our place for insertion!
+  ... | yes bottom⊴εₗ'@(incl (bottom' , refl))
+
+    -- We only need to show that we have the right boundaries...
+    with refl <- cancelₗ-◆ (εₗ ◆ bottom) (εₗ◆bottom◆εᵣ=μ)
+
+    -- ... and can return
+      = yes (incl (εₗ ⌟[ ξ ]⌞ bottom' ⌟[ ξ' ]⌞ ζ ))
+
+  -- Case 2.1.2: Bottom does not fit into εₗ'. This means that it overlaps with the top boundary
+  --             ξ₀ of the face ξ', and thus we cannot insert ξ.
+  ... | no p = nothing
+
+  -- Case 2.2: We have ϕ⊴εₗ. This means that our prefix εₗ skips over the full
+  --           ϕ free space before ξ'. We now need to check whether it also skips
+  --           over the full top boundary ξ₀ of ξ'.
+  insertFace (_⌟[_]⌞_ {ξ₀ = ξ₀} {μ = μ} ϕ ξ' ζ) εₗ {top} {bottom} P ξ | right ϕ⊴εₗ@(incl (ϕ' , refl))
+
+    -- we compare ξ₀ ⊴ ξ₀ ⟡ μ   and   ϕ' ⊴ ξ₀ ⟡ μ
+    with decide-⊴ (ξ₀ ◆[ μ ]) (ϕ' ◆[ bottom ] ⟡-⊴ (cancelₗ-⊴ ϕ P))
+
+    -- Case 2.2.1: ¬ (ξ₀ ⊴ ϕ'). This means that our left prefix ϕ' ends before ξ₀. Thus we would
+    --             have to insert our new face ξ directly into the existing face ξ' with top boundary
+    --             ξ₀. Thus we say that we cannot.
+  ... | no p = nothing
+
+    -- Case 2.2.2: ξ₀ ⊴ ϕ', indeed. This means that we can skip over the ξ face, and call ourselves
+    --             recursively.
+  ... | yes ξ₀⊴ϕ'@(incl (ξ₀' , refl)) with insertFace ζ ξ₀' (cancelₗ-⊴ (ϕ ◆ ξ₀) P) ξ
+  ... | no p = nothing
+  ... | yes (incl ζ-new) = yes (incl (ϕ ⌟[ ξ' ]⌞ ζ-new))
+
+
 
 
   -- Given two 2cellgens, we can push down all taken parts which fit into
@@ -312,26 +434,42 @@ module 2CellDefinition (G : 2Graph 𝑖) where
         {ηᵣp : Partition n ϕs ηᵣ}
         (ξᵣ : 2CellGen v ϕs μᵣp ηᵣp)
         -- The bottom cell into which we insert goes from
-        -- ηₗ ◆ ηᵣ to ω
-        (ζ : Some2CellGen v (ηₗ ◆ ηᵣ) ω)
+        -- ω₀ to ω₁. (Originally, ω₀ ≡ ηₗ ◆ ηᵣ, but this changes when we insert succesfully)
+        {ω₁ : 1Cell G a c}
+        (ζ : Some2CellGen v (ηₗ ◆ ηᵣ) ω₁)
         -- We return two new cells
-        -> (Some2CellGen v (μₗ ◆ μᵣ) (ηₗ ◆ ηᵣ)
-          ×-𝒰 Some2CellGen v (ηₗ ◆ ηᵣ) ω)
-  pushDownTaken ξₗ (_ ⌟) ζ = {!!}
+        -> ∑ λ ω₀ -> (Some2CellGen v (μₗ ◆ μᵣ) ω₀
+                 ×-𝒰 Some2CellGen v ω₀ ω₁)
+
+  -- Case 1: There is no face left in ξᵣ, so we reappend ϕ to ξₗ and return
+  pushDownTaken ξₗ (ϕ ⌟) ζ = _ , (ξₗ ⧓ incl (ϕ ⌟)) , ζ
+
   -- Case 2: We have a taken face ξ in ξᵣ.
   --         Thus we try to insert ξ down into ζ.
-  pushDownTaken ξₗ (ϕ ⌟[ ξ ]⌞ ξᵣ) ζ = {!!}
+  pushDownTaken {ηₗ = ηₗ} ξₗ (_⌟[_]⌞_ {ξ₀ = ξ₀} {ξ₁ = ξ₁} {η = η} ϕ ξ ξᵣ) ζ with insertFace (ζ .get) (ηₗ ◆ ϕ) ((ηₗ ◆ ϕ ◆ ξ₁) ◆[ η ])  ξ
 
--- {μ η ω : 1Cell G a b} {ϕs ψs : FreeParts a b}
---            {μp  : Partition n ϕs μ}
---            {η₀p : Partition n ϕs η}
---            {η₁p : Partition m ψs η}
---            {ωp  : Partition m ψs ω}
---            -> 2CellGen v ϕs μp η₀p
---            -> 2CellGen v ψs η₁p ωp
---            -> 
+  -- Case 2.1: We couldn't successfully insert, so we skip this face
+  ... | no x = pushDownTaken (ξₗ ⧓ incl (ϕ ⌟[ ξ ]⌞ id ⌟)) ξᵣ ζ
+
+  -- Case 2.2: We inserted successfully! So call ourselves with an ξₗ which is only extended by identity
+  ... | yes (ζ-new) = pushDownTaken (ξₗ ⧓ incl ((ϕ ◆ ξ₀) ⌟)) ξᵣ ζ-new
 
 
+  pushDown2CellGen : Some2CellGen v η μ -> Some2CellGen v μ ω -> ∑ λ μ' -> Some2CellGen v η μ' ×-𝒰 Some2CellGen v μ' ω
+  pushDown2CellGen ξ ζ = pushDownTaken (incl (id ⌟)) (ξ .get) ζ
+
+
+  {-# TERMINATING #-}
+  pushDownAll : 2Cell v η μ -> 2Cell v η μ
+  pushDownAll [] = []
+  pushDownAll (x ∷ []) = x ∷ []
+  pushDownAll (ξ ∷ (ζ ∷ ζs))
+    with (_ , ξ' , ζ') <- pushDown2CellGen ξ ζ
+    = ξ' ∷ pushDownAll (ζ' ∷ ζs)
+
+
+
+  {-
 
 
 
@@ -346,5 +484,5 @@ module 2CellDefinition (G : 2Graph 𝑖) where
 
 
 
-
+-}
 
