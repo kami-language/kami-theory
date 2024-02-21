@@ -74,6 +74,34 @@ module SendReceiveNarrow-2Cells (P : Preorder 𝑖) {{_ : hasDecidableEquality �
                     ∷ []
 
 
+    ------------------------------------------------------------------------
+    -- We state the rewriting laws
+    Pat-SR : 2CellLinePattern SRN vis _ 2
+    Pat-SR = record { State = S ; start = lift tt ; step = s }
+      where
+        S : ℕ -> 𝒰 _
+        S zero = Lift 𝟙-𝒰
+        S (suc zero) = ⟨ P ⟩
+        S (suc (suc i)) = Lift 𝟙-𝒰
+
+        s : (i : ℕ) → S i → {a b : 0Cell SRN} (ξ : SingleFace SRN vis a b) → Maybe (Some2CellGenOnPoints SRN vis a b ×-𝒰 S (suc i))
+        -- STEP 0: We are searching for a send
+        s zero _ (ϕ ⌟[ send U n ]⌞ ψ) = yes ( record { get = incl ((ϕ ◆ ψ) ⌟) } , U )
+        s zero _ (ϕ ⌟[ recv U ]⌞ ψ)   = nothing
+
+        -- STEP 1: We are searching for a (matching!) recv
+        s (suc zero) U (ϕ ⌟[ send _ n ]⌞ ψ)  = nothing
+        s (suc zero) U (ϕ ⌟[ recv V ]⌞ ψ) with U ≟ V
+        ... | no _ = nothing
+        ... | yes refl = yes ( record { get = incl ((ϕ ◆ ψ) ⌟)} , lift tt)
+
+        -- STEP other: we are already done
+        s (suc (suc i)) s ξ = nothing
+
+
+
+
+
 module Examples where
 
   open import Data.Fin.Base using (zero ; suc)
@@ -98,11 +126,14 @@ module Examples where
     -- ′_′ (Normalform ((𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 3))) since isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ)) {_} {{isPreorder:𝒩 {{isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ {{isSetoid:𝒫ᶠⁱⁿ}} {{isPreorder:𝒫ᶠⁱⁿ}} {{isDecidablePreorder:≤-𝒫ᶠⁱⁿ}}}}}}
     ′_′ (𝒫ᶠⁱⁿ (𝔽 3)) {_} {{isPreorder:𝒫ᶠⁱⁿ}}
 
+  MyInst : hasDecidableEquality ⟨ PP ⟩
+  MyInst = hasDecidableEquality:𝒫ᶠⁱⁿ
+
   instance
     isProp:≤ : ∀{a b : ⟨ PP ⟩} -> isProp (a ≤ b)
     isProp:≤ = {!!}
 
-  open Ex.SendReceiveNarrow-2Graph PP {{{!isProp:≤!}}}
+  open Ex.SendReceiveNarrow-2Graph PP {{MyInst}} {{isProp:≤}}
 
 
   uu : ⟨ PP ⟩
@@ -113,7 +144,7 @@ module Examples where
 
 
   G : 2Graph _
-  G = (SRN {{isProp:≤}})
+  G = (SRN )
 
   pat : 2CellLinePattern G vis _ 1
   pat = record { State = S ; start = tt ; step = s }
@@ -122,13 +153,13 @@ module Examples where
       S zero = 𝟙-𝒰
       S (suc i) = 𝟙-𝒰
 
-      s : {i : ℕ} → S i → {a b : 0Cell G} (ξ : SingleFace G vis a b) →
+      s : (i : ℕ) → S i → {a b : 0Cell G} (ξ : SingleFace G vis a b) →
           Maybe (Some2CellGenOnPoints G vis a b ×-𝒰 𝟙-𝒰)
-      s st (ϕ ⌟[ send U n ]⌞ ψ) with U ≟ uu
+      s _ st (ϕ ⌟[ send U n ]⌞ ψ) with U ≟ uu
       ... | no p = nothing
       ... | yes p = yes ( record { top = _ ; bottom = _ ; get = incl (ϕ ⌟[ send U (suc n) ]⌞ ψ ⌟) }
                           , tt)
-      s st (idₗ₁ ⌟[ recv U ]⌞ idᵣ₁) = nothing
+      s _ st (idₗ₁ ⌟[ recv U ]⌞ idᵣ₁) = nothing
       -- s st (idₗ₁ ⌟[ narrow x ]⌞ idᵣ₁) = nothing
 
 
@@ -150,9 +181,7 @@ module Examples where
 
 
   -- now lets try to find sth in a 2cell
-  result2 = findAll G pat ξ'
-
-
+  result2 = findAllAndReduce G (SendReceiveNarrow-2Cells.RewriteCells.Pat-SR PP {{MyInst}} {{isProp:≤}}) ξ'
 
 
 

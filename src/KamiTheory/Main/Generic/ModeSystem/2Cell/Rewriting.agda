@@ -69,7 +69,7 @@ module 2CellRewriting (G : 2Graph 𝑖) where
   record 2CellLinePattern v 𝑗 (n : ℕ) : 𝒰 (𝑗 ⁺ ､ 𝑖) where
     field State : ℕ -> 𝒰 𝑗
     field start : State zero
-    field step : ∀{i} -> (s : State i)
+    field step : ∀ i -> (s : State i)
                  -> ∀{a b}
                  -> (ξ : SingleFace v a b)
                  -- -> Maybe (SubSingleFace v ξ ×-𝒰 State (suc i))
@@ -100,7 +100,7 @@ module 2CellRewriting (G : 2Graph 𝑖) where
 
 
   _↷-SplitGen_ : ∀{v} -> {ω₀ ω₁ : 1Cell G a b} -> (ξ : Some2CellGen v ω₀ ω₁) -> SplitGen v b c -> SplitGen v a c
-  _↷-SplitGen_ {ω₀ = ω₀} {ω₁} ξ (leftξ ⧓⌞ center ⌟⧓ rightξ) = (ξ ⧓ leftξ) ⧓⌞ center ⌟⧓ rightξ
+  _↷-SplitGen_ {ω₀ = ω₀} {ω₁} ξ (leftξ ⧓⌞ center ⌟⧓ rightξ) = (ξ ⋈ leftξ) ⧓⌞ center ⌟⧓ rightξ
   -- _↷-SplitGen_ = {!!} -- {ω₀ = ω₀} {ω₁} ξ (leftξ ⧓⌞ center ⌟⧓ rightξ [ proof₀ , proof₁ ]) = (ξ ⧓ leftξ) ⧓⌞ center ⌟⧓ rightξ [ cong-≡ (ω₀ ◆_) proof₀ , cong-≡ (ω₁ ◆_) proof₁ ]
 
 
@@ -115,21 +115,21 @@ module 2CellRewriting (G : 2Graph 𝑖) where
              -> 2CellGen v ϕs μp ηp
              -> Maybe (SplitGen v a b ×-𝒰 2CellLinePattern v 𝑗 n)
   findNext pat ([ ϕ ]) (ϕ ⌟) = nothing
-  findNext pat (ϕ ∷ [ ψ ]) (ϕ ⌟[ ξ ]⌞ .ψ ⌟) with (pat .step (pat .start) (ϕ ⌟[ ξ ]⌞ ψ))
+  findNext pat (ϕ ∷ [ ψ ]) (ϕ ⌟[ ξ ]⌞ .ψ ⌟) with (pat .step _ (pat .start) (ϕ ⌟[ ξ ]⌞ ψ))
 
   ... | no x = nothing
   ... | yes (ξ₊ , s) = yes ( (incl (id ⌟) ⧓⌞ ξ₊ ⌟⧓ incl (id ⌟))
-                           , record { State = λ i → pat .State (suc i) ; start = s ; step = λ s -> pat .step s })
+                           , record { State = λ i → pat .State (suc i) ; start = s ; step = λ i s -> pat .step (suc i) s })
   -- yes ((incl (ξ₊ .extₗ ⌟) ⧓⌞ ξ₊ .keepₗ ⌟[ ξ ]⌞ ξ₊ .keepᵣ ⌟⧓ incl (ξ₊ .extᵣ ⌟) [ {!!} , {!!} ])
   --                          , record { State = λ i → pat .State (suc i) ; start = s ; step = λ s -> pat .step s })
 
   -- ... | yes (ξ₊ , s) = yes ((incl (ξ₊ .extₗ ⌟) ⧓⌞ ξ₊ .keepₗ ⌟[ ξ ]⌞ ξ₊ .keepᵣ ⌟⧓ incl (ξ₊ .extᵣ ⌟) [ {!!} , {!!} ])
   --                          , record { State = λ i → pat .State (suc i) ; start = s ; step = λ s -> pat .step s })
 
-  findNext pat (ϕ ∷ (ψ ∷ ψs)) (ϕ ⌟[ ξ ]⌞ ξs) with (pat .step (pat .start) (ϕ ⌟[ ξ ]⌞ ψ))
+  findNext pat (ϕ ∷ (ψ ∷ ψs)) (ϕ ⌟[ ξ ]⌞ ξs) with (pat .step _ (pat .start) (ϕ ⌟[ ξ ]⌞ ψ))
 
   findNext pat (ϕ ∷ (ψ ∷ ψs)) (ϕ ⌟[ ξ ]⌞ .ψ ⌟[ ζ ]⌞ ξs) | yes (ξ₊ , s) = yes (((incl (id ⌟) ⧓⌞ ξ₊ ⌟⧓ incl (id ⌟[ ζ ]⌞ ξs)))
-                                                                         , record { State = λ i → pat .State (suc i) ; start = s ; step = λ s -> pat .step s })
+                                                                         , record { State = λ i → pat .State (suc i) ; start = s ; step = λ i s -> pat .step (suc i) s })
 
       --   yes ((incl (ξ₊ .extₗ ⌟) ⧓⌞ ξ₊ .keepₗ ⌟[ ξ ]⌞ ξ₊ .keepᵣ ⌟⧓ (incl ((ξ₊ .extᵣ ) ⌟[ ζ ]⌞ ξs)) [ {!!} , {!!} ])
 
@@ -284,7 +284,7 @@ module 2CellRewriting (G : 2Graph 𝑖) where
   findAllLocked (suc n) {v = v} pat {μ₀ = μ₀} {μ₁ = μ₁} {η₁ = η₁} ξ (_ ⌟[ ξ₁ ]⌞ ζ) (_∷_ {η = η} ζ-new rest)
     | yes (sp@(_⧓⌞_⌟⧓_ {left₀ = left₀} {left₁ = left₁} {right₀ = right₀} {right₁ = right₁} foundₗ found foundᵣ ) , pat2)
     | yes res
-    | no p with findAllLocked (suc n) pat (get (incl ξ ⧓ (foundₗ ⧓ found .get ))) (foundᵣ .get) (ζ-new ∷ rest)
+    | no p with findAllLocked (suc n) pat (get (incl ξ ⋈ (foundₗ ⋈ found .get ))) (foundᵣ .get) (ζ-new ∷ rest)
 
     -- where ζ-new' : Some2CellGen _ (μ₁ ◆ left₁ ◆ found .idₗ ◆ found .cξ₁ ◆ found .idᵣ ◆ right₁) _
     --       ζ-new' = transp-≡ (cong-≡ (λ ξ -> Some2CellGen v (μ₁ ◆ ξ) η) (sym-≡ pf₁)) ζ-new
@@ -302,7 +302,7 @@ module 2CellRewriting (G : 2Graph 𝑖) where
   --                 the foundᵣ is going to be smaller than ζ
   findAllLocked (suc n) {v = v} pat {μ₀ = μ₀} {μ₁ = μ₁} {η₁ = η₁} ξ (_ ⌟[ ξ₁ ]⌞ ζ) (_∷_ {η = η} ζ-new rest)
     | yes (sp@(_⧓⌞_⌟⧓_ {left₁ = left₁} {right₁ = right₁} foundₗ found foundᵣ ) , pat2)
-    | no p with findAllLocked (suc n) pat (get (incl ξ ⧓ (foundₗ ⧓ found .get ))) (foundᵣ .get) (ζ-new ∷ rest)
+    | no p with findAllLocked (suc n) pat (get (incl ξ ⋈ (foundₗ ⋈ found .get ))) (foundᵣ .get) (ζ-new ∷ rest)
 
     -- where ζ-new' : Some2CellGen _ (μ₁ ◆ left₁ ◆ found .idₗ ◆ found .cξ₁ ◆ found .idᵣ ◆ right₁) _
     --       ζ-new' = transp-≡ (cong-≡ (λ ξ -> Some2CellGen v (μ₁ ◆ ξ) η) (sym-≡ pf₁)) ζ-new
@@ -357,9 +357,38 @@ module 2CellRewriting (G : 2Graph 𝑖) where
 
 
 
+  rejoinSplit : (sp : Split v a b) -> 2Cell v _ _
+  rejoinSplit (ξₗ ⧓⌞ ξ ⌟⧓ ξᵣ) = ξₗ ⧓ (ξ ⧓ ξᵣ)
+
+  tryCompVertical : 2Cell v μ η₀ -> 2Cell v η₁ ω -> Maybe (2Cell v μ ω)
+  tryCompVertical {η₀ = η₀} {η₁ = η₁} ξ ζ with decide-≡-Path η₀ η₁
+  ... | no _ = nothing
+  ... | yes refl = yes (ξ ◆'₂ ζ)
+
+  findAllAndReduce : ∀{n v}
+            -- The pattern we are searching for
+            -> 2CellLinePattern v 𝑗 (suc n)
+
+            -- The top(μ) and bottom(ω) 1cell
+            -> {μ ω : 1Cell G a b}
+
+            -- The 2Cell between them which we are searching
+            -> 2Cell v μ ω
+
+            -- We return a rewritten 2cell we find the pattern
+            -> Maybe (2Cell v μ ω)
+
+  findAllAndReduce pat ξ with findAll pat ξ
+  ... | no x = nothing
+  ... | yes res = do
+    let center = rejoinSplit (res .result .split)
+    center+bot <- tryCompVertical center (res .result .bottomξ)
+    top+center+bot <- tryCompVertical (res .topξ) center+bot
+    just (pushDownAll top+center+bot)
+
+    where _>>=_ = bind-Maybe
 
 
 
 
 
- 
