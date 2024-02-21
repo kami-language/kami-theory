@@ -103,18 +103,18 @@ module 2CellDefinition (G : 2Graph 𝑖) where
 
 
   -- We temporarily use ⋈ ⋊ ⋉ for concatenation on partitions
-  _⋈_ : ∃Partition μ -> ∃Partition η -> ∃Partition (μ ◆ η)
-  incl a ⋈ incl b = incl (join a b)
+  -- _⋈_ : ∃Partition μ -> ∃Partition η -> ∃Partition (μ ◆ η)
+  -- incl a ⋈ incl b = incl (join a b)
 
-  _⋉_ : ∃Partition μ -> (η : 1Cell G a b) -> ∃Partition (μ ◆ η)
-  μp ⋉ η = μp ⋈ incl (η ⌟)
+  -- _⋉_ : ∃Partition μ -> (η : 1Cell G a b) -> ∃Partition (μ ◆ η)
+  -- μp ⋉ η = μp ⋈ incl (η ⌟)
 
-  _⋊_ : (μ : 1Cell G a b) -> ∃Partition η -> ∃Partition (μ ◆ η)
-  μ ⋊ ηp = incl (μ ⌟) ⋈ ηp
+  -- _⋊_ : (μ : 1Cell G a b) -> ∃Partition η -> ∃Partition (μ ◆ η)
+  -- μ ⋊ ηp = incl (μ ⌟) ⋈ ηp
 
-  infixr 30 _⋈_
-  infixl 30 _⋉_
-  infixr 28 _⋊_
+  -- infixr 30 _⋈_
+  -- infixl 30 _⋉_
+  -- infixr 28 _⋊_
 
 
 
@@ -208,20 +208,27 @@ module 2CellDefinition (G : 2Graph 𝑖) where
   join-2CellGen (ϕ ⌟[ ξ ]⌞ ξs) ζ = ϕ ⌟[ ξ ]⌞ (join-2CellGen ξs ζ)
 
 
-  _⧓_ : {v : Visibility} {a b c : 0Cell G}
+  _⋈_ : {v : Visibility} {a b c : 0Cell G}
           -> {μ₀ μ₁ : 1Cell G a b}
           -> {η₀ η₁ : 1Cell G b c}
           -> Some2CellGen v μ₀ μ₁
           -> Some2CellGen v η₀ η₁
           -> Some2CellGen v (μ₀ ◆ η₀) (μ₁ ◆ η₁)
-  (incl ξ) ⧓ (incl ζ) = incl (join-2CellGen ξ ζ)
+  (incl ξ) ⋈ (incl ζ) = incl (join-2CellGen ξ ζ)
 
-  _⧕_ : {v : Visibility} {a b c : 0Cell G}
+  _⋊_ : {v : Visibility} {a b c : 0Cell G}
           -> (ϕ : 1Cell G a b)
           -> {η₀ η₁ : 1Cell G b c}
           -> Some2CellGen v η₀ η₁
           -> Some2CellGen v (ϕ ◆ η₀) (ϕ ◆ η₁)
-  _⧕_ ϕ ξ = incl (ϕ ⌟) ⧓ ξ
+  _⋊_ ϕ ξ = incl (ϕ ⌟) ⋈ ξ
+
+  _⋉_ : {v : Visibility} {a b c : 0Cell G}
+          -> {η₀ η₁ : 1Cell G a b}
+          -> Some2CellGen v η₀ η₁
+          -> (ϕ : 1Cell G b c)
+          -> Some2CellGen v (η₀ ◆ ϕ) (η₁ ◆ ϕ)
+  _⋉_ ξ ϕ = ξ ⋈ incl (ϕ ⌟)
 
 
 
@@ -254,9 +261,9 @@ module 2CellDefinition (G : 2Graph 𝑖) where
     [] : 2Cell v μ μ
     _∷_ : Some2CellGen v μ η -> 2Cell v η ω -> 2Cell v μ ω
 
-  _◆₂_ : ∀{v} -> 2Cell v μ η -> 2Cell v η ω -> 2Cell v μ ω
-  [] ◆₂ b = b
-  (x ∷ a) ◆₂ b = x ∷ (a ◆₂ b)
+  _◆'₂_ : ∀{v} -> 2Cell v μ η -> 2Cell v η ω -> 2Cell v μ ω
+  [] ◆'₂ b = b
+  (x ∷ a) ◆'₂ b = x ∷ (a ◆'₂ b)
 
 
 
@@ -442,17 +449,17 @@ module 2CellDefinition (G : 2Graph 𝑖) where
                  ×-𝒰 Some2CellGen v ω₀ ω₁)
 
   -- Case 1: There is no face left in ξᵣ, so we reappend ϕ to ξₗ and return
-  pushDownTaken ξₗ (ϕ ⌟) ζ = _ , (ξₗ ⧓ incl (ϕ ⌟)) , ζ
+  pushDownTaken ξₗ (ϕ ⌟) ζ = _ , (ξₗ ⋈ incl (ϕ ⌟)) , ζ
 
   -- Case 2: We have a taken face ξ in ξᵣ.
   --         Thus we try to insert ξ down into ζ.
   pushDownTaken {ηₗ = ηₗ} ξₗ (_⌟[_]⌞_ {ξ₀ = ξ₀} {ξ₁ = ξ₁} {η = η} ϕ ξ ξᵣ) ζ with insertFace (ζ .get) (ηₗ ◆ ϕ) ((ηₗ ◆ ϕ ◆ ξ₁) ◆[ η ])  ξ
 
   -- Case 2.1: We couldn't successfully insert, so we skip this face
-  ... | no x = pushDownTaken (ξₗ ⧓ incl (ϕ ⌟[ ξ ]⌞ id ⌟)) ξᵣ ζ
+  ... | no x = pushDownTaken (ξₗ ⋈ incl (ϕ ⌟[ ξ ]⌞ id ⌟)) ξᵣ ζ
 
   -- Case 2.2: We inserted successfully! So call ourselves with an ξₗ which is only extended by identity
-  ... | yes (ζ-new) = pushDownTaken (ξₗ ⧓ incl ((ϕ ◆ ξ₀) ⌟)) ξᵣ ζ-new
+  ... | yes (ζ-new) = pushDownTaken (ξₗ ⋈ incl ((ϕ ◆ ξ₀) ⌟)) ξᵣ ζ-new
 
 
   pushDown2CellGen : Some2CellGen v η μ -> Some2CellGen v μ ω -> ∑ λ μ' -> Some2CellGen v η μ' ×-𝒰 Some2CellGen v μ' ω
@@ -466,6 +473,30 @@ module 2CellDefinition (G : 2Graph 𝑖) where
   pushDownAll (ξ ∷ (ζ ∷ ζs))
     with (_ , ξ' , ζ') <- pushDown2CellGen ξ ζ
     = ξ' ∷ pushDownAll (ζ' ∷ ζs)
+
+
+
+  ------------------------------------------------------------------------
+  -- The proper operations on 2Cells
+
+  -- vertical composition of 2cells
+  _◆₂_ : 2Cell v μ η -> 2Cell v η ω -> 2Cell v μ ω
+  _◆₂_ ξ ζ = pushDownAll (ξ ◆'₂ ζ)
+
+  -- whiskering 2cells
+  _⧕_ : (μ : 1Cell G a b) -> 2Cell v η ω -> 2Cell v (μ ◆ η) (μ ◆ ω)
+  μ ⧕ [] = []
+  μ ⧕ (ξ ∷ ξs) = (μ ⋊ ξ) ∷ (μ ⧕ ξs)
+
+  _⧔_ : 2Cell v η ω -> (μ : 1Cell G a b) -> 2Cell v (η ◆ μ) (ω ◆ μ)
+  [] ⧔ μ = []
+  (ξ ∷ ξs) ⧔ μ = (ξ ⋉ μ) ∷ (ξs ⧔ μ)
+
+  -- horizontal composition of 2cells
+  _⧓_ : ∀{μ₀ η₀ : 1Cell G a b} {μ₁ η₁ : 1Cell G b c}
+      -> 2Cell v μ₀ η₀ -> 2Cell v μ₁ η₁ -> 2Cell v (μ₀ ◆ μ₁) (η₀ ◆ η₁)
+  _⧓_ {η₀ = η₀} {μ₁ = μ₁} ξ₀ ξ₁ = (ξ₀ ⧔ μ₁)
+                               ◆₂ (η₀ ⧕ ξ₁)
 
 
 
