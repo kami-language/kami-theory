@@ -76,13 +76,12 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   --       |--- ζ -|
   --
   --  Case 3:
-  --        |----- ξ ----|
-  --    |------ ζ ---|
-  --
-  --  Case 4:
   --        |-- ξ --|
   --    |------- ζ -----|
   --
+  --  Case 4:
+  --        |----- ξ ----|
+  --    |------ ζ ---|
   --
   -- In each case, the area spanned by the two cells is given by different
   -- endpoints. This makes it difficult to formulate a gluing uniformly.
@@ -116,6 +115,35 @@ module 2CellCommutation (G : 2Graph 𝑖) where
 
                  -- This means we have an intersection with a boundary
                  -> Intersecting (vξ₀) (vεₗ' ◆ iξ₁ ◆ iεₗiξ₀')
+
+    situation3 : (iεₗ' : 1Cell G a b) (δ : 1Cell G b c) (vεₗvξ₁' : 1Cell G c d)
+                 (δ≠id : isNonTrivial (incl δ))
+
+                 -- We have a face into the "vξ₁ = δ"
+                 {vξ₀ : 1Cell G b c}
+                 (vξ : Face G vis vξ₀ δ)
+
+                 -- And a face out of "iξ₀ = iεₗ' ◆ δ ◆ vεₗvξ₁'"
+                 {iξ₁ : 1Cell G a d}
+                 (iξ : Face G invis (iεₗ' ◆ δ ◆ vεₗvξ₁') iξ₁)
+
+                 -- This means we have an intersection with a boundary
+                 -> Intersecting (iεₗ' ◆ vξ₀ ◆ vεₗvξ₁') (iξ₁)
+
+    situation4 : (iεₗ' : 1Cell G a b) (δ : 1Cell G b c) (iεₗiξ₀' : 1Cell G c d)
+                 (δ≠id : isNonTrivial (incl δ))
+
+                 -- ...
+                 {vξ₀ : 1Cell G b d}
+                 (vξ : Face G vis vξ₀ (δ ◆ iεₗiξ₀'))
+
+                 -- ...
+                 {iξ₁ : 1Cell G a c}
+                 (iξ : Face G invis (iεₗ' ◆ δ) iξ₁)
+
+                 -- This means we have an intersection with a boundary
+                 -> Intersecting (iεₗ' ◆ vξ₀) (iξ₁ ◆ iεₗiξ₀')
+
 
   commute-intersecting : Intersecting μ η -> ∑ λ ω -> MaybeSparse2CellGen invis μ ω ×-𝒰 MaybeSparse2CellGen vis ω η
   commute-intersecting = {!!}
@@ -275,14 +303,91 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   --
   --
   --
-  --
-  -- Case 2.2.2:
+  -- Case 2.2.2: We know that vεₗ is (strictly) longer than iεₗ. This means that we might have situation 3 or 4. We have to check
+  --             in which situation we are by comparing (vεₗ ◆ vξ₁) with (iεₗ ◆ iξ₀)
   commuteFace {μ = μ} {η = η} {ω = ω} (vεₗ ⌟[ vξ₀ ⇒ vξ₁ ∋ vξ ]⌞ vεᵣ [ refl , refl ]) (iεₗ ⌟[ iξ₀ ⇒ iξ₁ ∋ iξ ]⌞ iεᵣ [ ipf₀ , refl ])
-    | no (¬iεₗiξ₀⊴vεₗ , vεₗ⊴iεₗiξ₀)
-    | no (¬vεₗvξ₁⊴iεₗ , iεₗ⊴vεₗvξ₁)
-    | no X = {!!}
+    | no (¬iεₗiξ₀⊴vεₗ , vεₗ⊴iεₗiξ₀@(incl (vδ , vδp)))
+    | no (¬vεₗvξ₁⊴iεₗ , iεₗ⊴vεₗvξ₁@(incl (iδ , iδp)))
+    | no (_ , iεₗ⊴vεₗ@(incl (iεₗ' , refl)))
+  --
+  -- But before that, we first show that we can write iξ₀ as (iεₗ' ◆ vδ), because we are going to
+  -- need this in both subcases.
+    with refl <- (let P₀ : iεₗ ◆ iξ₀ ≡ iεₗ ◆ iεₗ' ◆ vδ
+                      P₀ = sym-≡ vδp
 
+                      P : iξ₀ ≡ iεₗ' ◆ vδ
+                      P = cancelₗ-◆ iεₗ P₀
+                  in P)
+  --
+  -- Now we check whether we are in situation 1 or 2. That is,compare (prefix◆cell) from i and from v.
+    with decide-⊴ ((vεₗ ◆ vξ₁) ◆[ vεᵣ ] ⟡-⊴≡ sym-≡ ipf₀) ((iεₗ ◆ iξ₀) ◆[ iεᵣ ])
+  --
+  -- Case 2.2.2.1: Yes, vεₗvξ₁ is shorter than iεₗiξ₀. This means that we are in case 3 from above.
+  ... | yes (vεₗvξ₁⊴iεₗiξ₀@(incl (vεₗvξ₁' , vεₗvξ₁'p)))
+  --
+  -- We first show that we can write vδ as (vξ₁ ◆ vεₗvξ₁')
+    with refl <- (let P₀ : iεₗ ◆ iεₗ' ◆ vξ₁ ◆ vεₗvξ₁' ≡ iεₗ ◆ iεₗ' ◆ vδ
+                      P₀ = vεₗvξ₁'p
 
+                      P : vξ₁ ◆ vεₗvξ₁' ≡ vδ
+                      P = cancelₗ-◆ (iεₗ ◆ iεₗ') P₀
+
+                  in P)
+  --
+  -- We also already show that vεᵣ vs (vεₗvξ₁' ◆ iεᵣ), because this makes returning our result easier.
+    with refl <- (let P₀ : iεₗ ◆ iεₗ' ◆ vξ₁ ◆ vεₗvξ₁' ◆ iεᵣ ≡ iεₗ ◆ iεₗ' ◆ vδ ◆ iεᵣ
+                      P₀ = cong-≡ (_◆ iεᵣ) (vεₗvξ₁'p)
+
+                      P₁ : (iεₗ ◆ iεₗ' ◆ vξ₁ ◆ vεᵣ) ≡ iεₗ ◆ iεₗ' ◆ vξ₁ ◆ vεₗvξ₁' ◆ iεᵣ
+                      P₁ = (sym-≡ ipf₀) ∙-≡ P₀
+
+                      P : vεₗvξ₁' ◆ iεᵣ ≡ vεᵣ
+                      P = cancelₗ-◆ (iεₗ ◆ iεₗ' ◆ vξ₁) (sym-≡ P₁)
+                  in P)
+  --
+  -- We give the intersection and compute the result as above
+    = let s3 : Intersecting (iεₗ' ◆ vξ₀ ◆ vεₗvξ₁') iξ₁
+          s3 = situation3 iεₗ' vξ₁ vεₗvξ₁' {!!} vξ iξ
+
+          γ , ξ₀' , ξ₁' = commute-intersecting s3
+
+          res₀ = (iεₗ ↷-MaybeSparse2CellGen ξ₀') ↶-MaybeSparse2CellGen iεᵣ
+          res₁ = (iεₗ ↷-MaybeSparse2CellGen ξ₁') ↶-MaybeSparse2CellGen iεᵣ
+
+      in _ , res₀ , res₁
+  --
+  --
+  -- Case 2.2.2.1: No, actually, iεₗiξ₀ is shorter than vεₗvξ₁. This means that we are in situatation 4 from above (this is a mirror of situation 1)
+  ... | no (¬vεₗvξ₁⊴iεₗiξ₀ , iεₗiξ₀⊴vεₗvξ₁@(incl (iεₗiξ₀' , iεₗiξ₀'p)))
+
+  -- Next we show that we can wrvte vξ₁ as (δ ◆ iεₗiξ₀')
+    with refl <- (let P₀ : (iεₗ ◆ iεₗ' ◆ vξ₁) ≡ (iεₗ ◆ iεₗ' ◆ vδ ◆ iεₗiξ₀')
+                      P₀ = sym-≡ iεₗiξ₀'p
+
+                      P : vξ₁ ≡ (vδ ◆ iεₗiξ₀')
+                      P = cancelₗ-◆ (iεₗ ◆ iεₗ') P₀
+                  in P)
+  --
+  -- We also already show that iεᵣ vs (iεₗiξ₀' ◆ vεᵣ), because thvs makes returnvng our result easver.
+    with refl <- (let P₀ : (iεₗ ◆ iξ₀ ◆ iεₗiξ₀' ◆ vεᵣ) ≡ (vεₗ ◆ vξ₁ ◆ vεᵣ)
+                      P₀ = cong-≡ (_◆ vεᵣ) (iεₗiξ₀'p)
+
+                      P₁ : (iεₗ ◆ iξ₀ ◆ iεₗiξ₀' ◆ vεᵣ) ≡ (iεₗ ◆ iξ₀ ◆ iεᵣ)
+                      P₁ = P₀ ∙-≡ (sym-≡ ipf₀)
+
+                      P : iεₗiξ₀' ◆ vεᵣ ≡ iεᵣ
+                      P = cancelₗ-◆ (iεₗ ◆ iξ₀) P₁
+                  in P)
+
+    = let s4 : Intersecting (iεₗ' ◆ vξ₀) (iξ₁ ◆ iεₗiξ₀')
+          s4 = situation4 iεₗ' vδ iεₗiξ₀' {!!} vξ iξ
+
+          γ , ξ₀' , ξ₁' = commute-intersecting s4
+
+          res₀ = (iεₗ ↷-MaybeSparse2CellGen ξ₀') ↶-MaybeSparse2CellGen vεᵣ
+          res₁ = (iεₗ ↷-MaybeSparse2CellGen ξ₁') ↶-MaybeSparse2CellGen vεᵣ
+
+      in _ , res₀ , res₁
 
 
 
