@@ -53,6 +53,18 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   _⟡-⊴≡_ : η ⊴ μ -> μ ≡ ω -> η ⊴ ω
   p ⟡-⊴≡ refl-≡ = p
 
+  data MaybeSparse2CellGen v (μ η : 1Cell G a b) : 𝒰 𝑖 where
+    id : MaybeSparse2CellGen v μ η
+    incl : Sparse2CellGen v μ η -> MaybeSparse2CellGen v μ η
+
+  _↷-MaybeSparse2CellGen_ : ∀(ϕ : 1Cell G a b) -> MaybeSparse2CellGen v μ η -> MaybeSparse2CellGen v (ϕ ◆ μ) (ϕ ◆ η)
+  _↷-MaybeSparse2CellGen_ ϕ id = id
+  _↷-MaybeSparse2CellGen_ ϕ (incl (εₗ ⌟[ _ ⇒ _ ∋ ξ ]⌞ εᵣ [ pf₀ , pf₁ ])) = incl ((ϕ ◆ εₗ) ⌟[ _ ⇒ _ ∋ ξ ]⌞ εᵣ [ (cong-≡ (ϕ ◆_) pf₀) , ((cong-≡ (ϕ ◆_) pf₁)) ])
+
+  _↶-MaybeSparse2CellGen_ : MaybeSparse2CellGen v μ η -> (ϕ : 1Cell G a b) -> MaybeSparse2CellGen v (μ ◆ ϕ) (η ◆ ϕ)
+  _↶-MaybeSparse2CellGen_ id ϕ = id
+  _↶-MaybeSparse2CellGen_ (incl (εₗ ⌟[ _ ⇒ _ ∋ ξ ]⌞ εᵣ [ pf₀ , pf₁ ])) ϕ = incl (εₗ ⌟[ _ ⇒ _ ∋ ξ ]⌞ εᵣ ◆ ϕ [ (cong-≡ (_◆ ϕ) pf₀) , ((cong-≡ (_◆ ϕ) pf₁)) ])
+
 
   -- Given two 1cells, there are 4 ways in which they can intersect:
   --  Case 1:
@@ -91,7 +103,7 @@ module 2CellCommutation (G : 2Graph 𝑖) where
                  -- This means we have an intersection with a boundary
                  -> Intersecting (vξ₀ ◆ vεₗvξ₁') (vεₗ' ◆ iξ₁)
 
-  commute-intersecting : Intersecting μ η -> ∑ λ ω -> Sparse2CellGen invis μ ω ×-𝒰 Sparse2CellGen vis ω η
+  commute-intersecting : Intersecting μ η -> ∑ λ ω -> MaybeSparse2CellGen invis μ ω ×-𝒰 MaybeSparse2CellGen vis ω η
   commute-intersecting = {!!}
 
 
@@ -103,7 +115,7 @@ module 2CellCommutation (G : 2Graph 𝑖) where
 
   -- commute two faces
   commuteFace : Sparse2CellGen vis μ η -> Sparse2CellGen invis η ω
-              -> ∑ λ η' -> (Sparse2CellGen invis μ η' ×-𝒰 Sparse2CellGen vis η' ω)
+              -> ∑ λ η' -> (MaybeSparse2CellGen invis μ η' ×-𝒰 MaybeSparse2CellGen vis η' ω)
   commuteFace {μ = μ} {η = η} {ω = ω} (vεₗ ⌟[ vξ₀ ⇒ vξ₁ ∋ vξ ]⌞ vεᵣ [ refl , refl ]) (iεₗ ⌟[ iξ₀ ⇒ iξ₁ ∋ iξ ]⌞ iεᵣ [ ipf₀ , refl ])
   --
   -- first we have to understand whether we are intersecting at all,
@@ -121,7 +133,7 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   -- Case 1: If iεₗiξ₀⊴vεₗ, this means that the invisible cell fits through on the left
   --         side of the visible cell, and they don't interact. We can thus directly return
   --         their commuted result.
-  ... | yes (iεₗiξ₀⊴vεₗ@(incl (iεₗiξ₀' , refl))) = _ , (iεₗ ⌟[ _ ⇒ _ ∋ iξ ]⌞ iεₗiξ₀' ◆ vξ₀ ◆ vεᵣ [ refl , refl ]) , (iεₗ ◆ iξ₁ ◆ iεₗiξ₀' ⌟[ _ ⇒ _ ∋ vξ ]⌞ vεᵣ [ refl , P ])
+  ... | yes (iεₗiξ₀⊴vεₗ@(incl (iεₗiξ₀' , refl))) = _ , (incl (iεₗ ⌟[ _ ⇒ _ ∋ iξ ]⌞ iεₗiξ₀' ◆ vξ₀ ◆ vεᵣ [ refl , refl ])) , (incl (iεₗ ◆ iξ₁ ◆ iεₗiξ₀' ⌟[ _ ⇒ _ ∋ vξ ]⌞ vεᵣ [ refl , P ]))
         where P₀ : iεₗiξ₀' ◆ vξ₁ ◆ vεᵣ ≡ iεᵣ
               P₀ = cancelₗ-◆ (iεₗ ◆ iξ₀) (sym-≡ ipf₀)
 
@@ -138,7 +150,7 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   -- Case 2.1: If (vεₗ◆vξ₁) ⊴ iεₗ, this means that we can fit the invisible cell through
   --           on the right side of the visible cell, and they don't interact. We can thus directly
   --           return the result.
-  ... | yes (vεₗvξ₁⊴iεₗ@(incl (vεₗvξ₁' , refl))) = _ , (vεₗ ◆ vξ₀ ◆ vεₗvξ₁' ⌟[ _ ⇒ _ ∋ iξ ]⌞ iεᵣ [ P , refl ]) , (vεₗ ⌟[ _ ⇒ _ ∋ vξ ]⌞ vεₗvξ₁' ◆ iξ₁ ◆ iεᵣ [ refl , refl ])
+  ... | yes (vεₗvξ₁⊴iεₗ@(incl (vεₗvξ₁' , refl))) = _ , (incl (vεₗ ◆ vξ₀ ◆ vεₗvξ₁' ⌟[ _ ⇒ _ ∋ iξ ]⌞ iεᵣ [ P , refl ])) , (incl (vεₗ ⌟[ _ ⇒ _ ∋ vξ ]⌞ vεₗvξ₁' ◆ iξ₁ ◆ iεᵣ [ refl , refl ]))
         where P₀ : vεₗvξ₁' ◆ iξ₀ ◆ iεᵣ ≡ vεᵣ
               P₀ = cancelₗ-◆ (vεₗ ◆ vξ₁) (ipf₀)
 
@@ -185,13 +197,27 @@ module 2CellCommutation (G : 2Graph 𝑖) where
                       P : iξ₀ ≡ (iδ ◆ vεₗvξ₁')
                       P = cancelₗ-◆ (vεₗ ◆ vεₗ') P₀
                   in P)
+  --
+  -- We also already show that vεᵣ is (vεₗvξ₁' ◆ iεᵣ), because this makes returning our result easier.
+    with refl <- (let P₀ : (vεₗ ◆ vξ₁ ◆ vεₗvξ₁' ◆ iεᵣ) ≡ (iεₗ ◆ iξ₀ ◆ iεᵣ)
+                      P₀ = cong-≡ (_◆ iεᵣ) (vεₗvξ₁'p)
+
+                      P₁ : (vεₗ ◆ vξ₁ ◆ vεₗvξ₁' ◆ iεᵣ) ≡ (vεₗ ◆ vξ₁ ◆ vεᵣ)
+                      P₁ = P₀ ∙-≡ ipf₀
+
+                      P : vεₗvξ₁' ◆ iεᵣ ≡ vεᵣ
+                      P = cancelₗ-◆ (vεₗ ◆ vξ₁) P₁
+                  in P)
 
     = let s1 : Intersecting (vξ₀ ◆ vεₗvξ₁') (vεₗ' ◆ iξ₁)
           s1 = situation1 vεₗ' iδ vεₗvξ₁' {!!} vξ iξ
 
-          res = commute-intersecting s1
+          γ , ξ₀' , ξ₁' = commute-intersecting s1
 
-      in {!!}
+          res₀ = (vεₗ ↷-MaybeSparse2CellGen ξ₀') ↶-MaybeSparse2CellGen iεᵣ
+          res₁ = (vεₗ ↷-MaybeSparse2CellGen ξ₁') ↶-MaybeSparse2CellGen iεᵣ
+
+      in _ , res₀ , res₁
   --
   --
   --
