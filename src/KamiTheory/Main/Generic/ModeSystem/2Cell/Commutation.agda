@@ -29,6 +29,30 @@ module 2CellCommutation (G : 2Graph 𝑖) where
     ξ₀ ξ₁ : 1Cell G e f
     v : Visibility
 
+  record Some1Cell : 𝒰 𝑖 where
+    constructor incl
+    field {start end} : 0Cell G
+    field get : 1Cell G start end
+
+  open Some1Cell public
+
+  data isNonTrivial : Some1Cell -> 𝒰 𝑖 where
+    incl : ∀{x : Edge G a b} -> isNonTrivial (incl (x ⨾ μ))
+
+
+  record Sparse2CellGen v (μ η : 1Cell G a d) : 𝒰 𝑖 where
+    constructor _⌟[_⇒_∋_]⌞_[_,_]
+    field {pb pc} : 0Cell G
+    field εₗ : 1Cell G a pb
+    field top bottom : 1Cell G pb pc
+    field face : Face G v top bottom
+    field εᵣ : 1Cell G pc d
+    field pf₀ : (εₗ ◆ top ◆ εᵣ) ≡ μ
+    field pf₁ : (εₗ ◆ bottom ◆ εᵣ) ≡ η
+
+  _⟡-⊴≡_ : η ⊴ μ -> μ ≡ ω -> η ⊴ ω
+  p ⟡-⊴≡ refl-≡ = p
+
 
   -- Given two 1cells, there are 4 ways in which they can intersect:
   --  Case 1:
@@ -52,31 +76,27 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   -- endpoints. This makes it difficult to formulate a gluing uniformly.
   -- We thus simply distinguish all cases.
 
-  data Intersecting : (μ : 1Cell G a b) -> (η : 1Cell G c d) -> 𝒰 𝑖 where
+  data Intersecting : (μ : 1Cell G a b) -> (η : 1Cell G a b) -> 𝒰 𝑖 where
+    situation1 : (vεₗ' : 1Cell G a b) (δ : 1Cell G b c) (vεₗvξ₁' : 1Cell G c d)
+                 (δ≠id : isNonTrivial (incl δ))
+
+                 -- We have a face into the "vξ₁ = iεₗ' ◆ δ"
+                 {vξ₀ : 1Cell G a c}
+                 (vξ : Face G vis vξ₀ (vεₗ' ◆ δ))
+
+                 -- And a face out of "iξ₀ = δ ◆ vεᵣ'"
+                 {iξ₁ : 1Cell G b d}
+                 (iξ : Face G invis (δ ◆ vεₗvξ₁') iξ₁)
+
+                 -- This means we have an intersection with a boundary
+                 -> Intersecting (vξ₀ ◆ vεₗvξ₁') (vεₗ' ◆ iξ₁)
+
+  commute-intersecting : Intersecting μ η -> ∑ λ ω -> Sparse2CellGen invis μ ω ×-𝒰 Sparse2CellGen vis ω η
+  commute-intersecting = {!!}
 
 
 
-  -- data Sparse2Cell v (μ η : 1Cell G a b) : 𝒰 𝑖 where
 
-
-  -- data Sparse2CellGen v : (μ η : 1Cell G a b) -> 𝒰 𝑖 where
-  --   _⌟[_]⌞_ : (εₗ : 1Cell G a b) -> {ξ₀ ξ₁ : 1Cell G b c}
-  --           -> (ξ : Face G v ξ₀ ξ₁)
-  --           -> (εᵣ : 1Cell G c d)
-  --           -> Sparse2CellGen v (εₗ ◆ ξ₀ ◆ εᵣ) (εₗ ◆ ξ₁ ◆ εᵣ)
-
-  record Sparse2CellGen v (μ η : 1Cell G a d) : 𝒰 𝑖 where
-    constructor _⌟[_⇒_∋_]⌞_[_,_]
-    field {pb pc} : 0Cell G
-    field εₗ : 1Cell G a pb
-    field top bottom : 1Cell G pb pc
-    field face : Face G v top bottom
-    field εᵣ : 1Cell G pc d
-    field pf₀ : (εₗ ◆ top ◆ εᵣ) ≡ μ
-    field pf₁ : (εₗ ◆ bottom ◆ εᵣ) ≡ η
-
-  _⟡-⊴≡_ : η ⊴ μ -> μ ≡ ω -> η ⊴ ω
-  p ⟡-⊴≡ refl-≡ = p
 
 
 
@@ -130,8 +150,8 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   --           is "more left", that is whose left point is the leftmost point of their union.
   --           We thus check as next step which of {vεₗ,iεₗ} is shorter by comparing them.
   commuteFace {μ = μ} {η = η} {ω = ω} (vεₗ ⌟[ vξ₀ ⇒ vξ₁ ∋ vξ ]⌞ vεᵣ [ refl , refl ]) (iεₗ ⌟[ iξ₀ ⇒ iξ₁ ∋ iξ ]⌞ iεᵣ [ ipf₀ , refl ])
-    | no (¬iεₗiξ₀⊴vεₗ , vεₗ⊴iεₗiξ₀)
-    | no (¬vεₗvξ₁⊴iεₗ , iεₗ⊴vεₗvξ₁)
+    | no (¬iεₗiξ₀⊴vεₗ , vεₗ⊴iεₗiξ₀@(incl (vδ , vδp)))
+    | no (¬vεₗvξ₁⊴iεₗ , iεₗ⊴vεₗvξ₁@(incl (iδ , iδp)))
   --
   -- Check how vεₗ relates to iεₗ
     with decide-⊴ (vεₗ ◆[ vξ₁ ◆ vεᵣ ] ⟡-⊴≡ sym-≡ ipf₀) (iεₗ ◆[ iξ₀ ◆ iεᵣ ])
@@ -139,11 +159,42 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   -- Case 2.2.1: We know that vεₗ is shorter (or equal) to iεₗ. This means we are in
   --             "situation 1" or "situation 2" from above. We have to check in which we are,
   --             by comparing the lengths of "prefix◆cell", that is (vεₗ ◆ vξ₁) and (iεₗ ◆ iξ₀).
-  ... | yes X with decide-⊴ ((vεₗ ◆ vξ₁) ◆[ vεᵣ ] ⟡-⊴≡ sym-≡ ipf₀) ((iεₗ ◆ iξ₀) ◆[ iεᵣ ])
+  ... | yes (vεₗ⊴iεₗ@(incl (vεₗ' , refl))) with decide-⊴ ((vεₗ ◆ vξ₁) ◆[ vεᵣ ] ⟡-⊴≡ sym-≡ ipf₀) ((iεₗ ◆ iξ₀) ◆[ iεᵣ ])
   --
   -- Case 2.2.1.1: We know that (vεₗ ◆ vξ₁) is shorter (or equal) to (iεₗ ◆ iξ₀). This means that
   --               we are in situtation 1 from above.
-  ... | yes Y = {!!}
+  --
+  --               Now we first need to show that this means that the bottom face of vξ decomposes
+  --               into (vεₗ' ◆ δ), and the upper face of iξ decomposes into (δ ◆ vεₗvξ₁'), where
+  --               δ is their nontrivial intersection. To show these facts, we use the equations
+  --               that we already have.
+  ... | yes (vεₗvξ₁⊴iεₗiξ₀@(incl (vεₗvξ₁' , vεₗvξ₁'p)))
+  --
+  -- We first show that we can write vξ₁ as (vεₗ' ◆ iδ)
+    with refl <- (let P₀ : vεₗ ◆ vξ₁ ≡ vεₗ ◆ vεₗ' ◆ iδ
+                      P₀ = sym-≡ iδp
+
+                      P : vξ₁ ≡ vεₗ' ◆ iδ
+                      P = cancelₗ-◆ vεₗ P₀
+                  in P)
+  --
+  -- Next we show that we can write iξ₀ as (δ ◆ vεₗvξ₁')
+    with refl <- (let P₀ : (vεₗ ◆ vεₗ' ◆ iξ₀) ≡ (vεₗ ◆ vεₗ' ◆ iδ ◆ vεₗvξ₁')
+                      P₀ = sym-≡ vεₗvξ₁'p
+
+                      P : iξ₀ ≡ (iδ ◆ vεₗvξ₁')
+                      P = cancelₗ-◆ (vεₗ ◆ vεₗ') P₀
+                  in P)
+
+    = let s1 : Intersecting (vξ₀ ◆ vεₗvξ₁') (vεₗ' ◆ iξ₁)
+          s1 = situation1 vεₗ' iδ vεₗvξ₁' {!!} vξ iξ
+
+          res = commute-intersecting s1
+
+      in {!!}
+  --
+  --
+  --
   --
   -- Case 2.2.1.1: We know that (vεₗ ◆ vξ₁) is longer than (iεₗ ◆ iξ₀). This means that
   --               we are in situtation 2 from above.
