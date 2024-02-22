@@ -92,7 +92,7 @@ module 2CellCommutation (G : 2Graph 𝑖) where
     situation1 : (vεₗ' : 1Cell G a b) (δ : 1Cell G b c) (vεₗvξ₁' : 1Cell G c d)
                  (δ≠id : isNonTrivial (incl δ))
 
-                 -- We have a face into the "vξ₁ = iεₗ' ◆ δ"
+                 -- We have a face into the "vξ₁ = vεₗ' ◆ δ"
                  {vξ₀ : 1Cell G a c}
                  (vξ : Face G vis vξ₀ (vεₗ' ◆ δ))
 
@@ -102,6 +102,20 @@ module 2CellCommutation (G : 2Graph 𝑖) where
 
                  -- This means we have an intersection with a boundary
                  -> Intersecting (vξ₀ ◆ vεₗvξ₁') (vεₗ' ◆ iξ₁)
+
+    situation2 : (vεₗ' : 1Cell G a b) (δ : 1Cell G b c) (iεₗiξ₀' : 1Cell G c d)
+                 (δ≠id : isNonTrivial (incl δ))
+
+                 -- We have a face into the "vξ₁ = vεₗ' ◆ δ ◆ iεₗiξ₀'"
+                 {vξ₀ : 1Cell G a d}
+                 (vξ : Face G vis vξ₀ (vεₗ' ◆ δ ◆ iεₗiξ₀'))
+
+                 -- And a face out of "iξ₀ = δ"
+                 {iξ₁ : 1Cell G b c}
+                 (iξ : Face G invis δ iξ₁)
+
+                 -- This means we have an intersection with a boundary
+                 -> Intersecting (vξ₀) (vεₗ' ◆ iξ₁ ◆ iεₗiξ₀')
 
   commute-intersecting : Intersecting μ η -> ∑ λ ω -> MaybeSparse2CellGen invis μ ω ×-𝒰 MaybeSparse2CellGen vis ω η
   commute-intersecting = {!!}
@@ -171,7 +185,19 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   -- Case 2.2.1: We know that vεₗ is shorter (or equal) to iεₗ. This means we are in
   --             "situation 1" or "situation 2" from above. We have to check in which we are,
   --             by comparing the lengths of "prefix◆cell", that is (vεₗ ◆ vξ₁) and (iεₗ ◆ iξ₀).
-  ... | yes (vεₗ⊴iεₗ@(incl (vεₗ' , refl))) with decide-⊴ ((vεₗ ◆ vξ₁) ◆[ vεᵣ ] ⟡-⊴≡ sym-≡ ipf₀) ((iεₗ ◆ iξ₀) ◆[ iεᵣ ])
+  ... | yes (vεₗ⊴iεₗ@(incl (vεₗ' , refl)))
+  --
+  -- But before that, we first show that we can write vξ₁ as (vεₗ' ◆ iδ), because we are going to
+  -- need this in both subcases.
+    with refl <- (let P₀ : vεₗ ◆ vξ₁ ≡ vεₗ ◆ vεₗ' ◆ iδ
+                      P₀ = sym-≡ iδp
+
+                      P : vξ₁ ≡ vεₗ' ◆ iδ
+                      P = cancelₗ-◆ vεₗ P₀
+                  in P)
+  --
+  -- Now we check whether we are in situation 1 or 2.
+    with decide-⊴ ((vεₗ ◆ vξ₁) ◆[ vεᵣ ] ⟡-⊴≡ sym-≡ ipf₀) ((iεₗ ◆ iξ₀) ◆[ iεᵣ ])
   --
   -- Case 2.2.1.1: We know that (vεₗ ◆ vξ₁) is shorter (or equal) to (iεₗ ◆ iξ₀). This means that
   --               we are in situtation 1 from above.
@@ -181,14 +207,6 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   --               δ is their nontrivial intersection. To show these facts, we use the equations
   --               that we already have.
   ... | yes (vεₗvξ₁⊴iεₗiξ₀@(incl (vεₗvξ₁' , vεₗvξ₁'p)))
-  --
-  -- We first show that we can write vξ₁ as (vεₗ' ◆ iδ)
-    with refl <- (let P₀ : vεₗ ◆ vξ₁ ≡ vεₗ ◆ vεₗ' ◆ iδ
-                      P₀ = sym-≡ iδp
-
-                      P : vξ₁ ≡ vεₗ' ◆ iδ
-                      P = cancelₗ-◆ vεₗ P₀
-                  in P)
   --
   -- Next we show that we can write iξ₀ as (δ ◆ vεₗvξ₁')
     with refl <- (let P₀ : (vεₗ ◆ vεₗ' ◆ iξ₀) ≡ (vεₗ ◆ vεₗ' ◆ iδ ◆ vεₗvξ₁')
@@ -224,7 +242,39 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   --
   -- Case 2.2.1.1: We know that (vεₗ ◆ vξ₁) is longer than (iεₗ ◆ iξ₀). This means that
   --               we are in situtation 2 from above.
-  ... | no Y = {!!}
+  ... | no (¬vεₗvξ₁⊴iεₗiξ₀ , iεₗiξ₀⊴vεₗvξ₁@(incl (iεₗiξ₀' , iεₗiξ₀'p)))
+  --
+  -- We first show that we can write iδ as (iξ₀ ◆ iεₗiξ₀')
+    with refl <- (let P₀ : vεₗ ◆ vεₗ' ◆ iξ₀ ◆ iεₗiξ₀' ≡ vεₗ ◆ vεₗ' ◆ iδ
+                      P₀ = iεₗiξ₀'p
+
+                      P : iξ₀ ◆ iεₗiξ₀' ≡ iδ
+                      P = cancelₗ-◆ (vεₗ ◆ vεₗ') P₀
+
+                  in P)
+  --
+  -- We also already show that iεᵣ is (iεₗiξ₀' ◆ vεᵣ), because this makes returning our result easier.
+    with refl <- (let P₀ : vεₗ ◆ vεₗ' ◆ iξ₀ ◆ iεₗiξ₀' ◆ vεᵣ ≡ vεₗ ◆ vεₗ' ◆ iδ ◆ vεᵣ
+                      P₀ = cong-≡ (_◆ vεᵣ) (iεₗiξ₀'p)
+
+                      P₁ : (vεₗ ◆ vεₗ' ◆ iξ₀ ◆ iεᵣ) ≡ vεₗ ◆ vεₗ' ◆ iξ₀ ◆ iεₗiξ₀' ◆ vεᵣ
+                      P₁ = ipf₀ ∙-≡ P₀
+
+                      P : iεₗiξ₀' ◆ vεᵣ ≡ iεᵣ
+                      P = cancelₗ-◆ (vεₗ ◆ vεₗ' ◆ iξ₀) (sym-≡ P₁)
+                  in P)
+    = let s2 : Intersecting vξ₀ (vεₗ' ◆ iξ₁ ◆ iεₗiξ₀')
+          s2 = situation2 vεₗ' iξ₀ iεₗiξ₀' {!!} vξ iξ
+
+          γ , ξ₀' , ξ₁' = commute-intersecting s2
+
+          res₀ = (vεₗ ↷-MaybeSparse2CellGen ξ₀') ↶-MaybeSparse2CellGen vεᵣ
+          res₁ = (vεₗ ↷-MaybeSparse2CellGen ξ₁') ↶-MaybeSparse2CellGen vεᵣ
+
+      in _ , res₀ , res₁
+  --
+  --
+  --
   --
   -- Case 2.2.2:
   commuteFace {μ = μ} {η = η} {ω = ω} (vεₗ ⌟[ vξ₀ ⇒ vξ₁ ∋ vξ ]⌞ vεᵣ [ refl , refl ]) (iεₗ ⌟[ iξ₀ ⇒ iξ₁ ∋ iξ ]⌞ iεᵣ [ ipf₀ , refl ])
