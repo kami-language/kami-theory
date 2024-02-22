@@ -173,6 +173,9 @@ module Examples where
   ξ : 2Cell G vis (`＠` vv ⨾ id) (`＠` vv ⨾ id)
   ξ = SendReceiveNarrow-2Cells.RewriteCells.SR-eval-dom PP {{{!!}}} vv
 
+  ξ₁ : 2Cell G vis _ _ -- (`＠` vv ⨾ id) (`＠` vv ⨾ id)
+  ξ₁ = SendReceiveNarrow-2Cells.RewriteCells.RS-eval-dom PP {{{!!}}} vv
+
   ξ' : 2Cell G vis _ _ -- (`＠` vv ⨾ id) (`＠` vv ⨾ `[]` ⨾ `＠` uu ⨾ id)
   ξ' = incl (id ⌟[ send vv 1 ]⌞ (`＠` vv ⨾ `[]` ⨾ `＠` uu ⨾ id) ⌟)
       ∷ incl ((`＠` vv ⨾ id) ⌟[ recv vv ]⌞ `[]` ⨾ `＠` uu ⨾ id ⌟)
@@ -182,6 +185,7 @@ module Examples where
 
   -- now lets try to find sth in a 2cell
   result2 = findAllAndReduce G (SendReceiveNarrow-2Cells.RewriteCells.Pat-SR PP {{MyInst}} {{isProp:≤}}) ξ'
+
 
 
 

@@ -268,20 +268,8 @@ module 2CellDefinition (G : 2Graph 𝑖) where
 
 
   ----------------------------------------------------------
-  -- Merging 2CellGen's
+  -- sub-1cells
 
-  data 2CellGenSubst (v : Visibility) : FreeParts a b -> 𝒰 𝑖 where
-
-
-  -- Compute the freeparts of the bottom cellgen, which should be less
-  -- than before
-  -- bottomFreeParts : (η : 1Cell G a b) {ϕs ψs : FreeParts a b}
-  --                   (η₀p : Partition n ϕs η)
-  --                   (η₁p : Partition m ψs η)
-  --                   -> FreeParts a b
-  -- bottomFreeParts η (.η ⌟) (.η ⌟) = {!!}
-  -- bottomFreeParts .(μ ◆ τ ◆ _) (.(μ ◆ τ ◆ _) ⌟) (μ ⌟[ τ ]⌞ y) = {!!}
-  -- bottomFreeParts .(μ ◆ τ ◆ _) (μ ⌟[ τ ]⌞ x) y = {!!}
 
   isLeftSub1Cell : (μ₀ : 1Cell G a b) (μ : 1Cell G a c) -> 𝒰 _
   isLeftSub1Cell μ₀ μ = ∑ λ μ₁ -> μ₀ ◆ μ₁ ≡ μ
@@ -347,7 +335,8 @@ module 2CellDefinition (G : 2Graph 𝑖) where
 
 
 
-
+  ----------------------------------------------------------
+  -- Merging 2Cells
 
 
   -- Given a cellgen and a face with a 1cell-prefix, we
