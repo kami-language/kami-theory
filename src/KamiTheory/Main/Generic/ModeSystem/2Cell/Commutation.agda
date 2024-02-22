@@ -57,9 +57,12 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   _⟡-⊴≡_ : η ⊴ μ -> μ ≡ ω -> η ⊴ ω
   p ⟡-⊴≡ refl-≡ = p
 
-  data MaybeSparse2CellGen v (μ η : 1Cell G a b) : 𝒰 𝑖 where
-    id : MaybeSparse2CellGen v μ η
+  data MaybeSparse2CellGen v : (μ η : 1Cell G a b) -> 𝒰 𝑖 where
+    id : MaybeSparse2CellGen v μ μ
     incl : Sparse2CellGen v μ η -> MaybeSparse2CellGen v μ η
+
+  _↷-Sparse2CellGen_ : ∀(ϕ : 1Cell G a b) -> Sparse2CellGen v μ η -> Sparse2CellGen v (ϕ ◆ μ) (ϕ ◆ η)
+  _↷-Sparse2CellGen_ ϕ (εₗ ⌟[ _ ⇒ _ ∋ ξ ]⌞ εᵣ [ pf₀ , pf₁ ]) = (ϕ ◆ εₗ) ⌟[ _ ⇒ _ ∋ ξ ]⌞ εᵣ [ (cong-≡ (ϕ ◆_) pf₀) , ((cong-≡ (ϕ ◆_) pf₁)) ]
 
   _↷-MaybeSparse2CellGen_ : ∀(ϕ : 1Cell G a b) -> MaybeSparse2CellGen v μ η -> MaybeSparse2CellGen v (ϕ ◆ μ) (ϕ ◆ η)
   _↷-MaybeSparse2CellGen_ ϕ id = id
@@ -68,6 +71,21 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   _↶-MaybeSparse2CellGen_ : MaybeSparse2CellGen v μ η -> (ϕ : 1Cell G a b) -> MaybeSparse2CellGen v (μ ◆ ϕ) (η ◆ ϕ)
   _↶-MaybeSparse2CellGen_ id ϕ = id
   _↶-MaybeSparse2CellGen_ (incl (εₗ ⌟[ _ ⇒ _ ∋ ξ ]⌞ εᵣ [ pf₀ , pf₁ ])) ϕ = incl (εₗ ⌟[ _ ⇒ _ ∋ ξ ]⌞ εᵣ ◆ ϕ [ (cong-≡ (_◆ ϕ) pf₀) , ((cong-≡ (_◆ ϕ) pf₁)) ])
+
+  data Sparse2Cell v : (μ η : 1Cell G a d) -> 𝒰 𝑖 where
+    [] : Sparse2Cell v μ μ
+    _∷_ : Sparse2CellGen v μ η -> Sparse2Cell v η ω -> Sparse2Cell v μ ω
+
+  -- Sparse2Cell : (v : Visibility) -> (μ η : 1Cell G a d) -> 𝒰 𝑖
+
+  _↷-Sparse2Cell_ : ∀(ϕ : 1Cell G a b) -> Sparse2Cell v μ η -> Sparse2Cell v (ϕ ◆ μ) (ϕ ◆ η)
+  _↷-Sparse2Cell_ ϕ [] = []
+  _↷-Sparse2Cell_ ϕ (ξ ∷ ξs) = (ϕ ↷-Sparse2CellGen ξ) ∷ (ϕ ↷-Sparse2Cell ξs)
+
+  _◆-Sparse2Cell_ : Sparse2Cell v μ η -> Sparse2Cell v η ω -> Sparse2Cell v μ ω
+  _◆-Sparse2Cell_ ([]) ζs = ζs
+  _◆-Sparse2Cell_ (ξ ∷ ξs) ζs = ξ ∷ (ξs ◆-Sparse2Cell ζs)
+
 
 
   -- Given two 1cells, there are 4 ways in which they can intersect:
@@ -397,136 +415,56 @@ module 2CellCommutation (G : 2Graph 𝑖) where
       in _ , res₀ , res₁
 
 
+  commute-single-Sparse2Cell : Sparse2Cell vis μ η -> Sparse2CellGen invis η ω
+                             -> ∑ λ η' -> (MaybeSparse2CellGen invis μ η' ×-𝒰 Sparse2Cell vis η' ω)
+  commute-single-Sparse2Cell [] ζ = _ , incl ζ , []
+  commute-single-Sparse2Cell (ξ ∷ ξs) ζ with commute-single-Sparse2Cell ξs ζ
+  ... | _ , id , ξs' = _ , id , (ξ ∷ ξs')
+  ... | _ , incl ζ' , ξs' with commuteFace ξ ζ'
+  ... | _ , ζ'' , id = _ , ζ'' , ξs'
+  ... | _ , ζ'' , incl ξ' = _ , ζ'' , (ξ' ∷ ξs')
 
+  commute-Sparse2Cell : Sparse2Cell vis μ η -> Sparse2Cell invis η ω
+                        -> ∑ λ η' -> (Sparse2Cell invis μ η' ×-𝒰 Sparse2Cell vis η' ω)
+  commute-Sparse2Cell ξ [] = _ , [] , ξ
+  commute-Sparse2Cell ξ (ζ ∷ ζs) with commute-single-Sparse2Cell ξ ζ
+  ... | _ , id , ξ' = let _ , ζs' , ξ'' = commute-Sparse2Cell ξ' ζs
+                      in _ , ζs' , ξ''
+  ... | _ , incl ζ' , ξ' = let _ , ζs' , ξ'' = commute-Sparse2Cell ξ' ζs
+                          in _ , (ζ' ∷ ζs') , ξ''
 
-{-
+  sparsify-2CellGen : {v : Visibility}
+                   {a b : 0Cell G} {ϕs : FreeParts a b} {μ η : 1Cell G a b}
+                -> {μp : Partition n ϕs μ}
+                -> {ηp : Partition n ϕs η}
+                -> 2CellGen v ϕs μp ηp -> Sparse2Cell v μ η
+  sparsify-2CellGen (_ ⌟) = []
+  sparsify-2CellGen (_⌟[_]⌞_ {ξ₀ = ξ₀} {ξ₁ = ξ₁} ϕ ξ ξs) = (ϕ ⌟[ _ ⇒ _ ∋ ξ ]⌞ _ [ refl , refl ])
+                                                         ∷ ((ϕ ◆ ξ₁) ↷-Sparse2Cell sparsify-2CellGen ξs)
 
-  -- We have an invisible face and a visible 2Cell below it,
-  -- we commute the 2cell up. For this we first need to find
-  -- the starting point where the invisible face begins to
-  -- intersect with the cells' faces.
-  commuteFace :
-           -- the 2cellgen which we want to commute
-           -- we commute from the bottom up
-           {μ η : 1Cell G a d} {ϕs : FreeParts a d}
-           {μp  : Partition n ϕs μ}
-           {ηp : Partition n ϕs η}
-           (ζ : 2CellGen v ϕs μp ηp)
+  sparsify-Some2CellGen : Some2CellGen v μ η -> Sparse2Cell v μ η
+  sparsify-Some2CellGen (incl ξ) = sparsify-2CellGen ξ
 
-           -- the prefix of the face
-           (εₗ : 1Cell G a b)
-           -- the top and bottom boundaries
-           {top bottom : 1Cell G b c}
-           -- a proof that the prefix and the bottom part of
-           -- the face are a subcell of μ
-           (P : (εₗ ◆ bottom) ⊴ μ)
-           -- the face itself
-           (ξ : Face G v top bottom)
+  sparsify-2Cell : 2Cell v μ η -> Sparse2Cell v μ η
+  sparsify-2Cell [] = []
+  sparsify-2Cell (ξ ∷ ξs) = sparsify-Some2CellGen ξ ◆-Sparse2Cell sparsify-2Cell ξs 
 
-           -- We return 
-           -> (Some2CellGen v (εₗ ◆ top ◆ ⟨ P ⟩ .fst) η)
+  unsparsify-Sparse2CellGen : Sparse2CellGen v μ η -> Some2CellGen v μ η
+  unsparsify-Sparse2CellGen (εₗ ⌟[ ξ₀ ⇒ ξ₁ ∋ ξ ]⌞ εᵣ [ refl , refl ]) = incl (εₗ ⌟[ ξ ]⌞ εᵣ ⌟)
 
--}
-{-
+  unsparsify-Sparse2Cell : Sparse2Cell v μ η -> 2Cell v μ η
+  unsparsify-Sparse2Cell [] = []
+  unsparsify-Sparse2Cell (ξ ∷ ξs) = pushDownAll (unsparsify-Sparse2CellGen ξ ∷ unsparsify-Sparse2Cell ξs) -- NOTE, we reduce here!
 
-  -- Case 1: There is only a single free part left of ζ.
-  --         Then we can take our face and insert it after
-  --         the prefix εₗ. We know that there exists a proper
-  --         suffix εᵣ because of P.
-  insertFace (ϕ ⌟) εₗ (incl (εᵣ , refl)) ξ = yes (incl (εₗ ⌟[ ξ ]⌞ εᵣ ⌟))
-
-  -- Case 2: 
-  insertFace (_⌟[_]⌞_ {ξ₀ = ξ₀} {μ = μ}  ϕ ξ' ζ) εₗ {top} {bottom} P@(incl (εᵣ , εₗ◆bottom◆εᵣ=μ)) ξ
-
-    -- we check whether εₗ or ϕ is contained in the other
-    with decide-⊴ (ϕ ◆[ ξ₀ ◆ μ ]) (εₗ ◆[ bottom ] ⟡-⊴ P)
-
-  -- Case 2.1: we have εₗ⊴ϕ. This means that `bottom` has to fit between the
-  --           end of εₗ and the end of ϕ
-  ... | no (_ , εₗ⊴ϕ@(incl (εₗ' , refl)))
-
-    -- we check whether bottom fits into εₗ'
-    with decide-⊴ (cancelₗ-⊴ εₗ (P)) (εₗ' ◆[ ξ₀ ◆ μ ])
-
-  -- Case 2.1.1: It does, this means we found our place for insertion!
-  ... | yes bottom⊴εₗ'@(incl (bottom' , refl))
-
-    -- We only need to show that we have the right boundaries...
-    with refl <- cancelₗ-◆ (εₗ ◆ bottom) (εₗ◆bottom◆εᵣ=μ)
-
-    -- ... and can return
-      = yes (incl (εₗ ⌟[ ξ ]⌞ bottom' ⌟[ ξ' ]⌞ ζ ))
-
-  -- Case 2.1.2: Bottom does not fit into εₗ'. This means that it overlaps with the top boundary
-  --             ξ₀ of the face ξ', and thus we cannot insert ξ.
-  ... | no p = nothing
-
-  -- Case 2.2: We have ϕ⊴εₗ. This means that our prefix εₗ skips over the full
-  --           ϕ free space before ξ'. We now need to check whether it also skips
-  --           over the full top boundary ξ₀ of ξ'.
-  insertFace (_⌟[_]⌞_ {ξ₀ = ξ₀} {μ = μ} ϕ ξ' ζ) εₗ {top} {bottom} P ξ | right ϕ⊴εₗ@(incl (ϕ' , refl))
-
-    -- we compare ξ₀ ⊴ ξ₀ ⟡ μ   and   ϕ' ⊴ ξ₀ ⟡ μ
-    with decide-⊴ (ξ₀ ◆[ μ ]) (ϕ' ◆[ bottom ] ⟡-⊴ (cancelₗ-⊴ ϕ P))
-
-    -- Case 2.2.1: ¬ (ξ₀ ⊴ ϕ'). This means that our left prefix ϕ' ends before ξ₀. Thus we would
-    --             have to insert our new face ξ directly into the existing face ξ' with top boundary
-    --             ξ₀. Thus we say that we cannot.
-  ... | no p = nothing
-
-    -- Case 2.2.2: ξ₀ ⊴ ϕ', indeed. This means that we can skip over the ξ face, and call ourselves
-    --             recursively.
-  ... | yes ξ₀⊴ϕ'@(incl (ξ₀' , refl)) with insertFace ζ ξ₀' (cancelₗ-⊴ (ϕ ◆ ξ₀) P) ξ
-  ... | no p = nothing
-  ... | yes (incl ζ-new) = yes (incl (ϕ ⌟[ ξ' ]⌞ ζ-new))
-
--}
+  commute-2Cell : 2Cell vis μ η -> 2Cell invis η ω
+                  -> ∑ λ η' -> (2Cell invis μ η' ×-𝒰 2Cell vis η' ω)
+  commute-2Cell ξs ζs =
+    let _ , ζs' , ξs' = commute-Sparse2Cell (sparsify-2Cell ξs) (sparsify-2Cell ζs)
+    in _ , unsparsify-Sparse2Cell ζs' , unsparsify-Sparse2Cell ξs'
 
 
 
-{-
-
-  record Some1Cell : 𝒰 𝑖 where
-    constructor incl
-    field {start end} : 0Cell G
-    field get : 1Cell G start end
-
-  open Some1Cell public
-
-  data isNonTrivial : Some1Cell -> 𝒰 𝑖 where
-    incl : ∀{x : Edge G a b} -> isNonTrivial (incl (x ⨾ μ))
 
 
-  -- We define sub1cells, this time they are both-sided
-
-  isSub1Cell : (μ₀ : Some1Cell) (μ : Some1Cell) -> 𝒰 _
-  isSub1Cell μ₀ μ = ∑ λ εₗ -> ∑ λ εᵣ -> εₗ ◆ μ₀ .get ◆ εᵣ ≡ μ .get
-
-  record _⋖_ (μ₀ : Some1Cell) (μ : Some1Cell) : 𝒰 𝑖 where
-    constructor incl
-    field ⟨_⟩ : isSub1Cell μ₀ μ
 
 
-  -- two cells have an intersection if there is a non-trivial cell
-  -- which is contained in both
-  record _⟑_ (μ : Some1Cell) (η : Some1Cell) : 𝒰 𝑖 where
-    field intersection : Some1Cell
-    field in₀ : intersection ⋖ μ
-    field in₁ : intersection ⋖ η
-    field nontrivial : isNonTrivial intersection
-
-  leftPoint : ∀{μ η : Some1Cell} -> (μ ⟑ η) -> 0Cell G
-  leftPoint = {!!}
-
-  rightPoint : ∀{μ η : Some1Cell} -> (μ ⟑ η) -> 0Cell G
-  rightPoint = {!!}
-
-  -- We say that a 2graph is commutable if every visible/invisible
-  -- face pair which has a nontrivial intersection commutes against each other
-  record isCommutable : 𝒰 𝑖 where
-    field commuteFace : {μ : 1Cell G a b} {η₁ : 1Cell G c d} {ω : 1Cell G c d}
-                  -> ∀{ξ : Face G vis μ η₀} {ζ : Face G invis η₁ ω}
-                  -> (I : incl η₀ ⟑ incl η₁)
-                  -> ∑ λ (η : 1Cell G (leftPoint I) (rightPoint I)) -> (Face G invis μ η) ×-𝒰 (Face G vis η ω)
-
--}
