@@ -39,6 +39,10 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   data isNonTrivial : Some1Cell -> 𝒰 𝑖 where
     incl : ∀{x : Edge G a b} -> isNonTrivial (incl (x ⨾ μ))
 
+  nonTrivialBy⊴ : (¬(η ⊴ μ)) -> (p : μ ⊴ η) -> isNonTrivial (incl (⟨ p ⟩ .fst))
+  nonTrivialBy⊴ P (incl (id , refl)) = ⊥-elim (P refl-⊴)
+  nonTrivialBy⊴ P (incl (x ⨾ δ , δp)) = incl
+
 
   record Sparse2CellGen v (μ η : 1Cell G a d) : 𝒰 𝑖 where
     constructor _⌟[_⇒_∋_]⌞_[_,_]
@@ -103,7 +107,8 @@ module 2CellCommutation (G : 2Graph 𝑖) where
                  -> Intersecting (vξ₀ ◆ vεₗvξ₁') (vεₗ' ◆ iξ₁)
 
     situation2 : (vεₗ' : 1Cell G a b) (δ : 1Cell G b c) (iεₗiξ₀' : 1Cell G c d)
-                 (δ≠id : isNonTrivial (incl δ))
+                 -- NOTE that it is possible that δ is trivial,
+                 -- since we have to consider this possibility as well
 
                  -- We have a face into the "vξ₁ = vεₗ' ◆ δ ◆ iεₗiξ₀'"
                  {vξ₀ : 1Cell G a d}
@@ -117,7 +122,8 @@ module 2CellCommutation (G : 2Graph 𝑖) where
                  -> Intersecting (vξ₀) (vεₗ' ◆ iξ₁ ◆ iεₗiξ₀')
 
     situation3 : (iεₗ' : 1Cell G a b) (δ : 1Cell G b c) (vεₗvξ₁' : 1Cell G c d)
-                 (δ≠id : isNonTrivial (incl δ))
+                 -- NOTE that it is possible that δ is trivial,
+                 -- since we have to consider this possibility as well
 
                  -- We have a face into the "vξ₁ = δ"
                  {vξ₀ : 1Cell G b c}
@@ -147,6 +153,7 @@ module 2CellCommutation (G : 2Graph 𝑖) where
 
   commute-intersecting : Intersecting μ η -> ∑ λ ω -> MaybeSparse2CellGen invis μ ω ×-𝒰 MaybeSparse2CellGen vis ω η
   commute-intersecting = {!!}
+
 
 
 
@@ -256,7 +263,7 @@ module 2CellCommutation (G : 2Graph 𝑖) where
                   in P)
 
     = let s1 : Intersecting (vξ₀ ◆ vεₗvξ₁') (vεₗ' ◆ iξ₁)
-          s1 = situation1 vεₗ' iδ vεₗvξ₁' {!!} vξ iξ
+          s1 = situation1 vεₗ' iδ vεₗvξ₁' (nonTrivialBy⊴ ¬vεₗvξ₁⊴iεₗ iεₗ⊴vεₗvξ₁) vξ iξ
 
           γ , ξ₀' , ξ₁' = commute-intersecting s1
 
@@ -292,7 +299,7 @@ module 2CellCommutation (G : 2Graph 𝑖) where
                       P = cancelₗ-◆ (vεₗ ◆ vεₗ' ◆ iξ₀) (sym-≡ P₁)
                   in P)
     = let s2 : Intersecting vξ₀ (vεₗ' ◆ iξ₁ ◆ iεₗiξ₀')
-          s2 = situation2 vεₗ' iξ₀ iεₗiξ₀' {!!} vξ iξ
+          s2 = situation2 vεₗ' iξ₀ iεₗiξ₀' vξ iξ
 
           γ , ξ₀' , ξ₁' = commute-intersecting s2
 
@@ -347,7 +354,7 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   --
   -- We give the intersection and compute the result as above
     = let s3 : Intersecting (iεₗ' ◆ vξ₀ ◆ vεₗvξ₁') iξ₁
-          s3 = situation3 iεₗ' vξ₁ vεₗvξ₁' {!!} vξ iξ
+          s3 = situation3 iεₗ' vξ₁ vεₗvξ₁' vξ iξ
 
           γ , ξ₀' , ξ₁' = commute-intersecting s3
 
@@ -380,7 +387,7 @@ module 2CellCommutation (G : 2Graph 𝑖) where
                   in P)
 
     = let s4 : Intersecting (iεₗ' ◆ vξ₀) (iξ₁ ◆ iεₗiξ₀')
-          s4 = situation4 iεₗ' vδ iεₗiξ₀' {!!} vξ iξ
+          s4 = situation4 iεₗ' vδ iεₗiξ₀' (nonTrivialBy⊴ ¬iεₗiξ₀⊴vεₗ vεₗ⊴iεₗiξ₀) vξ iξ
 
           γ , ξ₀' , ξ₁' = commute-intersecting s4
 
@@ -388,7 +395,6 @@ module 2CellCommutation (G : 2Graph 𝑖) where
           res₁ = (iεₗ ↷-MaybeSparse2CellGen ξ₁') ↶-MaybeSparse2CellGen vεᵣ
 
       in _ , res₀ , res₁
-
 
 
 
