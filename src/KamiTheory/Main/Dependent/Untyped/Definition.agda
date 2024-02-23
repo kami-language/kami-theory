@@ -25,6 +25,8 @@
 
 -- {-# OPTIONS --without-K #-}
 
+{-# OPTIONS --allow-unsolved-metas --rewriting #-}
+
 module KamiTheory.Main.Dependent.Untyped.Definition where
 
 -- Raw terms, weakening (renaming) and substitution.
@@ -38,17 +40,18 @@ open import KamiTheory.ThirdParty.logrel-mltt.Tools.List
 import KamiTheory.ThirdParty.logrel-mltt.Tools.PropositionalEquality as PE
 
 -- open import KamiTheory.Main.Dependent.Modality.Definition
-open import KamiTheory.Main.Generic.ModeSystem.Definition
+open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
+open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition
 open import KamiTheory.Main.Generic.ModeSystem.Modality
 open import KamiTheory.Main.Generic.ModeSystem.Transition
-open import Data.Vec using ([] ; _∷_) renaming (Vec to StdVec)
+open import Data.Vec using ([] ; _∷_ ; _++_) renaming (Vec to StdVec)
 
 open import Agora.Conventions using (𝑖 ; 𝑗 ; 𝒰 ; _､_)
 
 -- Kami: We additionally parametrize over a set P, describing the set of locations
--- module KamiUntyped (P : 2Graph 𝑖) where
+-- module KamiUntyped (P : ModeSystem 𝑖) where
 private variable
-  P : 2Graph 𝑖
+  P : ModeSystem 𝑖
 
 infixl 30 _∙_
 infix 30 Π_▹_
@@ -78,7 +81,7 @@ private
 
 data Metakind : Set where
   term entry modality : Metakind
-  transition : Visibility -> Metakind
+  transition : Metakind
 
 -- Representation of sub terms using a list of binding levels
 
@@ -171,7 +174,7 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   -- 𝓀-[]▹ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
   -- 𝓀-exec : MainKind ((term , n0) ∷ [])
   -- 𝓀-prepare : MainKind ((term , n0) ∷ [])
-  𝓀-transform : MainKind ((term , n0) ∷ [])
+  -- 𝓀-transform : MainKind ((transition , n0) ∷ (term , n0) ∷ [])
 
 
   ---------------------------------------------
@@ -196,7 +199,7 @@ data LeafKind : Set where
 data Kind : (ns : List (Metakind × Nat)) → Set where
   main : ∀{ns} -> MainKind ns -> Kind ns
   leaf : LeafKind -> Kind []
-  𝓀-transform : Kind ((transition vis , n0) ∷ (term , n0) ∷ [])
+  𝓀-transform : Kind ((transition , n0) ∷ (term , n0) ∷ [])
 
 -- Term Ps are indexed by its number of unbound variables and are either:
 -- de Bruijn style variables or
@@ -204,12 +207,12 @@ data Kind : (ns : List (Metakind × Nat)) → Set where
 
 
 
-data Term (P : 2Graph 𝑖) (n : Nat) : 𝒰 𝑖
+data Term (P : ModeSystem 𝑖) (n : Nat) : 𝒰 𝑖
 
-data KindedTerm (P : 2Graph 𝑖) (n : Nat) : (k : Metakind) -> 𝒰 𝑖 where
+data KindedTerm (P : ModeSystem 𝑖) (n : Nat) : (k : Metakind) -> 𝒰 𝑖 where
   term : Term P n -> KindedTerm P n term
   modality : Modality P -> KindedTerm P n modality
-  transition : ∀{v} -> Transition P v -> KindedTerm P n (transition v)
+  transition : Transition P vis -> KindedTerm P n transition
   _//_ : Term P n -> Modality P -> KindedTerm P n entry
 
 pattern _/_ A μs = A // _ ↝ _ ∋ μs
@@ -219,10 +222,10 @@ infixl 21 _//_ _/_
 
 data Term P n where
   gen : {bs : List (Metakind × Nat)} (k : Kind bs) (c : GenTs (StdVec (Modality P)) (KindedTerm P) n bs) → Term P n
-  var : ∀{v} -> (x : Fin n) → Transition P v → Term P n
+  var : (x : Fin n) → Transition P all → Term P n
 
 
-Entry : (P : 2Graph 𝑖) (n : Nat) -> 𝒰 𝑖
+Entry : (P : ModeSystem 𝑖) (n : Nat) -> 𝒰 𝑖
 Entry P n = KindedTerm P n entry
 
 
@@ -353,7 +356,7 @@ infixl 30 _∥_
 
 -- pattern exec t       = gen (main 𝓀-exec) ([] ⦊ term t ∷ [])
 -- pattern prepare t       = gen (main 𝓀-prepare) ([] ⦊ term t ∷ [])
-pattern transform t  = gen (main 𝓀-transform) ([] ⦊ term t ∷ [])
+pattern transform ξ t  = gen (𝓀-transform) ([] ⦊ transition ξ ∷ [] ⦊ term t ∷ [])
 
 
 -- pattern let-tr t s   = gen (main 𝓀-let-tr) ([] ⦊ term t ∷ term s ∷ [])
@@ -411,7 +414,7 @@ suc-PE-injectivity PE.refl = PE.refl
 -- A term is neutral if it has a variable in head position.
 -- The variable blocks reduction of such terms.
 
-data Neutral (P : 2Graph 𝑖) : KindedTerm P n term → Set where
+data Neutral (P : ModeSystem 𝑖) : KindedTerm P n term → Set where
   -- var       : (x : Fin n) → Neutral P (var x)
   -- ∘ₙ        : Neutral P t   → Neutral P (t ∘ u)
   -- fstₙ      : Neutral P t   → Neutral P (fstₜ t)
@@ -425,7 +428,7 @@ data Neutral (P : 2Graph 𝑖) : KindedTerm P n term → Set where
 
 -- These are the (lazy) values of our language.
 
-data Whnf {P : 2Graph 𝑖} {n : Nat} : Term P n → Set where
+data Whnf {P : ModeSystem 𝑖} {n : Nat} : Term P n → Set where
 
   -- Type constₜructors are whnfs.
   Uₙ     : Whnf UU
@@ -502,7 +505,7 @@ cons≢ne () PE.refl
 
 -- A whnf of type ℕ is either zero, suc t, or neutral.
 
-data Natural {P : 2Graph 𝑖} {n : Nat} : Term P n → Set where
+data Natural {P : ModeSystem 𝑖} {n : Nat} : Term P n → Set where
   zeroₙ :             Natural zeroₜ
   sucₙ  :             Natural (sucₜ t)
   nilₙ  :             Natural nilₜ
@@ -513,7 +516,7 @@ data Natural {P : 2Graph 𝑖} {n : Nat} : Term P n → Set where
 -- A (small) type in whnf is either Π A B, Σ A B, ℕ, Empty, Unit or neutral.
 -- Large types could also be U.
 
-data Type {P : 2Graph 𝑖} {n : Nat} : Term P n → Set where
+data Type {P : ModeSystem 𝑖} {n : Nat} : Term P n → Set where
   Πₙ     :             Type (Π A ▹ B)
   Σₙ     :             Type (Σ A ▹ B)
   ℕₙ     :             Type NN
@@ -528,13 +531,13 @@ data Type {P : 2Graph 𝑖} {n : Nat} : Term P n → Set where
 
 -- A whnf of type Π A ▹ B is either lam t or neutral.
 
-data Function {P : 2Graph 𝑖} {n : Nat} : Term P n → Set where
+data Function {P : ModeSystem 𝑖} {n : Nat} : Term P n → Set where
   lamₙ : Function (lam t)
   ne   : Neutral P t → Function t
 
 -- A whnf of type Σ A ▹ B is either prod t u or neutral.
 
-data Product {P : 2Graph 𝑖} {n : Nat} : Term P n → Set where
+data Product {P : ModeSystem 𝑖} {n : Nat} : Term P n → Set where
   prodₙ : Product (prod t u)
   ne    : Neutral P t → Product t
 
@@ -629,9 +632,9 @@ mutual
 
   wk-Kinded : ∀{k : Metakind} -> {m n : Nat} (ρ : Wk m n) (t : KindedTerm P n k) → KindedTerm P m k
   wk-Kinded ρ (term x) = term (wk ρ x)
-  wk-Kinded ρ (transition v) = transition v
+  wk-Kinded ρ (transition ξ) = transition ξ
   wk-Kinded ρ (modality μ) = modality μ
-  wk-Kinded ρ (x / p) = wk ρ x / p
+  wk-Kinded ρ (x // p) = wk ρ x // p
 
   wk : {m n : Nat} (ρ : Wk m n) (t : Term P n) → Term P m
   wk ρ (var x ξ)   = var (wkVar ρ x) ξ
@@ -728,41 +731,107 @@ A ×× B = Σ A ▹ wk1 B
 -- To push transitions down, we actually need a transition for each
 -- variable. We call such a collection `Transitions`
 
-Transitions : ∀ (P : 2Graph 𝑖) -> Nat -> Visibility -> 𝒰 _
-Transitions P n v = Fin n -> Transition P v
+
+-- A term like `λ (A / μ) . λ (B / η) . λ (C / ω) . t` corresponds to a list
+-- (ω ∷ η ∷ μ ∷ []), which looks inverted because the first item has to belong to
+-- variable zero.
+-- Nevertheless, this vector should return the following modalities for the vars:
+-- 0 -> ω ◆ η ◆ μ
+-- 1 -> η ◆ μ
+-- 2 -> μ
+VarExtensionWk : (P : ModeSystem 𝑖) (n : Nat) -> 𝒰 _
+VarExtensionWk P n = StdVec (Modality P) n
+
+record Transitions (P : ModeSystem 𝑖) (n : Nat) (r : Range) : 𝒰 𝑖 where
+  constructor transitions
+  field get : Transition P r
+  field extensions : VarExtensionWk P n -- NOTE: The modalities' right point has to match with the left point of the transition
+
+open Transitions public
+
+concatAll : VarExtensionWk P n -> Modality P
+concatAll [] = id
+concatAll (x ∷ vs) = x ◆-Modality concatAll vs
+
+getVarTransition : VarExtensionWk P n -> Fin n -> Modality P
+getVarTransition (x ∷ xs) x0 = concatAll (x ∷ xs)
+getVarTransition (x ∷ xs) (_+1 i) = getVarTransition xs i
+
+uniformExtension : VarExtensionWk P n
+uniformExtension {n = n0} = []
+uniformExtension {n = 1+ n} = id ∷ uniformExtension
 
 -- a uniform transitions collection can be created from a single
 -- transition
 uniformTransitions : ∀{v} -> Transition P v -> Transitions P n v
-uniformTransitions ξ _ = ξ
+uniformTransitions ξ = transitions ξ uniformExtension
 
-liftTransitions : ∀{v b} -> (StdVec (Modality P) b) -> Transitions P n v -> Transitions P (b + n) v
-liftTransitions = {!!}
+-- liftVarsSingle : Modality P -> (Fin n -> Modality P) -> (Fin n -> Modality P)
+-- liftVarsSingle μ vars = λ i -> μ ◆-Modality vars i
+
+-- lift-Tail : ∀{A : 𝒰 𝑖} -> ((Fin n -> A) -> (Fin n -> A)) -> ((Fin (suc n) -> A) -> (Fin (suc n) -> A))
+-- lift-Tail f vars x0 = vars x0
+-- lift-Tail f vars (_+1 i) = f (λ j -> (vars (j +1))) i
+
+
+-- We lift step-wise, that is, in an aggregated fashion.
+-- liftVars : ∀{P : ModeSystem 𝑖} -> ∀{b} -> (StdVec (Modality P) b) -> (Fin n -> Modality P) -> (Fin (b + n) -> Modality P)
+-- liftVars [] ξs = ξs
+-- liftVars  {n = n} {P = P} {b = suc b}(μ ∷ μs) ξs =
+--   let liftedRest : Fin (b + n) -> Modality P
+--       liftedRest = liftVars μs ξs
+--   -- = liftVarsSingle μ (λ {x0 -> ξs x0
+--   --                             ; (i +1) -> lift-Tail (liftVars μs) ξs i})
+--   in {!f!}
+
+
+-- The μs are the new modalities, the xs are the already preexisting, thus
+-- we have to do simple appending here
+liftVarExtension : ∀{b} -> (μs : StdVec (Modality P) b) -> (xs : VarExtensionWk P n) -> VarExtensionWk P (b + n)
+liftVarExtension μs xs = μs ++ xs
+
+liftTransitions : ∀{b} -> (StdVec (Modality P) b) -> Transitions P n all -> Transitions P (b + n) all
+liftTransitions μs (transitions ξ vars) = transitions ξ (liftVarExtension μs vars)
 
 
 -- Pushes a transition down the term. We push it until the next
 -- `transform` term or variable.
 mutual
-  push-Gen : ∀{v bs} -> Transitions P n v -> GenTs (StdVec (Modality P)) (KindedTerm P) n bs -> GenTs (StdVec (Modality P)) (KindedTerm P) n bs
+  push-Gen : ∀{bs} -> Transitions P n all -> GenTs (StdVec (Modality P)) (KindedTerm P) n bs -> GenTs (StdVec (Modality P)) (KindedTerm P) n bs
   push-Gen ξs [] = []
   push-Gen ξs (μs ⦊ t ∷ ts) = μs ⦊ push-Kinded (liftTransitions μs ξs) t ∷ push-Gen ξs ts
 
-  push-Kinded : ∀{v k} -> Transitions P n v -> KindedTerm P n k -> KindedTerm P n k
+  push-Kinded : ∀{k} -> Transitions P n all -> KindedTerm P n k -> KindedTerm P n k
   push-Kinded ξs (term x) = term (push ξs x)
-  push-Kinded ξs (modality x) = {!!}
-  push-Kinded ξs (transition x) = {!!}
-  push-Kinded ξs (x // x₁) = {!!}
+  push-Kinded ξs (modality μ) = modality μ
+  push-Kinded ξs (transition ζ) = transition ζ
+  -- t)
+  push-Kinded ξs (x // μ) = push ξs x // μ
 
-  push : ∀{v} -> Transitions P n v -> Term P n -> Term P n
-  push ξs (gen k c) = gen k (push-Gen ξs c) -- NOTE: NEED SPECIAL CASE FOR TRANSFORM
-  push ξs (var x ζ) = var x (ζ ⋆-Transition ξs x)
+  push : Transitions P n all -> Term P n -> Term P n
+  push ξs (gen (main x) c) = gen (main x) (push-Gen ξs c)
+  push ξs (gen (leaf x) c) = gen (leaf x) []
+  push ξs (transform ζ t) with ξ' , ζ' <- commute-Transition-vis ζ (get ξs)
+                          = transform ζ' (push (transitions ξ' (extensions ξs)) t)
+  push ξs (var x ζ) = var x (ζ ◆-Transition (getVarTransition (extensions ξs) x ↷-Transition get ξs))
 
 
-untransform-Term : Term P n -> Term P n
-untransform-Term (gen (main x) c) = {!!}
-untransform-Term (gen (leaf x) c) = {!!}
-untransform-Term (gen 𝓀-transform c) = {!!}
-untransform-Term (var x ξ) = {!!}
+mutual
+  untransform-Gen : ∀{bs} -> GenTs (StdVec (Modality P)) (KindedTerm P) n bs -> GenTs (StdVec (Modality P)) (KindedTerm P) n bs
+  untransform-Gen [] = []
+  untransform-Gen (μs ⦊ t ∷ x) = μs ⦊ untransform-KindedTerm t ∷ untransform-Gen x
+
+  untransform-Term : Term P n -> Term P n
+  untransform-Term (gen (main x) c) = gen (main x) (untransform-Gen c)
+  untransform-Term (gen (leaf x) c) = gen (leaf x) []
+  untransform-Term (gen 𝓀-transform ([] ⦊ (transition ξ) ∷ [] ⦊ (term t) ∷ [])) = push (uniformTransitions (into-all-Transition ξ)) (untransform-Term t)
+  untransform-Term (var x x₁) = var x x₁
+
+  untransform-KindedTerm : ∀{k} -> KindedTerm P n k -> KindedTerm P n k
+  untransform-KindedTerm (term x) = term (untransform-Term x)
+  untransform-KindedTerm (modality μ) = modality μ
+  untransform-KindedTerm (transition ξ) = transition ξ
+  untransform-KindedTerm (x // p) = untransform-Term x // p
 
 ------------------------------------------------------------------------
 -- Substitution
@@ -772,7 +841,7 @@ untransform-Term (var x ξ) = {!!}
 
 -- The substitution σ itself is a map from natural numbers to terms.
 
-Subst : (P : 2Graph 𝑖) -> Nat → Nat → 𝒰 𝑖
+Subst : (P : ModeSystem 𝑖) -> Nat → Nat → 𝒰 𝑖
 Subst P m n = Fin n → Term P m
 
 -- Given closed contexts ⊢ Γ and ⊢ Δ,
@@ -854,13 +923,15 @@ mutual
 
   subst-Kinded : ∀{k : Metakind} (σ : Subst P m n) (t : KindedTerm P n k) → KindedTerm P m k
   subst-Kinded σ (term x) = term (subst σ x)
-  subst-Kinded σ (transition v) = transition v
+  subst-Kinded σ (transition ξ) = transition ξ --  (subst σ t)
   subst-Kinded σ (modality μ) = modality μ
-  subst-Kinded σ (x / p) = subst σ x / p
+  subst-Kinded σ (x // p) = subst σ x // p
 
   subst : (σ : Subst P m n) (t : Term P n) → Term P m
   subst σ (var x ξ) = push (uniformTransitions ξ) (substVar σ x) -- if we substitute a variable with an annotation, we have to push this annotation down the term
   subst σ (gen x c) = gen x (substGen σ c)
+
+
 
 -- Extend a substitution by adding a term as
 -- the first variable substitution and shift the rest.
@@ -917,6 +988,5 @@ t [ s ]↑ = subst (consSubst (wk1Subst idSubst) s) t
 --         → subst σ (⟦ W ⟧ F ▹ G) PE.≡ ⟦ W ⟧ (subst σ F) ▹ (subst (liftSubst σ) G)
 -- B-subst σ BΠ F G = PE.refl
 -- B-subst σ BΣ F G = PE.refl
-
 
 
