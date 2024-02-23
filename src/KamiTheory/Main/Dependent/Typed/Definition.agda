@@ -25,60 +25,59 @@
 
 -- {-# OPTIONS --without-K #-}
 
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
 module KamiTheory.Main.Dependent.Typed.Definition where
 
 open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
-open import Agora.Order.Preorder
-open import Agora.Order.Lattice
+-- open import Agora.Order.Preorder
+-- open import Agora.Order.Lattice
 
 open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
-open import KamiTheory.Main.Dependent.Modality.Definition
 
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Fin
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Nat
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Product
 
+open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
+open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition hiding ([_])
+open import KamiTheory.Main.Generic.ModeSystem.Modality
+open import KamiTheory.Main.Generic.ModeSystem.Transition
+
 
 
 
 -- module _ {P : 𝒰 _} {{_ : Preorder (ℓ₀ , ℓ₀ , ℓ₀) on P}} {{_ : hasDecidableEquality P}} where
-module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} {{_ : hasFiniteMeets ′ P ′ }} where
+module Judgements (P : ModeSystem 𝑖) where
+-- {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} {{_ : hasFiniteMeets ′ P ′ }} where
        -- {{_ : hasDecidableEquality P}} where
 
   -- open DUN.KamiUntyped P hiding (_∷_)
+  _★_ = _◆-Modality_
+
 
   infixl 30 _∙_
   infix 30 Πⱼ_▹_
   infix 30 Σⱼ_▹_
   -- infix 30 ⟦_⟧ⱼ_▹_
 
+  data TermTransitions n : 𝒰 𝑖 where
+    incl : Term P n -> TermTransitions n
+    * : TermTransitions n
 
-  -- data MLMod : Set where
-  --   local : (U : P) -> MLMod
-  --   global : MLMod
-
-  -- data Mod (n : Nat) : Set where
-  --   ml : MLMod -> Mod n
-  --   com : Term P n -> Mod n
-
-  -- record Term (n : Nat) : Set where
-  --   constructor _/_
-  --   field type : Term P n
-  --   field mod : Mod n
 
   open Term
 
   private variable
     -- n m : Nat
-    k l o q r : Mode
-    μs : ModeHom P k l
-    ωs : ModeHom P l o
-    ηs : ModeHom P q r
-    μ : BaseModeHom P k l
-    ω : BaseModeHom P l o
+    k l o q r : Mode P
+    μs : Modality P
+    ωs : Modality P
+    ηs : Modality P
+    μ : ModeHom P k l
+    ω : ModeHom P l o
+    ττ : TermTransitions n
     τ σ : Term P n -- Transitions
     ξ ξ₀ ξ₁ : Term P n -- Transitions
     Γ  : Con (Entry P) n
@@ -91,15 +90,14 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     f g : Term P n
     G : Term P (1+ n)
     x : Fin n
-    U V R : P
+    -- U V R : P
 
 
   wk1-Entry : Entry P n -> Entry P (suc n)
-  wk1-Entry (A / μ) = wk1 A / μ
-
+  wk1-Entry (A // μ) = wk1 A // μ
 
   -- Well-typed variables
-  data _∶_∈_ : (x : Fin n) (E : Entry P n) (Γ : Con (Entry P) n) → Set where
+  data _∶_∈_ : (x : Fin n) (E : Entry P n) (Γ : Con (Entry P) n) → 𝒰 𝑖 where
     zero :                       x0 ∶ wk1-Entry E ∈ (Γ ∙ E)
     suc  : (h : x ∶ E ∈ Γ) → (x +1) ∶ wk1-Entry E ∈ (Γ ∙ F)
 
@@ -107,20 +105,20 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
 
 
-  data ⊢Ctx_ : Con (Entry P) n → Set
-  data _⊢Tr_ (Γ : Con (Entry P) n) : Term P n -> Set
-  data _⊢Sort_ (Γ : Con (Entry P) n) : Term P n -> Set
-  data _⊢Entry_ (Γ : Con (Entry P) n) : Entry P n -> Set
-  data _⊢[_]_∶_ (Γ : Con (Entry P) n) : Term P n -> Term P n → Entry P n → Set
+  data ⊢Ctx_ : Con (Entry P) n → 𝒰 𝑖
+  data _⊢Tr_ (Γ : Con (Entry P) n) : Term P n -> 𝒰 𝑖
+  data _⊢Sort_ (Γ : Con (Entry P) n) : Term P n -> 𝒰 𝑖
+  data _⊢Entry_ (Γ : Con (Entry P) n) : Entry P n -> 𝒰 𝑖
+  data _⊢[_]_∶_ (Γ : Con (Entry P) n) : TermTransitions n -> Term P n → Entry P n → 𝒰 𝑖
 
-  _⊢_∶_ : (Γ : Con (Entry P) n) -> Term P n -> Entry P n -> Set
-  _⊢_∶_ Γ t A = Γ ⊢[ end ] t ∶ A
+  _⊢_∶_ : (Γ : Con (Entry P) n) -> Term P n -> Entry P n -> 𝒰 𝑖
+  _⊢_∶_ Γ t A = Γ ⊢[ incl end ] t ∶ A
 
 
-  id-◯ : ModeHom P ◯ ◯
-  id-◯ = id
+  -- id-◯ : ModeHom P ◯ ◯
+  -- id-◯ = id
 
-  data _⊢Tr_＝_ (Γ : Con (Entry P) n) : Term P n -> Term P n -> Set where
+  data _⊢Tr_＝_ (Γ : Con (Entry P) n) : Term P n -> Term P n -> 𝒰 𝑖 where
     tt : Γ ⊢Tr ξ₀ ＝ ξ₁
 
 
@@ -132,10 +130,10 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
         → ⊢Ctx Γ ∙ E
 
   data _⊢Tr_ Γ where
-    trⱼ : Γ ⊢Entry A / μs
-          -> (ξ : ModeTrans μs ηs vis)
-          -> Γ ⊢Tr A / μs ⇒ ηs
-    _≫ⱼ_ : Γ ⊢Tr ξ₀ -> Γ ⊢Tr ξ₁ -> Γ ⊢Tr (ξ₀ ≫ ξ₁)
+    -- trⱼ : Γ ⊢Entry A // μs
+    --       -> (ξ : Transition μs ηs vis)
+    --       -> Γ ⊢Tr A / μs ⇒ ηs
+    -- _≫ⱼ_ : Γ ⊢Tr ξ₀ -> Γ ⊢Tr ξ₁ -> Γ ⊢Tr (ξ₀ ≫ ξ₁)
 
 
   -- Well-formed type
@@ -146,8 +144,8 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     Emptyⱼ : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Sort Empty
     Unitⱼ  : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Sort Unit
 
-    Πⱼ_▹_  : Γ ⊢Entry (A / μs) → Γ ∙ E ⊢Sort B → Γ ⊢Sort Π (A / μs) ▹ B
-    Σⱼ_▹_  : Γ ⊢Entry (A / μs) → Γ ∙ F ⊢Sort G → Γ ⊢Sort Σ (A / μs) ▹ G
+    Πⱼ_▹_  : Γ ⊢Entry (A // μs) → Γ ∙ E ⊢Sort B → Γ ⊢Sort Π (A // μs) ▹ B
+    Σⱼ_▹_  : Γ ⊢Entry (A // μs) → Γ ∙ F ⊢Sort G → Γ ⊢Sort Σ (A // μs) ▹ G
     -- univ   : Γ ⊢Sort A ∶ UU
     --       → Γ ⊢Sort A
 
@@ -186,16 +184,16 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
     -------------------
     -- Kami modality system
-    Modalⱼ : Γ ⊢Entry (A / μ ⨾ μs) -> Γ ⊢Entry Modal A μ / μs
+    Modalⱼ : Γ ⊢Entry (A / (ηs ◆-Modality μs)) -> Γ ⊢Entry Modal A ηs / μs
 
-    narrowⱼ : (ϕ : U ≤ V)
-               -> Γ ⊢Entry X / `＠` U ⨾ μs
-               -> Γ ⊢Entry X / `＠` V ⨾ μs
+    -- narrowⱼ : (ϕ : U ≤ V)
+    --            -> Γ ⊢Entry X / `＠` U ⨾ μs
+    --            -> Γ ⊢Entry X / `＠` V ⨾ μs
 
     -------------------
     -- Mode transformations (transitions)
 
-    Trⱼ : Γ ⊢Entry Tr / id-◯
+    Trⱼ : Γ ⊢Entry Tr / id
     -- []▹ⱼ : Γ ⊢Entry [ τ ]▹ A / μs
 
 
@@ -207,27 +205,35 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
     -------------------
     -- Standard modality intro and "elim"
 
-    modⱼ : Γ ⊢[ τ ] t ∶ X / μ ⨾ μs -> Γ ⊢[ τ ] mod t ∶ Modal X μ / μs
-    unmodⱼ : Γ ⊢[ τ ] t ∶ Modal X μ / μs -> Γ ⊢[ τ ] unmod t ∶ X / μ ⨾ μs
+
+    modⱼ : Γ ⊢[ ττ ] t ∶ X / (ηs ★ μs) -> Γ ⊢[ ττ ] mod t ∶ Modal X ηs / μs
+
+    letunmodⱼ : Γ ⊢[ incl τ ] t ∶ Modal X ηs / μs
+              -> Γ ∙ (X / (ηs ★ μs)) ⊢[ incl σ ] s ∶ Y / μs
+              -> Γ ⊢[ incl (τ ≫ (σ [ unmod t ])) ] letunmod ηs t s ∶ Y [ unmod t ] / μs
+
+    unmodⱼ : Γ ⊢[ * ] t ∶ Modal X ηs / μs -> Γ ⊢[ * ] unmod t ∶ X / (ηs ★ μs)
+
 
 
     -------------------
     -- Transformations between modehoms (transitions)
 
     trⱼ : Γ ⊢Entry A / μs
-          → (ξ : ModeTrans μs ηs vis)
-          → Γ ⊢ A / μs ⇒ ηs ∶ Tr / id-◯
+          -- → (ξ : ModeTrans μs ηs vis)
+          → Γ ⊢ A / μs ⇒ ηs ∶ Tr / id
 
     _≫ⱼ_ : Γ ⊢ ξ₀ ∶ Tr / μs
          → Γ ⊢ ξ₁ ∶ Tr / μs
          → Γ ⊢ (ξ₀ ≫ ξ₁) ∶ Tr / μs
 
-    endⱼ : Γ ⊢ end ∶ Tr / id-◯
+    endⱼ : Γ ⊢ end ∶ Tr / id
 
-    transformⱼ : ModeTrans μs ηs vis
-                 -> Γ ⊢[ ξ ] t ∶ A / μs
-                 -> Γ ⊢[ ξ ≫ A / μs ⇒ ηs ] transform t ∶ A / ηs
+    transformⱼ : ∀ ζ -- ModeTrans μs ηs vis
+                 -> Γ ⊢[ incl ξ ] t ∶ A / μs
+                 -> Γ ⊢[ incl (ξ ≫ A / μs ⇒ ηs) ] transform ζ {!!} ∶ A / ηs
 
+{-
     castⱼ : Γ ⊢Tr ξ₀ ＝ ξ₁
             -> Γ ⊢[ ξ₀ ] t ∶ A / μs
             -> Γ ⊢[ ξ₁ ] t ∶ A / μs
@@ -735,4 +741,5 @@ module _ {P : 𝒰 ℓ₀} {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ �
 
   -}
 
+-}
 -}

@@ -70,7 +70,7 @@ infix 25 _[_]↑
 -- Term Ps added to the context are well scoped in the sense that it cannot
 -- contain more unbound variables than can be looked up in the context.
 
-data Con (A : Nat → Set) : Nat → Set where
+data Con (A : Nat → 𝒰 𝑖) : Nat → 𝒰 𝑖 where
   ε   :                             Con A 0        -- Empty context.
   _∙_ : {n : Nat} → Con A n → A n → Con A (1+ n)   -- Context extension.
 
@@ -146,6 +146,7 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   -- Kami modality terms
   𝓀-mod : MainKind ((term , n0) ∷ [])
   𝓀-unmod : MainKind ((term , n0) ∷ [])
+  𝓀-letunmod : MainKind ((term , n0) ∷ (term , n1) ∷ [])
   -- 𝓀-send : MainKind ((term , n0) ∷ [])
   -- 𝓀-recv : MainKind ((term , n0) ∷ [])
   -- 𝓀-narrow : MainKind ((term , n0) ∷ [])
@@ -215,7 +216,7 @@ data KindedTerm (P : ModeSystem 𝑖) (n : Nat) : (k : Metakind) -> 𝒰 𝑖 wh
   transition : Transition P vis -> KindedTerm P n transition
   _//_ : Term P n -> Modality P -> KindedTerm P n entry
 
-pattern _/_ A μs = A // _ ↝ _ ∋ μs
+pattern _/_ A μs = A // μs
 infixl 21 _//_ _/_
 
 
@@ -271,7 +272,7 @@ pattern end        = gen (main 𝓀-end) ([])
 pattern NN = gen (leaf Natkind) []
 
 -- Vec : (m : Term n) (t : Term n) → Term n -- Vector type.
-pattern Vec m t = gen (main Veckind) (term m ∷ term t ∷ [])
+pattern Vec m t = gen (main Veckind) ([] ⦊ term m ∷ [] ⦊ term t ∷ [])
 
 -- Empty : Term P n                       -- Empty type
 pattern Empty = gen (leaf Emptykind) []
@@ -331,7 +332,7 @@ Emptyrec A e = gen (main Emptyreckind) ([] ⦊ term A ∷ [] ⦊ term e ∷ [])
 -- pattern comtype a    = gen (main 𝓀-comtype) (term a ∷ [])
 -- pattern comval a     = gen (main 𝓀-comval) (term a ∷ [])
 
-pattern Modal A μ     = gen (main 𝓀-Modal) (term A ∷ (modality μ) ∷ [])
+pattern Modal A μ     = gen (main 𝓀-Modal) ([] ⦊ term A ∷ [] ⦊ (modality μ) ∷ [])
 -- pattern _＠_ L U     = gen (main 𝓀-＠) (term L ∷ (location U) ∷ [])
 -- pattern loc U t      = gen 𝓀-loc ((location U) ∷ term t ∷ []) -- NOTE, this one is *not* wrapped in `main`
 -- pattern unloc t      = gen (main 𝓀-unloc) ([] ⦊ term t ∷ [])
@@ -341,13 +342,14 @@ pattern Modal A μ     = gen (main 𝓀-Modal) (term A ∷ (modality μ) ∷ [])
 -- pattern recv t       = gen (main 𝓀-recv) ([] ⦊ term t ∷ [])
 pattern mod t        = gen (main 𝓀-mod) ([] ⦊ term t ∷ [])
 pattern unmod t      = gen (main 𝓀-unmod) ([] ⦊ term t ∷ [])
+pattern letunmod μ t s  = gen (main 𝓀-letunmod) ([] ⦊ term t ∷ (μ ∷ []) ⦊ term s ∷ [])
 
 
 -- Transformations / Transitions
 pattern Tr           = gen (main 𝓀-Tr) ([])
-pattern _/_⇒_ A μ η = gen (main 𝓀-tr) (term A ∷ modality μ ∷ modality η ∷ [])
-pattern _≫_ m n     = gen (main 𝓀-≫) (term m ∷ term n ∷ [])
-pattern _∥_ m n     = gen (main 𝓀-∥) (term m ∷ term n ∷ [])
+pattern _/_⇒_ A μ η = gen (main 𝓀-tr) ([] ⦊ term A ∷ [] ⦊ modality μ ∷ [] ⦊ modality η ∷ [])
+pattern _≫_ m n     = gen (main 𝓀-≫) ([] ⦊ term m ∷ [] ⦊ term n ∷ [])
+pattern _∥_ m n     = gen (main 𝓀-∥) ([] ⦊ term m ∷ [] ⦊ term n ∷ [])
 -- pattern [_]▹_ T A    = gen (main 𝓀-[]▹) (term T ∷ term A ∷ [])
 -- infixr 30 [_]▹_
 
