@@ -6,11 +6,6 @@ module KamiTheory.Main.Generic.ModeSystem.2Cell.Rewriting where
 open import Agora.Conventions
 open import KamiTheory.Basics
 open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
-open import KamiTheory.Main.Generic.ModeSystem.Modality
--- open import KamiTheory.Main.Generic.ModeSystem.LinearFSM.Definition
-open import KamiTheory.Order.StrictOrder.Base
-
-open import Data.Fin using (Fin ; zero ; suc)
 
 
 import KamiTheory.Main.Generic.ModeSystem.2Cell.Definition as D
@@ -389,6 +384,36 @@ module 2CellRewriting (G : 2Graph 𝑖) where
     where _>>=_ = bind-Maybe
 
 
+  -- Tries to rewrite with one of a list of patterns.
+  -- Rewrites only once! Returns nothing if no pattern was
+  -- applicable.
+  rewriteOnce : ∀{v}
+            -- The patterns we are searching for
+            -> List (∑ λ n -> 2CellLinePattern v 𝑗 (suc n))
 
+            -- The 2Cell which we want to rewrite
+            -> 2Cell v μ ω
+
+            -- We only return a result if rewriting was done
+            -> Maybe (2Cell v μ ω)
+  rewriteOnce [] ξ = nothing
+  rewriteOnce ((n , pat) ∷ pats) ξ with findAllAndReduce pat ξ
+  ... | nothing = rewriteOnce pats ξ
+  ... | yes ξ' = just ξ'
+
+
+  {-# TERMINATING #-}
+  -- Rewrites and normalizes until rewriting is no longer succesfull
+  rewriteComplete : -- The patterns we are searching for
+                      List (∑ λ n -> 2CellLinePattern v 𝑗 (suc n))
+
+                    -- The 2Cell which we want to rewrite
+                    -> 2Cell v μ ω
+
+                    -- Return the rewritten 2cell
+                    -> 2Cell v μ ω
+  rewriteComplete pats ξ with rewriteOnce pats ξ
+  ... | nothing = ξ
+  ... | just ξ' = rewriteComplete pats (pushDownAll ξ')
 
 

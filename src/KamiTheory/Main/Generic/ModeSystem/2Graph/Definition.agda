@@ -127,22 +127,10 @@ open 2Graph public
 ------------------------------------------------------------------------
 -- A mode system is given by
 
-record ModeSystem 𝑖 : 𝒰 (𝑖 ⁺) where
-  field Generators : 2Graph 𝑖
+-- record ModeSystem 𝑖 : 𝒰 (𝑖 ⁺) where
+--   field Generators : 2Graph 𝑖
 
 
----------------------------------------------
--- Convenience definitions for accessing
--- the mode data
-
-Mode : 2Graph 𝑖 -> 𝒰 _
-Mode G = Point G
-
-ModeHom : (G : 2Graph 𝑖) -> (m n : Mode G) -> 𝒰 _
-ModeHom G = Path (Edge G)
-
--- ModeTrans : (G : 2Graph 𝑖) -> ∀{m n} -> (μ η : ModeHom G m n) -> Visibility -> 𝒰 _
--- ModeTrans G = 2Cell G
 
 
 

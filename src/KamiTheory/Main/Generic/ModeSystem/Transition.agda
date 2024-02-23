@@ -1,17 +1,23 @@
 
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
 module KamiTheory.Main.Generic.ModeSystem.Transition where
 
 open import Agora.Conventions hiding (m ; n)
 open import KamiTheory.Basics
-open import KamiTheory.Main.Generic.ModeSystem.Definition
+open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
 open import KamiTheory.Main.Generic.ModeSystem.Modality
 
+import KamiTheory.Main.Generic.ModeSystem.2Cell.Definition as 2CellDefinition
+import KamiTheory.Main.Generic.ModeSystem.2Cell.Rewriting as 2CellRewriting
+import KamiTheory.Main.Generic.ModeSystem.2Cell.Commutation as 2CellCommutation
+
+open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition
+
 private variable
-  G : 2Graph 𝑖
-  v w : Visibility
-  m n : Mode G
+  M : ModeSystem 𝑖
+  v : Visibility
+  m n : Mode M
 
 ------------------------------------------------------------------------
 -- ModalityTrans
@@ -20,17 +26,17 @@ private variable
 -- for domain and codomain
 
 
-data ModalityTrans (G : 2Graph 𝑖) : (μ η : Modality G) (v : Visibility) -> 𝒰 𝑖 where
-  _⇒_∋_ : ∀{m n : Mode G} -> (μ η : ModeHom G m n) -> (ξ : ModeTrans G μ η v) -> ModalityTrans G (m ↝ n ∋ μ) (m ↝ n ∋ η) v
+data ModalityTrans (M : ModeSystem 𝑖) (v : Visibility) : (μ η : Modality M) -> 𝒰 𝑖 where
+  _⇒_∋_ : ∀{m n : Mode M} -> (μ η : ModeHom M m n) -> (ξ : ModeTrans M v μ η) -> ModalityTrans M v (m ↝ n ∋ μ) (m ↝ n ∋ η)
 
 ---------------------------------------------
 -- Category structure on modality trans
 
-_◆-ModalityTrans_ : {μ η ω : Modality G}
-                    -> ModalityTrans G μ η v
-                    -> ModalityTrans G η ω w
-                    -> ModalityTrans G μ ω (v ⋆ w)
-(μ ⇒ η ∋ ξ) ◆-ModalityTrans (.η ⇒ ω ∋ ζ) = μ ⇒ ω ∋ (ξ ◇ ζ)
+_◆-ModalityTrans_ : {μ η ω : Modality M}
+                    -> ModalityTrans M v μ η
+                    -> ModalityTrans M v η ω
+                    -> ModalityTrans M v μ ω
+(μ ⇒ η ∋ ξ) ◆-ModalityTrans (.η ⇒ ω ∋ ζ) = μ ⇒ ω ∋ (ξ ◆₂ₘ ζ)
 
 
 
@@ -42,28 +48,23 @@ _◆-ModalityTrans_ : {μ η ω : Modality G}
 -- modalities as domain and codomain. We define them as
 -- a monoid with explicit identity element.
 
-data Transition (G : 2Graph 𝑖) : (v : Visibility) -> 𝒰 𝑖 where
-  id : Transition G invis
-  fail : Transition G v
-  _⇒_∋_ : (μ η : Modality G) -> ModalityTrans G μ η v -> Transition G v
+data Transition (M : ModeSystem 𝑖) : (v : Visibility) -> 𝒰 𝑖 where
+  id : Transition M invis
+  fail : Transition M v
+  _⇒_∋_ : (μ η : Modality M) -> ModalityTrans M v μ η -> Transition M v
 
 
 
 -- Monoid structure on transitions
 
-module _ {G : 2Graph 𝑖} where
+module _ {M : ModeSystem 𝑖} where
 
-  _⋆-Transition_ : Transition G v -> Transition G w -> Transition G (v ⋆ w)
-  id ⋆-Transition s = s
-  fail ⋆-Transition s = fail
-  _⋆-Transition_ {vis}   t@(μ ⇒ η ∋ x) id = t
-  _⋆-Transition_ {vis}   t@(μ ⇒ η ∋ x) fail = fail
-  _⋆-Transition_ {vis}   t@(μ ⇒ η₀ ∋ x) (η₁ ⇒ ω ∋ y) with η₀ ≟ η₁
-  ... | no p = fail
-  ... | yes refl = μ ⇒ ω ∋ (x ◆-ModalityTrans y)
-  _⋆-Transition_ {invis} t@(μ ⇒ η ∋ x) id = t
-  _⋆-Transition_ {invis} t@(μ ⇒ η ∋ x) fail = fail
-  _⋆-Transition_ {invis} t@(μ ⇒ η₀ ∋ x) (η₁ ⇒ ω ∋ y) with η₀ ≟ η₁
+  _◆-Transition_ : Transition M v -> Transition M v -> Transition M v
+  id ◆-Transition s = s
+  fail ◆-Transition s = fail
+  _◆-Transition_ t@(μ ⇒ η ∋ x) id = t
+  _◆-Transition_ t@(μ ⇒ η ∋ x) fail = fail
+  _◆-Transition_ t@(μ ⇒ η₀ ∋ x) (η₁ ⇒ ω ∋ y) with η₀ ≟ η₁
   ... | no p = fail
   ... | yes refl = μ ⇒ ω ∋ (x ◆-ModalityTrans y)
 

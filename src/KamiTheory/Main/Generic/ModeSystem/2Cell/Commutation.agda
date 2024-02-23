@@ -6,11 +6,6 @@ module KamiTheory.Main.Generic.ModeSystem.2Cell.Commutation where
 open import Agora.Conventions
 open import KamiTheory.Basics
 open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
-open import KamiTheory.Main.Generic.ModeSystem.Modality
--- open import KamiTheory.Main.Generic.ModeSystem.LinearFSM.Definition
-open import KamiTheory.Order.StrictOrder.Base
-
-open import Data.Fin using (Fin ; zero ; suc)
 
 
 import KamiTheory.Main.Generic.ModeSystem.2Cell.Definition as D
