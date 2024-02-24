@@ -3,8 +3,9 @@
 
 module KamiTheory.Main.Dependent.Typed.Examples where
 
-open import Data.Fin using (#_ ; zero ; suc)
+open import Data.Fin using (#_ ; zero ; suc ; Fin)
 open import Data.List using (_∷_ ; [])
+open import Data.Vec using ([] ; _∷_ ; _++_) renaming (Vec to StdVec)
 
 open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
 open import Agora.Order.Preorder
@@ -61,8 +62,19 @@ module Examples where
   -- PP = -- QQ
   --    ′_′ (Normalform ((𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 3))) since isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ)) {_} {{isPreorder:𝒩 {{isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ {{isSetoid:𝒫ᶠⁱⁿ}} {{isPreorder:𝒫ᶠⁱⁿ}} {{isDecidablePreorder:≤-𝒫ᶠⁱⁿ}}}}}}
 
+
+  -- singleton : {A : 𝒰 𝑖} -> {{_ : hasDecidableEquality A}} -> (a : A) -> A -> 𝟚
+  -- singleton a b with a ≟ b
+  -- ... | no x = false
+  -- ... | yes x = true
+
+
   PP : Preorder _
-  PP = 𝔽 3 →# 𝟚
+  PP = ′ StdVec 𝟚 3 ′
+  -- 𝔽 3 →# 𝟚
+
+  singleton : Fin 3 -> ⟨ PP ⟩
+  singleton i = singletonVec false true i 
 
   M : ModeSystem _
   M = SendReceiveNarrow-ModeSystem.SRN-ModeSystem PP {{it}} {{{!!}}}
@@ -96,7 +108,10 @@ module Examples where
   P : 𝒰 _
   P = ⟨ PP ⟩
 
-  uu vv : P
+  uu vv ww : P
+  uu = singleton (# 0)
+  vv = singleton (# 1)
+  ww = singleton (# 2)
 
 
 
@@ -137,13 +152,24 @@ module Examples where
   -- manual examples
 
   Com : ∀ (U V : P) -> ModalityTrans M vis (_ ↝ _ ∋ `＠` U ⨾ id) (_ ↝ _ ∋ `＠` V ⨾ id)
-  Com U V = {!!} --  {!id ⨾ base (send V)!} ◇ {!!}
+  Com U V = _ ⇒ _ ∋ [ (incl
+          ( incl (id ⌟[ send V ]⌞ `＠` U ⨾ id ⌟)
+          ∷ incl (`＠` V ⨾ id ⌟[ recv U ]⌞ id ⌟)
+          ∷ [])) ] --  {!id ⨾ base (send V)!} ◇ {!!}
 
 
-  com : εε ⊢ (Modal NN (`＠` uu ⨾ id) / id) ▹▹[ {!!} ] (Modal NN (`＠` vv ⨾ id)) / id
-     ≔ _ -- lam {!!} (mod (transform {!!} (letunmod (var zero {!!}))))
-  com = lamⱼ (Modalⱼ (NNⱼ {{{!!}}})) (letunmodⱼ ((var {{{!!}}} zero idT))
-                                                (modⱼ (transformⱼ (Com uu vv) (var {{{!!}}} zero idT))) )
+  RES : Term M 0
+  RES = te'
+    where
+      te : Term M 0
+      te = _
+
+      com : εε ⊢ (Modal NN (`＠` uu ⨾ id) / id) ▹▹[ {!!} ] (Modal NN (`＠` uu ⨾ id)) / id
+        ≔ te -- lam {!!} (mod (transform {!!} (letunmod (var zero {!!}))))
+      com = lamⱼ (Modalⱼ (NNⱼ {{{!!}}})) (letunmodⱼ ((var {{{!!}}} zero idT))
+                                                    (modⱼ (transformⱼ (Com uu uu) (var {{{!!}}} zero idT))) )
+
+      te' = untransform-Term te
 
 
 

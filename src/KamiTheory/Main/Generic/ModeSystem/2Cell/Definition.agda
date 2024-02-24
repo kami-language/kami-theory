@@ -454,7 +454,6 @@ module 2CellDefinition (G : 2Graph 𝑖) where
   {-# TERMINATING #-}
   pushDownAll : 2Cell v η μ -> 2Cell v η μ
   pushDownAll [] = []
-  pushDownAll (x ∷ []) = x ∷ []
   pushDownAll (ξ ∷ (ζ ∷ ζs)) with pushDown2CellGen ξ ζ
 
   -- if the size of our reduced ξ=ξ' is zero, we skip it
@@ -462,6 +461,8 @@ module 2CellDefinition (G : 2Graph 𝑖) where
 
   -- otherwise keep it, and recurse
   ... | (_ , ((incl {size = suc n} ξ')) , ζ') = incl ξ' ∷ pushDownAll (ζ' ∷ ζs)
+  pushDownAll (incl (_ ⌟) ∷ []) = []
+  pushDownAll x@(incl (ϕ ⌟[ ξ ]⌞ get₁) ∷ []) = x
 
 
 

@@ -4,8 +4,10 @@
 module KamiTheory.Order.Preorder.Instances where
 
 open import Data.Fin using (Fin ; zero ; suc)
+open import Data.Nat using (_+_)
 
-open import Agora.Conventions
+
+open import Agora.Conventions hiding (_∷_)
 open import Agora.Order.Preorder
 open import Agora.Setoid.Definition
 -- open import Agora.Data.Universe.Definition
@@ -114,4 +116,75 @@ instance
 --       isProp:≤-Family : ∀{f g : I -> A} -> isProp (f ≤ g)
 --       isProp:≤-Family = {!!}
 
+
+---------------------------------------------
+-- We build a better behaved family on vectors
+
+open import Data.Vec using ([] ; _∷_ ; _++_) renaming (Vec to StdVec)
+
+
+
+-- record Valuation (n : ℕ) : 𝒰 𝑖 where
+--   constructor incl
+--   field ⟨_⟩ : StdVec Bool n
+
+-- open Valuation public
+
+data PointWise {A : 𝒰 𝑖} (R : A -> A -> 𝒰 𝑗) : StdVec A n -> StdVec A n -> 𝒰 (𝑖 ､ 𝑗) where
+  [] : PointWise R [] []
+  _∷_  : ∀{a b} {as bs : StdVec A n} -> R a b -> PointWise R as bs -> PointWise R (a ∷ as) (b ∷ bs)
+
+module _ {A : 𝒰 𝑖} where
+  constVec : A -> ∀ n -> StdVec A n
+  constVec a zero = []
+  constVec a (suc n) = a ∷ constVec a n
+
+  singletonVec : A -> A -> Fin n -> StdVec A n
+  singletonVec a b zero = b ∷ constVec a _
+  singletonVec a b (suc i) = a ∷ singletonVec a b i
+
+-- module _ {A : 𝒰 𝑖} {{_ : hasDecidableEquality A}} where
+--   instance
+--     hasDecidableEquality:Vec : hasDecidableEquality (StdVec A)
+--     hasDecidableEquality:Vec = ?
+
+module _ {A : 𝒰 𝑖} {{_ : isSetoid {𝑗} A}} where
+
+  _∼-Vec_ : ∀(as bs : StdVec A n) -> 𝒰 _
+  _∼-Vec_ = PointWise _∼_
+
+  refl-∼-Vec : {x : StdVec A n} → x ∼-Vec x
+  refl-∼-Vec {x = []} = []
+  refl-∼-Vec {x = x ∷ x₁} = refl-∼ ∷ refl-∼-Vec
+
+  sym-∼-Vec : {x y : StdVec A n} → x ∼-Vec y → y ∼-Vec x
+  sym-∼-Vec p = {!!}
+
+  _∙-∼-Vec_ : {x y z : StdVec A n} → x ∼-Vec y → y ∼-Vec z → x ∼-Vec z
+  _∙-∼-Vec_ = {!!}
+
+  instance
+    isEquivRel:∼-Vec : ∀{n} -> isEquivRel (_∼-Vec_ {n = n})
+    isEquivRel:∼-Vec = record { refl-∼ = refl-∼-Vec ; sym = sym-∼-Vec ; _∙_ = _∙-∼-Vec_ }
+
+  instance
+    isSetoid:Vec : isSetoid (StdVec A n)
+    isSetoid:Vec = record { _∼_ = _∼-Vec_ }
+
+module _ {A : 𝒰 𝑖} {{_ : isSetoid {𝑗} A}} {{_ : isPreorder 𝑘 ′ A ′}} where
+
+  _≤-Vec_ : ∀(as bs : StdVec A n) -> 𝒰 _
+  _≤-Vec_ = PointWise _≤_
+
+  refl-≤-Vec : {a : StdVec A n} → a ≤-Vec a
+  refl-≤-Vec {a = []} = []
+  refl-≤-Vec {a = x ∷ a} = refl-≤ ∷ refl-≤-Vec
+
+  instance
+    isPreorderData:Vec : isPreorderData ′ (StdVec A n) ′ _≤-Vec_
+    isPreorderData:Vec = record { refl-≤ = refl-≤-Vec ; _⟡_ = {!!} ; transp-≤ = {!!} }
+
+  instance
+    isPreorder:Vec : isPreorder _ ′ (StdVec A n) ′
+    isPreorder:Vec = record { _≤_ = _≤-Vec_ }
 
