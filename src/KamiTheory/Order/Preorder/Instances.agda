@@ -1,4 +1,6 @@
 
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module KamiTheory.Order.Preorder.Instances where
 
 open import Data.Fin using (Fin ; zero ; suc)
@@ -67,6 +69,7 @@ instance
   isProp:≤-𝟚 : ∀{a b} -> isProp (a ≤-𝟚 b)
   isProp:≤-𝟚 = record { force-≡ = force-≡-≤-𝟚 }
 
+
 -------------------
 -- This means that all families I -> 𝟚 are also preorders.
 --
@@ -86,6 +89,20 @@ instance
   isDecidablePreorder:𝔽→𝟚 : isDecidablePreorder (𝔽 n →# 𝟚)
   isDecidablePreorder:𝔽→𝟚 = record { decide-≤ = decide-≤-𝔽→𝟚 }
 
+
+
+
+decide-≡-𝔽→𝟚 : {n : ℕ} -> ∀(f g : 𝔽 n -> 𝟚) -> isDecidable (f ≡ g)
+decide-≡-𝔽→𝟚 {n = zero} f g = yes {!!}
+decide-≡-𝔽→𝟚 {n = suc n} f g with (f zero) ≟ (g zero)
+... | no p = no λ q -> {!!} -- p (q zero)
+... | yes p1 with decide-≡-𝔽→𝟚 (λ i -> f (suc i)) (λ i -> g (suc i))
+... | no p = no λ q -> {!!} -- p (λ i -> q (suc i))
+... | yes p2 = yes {!!} -- λ {zero -> p1 ; (suc i) -> p2 i}
+
+instance
+  hasDecidableEquality:𝔽→𝟚 : hasDecidableEquality (𝔽 n →# 𝟚)
+  hasDecidableEquality:𝔽→𝟚 = record { _≟_ = decide-≡-𝔽→𝟚 }
 
 -- module _ {A : 𝒰 𝑘} {{_ : isSetoid {𝑖} A}} {{_ : isPreorder 𝑗 ′ A ′}} {I : 𝒰 𝑙} where
 --   module _ {{_ : ∀{a b : A} -> isProp (a ≤ b)}} where

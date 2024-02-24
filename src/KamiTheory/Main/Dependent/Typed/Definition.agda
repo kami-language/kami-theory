@@ -185,7 +185,7 @@ module Judgements (P : ModeSystem 𝑖) where
 
     -------------------
     -- Kami modality system
-    Modalⱼ : Γ ⊢Entry (A / (η ◆ μ)) -> Γ ⊢Entry Modal A (incl (_ ↝ _ ∋ η)) / μ
+    Modalⱼ : Γ ⊢Entry (A / (η ◆ μ)) -> Γ ⊢Entry Modal A η / μ
 
     -- narrowⱼ : (ϕ : U ≤ V)
     --            -> Γ ⊢Entry X / `＠` U ⨾ μs
@@ -207,13 +207,13 @@ module Judgements (P : ModeSystem 𝑖) where
     -- Standard modality intro and "elim"
 
 
-    modⱼ : Γ ⊢[ ττ ] t ∶ X / (η ◆ μ) -> Γ ⊢[ ττ ] mod t ∶ Modal X (incl (_ ↝ _ ∋ η)) / μ
+    modⱼ : Γ ⊢[ ττ ] t ∶ X / (η ◆ μ) -> Γ ⊢[ ττ ] mod t ∶ Modal X η / μ
 
-    letunmodⱼ : Γ ⊢[ incl τ ] t ∶ Modal X (incl (_ ↝ _ ∋ η)) / μ
+    letunmodⱼ : Γ ⊢[ incl τ ] t ∶ Modal X η / μ
               -> Γ ∙ (X / (η ◆ μ)) ⊢[ incl σ ] s ∶ Y / μ
-              -> Γ ⊢[ incl (τ ≫ (σ [ unmod t ])) ] letunmod ηs t s ∶ Y [ unmod t ] / μ
+              -> Γ ⊢[ incl (τ ≫ (σ [ unmod t ])) ] letunmod η t s ∶ Y [ unmod t ] / μ
 
-    unmodⱼ : Γ ⊢[ * ] t ∶ Modal X (incl (_ ↝ _ ∋ η)) / μ -> Γ ⊢[ * ] unmod t ∶ X / (η ◆ μ)
+    unmodⱼ : Γ ⊢[ * ] t ∶ Modal X η / μ -> Γ ⊢[ * ] unmod t ∶ X / (η ◆ μ)
 
 
 
@@ -273,14 +273,14 @@ module Judgements (P : ModeSystem 𝑖) where
               → (ζ : ModalityTrans P all (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
               → Γ ⊢ (Term.var x (incl ζ)) ∶ A // incl (k ↝ l ∋ η)
 
-{-
-{-
 
     lamⱼ      : ∀ {t}
-              → Γ ⊢Entry E
-              → Γ ∙ E ⊢[ ξ ] t ∶ B / μs
-              → Γ     ⊢ lam t ∶ Π E ▹[ ξ ] B / μs
+              → Γ ⊢Entry (A / (η ◆ μ))
+              → Γ ∙ (A / (η ◆ μ)) ⊢[ incl τ ] t ∶ B / μ
+              → Γ ⊢ lam η t ∶ Π (A / η) ▹[ τ ] B / μ
 
+{-
+{-
     _∘ⱼ_      : ∀ {g a}
               → Γ ⊢[ ξ₀ ] g ∶ Π (A / ωs) ▹[ ξ ] B / μs
               → Γ ⊢[ ξ₁ ] a ∶ A / ωs

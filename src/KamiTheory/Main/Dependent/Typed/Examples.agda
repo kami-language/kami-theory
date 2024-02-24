@@ -8,6 +8,7 @@ open import Data.List using (_∷_ ; [])
 
 open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
 open import Agora.Order.Preorder
+open import Agora.Setoid.Definition
 -- open import Agora.Order.Lattice
 -- open import Agora.Data.Normal.Definition
 -- open import Agora.Data.Normal.Instance.Setoid
@@ -16,10 +17,20 @@ open import Agora.Order.Preorder
 -- open import Agora.Data.Normal.Instance.DecidableEquality
 
 open import KamiTheory.Basics
+open import KamiTheory.Order.Preorder.Instances
 open import KamiTheory.Main.Dependent.Untyped.Definition
 open import KamiTheory.Main.Dependent.Untyped.Instances
 open import KamiTheory.Main.Dependent.Typed.Definition
 -- open import KamiTheory.Main.Dependent.Typed.Instances
+
+
+open import KamiTheory.Main.Generic.ModeSystem.2Cell.Definition
+open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
+open import KamiTheory.Main.Generic.ModeSystem.2Graph.Example
+open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition
+open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Example
+open import KamiTheory.Main.Generic.ModeSystem.Modality
+open import KamiTheory.Main.Generic.ModeSystem.Transition
 
 -- open import KamiTheory.Data.Open.Definition
 -- open import KamiTheory.Data.UniqueSortedList.Definition
@@ -50,25 +61,42 @@ module Examples where
   -- PP = -- QQ
   --    ′_′ (Normalform ((𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 3))) since isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ)) {_} {{isPreorder:𝒩 {{isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ {{isSetoid:𝒫ᶠⁱⁿ}} {{isPreorder:𝒫ᶠⁱⁿ}} {{isDecidablePreorder:≤-𝒫ᶠⁱⁿ}}}}}}
 
+  PP : Preorder _
+  PP = 𝔽 3 →# 𝟚
 
-{-
+  M : ModeSystem _
+  M = SendReceiveNarrow-ModeSystem.SRN-ModeSystem PP {{it}} {{{!!}}}
 
-  uu : ⟨ PP ⟩
-  uu = (((⦗ # 0 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
 
-  vv : ⟨ PP ⟩
-  vv = (((⦗ # 1 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
+  open Judgements M
 
-  ww : ⟨ PP ⟩
-  ww = (((⦗ # 2 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
+  open SendReceiveNarrow-2Graph
+  open 2CellDefinition (graph M)
 
-  all = uu ∨ vv ∨ ww
+  instance
+    _ : ∀{a b : ⟨ PP ⟩} -> isProp (a ≤ b)
+    _ = {!!}
 
-  open Typecheck (PP) {{hasDecidableEquality:𝒩}} {{isDecidablePreorder:𝒩}}
+
+
+  -- uu : ⟨ PP ⟩
+  -- uu = (((⦗ # 0 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
+
+  -- vv : ⟨ PP ⟩
+  -- vv = (((⦗ # 1 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
+
+  -- ww : ⟨ PP ⟩
+  -- ww = (((⦗ # 2 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
+
+  -- all = uu ∨ vv ∨ ww
+
+  -- open Typecheck (PP) {{hasDecidableEquality:𝒩}} {{isDecidablePreorder:𝒩}}
 
 
   P : 𝒰 _
   P = ⟨ PP ⟩
+
+  uu vv : P
 
 
 
@@ -76,20 +104,53 @@ module Examples where
 
   private variable
     -- n m : Nat
-    p q : Term P n
-    t u : Term P n
-    Γ  : Con (Entry P) n
-    A B C : Term P n
+    p q : Term M n
+    t u : Term M n
+    Γ  : Con (Entry M) n
+    A B C : Term M n
     U V W R : P
 
-  _⊢_≔_ : (Γ : Con (Entry P) n) → Entry P n → Term P n → Set
+  _⊢_≔_ : (Γ : Con (Entry M) n) → Entry M n → Term M n → Set
   Γ ⊢ E ≔ t = Γ ⊢ t ∶ E
 
-
-  εε : Con (Entry P) zero
+  εε : Con (Entry M) zero
   εε = ε
 
+  idT : ∀{μ : SomeModeHom M } -> ModalityTrans M all μ μ
+  idT = (_ ⇒ _ ∋ [ incl [] ∣ incl [] ])
 
+  idM : (a : Mode M) -> ModeHom M a a
+  idM a = id
+
+  ---------------------------------------------
+  -- small examples
+
+  P0 : εε ∙ (NN / (`＠` uu ⨾ id)) ⊢ var zero (incl idT) ∶ NN / `＠` uu ⨾ id
+  P0 = var {{{!!}}} zero idT
+
+  P1 : εε ⊢ ((Modal NN (`＠` uu ⨾ id) / id) ▹▹[ _ ] Modal NN (`＠` uu ⨾ id)) / id
+       ≔ _
+  P1 = lamⱼ (Modalⱼ (NNⱼ {{{!!}}})) (letunmodⱼ (var {{{!!}}} zero idT) (modⱼ ((var {{{!!}}} zero idT))))
+
+
+  ---------------------------------------------
+  -- manual examples
+
+  Com : ∀ (U V : P) -> ModalityTrans M vis (_ ↝ _ ∋ `＠` U ⨾ id) (_ ↝ _ ∋ `＠` V ⨾ id)
+  Com U V = {!!} --  {!id ⨾ base (send V)!} ◇ {!!}
+
+
+  com : εε ⊢ (Modal NN (`＠` uu ⨾ id) / id) ▹▹[ {!!} ] (Modal NN (`＠` vv ⨾ id)) / id
+     ≔ _ -- lam {!!} (mod (transform {!!} (letunmod (var zero {!!}))))
+  com = lamⱼ (Modalⱼ (NNⱼ {{{!!}}})) (letunmodⱼ ((var {{{!!}}} zero idT))
+                                                (modⱼ (transformⱼ (Com uu vv) (var {{{!!}}} zero idT))) )
+
+
+
+
+
+
+{-
   ---------------------------------------------
   -- automatic derivation
 

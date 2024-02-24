@@ -281,7 +281,7 @@ pattern Empty = gen (leaf Emptykind) []
 pattern Unit = gen (leaf Unitkind) []
 
 -- lam    : (t : Term P (1+ n)) → Term P n  -- Function abstraction (binder).
-pattern lam t = gen (main Lamkind) ([] ⦊ term t ∷ [])
+pattern lam μ t = gen (main Lamkind) ((incl (_ ↝ _ ∋ μ) ∷ []) ⦊ term t ∷ [])
 
 -- _∘_    : (t u : Term P n) → Term P n     -- Application.
 pattern _∘_ t u = gen (main Appkind) ([] ⦊ term t ∷ [] ⦊ term u ∷ [])
@@ -332,7 +332,7 @@ Emptyrec A e = gen (main Emptyreckind) ([] ⦊ term A ∷ [] ⦊ term e ∷ [])
 -- pattern comtype a    = gen (main 𝓀-comtype) (term a ∷ [])
 -- pattern comval a     = gen (main 𝓀-comval) (term a ∷ [])
 
-pattern Modal A μ     = gen (main 𝓀-Modal) ([] ⦊ term A ∷ [] ⦊ (modality μ) ∷ [])
+pattern Modal A μ     = gen (main 𝓀-Modal) ([] ⦊ term A ∷ [] ⦊ (modality ((incl (_ ↝ _ ∋ μ)))) ∷ [])
 -- pattern _＠_ L U     = gen (main 𝓀-＠) (term L ∷ (location U) ∷ [])
 -- pattern loc U t      = gen 𝓀-loc ((location U) ∷ term t ∷ []) -- NOTE, this one is *not* wrapped in `main`
 -- pattern unloc t      = gen (main 𝓀-unloc) ([] ⦊ term t ∷ [])
@@ -342,7 +342,7 @@ pattern Modal A μ     = gen (main 𝓀-Modal) ([] ⦊ term A ∷ [] ⦊ (modali
 -- pattern recv t       = gen (main 𝓀-recv) ([] ⦊ term t ∷ [])
 pattern mod t        = gen (main 𝓀-mod) ([] ⦊ term t ∷ [])
 pattern unmod t      = gen (main 𝓀-unmod) ([] ⦊ term t ∷ [])
-pattern letunmod μ t s  = gen (main 𝓀-letunmod) ([] ⦊ term t ∷ (μ ∷ []) ⦊ term s ∷ [])
+pattern letunmod μ t s  = gen (main 𝓀-letunmod) ([] ⦊ term t ∷ (incl (_ ↝ _ ∋ μ) ∷ []) ⦊ term s ∷ [])
 
 
 -- Transformations / Transitions
