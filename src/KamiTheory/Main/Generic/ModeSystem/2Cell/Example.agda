@@ -38,7 +38,7 @@ module SendReceiveNarrow-2Cells (P : Preorder 𝑖) {{_ : hasDecidableEquality �
     -------------------
     -- send comes first
     SR-eval-dom : (U : ⟨ P ⟩) -> 2Cell SRN vis (`＠` U ⨾ id) (`＠` U ⨾ id)
-    SR-eval-dom U = incl (id ⌟[ send U 1 ]⌞ (`＠` U ⨾ id) ⌟)
+    SR-eval-dom U = incl (id ⌟[ send U ]⌞ (`＠` U ⨾ id) ⌟)
                   ∷ incl ((`＠` U ⨾ id) ⌟[ recv U ]⌞ id ⌟)
                   ∷ []
 
@@ -49,7 +49,7 @@ module SendReceiveNarrow-2Cells (P : Preorder 𝑖) {{_ : hasDecidableEquality �
     -------------------
     -- recv comes first
     RS-eval-dom : (U : ⟨ P ⟩) -> 2Cell SRN vis (`[]` ⨾ id) (`[]` ⨾ id)
-    RS-eval-dom U = incl ((`[]` ⨾ id) ⌟[ send U 1 ]⌞ id ⌟)
+    RS-eval-dom U = incl ((`[]` ⨾ id) ⌟[ send U ]⌞ id ⌟)
                   ∷ incl (id ⌟[ recv U ]⌞ (`[]` ⨾ id) ⌟)
                   ∷ []
 
@@ -86,11 +86,11 @@ module SendReceiveNarrow-2Cells (P : Preorder 𝑖) {{_ : hasDecidableEquality �
 
         s : (i : ℕ) → S i → {a b : 0Cell SRN} (ξ : SingleFace SRN vis a b) → Maybe (Some2CellGenOnPoints SRN vis a b ×-𝒰 S (suc i))
         -- STEP 0: We are searching for a send
-        s zero _ (ϕ ⌟[ send U n ]⌞ ψ) = yes ( record { get = incl ((ϕ ◆ ψ) ⌟) } , U )
+        s zero _ (ϕ ⌟[ send U ]⌞ ψ) = yes ( record { get = incl ((ϕ ◆ ψ) ⌟) } , U )
         s zero _ (ϕ ⌟[ recv U ]⌞ ψ)   = nothing
 
         -- STEP 1: We are searching for a (matching!) recv
-        s (suc zero) U (ϕ ⌟[ send _ n ]⌞ ψ)  = nothing
+        s (suc zero) U (ϕ ⌟[ send _ ]⌞ ψ)  = nothing
         s (suc zero) U (ϕ ⌟[ recv V ]⌞ ψ) with U ≟ V
         ... | no _ = nothing
         ... | yes refl = yes ( record { get = incl ((ϕ ◆ ψ) ⌟)} , lift tt)
@@ -155,16 +155,16 @@ module Examples where
 
       s : (i : ℕ) → S i → {a b : 0Cell G} (ξ : SingleFace G vis a b) →
           Maybe (Some2CellGenOnPoints G vis a b ×-𝒰 𝟙-𝒰)
-      s _ st (ϕ ⌟[ send U n ]⌞ ψ) with U ≟ uu
+      s _ st (ϕ ⌟[ send U ]⌞ ψ) with U ≟ uu
       ... | no p = nothing
-      ... | yes p = yes ( record { top = _ ; bottom = _ ; get = incl (ϕ ⌟[ send U (suc n) ]⌞ ψ ⌟) }
+      ... | yes p = yes ( record { top = _ ; bottom = _ ; get = incl (ϕ ⌟[ send U ]⌞ ψ ⌟) }
                           , tt)
       s _ st (idₗ₁ ⌟[ recv U ]⌞ idᵣ₁) = nothing
       -- s st (idₗ₁ ⌟[ narrow x ]⌞ idᵣ₁) = nothing
 
 
   ξ₀ : Some2CellGen G vis id _
-  ξ₀ = incl ((id) ⌟[ send uu 1 ]⌞ (id) ⌟[ send vv 2 ]⌞ (id) ⌟)
+  ξ₀ = incl ((id) ⌟[ send uu ]⌞ (id) ⌟[ send vv ]⌞ (id) ⌟)
 
 
   -- We try to find the send vv face
@@ -177,9 +177,9 @@ module Examples where
   ξ₁ = SendReceiveNarrow-2Cells.RewriteCells.RS-eval-dom PP {{{!!}}} vv
 
   ξ' : 2Cell G vis _ _ -- (`＠` vv ⨾ id) (`＠` vv ⨾ `[]` ⨾ `＠` uu ⨾ id)
-  ξ' = incl (id ⌟[ send vv 1 ]⌞ (`＠` vv ⨾ `[]` ⨾ `＠` uu ⨾ id) ⌟)
+  ξ' = incl (id ⌟[ send vv ]⌞ (`＠` vv ⨾ `[]` ⨾ `＠` uu ⨾ id) ⌟)
       ∷ incl ((`＠` vv ⨾ id) ⌟[ recv vv ]⌞ `[]` ⨾ `＠` uu ⨾ id ⌟)
-      ∷ incl ((`＠` vv ⨾ `[]` ⨾ id) ⌟[ send uu 2 ]⌞ (`＠` uu ⨾ id) ⌟)
+      ∷ incl ((`＠` vv ⨾ `[]` ⨾ id) ⌟[ send uu ]⌞ (`＠` uu ⨾ id) ⌟)
       ∷ []
 
 

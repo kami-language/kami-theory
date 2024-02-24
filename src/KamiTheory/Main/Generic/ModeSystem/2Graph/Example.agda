@@ -37,7 +37,7 @@ module SendReceiveNarrow-2Graph (P : Preorder 𝑖) {{_ : hasDecidableEquality �
   -- mode transformations
 
   data BaseModeTrans-SRN : Visibility -> {m n : Mode-SRN} (μs ηs : Path BaseModeHom-SRN m n) -> 𝒰 𝑖 where
-    send : ∀ U -> ℕ -> BaseModeTrans-SRN vis id (`＠` U ⨾ `[]` ⨾ id)
+    send : ∀ U -> BaseModeTrans-SRN vis id (`＠` U ⨾ `[]` ⨾ id)
     recv : ∀ U -> BaseModeTrans-SRN vis (`[]` ⨾ `＠` U ⨾ id) id
     narrow : U ≤ V -> BaseModeTrans-SRN invis (`＠` U ⨾ id) (`＠` V ⨾ id)
 
@@ -66,9 +66,7 @@ module SendReceiveNarrow-2Graph (P : Preorder 𝑖) {{_ : hasDecidableEquality �
     hasDecidableEquality:BaseModeHom-SRN = record { _≟_ = decide-≡-BaseModeHom-SRN }
 
   decide-≡-BaseModeTrans-SRN : ∀{v a b} -> {μ η : Path BaseModeHom-SRN a b} -> (x y : BaseModeTrans-SRN v μ η) → isDecidable (x ≡ y)
-  decide-≡-BaseModeTrans-SRN (send U n) (send .U n2) with n ≟ n2
-  ... | no x = no λ{refl -> x refl}
-  ... | yes refl = yes refl
+  decide-≡-BaseModeTrans-SRN (send U) (send .U) = yes refl
   decide-≡-BaseModeTrans-SRN (recv U) (recv .U) = yes refl
   decide-≡-BaseModeTrans-SRN (narrow ϕ) (narrow ψ) with force-≡ ϕ ψ
   ... | refl = yes refl

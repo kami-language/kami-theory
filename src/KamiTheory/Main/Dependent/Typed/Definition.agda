@@ -76,7 +76,8 @@ module Judgements (P : ModeSystem 𝑖) where
     ωs : Modality P
     ηs : Modality P
     μ : ModeHom P k l
-    ω : ModeHom P l o
+    η : ModeHom P o q
+    -- ω : ModeHom P q r
     ττ : TermTransitions n
     τ σ : Term P n -- Transitions
     ξ ξ₀ ξ₁ : Term P n -- Transitions
@@ -154,18 +155,18 @@ module Judgements (P : ModeSystem 𝑖) where
 
     -- Well-formed entry
   data _⊢Entry_ Γ where
-    NNⱼ    : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (NN / μs)
+    NNⱼ    : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (NN // μs)
     -- Emptyⱼ : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (Empty / ▲ U)
     -- Unitⱼ  : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (Unit / ▲ U)
     -- Leafⱼ : ∀{l} -> {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (gen (leaf l) [] / ▲ U) -- leafs are NN, Unit, Empty
 
     -- UUⱼ    : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (UU / ▲ U)
 
-    Vecⱼ   : Γ ⊢Entry (A / μs) → Γ ⊢ t ∶ NN / μs  → Γ ⊢Entry (Vec A t / μs)
+    Vecⱼ   : Γ ⊢Entry (A // μs) → Γ ⊢ t ∶ NN // μs  → Γ ⊢Entry (Vec A t // μs)
 
-    Πⱼ_▹_  : Γ ⊢Entry (A / μs)
-              → Γ ∙ (A / μs) ⊢Entry (B / ωs)
-              → Γ ⊢Entry ((Π (A / μs) ▹ B) / ωs)
+    Πⱼ_▹_  : Γ ⊢Entry (A // μs)
+              → Γ ∙ (A // μs) ⊢Entry (B // ωs)
+              → Γ ⊢Entry ((Π (A // μs) ▹ B) // ωs)
 
     -- Σⱼ_▹_  : ∀{q} -> Γ ⊢Entry (A / ωs)
     --         → Γ ∙ (A / ωs) ⊢Entry (B / ωs)
@@ -184,7 +185,7 @@ module Judgements (P : ModeSystem 𝑖) where
 
     -------------------
     -- Kami modality system
-    Modalⱼ : Γ ⊢Entry (A / (ηs ◆-Modality μs)) -> Γ ⊢Entry Modal A ηs / μs
+    Modalⱼ : Γ ⊢Entry (A / (η ◆ μ)) -> Γ ⊢Entry Modal A (incl (_ ↝ _ ∋ η)) / μ
 
     -- narrowⱼ : (ϕ : U ≤ V)
     --            -> Γ ⊢Entry X / `＠` U ⨾ μs
@@ -193,7 +194,7 @@ module Judgements (P : ModeSystem 𝑖) where
     -------------------
     -- Mode transformations (transitions)
 
-    Trⱼ : Γ ⊢Entry Tr / id
+    Trⱼ : Γ ⊢Entry Tr // id
     -- []▹ⱼ : Γ ⊢Entry [ τ ]▹ A / μs
 
 
@@ -206,37 +207,36 @@ module Judgements (P : ModeSystem 𝑖) where
     -- Standard modality intro and "elim"
 
 
-    modⱼ : Γ ⊢[ ττ ] t ∶ X / (ηs ★ μs) -> Γ ⊢[ ττ ] mod t ∶ Modal X ηs / μs
+    modⱼ : Γ ⊢[ ττ ] t ∶ X / (η ◆ μ) -> Γ ⊢[ ττ ] mod t ∶ Modal X (incl (_ ↝ _ ∋ η)) / μ
 
-    letunmodⱼ : Γ ⊢[ incl τ ] t ∶ Modal X ηs / μs
-              -> Γ ∙ (X / (ηs ★ μs)) ⊢[ incl σ ] s ∶ Y / μs
-              -> Γ ⊢[ incl (τ ≫ (σ [ unmod t ])) ] letunmod ηs t s ∶ Y [ unmod t ] / μs
+    letunmodⱼ : Γ ⊢[ incl τ ] t ∶ Modal X (incl (_ ↝ _ ∋ η)) / μ
+              -> Γ ∙ (X / (η ◆ μ)) ⊢[ incl σ ] s ∶ Y / μ
+              -> Γ ⊢[ incl (τ ≫ (σ [ unmod t ])) ] letunmod ηs t s ∶ Y [ unmod t ] / μ
 
-    unmodⱼ : Γ ⊢[ * ] t ∶ Modal X ηs / μs -> Γ ⊢[ * ] unmod t ∶ X / (ηs ★ μs)
+    unmodⱼ : Γ ⊢[ * ] t ∶ Modal X (incl (_ ↝ _ ∋ η)) / μ -> Γ ⊢[ * ] unmod t ∶ X / (η ◆ μ)
 
 
 
     -------------------
     -- Transformations between modehoms (transitions)
 
-    trⱼ : Γ ⊢Entry A / μs
+    trⱼ : Γ ⊢Entry A // μs
           -- → (ξ : ModeTrans μs ηs vis)
-          → Γ ⊢ A / μs ⇒ ηs ∶ Tr / id
+          → Γ ⊢ A / μs ⇒ ηs ∶ Tr // id
 
-    _≫ⱼ_ : Γ ⊢ ξ₀ ∶ Tr / μs
-         → Γ ⊢ ξ₁ ∶ Tr / μs
-         → Γ ⊢ (ξ₀ ≫ ξ₁) ∶ Tr / μs
+    _≫ⱼ_ : Γ ⊢ ξ₀ ∶ Tr // μs
+         → Γ ⊢ ξ₁ ∶ Tr // μs
+         → Γ ⊢ (ξ₀ ≫ ξ₁) ∶ Tr // μs
 
-    endⱼ : Γ ⊢ end ∶ Tr / id
+    endⱼ : Γ ⊢ end ∶ Tr // id
 
-    transformⱼ : ∀ ζ -- ModeTrans μs ηs vis
-                 -> Γ ⊢[ incl ξ ] t ∶ A / μs
-                 -> Γ ⊢[ incl (ξ ≫ A / μs ⇒ ηs) ] transform ζ {!!} ∶ A / ηs
+    transformⱼ : ∀ (ζ : ModalityTrans P vis (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
+                 -> Γ ⊢[ incl τ ] t ∶ A / μ
+                 -> Γ ⊢[ incl (τ ≫ A / (incl (_ ↝ _ ∋ μ)) ⇒ (incl (_ ↝ _ ∋ η))) ] transform (incl ζ) t ∶ A / η
 
-{-
-    castⱼ : Γ ⊢Tr ξ₀ ＝ ξ₁
-            -> Γ ⊢[ ξ₀ ] t ∶ A / μs
-            -> Γ ⊢[ ξ₁ ] t ∶ A / μs
+    castⱼ : Γ ⊢Tr τ ＝ σ
+            -> Γ ⊢[ incl τ ] t ∶ A // μs
+            -> Γ ⊢[ incl σ ] t ∶ A // μs
 
 
     -- trⱼ : Γ ⊢Entry A / μs
@@ -269,9 +269,12 @@ module Judgements (P : ModeSystem 𝑖) where
     -- Vars allow mode transformations between modalities
     var       : ∀ {A x}
               -> {{ΓP : isTrue (⊢Ctx Γ)}}
-              → x ∶ (A // k ↝ l ∋ μs) ∈ Γ
-              → ModeTrans μs ηs invis
-              → Γ ⊢ (Term.var x) ∶ A // k ↝ l ∋ ηs
+              → x ∶ (A // incl (k ↝ l ∋ μ)) ∈ Γ
+              → (ζ : ModalityTrans P all (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
+              → Γ ⊢ (Term.var x (incl ζ)) ∶ A // incl (k ↝ l ∋ η)
+
+{-
+{-
 
     lamⱼ      : ∀ {t}
               → Γ ⊢Entry E
@@ -741,5 +744,6 @@ module Judgements (P : ModeSystem 𝑖) where
 
   -}
 
+-}
 -}
 -}

@@ -216,7 +216,7 @@ data KindedTerm (P : ModeSystem 𝑖) (n : Nat) : (k : Metakind) -> 𝒰 𝑖 wh
   transition : Transition P vis -> KindedTerm P n transition
   _//_ : Term P n -> Modality P -> KindedTerm P n entry
 
-pattern _/_ A μs = A // μs
+pattern _/_ A μs = A // incl (_ ↝ _ ∋ μs)
 infixl 21 _//_ _/_
 
 
