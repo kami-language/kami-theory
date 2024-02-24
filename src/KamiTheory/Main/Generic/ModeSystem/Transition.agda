@@ -97,3 +97,33 @@ module _ {M : ModeSystem 𝑖} where
   commute-Transition-vis ξ ζ =
     let ξ' = into-all-Transition ξ
     in split-all-Transition (ξ' ◆-Transition ζ)
+
+  ----------------------------------------------------------
+  -- Decidability
+
+  decide-≡-Transition : (x y : Transition M r) → isDecidable (x ≡ y)
+  decide-≡-Transition id id = yes refl
+  decide-≡-Transition id fail = no λ ()
+  decide-≡-Transition id (incl x) = no λ ()
+  decide-≡-Transition fail id = no λ ()
+  decide-≡-Transition fail fail = yes refl
+  decide-≡-Transition fail (incl x) = no λ ()
+  decide-≡-Transition (incl x) id = no λ ()
+  decide-≡-Transition (incl x) fail = no λ ()
+  decide-≡-Transition (incl (_⇒_∋_ {m} {n} μ η ξ)) (incl (_⇒_∋_ {m₁} {n₁} μ₁ η₁ ξ₁)) with m ≟ m₁
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl with n ≟ n₁
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl with μ ≟ μ₁
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl with η ≟ η₁
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl with ξ ≟ ξ₁
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl = refl
+
+  instance
+    hasDecidableEquality:Transition : ∀{r} -> hasDecidableEquality (Transition M r)
+    hasDecidableEquality:Transition = record { _≟_ = {!!} }
+
+

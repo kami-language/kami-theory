@@ -1,4 +1,5 @@
 
+{-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
 module KamiTheory.Main.Dependent.Typed.Examples where
 
@@ -7,25 +8,24 @@ open import Data.List using (_∷_ ; [])
 
 open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
 open import Agora.Order.Preorder
-open import Agora.Order.Lattice
-open import Agora.Data.Normal.Definition
-open import Agora.Data.Normal.Instance.Setoid
-open import Agora.Data.Normal.Instance.Preorder
-open import Agora.Data.Normal.Instance.Lattice
-open import Agora.Data.Normal.Instance.DecidableEquality
+-- open import Agora.Order.Lattice
+-- open import Agora.Data.Normal.Definition
+-- open import Agora.Data.Normal.Instance.Setoid
+-- open import Agora.Data.Normal.Instance.Preorder
+-- open import Agora.Data.Normal.Instance.Lattice
+-- open import Agora.Data.Normal.Instance.DecidableEquality
 
 open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
 open import KamiTheory.Main.Dependent.Untyped.Instances
 open import KamiTheory.Main.Dependent.Typed.Definition
-open import KamiTheory.Main.Dependent.Typed.Instances
+-- open import KamiTheory.Main.Dependent.Typed.Instances
 
-open import KamiTheory.Data.Open.Definition
-open import KamiTheory.Data.UniqueSortedList.Definition
-open import KamiTheory.Order.StrictOrder.Base
-open import KamiTheory.Order.StrictOrder.Instances.UniqueSortedList
-open import KamiTheory.Main.Dependent.Untyped.Definition
-open import KamiTheory.Main.Dependent.Modality.Definition
+-- open import KamiTheory.Data.Open.Definition
+-- open import KamiTheory.Data.UniqueSortedList.Definition
+-- open import KamiTheory.Order.StrictOrder.Base
+-- open import KamiTheory.Order.StrictOrder.Instances.UniqueSortedList
+-- open import KamiTheory.Main.Dependent.Modality.Definition
 
 
 
@@ -46,11 +46,12 @@ module Examples where
 
   -- {-# INLINE QQ #-}
 
-  PP : Preorder _
-  PP = -- QQ
-     ′_′ (Normalform ((𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 3))) since isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ)) {_} {{isPreorder:𝒩 {{isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ {{isSetoid:𝒫ᶠⁱⁿ}} {{isPreorder:𝒫ᶠⁱⁿ}} {{isDecidablePreorder:≤-𝒫ᶠⁱⁿ}}}}}}
+  -- PP : Preorder _
+  -- PP = -- QQ
+  --    ′_′ (Normalform ((𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 3))) since isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ)) {_} {{isPreorder:𝒩 {{isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ {{isSetoid:𝒫ᶠⁱⁿ}} {{isPreorder:𝒫ᶠⁱⁿ}} {{isDecidablePreorder:≤-𝒫ᶠⁱⁿ}}}}}}
 
 
+{-
 
   uu : ⟨ PP ⟩
   uu = (((⦗ # 0 ⦘ ∷ []) since (IB.[] IB.∷ IB.[])) since incl [-])
@@ -257,4 +258,4 @@ module Examples where
         >ⱼ comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))) )))
   -}
 -}
-
+-}

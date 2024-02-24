@@ -1,5 +1,5 @@
 
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
 module KamiTheory.Main.Dependent.Untyped.Instances where
 
@@ -7,7 +7,10 @@ open import Agora.Conventions
 
 open import KamiTheory.Basics
 open import KamiTheory.Main.Dependent.Untyped.Definition
-open import KamiTheory.Main.Dependent.Modality.Definition
+open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
+open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition
+open import KamiTheory.Main.Generic.ModeSystem.Modality
+open import KamiTheory.Main.Generic.ModeSystem.Transition
 
 open import Prelude.Equality using (Eq)
 open import Prelude.Decidable using () renaming (Dec to Dec-Prelude)
@@ -16,6 +19,7 @@ open import Tactic.Deriving.Eq
 
 -- open import Relation.Binary.Definitions using () renaming (Decidable to Dec-Std)
 open import Relation.Nullary.Decidable.Core using () renaming (Dec to Dec-Std ; yes to yes-Std ; no to no-Std)
+open import Data.Vec using ([] ; _∷_ ; _++_) renaming (Vec to StdVec)
 
 ---------------------------------------------
 -- Converting between the Prelude Dec and the Agora Dec
@@ -66,6 +70,7 @@ instance
 ---------------------------------------------
 -- Deriving eq for Mode using Prelude
 
+{-
 eqMode : deriveEqType Mode -- {l : List (Metakind ×-𝒰 ℕ)} (k k₁ : Mode l) → Dec-Prelude (StrId k k₁)
 unquoteDef eqMode = deriveEqDef eqMode (quote Mode)
 
@@ -75,6 +80,7 @@ _≟-Mode_ = λ k l -> cast-Dec-Prelude (eqMode k l)
 instance
   hasDecidableEquality:Mode : hasDecidableEquality Mode
   hasDecidableEquality:Mode = record { _≟_ = _≟-Mode_ }
+  -}
 
 ---------------------------------------------
 -- Deriving eq for LeafKind using Prelude
@@ -104,7 +110,7 @@ leaf x ≟-Kind main y = no λ ()
 leaf x ≟-Kind leaf y with x ≟ y
 ... | no y = no λ {refl -> y refl}
 ... | yes refl = yes refl
-𝓀-loc ≟-Kind 𝓀-loc = yes refl-≡
+𝓀-transform ≟-Kind 𝓀-transform = yes refl-≡
 
 instance
   hasDecidableEquality:Kind : ∀{ns} -> hasDecidableEquality (Kind ns)
@@ -113,6 +119,7 @@ instance
 ---------------------------------------------
 -- Deriving eq for BaseModeHom using Prelude
 
+{-
 -- eqConstTerm : {l : List ℕ} (k k₁ : ConstTerm l) → Dec-Prelude (StrId k k₁)
 eqBaseModeHom : deriveEqType BaseModeHom
 unquoteDef eqBaseModeHom = deriveEqDef eqBaseModeHom (quote BaseModeHom)
@@ -171,7 +178,7 @@ instance
   hasDecidableEquality:Modality : ∀{P} {{_ : hasDecidableEquality P}} -> hasDecidableEquality (Modality P)
   hasDecidableEquality:Modality = record { _≟_ = _≟-Modality_ }
 
-
+-}
 ---------------------------------------------
 -- Deriving eq for Kind using Prelude
 
@@ -222,14 +229,14 @@ instance
 ---------------------------------------------
 -- Stating eq for Nat
 
-open import Data.Nat using () renaming (_≟_ to _≟-Nat-Std_)
+-- open import Data.Nat using () renaming (_≟_ to _≟-Nat-Std_)
 
-_≟-ℕ_ : (k l : ℕ) -> isDecidable (k ≡ l)
-_≟-ℕ_ k l = cast-Dec-Std (k ≟-Nat-Std l)
+-- _≟-ℕ_ : (k l : ℕ) -> isDecidable (k ≡ l)
+-- _≟-ℕ_ k l = cast-Dec-Std (k ≟-Nat-Std l)
 
-instance
-  hasDecidableEquality:ℕ : hasDecidableEquality ℕ
-  hasDecidableEquality:ℕ = record { _≟_ = _≟-ℕ_ }
+-- instance
+--   hasDecidableEquality:ℕ : hasDecidableEquality ℕ
+--   hasDecidableEquality:ℕ = record { _≟_ = _≟-ℕ_ }
 
 ---------------------------------------------
 -- Stating eq for List
@@ -266,17 +273,19 @@ module _ {A : 𝒰 𝑖} {B : 𝒰 𝑗} {{_ : hasDecidableEquality A}} {{_ : ha
 ---------------------------------------------
 -- Stating eq for Kind
 
-module _ {P : 𝒰₀} {{_ : hasDecidableEquality P}} where
+module _ {P : ModeSystem 𝑖} where
 
-  _≟-GenTs_ : ∀{n bs} -> (k l : GenTs (KindedTerm P) n bs) -> isDecidable (k ≡ l)
+  _≟-GenTs_ : ∀{n bs} -> (k l : GenTs (StdVec (Modality P)) (KindedTerm P) n bs) -> isDecidable (k ≡ l)
   _≟-Term_ : ∀{n} -> (k l : Term P n) -> isDecidable (k ≡ l)
   _≟-KindedTerm_ : ∀{n mk} -> (k l : KindedTerm P n mk) -> isDecidable (k ≡ l)
 
+
   [] ≟-GenTs [] = yes refl
-  (t ∷ k) ≟-GenTs (t₁ ∷ k₁) with t ≟-KindedTerm t₁ | k ≟-GenTs k₁
-  ... | no t≠t₁ | Y = no λ {refl → t≠t₁ refl}
-  ... | yes x | no k≠k₁ = no λ {refl → k≠k₁ refl}
-  ... | yes refl | yes refl = yes refl
+  (μ ⦊ t ∷ k) ≟-GenTs (η ⦊ t₁ ∷ k₁) with μ ≟ η | t ≟-KindedTerm t₁ | k ≟-GenTs k₁
+  ... | no μ≠η | Y | Z = no λ {refl → μ≠η refl}
+  ... | yes refl | no t≠t₁ | Y = no λ {refl → t≠t₁ refl}
+  ... | yes refl | yes x | no k≠k₁ = no λ {refl → k≠k₁ refl}
+  ... | yes refl | yes refl | yes refl = yes refl
 
   gen {bs = bs} k c ≟-Term gen {bs = bs₁} k₁ c₁ with bs ≟ bs₁
   ... | no bs≠bs₁ = no λ {refl → bs≠bs₁ refl}
@@ -285,12 +294,14 @@ module _ {P : 𝒰₀} {{_ : hasDecidableEquality P}} where
   ... | yes refl with c ≟-GenTs c₁
   ... | no c≠c₁ = no λ {refl → c≠c₁ refl}
   ... | yes refl = yes refl
-  gen k c ≟-Term var x = no (λ ())
-  var x ≟-Term gen k c = no (λ ())
-  var x ≟-Term var y with x ≟ y
-  ... | no x≠y = no λ {refl → x≠y refl}
-  ... | yes refl = yes refl
+  gen k c ≟-Term var x _ = no (λ ())
+  var x _ ≟-Term gen k c = no (λ ())
+  var x ξ ≟-Term var y ζ with ξ ≟ ζ | x ≟ y
+  ... | X | Y = ?
+  -- ... | no x≠y = no λ {refl → x≠y refl}
+  -- ... | yes refl = yes refl
 
+{-
   term x ≟-KindedTerm term y with x ≟-Term y
   ... | no p = no λ {refl -> p refl}
   ... | yes refl = yes refl
@@ -312,6 +323,8 @@ module _ {P : 𝒰₀} {{_ : hasDecidableEquality P}} where
   modehom y ≟-KindedTerm modehom x with (_ ↝ _ ∋ x) ≟ (_ ↝ _ ∋ y)
   ... | no p = no λ {refl -> p refl}
   ... | yes refl = yes refl
+
+-}
 
   instance
     hasDecidableEquality:Term : ∀{n} -> hasDecidableEquality (Term P n)

@@ -21,7 +21,7 @@ pattern refl = refl-≡
 --------------------------------------------------
 -- decidable equality
 
-open import Agora.Conventions using (hasDecidableEquality ; isDecidable)
+open import Agora.Conventions using (hasDecidableEquality ; isDecidable ; 𝒰 ; 𝑖 ; yes ; no ; _≟_)
 open import Agora.System.Marshall.Data.DecidableEquality
 
 decide-≡-ℕ : (x y : Nat) → isDecidable (x ≡ y)
@@ -31,6 +31,22 @@ decide-≡-ℕ x y with x ≟-ℕ y
 instance
   hasDecidableEquality:ℕ : hasDecidableEquality Nat
   hasDecidableEquality:ℕ = record { _≟_ = decide-≡-ℕ }
+
+open import Data.Vec using ([] ; _∷_ ; _++_) renaming (Vec to StdVec)
+
+module _ {A : 𝒰 𝑖} {{_ : hasDecidableEquality A}} where
+
+  decide-≡-Vec : ∀{n} -> (x y : StdVec A n) → isDecidable (x ≡ y)
+  decide-≡-Vec [] [] = yes refl-≡
+  decide-≡-Vec (x ∷ xs) (y ∷ ys) with x ≟ y
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl with decide-≡-Vec xs ys
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl = yes refl
+
+  instance
+    hasDecidableEquality:Vec : ∀{n} -> hasDecidableEquality (StdVec A n)
+    hasDecidableEquality:Vec = record { _≟_ = decide-≡-Vec }
 
 
 

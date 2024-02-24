@@ -118,3 +118,14 @@ module _ {M : ModeSystem 𝑖} where
                   ->  ∑ λ η -> ModeTrans* M all (μ) (η) ×-𝒰 ModeTrans* M vis η ω
   split-all-ModeTrans* [ iξ ∣ vξ ] = _ , [ iξ ∣ incl [] ] , [ vξ ]
 
+
+  decide-≡-ModeTrans* : {a b : Mode M} -> {μ η : ModeHom M a b} -> (x y : ModeTrans* M r μ η) → isDecidable (x ≡ y)
+  decide-≡-ModeTrans* [ incl x ] [ incl x₁ ] with x ≟ x₁
+  ... | X = {!!}
+  decide-≡-ModeTrans* [ x ∣ x₁ ] [ x₂ ∣ x₃ ] = {!!}
+
+
+  instance
+    hasDecidableEquality:ModeTrans* : {a b : Mode M} -> {μ η : ModeHom M a b} -> hasDecidableEquality (ModeTrans* M r μ η)
+    hasDecidableEquality:ModeTrans* = record { _≟_ = decide-≡-ModeTrans* }
+
