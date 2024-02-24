@@ -53,7 +53,7 @@ module SendReceiveNarrow-ModeSystem (P : Preorder 𝑖) {{_ : hasDecidableEquali
 
   commute-intersecting-SRN (situation4 id (.(`＠` _) ⨾ .id) id δ≠id () (narrow x))
   commute-intersecting-SRN (situation4 id (`＠` U ⨾ .id) (.`[]` ⨾ .id) δ≠id (send .U) (narrow x)) = _ , id , incl (id ⌟[ _ ⇒ _ ∋ (send _) ]⌞ id [ refl , refl ])
-  commute-intersecting-SRN (situation4 (2GraphExample.SendReceiveNarrow-2Graph.`＠` U₁ ⨾ x ⨾ iεₗ') (.(2GraphExample.SendReceiveNarrow-2Graph.`＠` U) ⨾ id) .(2GraphExample.SendReceiveNarrow-2Graph.`[]` ⨾ id) δ≠id (2GraphExample.SendReceiveNarrow-2Graph.send U) ())
+  commute-intersecting-SRN (situation4 (`＠` U₁ ⨾ x ⨾ iεₗ') (.(`＠` U) ⨾ id) .(`[]` ⨾ id) δ≠id (send U) ())
   commute-intersecting-SRN (situation4 (x₁ ⨾ id) (x ⨾ x₂ ⨾ δ) id δ≠id vξ ())
   commute-intersecting-SRN (situation4 (x₁ ⨾ id) (x ⨾ x₂ ⨾ δ) (x₃ ⨾ iεₗiξ₀') δ≠id vξ ())
   commute-intersecting-SRN (situation4 (x₁ ⨾ x₃ ⨾ iεₗ') (x ⨾ x₂ ⨾ δ) iεₗiξ₀' δ≠id vξ ())
