@@ -120,10 +120,10 @@ module _ {M : ModeSystem 𝑖} where
   ... | no p = no λ {refl -> p refl}
   ... | yes refl with ξ ≟ ξ₁
   ... | no p = no λ {refl -> p refl}
-  ... | yes refl = refl
+  ... | yes refl = yes refl
 
   instance
     hasDecidableEquality:Transition : ∀{r} -> hasDecidableEquality (Transition M r)
-    hasDecidableEquality:Transition = record { _≟_ = {!!} }
+    hasDecidableEquality:Transition = record { _≟_ = decide-≡-Transition }
 
 

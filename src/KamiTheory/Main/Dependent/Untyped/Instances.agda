@@ -296,23 +296,13 @@ module _ {P : ModeSystem 𝑖} where
   ... | yes refl = yes refl
   gen k c ≟-Term var x _ = no (λ ())
   var x _ ≟-Term gen k c = no (λ ())
-  var x ξ ≟-Term var y ζ with ξ ≟ ζ | x ≟ y
-  ... | X | Y = ?
-  -- ... | no x≠y = no λ {refl → x≠y refl}
-  -- ... | yes refl = yes refl
-
-{-
-  term x ≟-KindedTerm term y with x ≟-Term y
-  ... | no p = no λ {refl -> p refl}
-  ... | yes refl = yes refl
-  location U ≟-KindedTerm location V with U ≟ V
-  ... | no x = no λ {refl -> x refl}
-  ... | yes refl = yes refl
-  basemod {k} {l} x ≟-KindedTerm basemod {k₁} {l₁} y with k ≟-Mode k₁
-  ... | no p = no λ {refl -> p refl}
-  ... | yes refl with l ≟ l₁
-  ... | no p = no λ {refl -> p refl}
+  var x ξ ≟-Term var y ζ with ξ ≟ ζ
+  ... | no x≠y = no λ {refl → x≠y refl}
   ... | yes refl with x ≟ y
+  ... | no x≠y = no λ {refl → x≠y refl}
+  ... | yes refl = yes refl
+
+  term x ≟-KindedTerm term y with x ≟-Term y
   ... | no p = no λ {refl -> p refl}
   ... | yes refl = yes refl
   (x // p) ≟-KindedTerm (y // q) with x ≟-Term y
@@ -320,11 +310,13 @@ module _ {P : ModeSystem 𝑖} where
   ... | yes refl with p ≟ q
   ... | no p = no λ {refl -> p refl}
   ... | yes refl = yes refl
-  modehom y ≟-KindedTerm modehom x with (_ ↝ _ ∋ x) ≟ (_ ↝ _ ∋ y)
+  modality x₁ ≟-KindedTerm modality x with x ≟ x₁
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl = yes refl
+  transition x₁ ≟-KindedTerm transition x with x ≟ x₁
   ... | no p = no λ {refl -> p refl}
   ... | yes refl = yes refl
 
--}
 
   instance
     hasDecidableEquality:Term : ∀{n} -> hasDecidableEquality (Term P n)

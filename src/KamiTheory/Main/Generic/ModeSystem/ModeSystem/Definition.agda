@@ -10,6 +10,7 @@ open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
 import KamiTheory.Main.Generic.ModeSystem.2Cell.Definition as 2CellDefinition
 import KamiTheory.Main.Generic.ModeSystem.2Cell.Rewriting as 2CellRewriting
 import KamiTheory.Main.Generic.ModeSystem.2Cell.Commutation as 2CellCommutation
+import KamiTheory.Main.Generic.ModeSystem.2Cell.Decidability as 2CellDecidability
 
 
 
@@ -94,6 +95,7 @@ data ModeTrans* (M : ModeSystem 𝑖) {a b : Mode M} : (r : Range) -> (μ η : M
 module _ {M : ModeSystem 𝑖} where
 
   open 2CellDefinition.2CellDefinition (graph M)
+  open 2CellDecidability.2CellDecidability (graph M)
 
   _◆*₂ₘ_ : {a b : Mode M} -> {μ η ω : ModeHom M a b} -> ModeTrans* M r μ η -> ModeTrans* M r η ω -> ModeTrans* M r μ ω
   [ ξ ] ◆*₂ₘ [ ζ ] = [ ξ ◆₂ₘ ζ ]
@@ -121,8 +123,15 @@ module _ {M : ModeSystem 𝑖} where
 
   decide-≡-ModeTrans* : {a b : Mode M} -> {μ η : ModeHom M a b} -> (x y : ModeTrans* M r μ η) → isDecidable (x ≡ y)
   decide-≡-ModeTrans* [ incl x ] [ incl x₁ ] with x ≟ x₁
-  ... | X = {!!}
-  decide-≡-ModeTrans* [ x ∣ x₁ ] [ x₂ ∣ x₃ ] = {!!}
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl = yes refl
+  decide-≡-ModeTrans* ([_∣_] {η = η} (incl iξ) (incl vξ)) ([_∣_] {η = η₁} (incl iζ) (incl vζ)) with η ≟ η₁
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl with iξ ≟ iζ
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl with vξ ≟ vζ
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl = yes refl
 
 
   instance
