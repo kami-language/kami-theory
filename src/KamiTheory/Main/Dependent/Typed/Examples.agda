@@ -22,7 +22,7 @@ open import KamiTheory.Order.Preorder.Instances
 open import KamiTheory.Main.Dependent.Untyped.Definition
 open import KamiTheory.Main.Dependent.Untyped.Instances
 open import KamiTheory.Main.Dependent.Typed.Definition
--- open import KamiTheory.Main.Dependent.Typed.Instances
+open import KamiTheory.Main.Dependent.Typed.Instances
 
 
 open import KamiTheory.Main.Generic.ModeSystem.2Cell.Definition
@@ -82,6 +82,8 @@ module Examples where
 
   open Judgements M
 
+  open Typecheck M
+
   open SendReceiveNarrow-2Graph
   open 2CellDefinition (graph M)
 
@@ -134,8 +136,6 @@ module Examples where
   εε : Con (Entry M) zero
   εε = ε
 
-  idT : ∀{μ : SomeModeHom M } -> ModalityTrans M all μ μ
-  idT = (_ ⇒ _ ∋ [ incl [] ∣ incl [] ])
 
   idM : (a : Mode M) -> ModeHom M a a
   idM a = id
@@ -144,11 +144,11 @@ module Examples where
   -- small examples
 
   P0 : εε ∙ (NN / (`＠` uu ⨾ id)) ⊢ var zero (incl idT) ∶ NN / `＠` uu ⨾ id
-  P0 = var {{{!!}}} zero idT
+  P0 = var zero idT
 
   P1 : εε ⊢ ((Modal NN (`＠` uu ⨾ id) / id) ▹▹[ _ ] Modal NN (`＠` uu ⨾ id)) / id
        ≔ _
-  P1 = lamⱼ (Modalⱼ (NNⱼ {{{!!}}})) (letunmodⱼ (var {{{!!}}} zero idT) (modⱼ ((var {{{!!}}} zero idT))))
+  P1 = lamⱼ (Modalⱼ (NNⱼ )) (letunmodⱼ (var zero idT) (modⱼ ((var zero idT))))
 
 
   ---------------------------------------------
@@ -169,8 +169,8 @@ module Examples where
 
       com : εε ⊢ (Modal NN (`＠` uu ⨾ id) / id) ▹▹[ {!!} ] (Modal NN (`＠` uu ⨾ id)) / id
         ≔ te -- lam {!!} (mod (transform {!!} (letunmod (var zero {!!}))))
-      com = lamⱼ (Modalⱼ (NNⱼ {{{!!}}})) (letunmodⱼ ((var {{{!!}}} zero idT))
-                                                    (modⱼ (transformⱼ (Com uu uu) (var {{{!!}}} zero idT))) )
+      com = lamⱼ (Modalⱼ (NNⱼ)) (letunmodⱼ ((var  zero idT))
+                                                    (modⱼ (transformⱼ (Com uu uu) (var zero idT))) )
 
       te' = untransform-Term te
 
@@ -186,8 +186,8 @@ module Examples where
 
                   ≔ SendVec-Term
 
-      SendVec = lamⱼ {!!} (letunmodⱼ (var {{{!!}}} zero idT)
-                (natrecⱼ Trⱼ endⱼ (lamⱼ {!!} (lamⱼ Trⱼ (trⱼ (NNⱼ {{{!!}}}) (Com uu uuvv) ≫ⱼ var {{{!!}}} zero idT))) (var {{{!!}}} zero idT))
+      SendVec = lamⱼ proof (letunmodⱼ (var zero idT)
+                (natrecⱼ Trⱼ endⱼ (lamⱼ proof (lamⱼ Trⱼ (trⱼ (NNⱼ) (Com uu uuvv) ≫ⱼ var zero idT))) (var zero idT))
                 )
 
 
@@ -199,7 +199,7 @@ module Examples where
                 Vec NN (var (suc zero) (incl {!!})) / `＠` vv ⨾ id
                 ) ⊢
                 Π (NN / `＠` uu ⨾ id) ▹
-                Π (Vec NN (var zero (incl idT)) / `＠` (uu) ⨾ id) ▹[ (NN / (incl (_ ↝ _ ∋ `＠` uu ⨾ id)) ⇒ (incl (_ ↝ _ ∋ `＠` (uuvv) ⨾ id))) ≫ (wk1 (wk1 (wk1 (SendVec-Term))) ∘ var (suc zero) (incl {!!})) ]
+                Π (Vec NN (var zero (incl idT)) / `＠` (uu) ⨾ id) ▹[ (NN / (_ ↝ _ ∋ `＠` uu ⨾ id) ⇒ (_ ↝ _ ∋ `＠` (uuvv) ⨾ id)) ≫ (wk1 (wk1 (wk1 (SendVec-Term))) ∘ var (suc zero) (incl {!!})) ]
                 Vec NN (transform {!!} (var (suc zero) {!!})) / `＠` vv ⨾ id
                 ≔ {!!}
 
