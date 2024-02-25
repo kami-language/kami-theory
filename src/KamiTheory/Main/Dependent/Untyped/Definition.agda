@@ -212,17 +212,17 @@ data Term (P : ModeSystem 𝑖) (n : Nat) : 𝒰 𝑖
 
 data KindedTerm (P : ModeSystem 𝑖) (n : Nat) : (k : Metakind) -> 𝒰 𝑖 where
   term : Term P n -> KindedTerm P n term
-  modality : Modality P -> KindedTerm P n modality
+  modality : SomeModeHom P -> KindedTerm P n modality
   transition : Transition P vis -> KindedTerm P n transition
-  _//_ : Term P n -> Modality P -> KindedTerm P n entry
+  _//_ : Term P n -> SomeModeHom P -> KindedTerm P n entry
 
-pattern _/_ A μs = A // incl (_ ↝ _ ∋ μs)
+pattern _/_ A μs = A // (_ ↝ _ ∋ μs)
 infixl 21 _//_ _/_
 
 
 
 data Term P n where
-  gen : {bs : List (Metakind × Nat)} (k : Kind bs) (c : GenTs (StdVec (Modality P)) (KindedTerm P) n bs) → Term P n
+  gen : {bs : List (Metakind × Nat)} (k : Kind bs) (c : GenTs (StdVec (SomeModeHom P)) (KindedTerm P) n bs) → Term P n
   var : (x : Fin n) → Transition P all → Term P n
 
 
@@ -281,7 +281,7 @@ pattern Empty = gen (leaf Emptykind) []
 pattern Unit = gen (leaf Unitkind) []
 
 -- lam    : (t : Term P (1+ n)) → Term P n  -- Function abstraction (binder).
-pattern lam μ t = gen (main Lamkind) ((incl (_ ↝ _ ∋ μ) ∷ []) ⦊ term t ∷ [])
+pattern lam μ t = gen (main Lamkind) (((_ ↝ _ ∋ μ) ∷ []) ⦊ term t ∷ [])
 
 -- _∘_    : (t u : Term P n) → Term P n     -- Application.
 pattern _∘_ t u = gen (main Appkind) ([] ⦊ term t ∷ [] ⦊ term u ∷ [])
@@ -304,8 +304,8 @@ zeroₜ = gen (main Zerokind) []
 sucₜ    : (t : Term P n)       → Term P n -- Successor.
 sucₜ t = gen (main Suckind) ([] ⦊ term t ∷ [])
 
-natrec : (μ : Modality P) (A : Term P (1+ n)) (t u v : Term P n) → Term P n  -- Natural number recursor (A is a binder).
-natrec μ A t u v = gen (main Natreckind) ((μ ∷ []) ⦊ term A ∷ [] ⦊ term t ∷ [] ⦊ term u ∷ [] ⦊ term v ∷ [])
+-- natrec : (μ : Modality P) (A : Term P (1+ n)) (t u v : Term P n) → Term P n  -- Natural number recursor (A is a binder).
+pattern natrec μ A t u v = gen (main Natreckind) (((_ ↝ _ ∋ μ) ∷ []) ⦊ term A ∷ [] ⦊ term t ∷ [] ⦊ term u ∷ [] ⦊ term v ∷ [])
 
 -- Introduction and elimination of vectors.
 nilₜ : Term P n                         -- Empty vector.
@@ -314,7 +314,7 @@ nilₜ = gen (main Nilkind) []
 consₜ : (v : Term P n) → (vs : Term P n) → Term P n -- Append.
 consₜ v vs = gen (main Conskind) ([] ⦊ term v ∷ [] ⦊ term vs ∷ [])
 
-vecrec : (μ η : Modality P) -> (G : Term P (1+ (1+ n))) (z s l vs : Term P n) → Term P n  -- Vector recursor ( is a binder).
+vecrec : (μ η : SomeModeHom P) -> (G : Term P (1+ (1+ n))) (z s l vs : Term P n) → Term P n  -- Vector recursor ( is a binder).
 vecrec μ η G z s l vs = gen (main Vecreckind) ((μ ∷ η ∷ []) ⦊ term G ∷ [] ⦊ term z ∷ [] ⦊ term s ∷ [] ⦊ term l ∷ [] ⦊ term vs ∷ [])
 
 
@@ -332,7 +332,7 @@ Emptyrec A e = gen (main Emptyreckind) ([] ⦊ term A ∷ [] ⦊ term e ∷ [])
 -- pattern comtype a    = gen (main 𝓀-comtype) (term a ∷ [])
 -- pattern comval a     = gen (main 𝓀-comval) (term a ∷ [])
 
-pattern Modal A μ     = gen (main 𝓀-Modal) ([] ⦊ term A ∷ [] ⦊ (modality ((incl (_ ↝ _ ∋ μ)))) ∷ [])
+pattern Modal A μ     = gen (main 𝓀-Modal) ([] ⦊ term A ∷ [] ⦊ (modality (((_ ↝ _ ∋ μ)))) ∷ [])
 -- pattern _＠_ L U     = gen (main 𝓀-＠) (term L ∷ (location U) ∷ [])
 -- pattern loc U t      = gen 𝓀-loc ((location U) ∷ term t ∷ []) -- NOTE, this one is *not* wrapped in `main`
 -- pattern unloc t      = gen (main 𝓀-unloc) ([] ⦊ term t ∷ [])
@@ -342,7 +342,7 @@ pattern Modal A μ     = gen (main 𝓀-Modal) ([] ⦊ term A ∷ [] ⦊ (modali
 -- pattern recv t       = gen (main 𝓀-recv) ([] ⦊ term t ∷ [])
 pattern mod t        = gen (main 𝓀-mod) ([] ⦊ term t ∷ [])
 pattern unmod t      = gen (main 𝓀-unmod) ([] ⦊ term t ∷ [])
-pattern letunmod μ t s  = gen (main 𝓀-letunmod) ([] ⦊ term t ∷ (incl (_ ↝ _ ∋ μ) ∷ []) ⦊ term s ∷ [])
+pattern letunmod μ t s  = gen (main 𝓀-letunmod) ([] ⦊ term t ∷ ((_ ↝ _ ∋ μ) ∷ []) ⦊ term s ∷ [])
 
 
 -- Transformations / Transitions
@@ -624,7 +624,7 @@ wkVar (lift ρ) (x +1) = (wkVar ρ x) +1
   -- If η : Γ ≤ Δ and Δ ⊢ t : A then Γ ⊢ wk η t : wk η A.
 
 mutual
-  wkGen : {m n : Nat} {bs : List (Metakind × Nat)} (ρ : Wk m n) (c : GenTs (StdVec (Modality P)) (KindedTerm P) n bs) → GenTs (StdVec (Modality P)) (KindedTerm P) m bs
+  wkGen : {m n : Nat} {bs : List (Metakind × Nat)} (ρ : Wk m n) (c : GenTs (StdVec (SomeModeHom P)) (KindedTerm P) n bs) → GenTs (StdVec (SomeModeHom P)) (KindedTerm P) m bs
   wkGen ρ []                = []
   wkGen ρ (_⦊_∷_ {b = b} ξs t c) = ξs ⦊ (wk-Kinded (liftn ρ b) t) ∷ (wkGen ρ c)
 
@@ -786,20 +786,23 @@ uniformTransitions ξ = transitions ξ uniformExtension
 --   --                             ; (i +1) -> lift-Tail (liftVars μs) ξs i})
 --   in {!f!}
 
+intoModalities : StdVec (SomeModeHom P) n -> StdVec (Modality P) n
+intoModalities [] = []
+intoModalities (x ∷ xs) = incl x ∷ intoModalities xs
 
 -- The μs are the new modalities, the xs are the already preexisting, thus
 -- we have to do simple appending here
-liftVarExtension : ∀{b} -> (μs : StdVec (Modality P) b) -> (xs : VarExtensionWk P n) -> VarExtensionWk P (b + n)
-liftVarExtension μs xs = μs ++ xs
+liftVarExtension : ∀{b} -> (μs : StdVec (SomeModeHom P) b) -> (xs : VarExtensionWk P n) -> VarExtensionWk P (b + n)
+liftVarExtension μs xs = intoModalities μs ++ xs
 
-liftTransitions : ∀{b} -> (StdVec (Modality P) b) -> Transitions P n all -> Transitions P (b + n) all
+liftTransitions : ∀{b} -> (StdVec (SomeModeHom P) b) -> Transitions P n all -> Transitions P (b + n) all
 liftTransitions μs (transitions ξ vars) = transitions ξ (liftVarExtension μs vars)
 
 
 -- Pushes a transition down the term. We push it until the next
 -- `transform` term or variable.
 mutual
-  push-Gen : ∀{bs} -> Transitions P n all -> GenTs (StdVec (Modality P)) (KindedTerm P) n bs -> GenTs (StdVec (Modality P)) (KindedTerm P) n bs
+  push-Gen : ∀{bs} -> Transitions P n all -> GenTs (StdVec (SomeModeHom P)) (KindedTerm P) n bs -> GenTs (StdVec (SomeModeHom P)) (KindedTerm P) n bs
   push-Gen ξs [] = []
   push-Gen ξs (μs ⦊ t ∷ ts) = μs ⦊ push-Kinded (liftTransitions μs ξs) t ∷ push-Gen ξs ts
 
@@ -819,7 +822,7 @@ mutual
 
 
 mutual
-  untransform-Gen : ∀{bs} -> GenTs (StdVec (Modality P)) (KindedTerm P) n bs -> GenTs (StdVec (Modality P)) (KindedTerm P) n bs
+  untransform-Gen : ∀{bs} -> GenTs (StdVec (SomeModeHom P)) (KindedTerm P) n bs -> GenTs (StdVec (SomeModeHom P)) (KindedTerm P) n bs
   untransform-Gen [] = []
   untransform-Gen (μs ⦊ t ∷ x) = μs ⦊ untransform-KindedTerm t ∷ untransform-Gen x
 
@@ -919,7 +922,7 @@ toSubst pr x = var (wkVar pr x) id
 -- If Γ ⊢ σ : Δ and Δ ⊢ t : A then Γ ⊢ subst σ t : subst σ A.
 
 mutual
-  substGen : {bs : List (Metakind × Nat)} (σ : Subst P m n) (g : GenTs (StdVec (Modality P)) (KindedTerm P) n bs) → GenTs (StdVec (Modality P)) (KindedTerm P) m bs
+  substGen : {bs : List (Metakind × Nat)} (σ : Subst P m n) (g : GenTs (StdVec (SomeModeHom P)) (KindedTerm P) n bs) → GenTs (StdVec (SomeModeHom P)) (KindedTerm P) m bs
   substGen σ  []      = []
   substGen σ (_⦊_∷_ {b = b} ξs t ts) = ξs ⦊ subst-Kinded (liftSubstn σ b) t ∷ (substGen σ ts)
 

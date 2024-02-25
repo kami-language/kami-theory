@@ -113,6 +113,9 @@ module Examples where
   vv = singleton (# 1)
   ww = singleton (# 2)
 
+  uuvv : P
+  uuvv = true ∷ (true ∷ (false ∷ []))
+
 
 
   _⟶_ = _▹▹_
@@ -171,6 +174,37 @@ module Examples where
 
       te' = untransform-Term te
 
+
+      -- SendVec-Term = lam (natrec Tr
+      --                         end
+      --                         (lam (lam ((NN / (`＠` uu ⨾ id) ⇒ (`＠` vv ⨾ id)) ≫ var zero)))
+      --                         (unmod (var zero)))
+
+      -- postulate
+      SendVec-Term = _
+      SendVec : εε ⊢ ((Modal NN (`＠` uuvv ⨾ id) / id) ▹▹[ _ ] Tr / id)
+
+                  ≔ SendVec-Term
+
+      SendVec = lamⱼ {!!} (letunmodⱼ (var {{{!!}}} zero idT)
+                (natrecⱼ Trⱼ endⱼ (lamⱼ {!!} (lamⱼ Trⱼ (trⱼ (NNⱼ {{{!!}}}) (Com uu uuvv) ≫ⱼ var {{{!!}}} zero idT))) (var {{{!!}}} zero idT))
+                )
+
+
+      -- lamⱼ proof (natrecⱼ Trⱼ endⱼ (lamⱼ proof (lamⱼ Trⱼ (trⱼ NNⱼ (Com uu ((uu ∧ vv))) ≫ⱼ var zero id))) (unmodⱼ (var zero id)))
+
+      sendvec2 : εε ∙ (
+                Π (NN / `＠` (uuvv) ⨾ id) ▹
+                Π (Vec NN (var zero (incl {!!})) / `＠` (uu) ⨾ id) ▹[ wk1 (wk1 (SendVec-Term)) ∘ var (suc zero) (incl idT) ]
+                Vec NN (var (suc zero) (incl {!!})) / `＠` vv ⨾ id
+                ) ⊢
+                Π (NN / `＠` uu ⨾ id) ▹
+                Π (Vec NN (var zero (incl idT)) / `＠` (uu) ⨾ id) ▹[ (NN / (incl (_ ↝ _ ∋ `＠` uu ⨾ id)) ⇒ (incl (_ ↝ _ ∋ `＠` (uuvv) ⨾ id))) ≫ (wk1 (wk1 (wk1 (SendVec-Term))) ∘ var (suc zero) (incl {!!})) ]
+                Vec NN (transform {!!} (var (suc zero) {!!})) / `＠` vv ⨾ id
+                ≔ {!!}
+
+      sendvec2 = {!!}
+       -- lamⱼ {!!} (lamⱼ {!!} (castⱼ {!!} ((var {{ΓP = {!!}}} (suc (suc zero)) id ∘ⱼ transformⱼ {!!} (var {{ΓP = {!!}}} (suc zero) id)) ∘ⱼ {!!})))
 
 
 

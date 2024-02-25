@@ -131,9 +131,9 @@ module Judgements (P : ModeSystem 𝑖) where
         → ⊢Ctx Γ ∙ E
 
   data _⊢Tr_ Γ where
-    -- trⱼ : Γ ⊢Entry A // μs
+    -- trⱼ : Γ ⊢Entry A / μ
     --       -> (ξ : Transition μs ηs vis)
-    --       -> Γ ⊢Tr A / μs ⇒ ηs
+    --       -> Γ ⊢Tr A / μ ⇒ ηs
     -- _≫ⱼ_ : Γ ⊢Tr ξ₀ -> Γ ⊢Tr ξ₁ -> Γ ⊢Tr (ξ₀ ≫ ξ₁)
 
 
@@ -145,8 +145,8 @@ module Judgements (P : ModeSystem 𝑖) where
     Emptyⱼ : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Sort Empty
     Unitⱼ  : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Sort Unit
 
-    Πⱼ_▹_  : Γ ⊢Entry (A // μs) → Γ ∙ E ⊢Sort B → Γ ⊢Sort Π (A // μs) ▹ B
-    Σⱼ_▹_  : Γ ⊢Entry (A // μs) → Γ ∙ F ⊢Sort G → Γ ⊢Sort Σ (A // μs) ▹ G
+    Πⱼ_▹_  : Γ ⊢Entry (A / μ) → Γ ∙ E ⊢Sort B → Γ ⊢Sort Π (A / μ) ▹ B
+    Σⱼ_▹_  : Γ ⊢Entry (A / μ) → Γ ∙ F ⊢Sort G → Γ ⊢Sort Σ (A / μ) ▹ G
     -- univ   : Γ ⊢Sort A ∶ UU
     --       → Γ ⊢Sort A
 
@@ -155,18 +155,18 @@ module Judgements (P : ModeSystem 𝑖) where
 
     -- Well-formed entry
   data _⊢Entry_ Γ where
-    NNⱼ    : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (NN // μs)
+    NNⱼ    : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (NN / μ)
     -- Emptyⱼ : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (Empty / ▲ U)
     -- Unitⱼ  : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (Unit / ▲ U)
     -- Leafⱼ : ∀{l} -> {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (gen (leaf l) [] / ▲ U) -- leafs are NN, Unit, Empty
 
     -- UUⱼ    : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (UU / ▲ U)
 
-    Vecⱼ   : Γ ⊢Entry (A // μs) → Γ ⊢ t ∶ NN // μs  → Γ ⊢Entry (Vec A t // μs)
+    Vecⱼ   : Γ ⊢Entry (A / μ) → Γ ⊢ t ∶ NN / μ  → Γ ⊢Entry (Vec A t / μ)
 
-    Πⱼ_▹_  : Γ ⊢Entry (A // μs)
-              → Γ ∙ (A // μs) ⊢Entry (B // ωs)
-              → Γ ⊢Entry ((Π (A // μs) ▹ B) // ωs)
+    Πⱼ_▹_  : Γ ⊢Entry (A / μ)
+              → Γ ∙ (A / μ) ⊢Entry (B / η)
+              → Γ ⊢Entry ((Π (A / μ) ▹ B) / η)
 
     -- Σⱼ_▹_  : ∀{q} -> Γ ⊢Entry (A / ωs)
     --         → Γ ∙ (A / ωs) ⊢Entry (B / ωs)
@@ -194,8 +194,8 @@ module Judgements (P : ModeSystem 𝑖) where
     -------------------
     -- Mode transformations (transitions)
 
-    Trⱼ : Γ ⊢Entry Tr // id
-    -- []▹ⱼ : Γ ⊢Entry [ τ ]▹ A / μs
+    Trⱼ : ∀{m} -> Γ ⊢Entry Tr / id {m = m}
+    -- []▹ⱼ : Γ ⊢Entry [ τ ]▹ A / μ
 
 
 
@@ -220,47 +220,47 @@ module Judgements (P : ModeSystem 𝑖) where
     -------------------
     -- Transformations between modehoms (transitions)
 
-    trⱼ : Γ ⊢Entry A // μs
-          -- → (ξ : ModeTrans μs ηs vis)
-          → Γ ⊢ A / μs ⇒ ηs ∶ Tr // id
+    trⱼ : ∀{m} -> Γ ⊢Entry A / μ
+          → (ξ : ModalityTrans P vis (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
+          → Γ ⊢ A / ((_ ↝ _ ∋ μ)) ⇒ ((_ ↝ _ ∋ η)) ∶ Tr / id {m = m}
 
-    _≫ⱼ_ : Γ ⊢ ξ₀ ∶ Tr // μs
-         → Γ ⊢ ξ₁ ∶ Tr // μs
-         → Γ ⊢ (ξ₀ ≫ ξ₁) ∶ Tr // μs
+    _≫ⱼ_ : Γ ⊢ ξ₀ ∶ Tr / μ
+         → Γ ⊢ ξ₁ ∶ Tr / μ
+         → Γ ⊢ (ξ₀ ≫ ξ₁) ∶ Tr / μ
 
-    endⱼ : Γ ⊢ end ∶ Tr // id
+    endⱼ : ∀{m} -> Γ ⊢ end ∶ Tr / id {m = m}
 
     transformⱼ : ∀ (ζ : ModalityTrans P vis (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
                  -> Γ ⊢[ incl τ ] t ∶ A / μ
-                 -> Γ ⊢[ incl (τ ≫ A / (incl (_ ↝ _ ∋ μ)) ⇒ (incl (_ ↝ _ ∋ η))) ] transform (incl ζ) t ∶ A / η
+                 -> Γ ⊢[ incl (τ ≫ A / ((_ ↝ _ ∋ μ)) ⇒ ((_ ↝ _ ∋ η))) ] transform (incl ζ) t ∶ A / η
 
     castⱼ : Γ ⊢Tr τ ＝ σ
-            -> Γ ⊢[ incl τ ] t ∶ A // μs
-            -> Γ ⊢[ incl σ ] t ∶ A // μs
+            -> Γ ⊢[ incl τ ] t ∶ A / μ
+            -> Γ ⊢[ incl σ ] t ∶ A / μ
 
 
-    -- trⱼ : Γ ⊢Entry A / μs
+    -- trⱼ : Γ ⊢Entry A / μ
     --     → ModeTrans μs ηs vis
     --     → Γ ∙ (A / ηs) ⊢ B ∶ Tr // ◯ ↝ ◯ ∋ id
-    --     →  Γ ⊢ A / μs ⇒ ηs > B ∶ Tr // ◯ ↝ ◯ ∋ id
-    -- execⱼ : Γ ⊢[ σ ] t ∶ [ τ ]▹ A / μs
-    --          → Γ ⊢[ σ ≫ τ ] exec t ∶ (A / μs)
-    -- prepareⱼ : Γ ⊢[ σ ] t ∶ A / μs
-    --          → Γ ⊢ prepare t ∶ [ σ ]▹ A / μs
+    --     →  Γ ⊢ A / μ ⇒ ηs > B ∶ Tr // ◯ ↝ ◯ ∋ id
+    -- execⱼ : Γ ⊢[ σ ] t ∶ [ τ ]▹ A / μ
+    --          → Γ ⊢[ σ ≫ τ ] exec t ∶ (A / μ)
+    -- prepareⱼ : Γ ⊢[ σ ] t ∶ A / μ
+    --          → Γ ⊢ prepare t ∶ [ σ ]▹ A / μ
 
     -- let-inⱼ : Γ ⊢ t ∶ A / ηs
     --         → Γ ∙ (A / ηs) ⊢[ σ ] s ∶ B / ωs
     --         → Γ ⊢[ σ [ t ] ] let-in t s ∶ B [ t ] / ωs
 
-    -- let-trⱼ : Γ ⊢ t ∶ A / μs
+    -- let-trⱼ : Γ ⊢ t ∶ A / μ
     --         → Γ ∙ (A / ηs) ⊢[ σ ] s ∶ B / ωs
-    --         → Γ ⊢[ A / μs ⇒ ηs > σ ] let-tr t s ∶ B [ t ] / ωs
+    --         → Γ ⊢[ A / μ ⇒ ηs > σ ] let-tr t s ∶ B [ t ] / ωs
 
 
     -------------------
     -- Interactions between modalities
-    -- sendⱼ : ∀ U -> Γ ⊢ t ∶ X / μs -> Γ ⊢ send t ∶ X / `＠` U ⨾ `[]` ⨾ μs
-    -- recvⱼ : ∀ U -> Γ ⊢ t ∶ X / `[]` ⨾ `＠` U ⨾ μs -> Γ ⊢ recv t ∶ X / μs
+    -- sendⱼ : ∀ U -> Γ ⊢ t ∶ X / μ -> Γ ⊢ send t ∶ X / `＠` U ⨾ `[]` ⨾ μs
+    -- recvⱼ : ∀ U -> Γ ⊢ t ∶ X / `[]` ⨾ `＠` U ⨾ μs -> Γ ⊢ recv t ∶ X / μ
 
 
     -------------------
@@ -269,9 +269,9 @@ module Judgements (P : ModeSystem 𝑖) where
     -- Vars allow mode transformations between modalities
     var       : ∀ {A x}
               -> {{ΓP : isTrue (⊢Ctx Γ)}}
-              → x ∶ (A // incl (k ↝ l ∋ μ)) ∈ Γ
+              → x ∶ (A // (k ↝ l ∋ μ)) ∈ Γ
               → (ζ : ModalityTrans P all (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
-              → Γ ⊢ (Term.var x (incl ζ)) ∶ A // incl (k ↝ l ∋ η)
+              → Γ ⊢ (Term.var x (incl ζ)) ∶ A // (k ↝ l ∋ η)
 
 
     lamⱼ      : ∀ {t}
@@ -284,8 +284,6 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢[ incl σ ] a ∶ A / (η ◆ μ)
               → Γ ⊢[ incl ((ξ₀ ∥ ξ₁) ≫ (ξ [ untransform-Term a ])) ] g ∘ a ∶ B [ untransform-Term a ] / μ
 
-{-
-{-
 
 {-
     prodⱼ     : ∀ A B -> ∀{t u}
@@ -307,28 +305,29 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢ t ∶ Σ (A / μ) ▹ B / μ
               → Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / μ
               -}
-               
+
     zeroⱼ     :  {{ΓP : isTrue (⊢Ctx Γ)}}
-              → Γ ⊢ zeroₜ ∶ NN  / μs
-              
+              → Γ ⊢ zeroₜ ∶ NN  / μ
+
     sucⱼ      : ∀ {n}
-              → Γ ⊢      n ∶ NN  / μs
-              → Γ ⊢ sucₜ n ∶ NN  / μs
+              → Γ ⊢      n ∶ NN  / μ
+              → Γ ⊢ sucₜ n ∶ NN  / μ
 
     natrecⱼ   : ∀ {G s z n}
-              → Γ ∙ (NN / μs) ⊢Entry G / ηs
-              → Γ       ⊢ z ∶ G [ zeroₜ ]  / ηs
-              → Γ       ⊢ s ∶ Π (NN / μs) ▹ ((G / ηs) ▹▹ G [ sucₜ (var x0) ]↑)  / ηs
-              → Γ       ⊢ n ∶ NN  / μs
-              → Γ       ⊢ natrec G z s n ∶ G [ n ]  / ηs
- 
+              → Γ ∙ (NN / η ◆ μ) ⊢Entry G / μ
+              → Γ       ⊢ z ∶ G [ zeroₜ ]  / μ
+              → Γ       ⊢ s ∶ Π (NN / (η ◆ μ)) ▹ ((G / μ) ▹▹ G [ sucₜ (var x0 id) ]↑)  / μ
+              → Γ       ⊢ n ∶ NN  / (η ◆ μ)
+              → Γ       ⊢ natrec η G z s n ∶ G [ n ]  / μ
+
+{-
     nilⱼ      : ∀ {A}
-              → Γ ⊢ nilₜ ∶ Vec A zeroₜ  / μs
+              → Γ ⊢ nilₜ ∶ Vec A zeroₜ  / μ
  
     consⱼ     : ∀ {A v vs n}
-              → Γ ⊢         v ∶ A  / μs
-              → Γ ⊢        vs ∶ Vec A n  / μs
-              → Γ ⊢ consₜ v vs ∶ Vec A (sucₜ n)  / μs
+              → Γ ⊢         v ∶ A  / μ
+              → Γ ⊢        vs ∶ Vec A n  / μ
+              → Γ ⊢ consₜ v vs ∶ Vec A (sucₜ n)  / μ
 
     vecrecⱼ   : ∀ {G A z s l vs}
               → Γ ∙ (NN / `＠` (U ∧ V) ⨾ μs) ∙ (Vec (wk1 A) (var x0) / `＠` U ⨾ μs) ⊢Entry G / `＠` V ⨾ ηs -- note l and vs don't have to be in the same location as G
@@ -346,7 +345,6 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢ vecrec G z s l vs ∶ G [ wk1 vs ] [ l ]  / `＠` V ⨾ ηs
 
 
-{-
 {-
     -------------------
     -- Interaction of Communication with global types
@@ -744,6 +742,4 @@ module Judgements (P : ModeSystem 𝑖) where
 
   -}
 
--}
--}
 -}
