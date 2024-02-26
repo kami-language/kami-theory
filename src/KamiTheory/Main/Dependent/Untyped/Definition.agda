@@ -127,6 +127,12 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
 
   Emptyreckind : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
+  -- mode-local types
+  𝓀-BB : MainKind []
+  𝓀-trueₜ : MainKind []
+  𝓀-falseₜ : MainKind []
+  𝓀-boolrec : MainKind ((term , n1) ∷ (term , n0) ∷ (term , n0) ∷ (term , n0) ∷ [])
+
   -- Kami modality system
   -- 𝓀-/ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
@@ -305,7 +311,12 @@ sucₜ    : (t : Term P n)       → Term P n -- Successor.
 sucₜ t = gen (main Suckind) ([] ⦊ term t ∷ [])
 
 -- natrec : (μ : Modality P) (A : Term P (1+ n)) (t u v : Term P n) → Term P n  -- Natural number recursor (A is a binder).
-pattern natrec μ A t u v = gen (main Natreckind) (((_ ↝ _ ∋ μ) ∷ []) ⦊ term A ∷ [] ⦊ term t ∷ [] ⦊ term u ∷ [] ⦊ term v ∷ [])
+pattern natrec m A t u v = gen (main Natreckind) (((m ↝ _ ∋ id) ∷ []) ⦊ term A ∷ [] ⦊ term t ∷ [] ⦊ term u ∷ [] ⦊ term v ∷ [])
+
+pattern BB = gen (main 𝓀-BB) []
+pattern trueₜ = gen (main 𝓀-trueₜ) []
+pattern falseₜ = gen (main 𝓀-falseₜ) []
+pattern boolrec m A t u v = gen (main 𝓀-boolrec) (((m ↝ _ ∋ id) ∷ []) ⦊ term A ∷ [] ⦊ term t ∷ [] ⦊ term u ∷ [] ⦊ term v ∷ [])
 
 -- Introduction and elimination of vectors.
 nilₜ : Term P n                         -- Empty vector.

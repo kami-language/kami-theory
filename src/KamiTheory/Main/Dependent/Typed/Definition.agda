@@ -206,7 +206,6 @@ module Judgements (P : ModeSystem 𝑖) where
     -------------------
     -- Standard modality intro and "elim"
 
-
     modⱼ : Γ ⊢[ ττ ] t ∶ X / (η ◆ μ) -> Γ ⊢[ ττ ] mod t ∶ Modal X η / μ
 
     letunmodⱼ : Γ ⊢[ incl τ ] t ∶ Modal X η / μ
@@ -306,6 +305,24 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / μ
               -}
 
+    --------------------------------------------------
+    -- Booleans
+    falseⱼ     : {{ΓP : isTrue (⊢Ctx Γ)}}
+               → Γ ⊢ falseₜ ∶ BB  / μ
+
+    trueⱼ     : {{ΓP : isTrue (⊢Ctx Γ)}}
+               → Γ ⊢ trueₜ ∶ BB  / μ
+
+    boolrecⱼ   : ∀ {G} -> {μ : ModeHom P k l}
+              → Γ ∙ (BB / μ) ⊢Entry G / μ
+              → Γ       ⊢ f ∶ G [ falseₜ ]  / μ
+              → Γ       ⊢ t ∶ G [ trueₜ ]  / μ
+              → Γ       ⊢ b ∶ BB  / μ
+              → Γ       ⊢ natrec k G f t b ∶ G [ b ]  / μ
+
+    --------------------------------------------------
+    -- Natural numbers
+
     zeroⱼ     :  {{ΓP : isTrue (⊢Ctx Γ)}}
               → Γ ⊢ zeroₜ ∶ NN  / μ
 
@@ -313,12 +330,12 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢      n ∶ NN  / μ
               → Γ ⊢ sucₜ n ∶ NN  / μ
 
-    natrecⱼ   : ∀ {G s z n}
-              → Γ ∙ (NN / η ◆ μ) ⊢Entry G / μ
+    natrecⱼ   : ∀ {G s z n} -> {μ : ModeHom P k l}
+              → Γ ∙ (NN / μ) ⊢Entry G / μ
               → Γ       ⊢ z ∶ G [ zeroₜ ]  / μ
-              → Γ       ⊢ s ∶ Π (NN / (η ◆ μ)) ▹ ((G / μ) ▹▹ G [ sucₜ (var x0 id) ]↑)  / μ
-              → Γ       ⊢ n ∶ NN  / (η ◆ μ)
-              → Γ       ⊢ natrec η G z s n ∶ G [ n ]  / μ
+              → Γ       ⊢ s ∶ Π (NN / μ) ▹ ((G / μ) ▹▹ G [ sucₜ (var x0 id) ]↑)  / μ
+              → Γ       ⊢ n ∶ NN  / μ
+              → Γ       ⊢ natrec k G z s n ∶ G [ n ]  / μ
 
 {-
     nilⱼ      : ∀ {A}
