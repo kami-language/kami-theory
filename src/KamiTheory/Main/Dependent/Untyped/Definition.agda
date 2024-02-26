@@ -54,12 +54,14 @@ private variable
   P : ModeSystem 𝑖
 
 infixl 30 _∙_
-infix 30 Π_▹_
-infix 30 Π_▹[_]_
-infixr 22 _▹▹_
-infixr 22 _▹▹[_]_
-infix 30 Σ_▹_
-infixr 22 _××_
+infix 30 Π_/▹_
+infix 30 Π_/_▹_
+infix 30 Π_//_▹_
+infixr 32 _/_▹▹_
+infixr 32 _/▹▹_
+infix 30 Σ_/_▹_
+infix 30 Σ_//_▹_
+infixr 32 _××_
 -- infix 30 ⟦_⟧_▹_
 infixl 30 _ₛ•ₛ_ _•ₛ_ _ₛ•_
 infix 25 _[_]
@@ -105,7 +107,7 @@ pattern n1 = suc (zero)
 data MainKind : (ns : List (Metakind × Nat)) → Set where
   Ukind : MainKind []
 
-  Pikind  : MainKind ((term , n0) ∷ (term , n1) ∷ (term , n1) ∷ [])
+  Pikind  : MainKind ((term , n0) ∷ (term , n1) ∷ [])
   Lamkind : MainKind ((term , n1) ∷ [])
   Appkind : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
@@ -259,17 +261,22 @@ pattern end        = gen (main 𝓀-end) ([])
 
 -- Π_▹_ : (A : Term P n) (B : Term P (1+ n)) → Term P n  -- Dependent function type (B is a binder).
 
-Π_▹[_]_ : (A : Entry P n) -> (ξ : Term P (1+ n)) -> (B : Term P (1+ n)) → Term P n  -- Dependent function type (B is a binder).
-Π_▹[_]_ (A // μ) ξ B = gen (main Pikind) ([] ⦊ term A ∷ (μ ∷ []) ⦊ term ξ ∷ (μ ∷ []) ⦊ term B ∷ [])
+-- Π_▹[_]_ : (A : Entry P n) -> (ξ : Term P (1+ n)) -> (B : Term P (1+ n)) → Term P n  -- Dependent function type (B is a binder).
+-- Π_▹[_]_ (A // μ) ξ B = gen (main Pikind) ([] ⦊ term A ∷ (μ ∷ []) ⦊ term ξ ∷ (μ ∷ []) ⦊ term B ∷ [])
 
-Π_▹_ : (A : Entry P n) -> (B : Term P (1+ n)) → Term P n  -- Dependent function type (B is a binder).
-Π_▹_ (A // μ) B = gen (main Pikind) ([] ⦊ term A ∷ (μ ∷ []) ⦊ term end ∷ (μ ∷ []) ⦊ term B ∷ [])
+-- Π_▹_ : (A : Entry P n) -> (B : Term P (1+ n)) → Term P n  -- Dependent function type (B is a binder).
+-- Π_▹_ (A // μ) B = gen (main Pikind) ([] ⦊ term A ∷ (μ ∷ []) ⦊ term B ∷ [])
 
--- pattern Π_/_▹_ μ A B = gen (main Pikind) ([] ⦊ term A ∷ (μ ∷ []) ⦊ term end ∷ (μ ∷ []) ⦊ term B ∷ [])
+pattern Π_/▹_ A B = gen (main Pikind) ([] ⦊ term A ∷ (_ ↝ _ ∋ id ∷ []) ⦊ term B ∷ [])
+pattern Π_/_▹_ A μ B = gen (main Pikind) ([] ⦊ term A ∷ (_ ↝ _ ∋ μ ∷ []) ⦊ term B ∷ [])
+pattern Π_//_▹_ A μ B = gen (main Pikind) ([] ⦊ term A ∷ (μ ∷ []) ⦊ term B ∷ [])
 -- pattern Π_/_▹[_]_ A ξ B = gen (main Pikind) (A ∷ term ξ ∷ term B ∷ [])
 
-Σ_▹_ : (A : Entry P n) -> (B : Term P (1+ n)) → Term P n  -- Dependent function type (B is a binder).
-Σ_▹_ (A // μ) B = gen (main Sigmakind) ([] ⦊ term A ∷ (μ ∷ []) ⦊ term B ∷ [])
+-- Σ_▹_ : (A : Entry P n) -> (B : Term P (1+ n)) → Term P n  -- Dependent function type (B is a binder).
+-- Σ_▹_ (A // μ) B = gen (main Sigmakind) ([] ⦊ term A ∷ (μ ∷ []) ⦊ term B ∷ [])
+
+pattern Σ_/_▹_ A μ B  = gen (main Sigmakind) ([] ⦊ term A ∷ (_ ↝ _ ∋ μ ∷ []) ⦊ term B ∷ [])
+pattern Σ_//_▹_ A μ B = gen (main Sigmakind) ([] ⦊ term A ∷ (μ ∷ []) ⦊ term B ∷ [])
 
 -- Σ_▹_ : (A : Term P n) (B : Term P (1+ n)) → Term P n  -- Dependent sum type (B is a binder).
 -- pattern Σ_▹_ A B = gen (main Sigmakind) (A ∷ term B ∷ [])
@@ -287,7 +294,8 @@ pattern Empty = gen (leaf Emptykind) []
 pattern Unit = gen (leaf Unitkind) []
 
 -- lam    : (t : Term P (1+ n)) → Term P n  -- Function abstraction (binder).
-pattern lam μ t = gen (main Lamkind) (((_ ↝ _ ∋ μ) ∷ []) ⦊ term t ∷ [])
+pattern lam_↦_ μ t = gen (main Lamkind) (((_ ↝ _ ∋ μ) ∷ []) ⦊ term t ∷ [])
+infix 23 lam_↦_
 
 -- _∘_    : (t u : Term P n) → Term P n     -- Application.
 pattern _∘_ t u = gen (main Appkind) ([] ⦊ term t ∷ [] ⦊ term u ∷ [])
@@ -295,7 +303,7 @@ pattern _∘_ t u = gen (main Appkind) ([] ⦊ term t ∷ [] ⦊ term u ∷ [])
 
 prod : (t u : Term P n) → Term P n       -- Dependent products
 prod t u = gen (main Prodkind) ([] ⦊ term t ∷ [] ⦊ term u ∷ [])
-pattern _,ₜ_ t u = gen (main Prodkind) ([] ⦊ term t ∷ [] ⦊ term u ∷ [])
+pattern _,,_ t u = gen (main Prodkind) ([] ⦊ term t ∷ [] ⦊ term u ∷ [])
 
 fstₜ : (t : Term P n) → Term P n          -- First projection
 fstₜ t = gen (main Fstkind) ([] ⦊ term t ∷ [])
@@ -344,6 +352,7 @@ Emptyrec A e = gen (main Emptyreckind) ([] ⦊ term A ∷ [] ⦊ term e ∷ [])
 -- pattern comval a     = gen (main 𝓀-comval) (term a ∷ [])
 
 pattern Modal A μ     = gen (main 𝓀-Modal) ([] ⦊ term A ∷ [] ⦊ (modality (((_ ↝ _ ∋ μ)))) ∷ [])
+pattern ⟨_∣_⟩ A μ = Modal A μ
 -- pattern _＠_ L U     = gen (main 𝓀-＠) (term L ∷ (location U) ∷ [])
 -- pattern loc U t      = gen 𝓀-loc ((location U) ∷ term t ∷ []) -- NOTE, this one is *not* wrapped in `main`
 -- pattern unloc t      = gen (main 𝓀-unloc) ([] ⦊ term t ∷ [])
@@ -353,7 +362,8 @@ pattern Modal A μ     = gen (main 𝓀-Modal) ([] ⦊ term A ∷ [] ⦊ (modali
 -- pattern recv t       = gen (main 𝓀-recv) ([] ⦊ term t ∷ [])
 pattern mod t        = gen (main 𝓀-mod) ([] ⦊ term t ∷ [])
 pattern unmod t      = gen (main 𝓀-unmod) ([] ⦊ term t ∷ [])
-pattern letunmod μ t s  = gen (main 𝓀-letunmod) ([] ⦊ term t ∷ ((_ ↝ _ ∋ μ) ∷ []) ⦊ term s ∷ [])
+pattern letunmod[_]_by_ μ t s  = gen (main 𝓀-letunmod) ([] ⦊ term t ∷ ((_ ↝ _ ∋ μ) ∷ []) ⦊ term s ∷ [])
+infix 25 letunmod[_]_by_
 
 
 -- Transformations / Transitions
@@ -726,16 +736,22 @@ wkWhnf ρ (ne x)  = ne (wkNeutral ρ x)
 
 -- Non-dependent version of Π.
 
-_▹▹_ : Entry P n → Term P n → Term P n
-A ▹▹ B = Π A ▹ wk1 B
+_/_▹▹_ : ∀{k l} -> Term P n → ModeHom P k l -> Term P n → Term P n
+A / μ ▹▹ B = Π A / μ ▹ wk1 B
 
-_▹▹[_]_ : Entry P n → Term P n -> Term P n → Term P n
-A ▹▹[ ξ ] B = Π A ▹[ wk1 ξ ] wk1 B
+_/▹▹_ : ∀{m : Mode P} -> Term P n → Term P n → Term P n
+_/▹▹_ {m = m} A B = Π A / id {m = m} ▹ wk1 B
+
+-- _▹▹[_]_ : Entry P n → Term P n -> Term P n → Term P n
+-- A ▹▹[ ξ ] B = Π A ▹[ wk1 ξ ] wk1 B
 
 -- Non-dependent products.
 
-_××_ : Entry P n → Term P n → Term P n
-A ×× B = Σ A ▹ wk1 B
+-- _××_ : Entry P n → Term P n → Term P n
+-- (A // μ) ×× B = Σ A // μ ▹ wk1 B
+
+_××_ : ∀{k : Mode P} -> Term P n → Term P n → Term P n
+_××_ {k = k} A B = Σ A // k ↝ k ∋ id ▹ wk1 B
 
 
 ------------------------------------------------------------------------
@@ -830,6 +846,12 @@ mutual
   push ξs (transform ζ t) with ξ' , ζ' <- commute-Transition-vis ζ (get ξs)
                           = transform ζ' (push (transitions ξ' (extensions ξs)) t)
   push ξs (var x ζ) = var x (ζ ◆-Transition (getVarTransition (extensions ξs) x ↷-Transition get ξs))
+
+
+_^[_] : Term P n -> ∀{μ η : SomeModeHom P} -> ModalityTrans P all μ η -> Term P n
+_^[_] A ξ = push (uniformTransitions (incl ξ)) A
+
+infix 60 _^[_]
 
 
 mutual

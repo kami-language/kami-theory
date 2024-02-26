@@ -56,8 +56,9 @@ module Typecheck (P : ModeSystem 𝑖) where
   derive-Ctx : ∀ (Γ : Con (Entry P) n) -> Maybe (⊢Ctx Γ)
   derive-Term-Sort↓,Mod↓ : ∀ Γ -> (t A : Term P n) → (p : SomeModeHom P) -> Maybe (Γ ⊢ t ∶ A // p)
 
-  --derive-Entry Γ (UU / μs)    = map-Maybe (λ P -> UUⱼ {{ΓP = because P}}) (derive-Ctx Γ)
+  derive-Entry Γ (UU / μs)    = map-Maybe (λ P -> UUⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Entry Γ (NN / μs)    = map-Maybe (λ P -> NNⱼ {{ΓP = because P}}) (derive-Ctx Γ)
+  derive-Entry Γ (BB / μs)    = map-Maybe (λ P -> BBⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Entry Γ (Vec A t // μs) = do
     A′ <- derive-Entry Γ (A // μs )
     t′ <- derive-Term-Sort↓,Mod↓ Γ t NN (μs)
@@ -69,7 +70,6 @@ module Typecheck (P : ModeSystem 𝑖) where
           A' <- derive-Entry Γ (A / μ ◆ μs)
           just (Modalⱼ A')
 
-  derive-Entry Γ (Tr // ◯ ↝ ◯ ∋ id) = yes Trⱼ
   -- map-Maybe (λ P -> Emptyⱼ {{ΓP = because P}}) (derive-Ctx Γ)
 
 
@@ -82,11 +82,26 @@ module Typecheck (P : ModeSystem 𝑖) where
     A' <- derive-Entry Γ (A / ML p)
     B' <- derive-Entry (Γ ∙ (A / ML q)) (B / ML q)
     just (Σⱼ A' ▹ B')
-  derive-Entry Γ (Π (A / ML p) ▹ B / ML q) = do
-    A' <- derive-Entry Γ (A / ML p)
-    B' <- derive-Entry (Γ ∙ (A / ML p)) (B / ML q)
-    just (Πⱼ A' ▹ B')
     -}
+  derive-Entry Γ (var x ξ // η) = do
+    res <- derive-Term-Sort↓,Mod↓ Γ (var x ξ) UU η
+    just (Univⱼ res)
+  derive-Entry Γ ((Π A // (_ ↝ k ∋ μ) ▹ B) // l ↝ _ ∋ η) with k ≟ l
+  ... | no _ = nothing
+  ... | yes refl = do
+    A' <- derive-Entry Γ (A / (μ ◆ η))
+    B' <- derive-Entry (Γ ∙ (A / μ ◆ η)) (B / η)
+    just (Πⱼ A' ▹ B')
+  derive-Entry Γ ((Σ A // (k0 ↝ k ∋ μ) ▹ B) // l ↝ _ ∋ η) with k ≟ l
+  ... | no _ = nothing
+  ... | yes refl with k0 ≟ k
+  ... | no _ = nothing
+  ... | yes refl with μ ≟ id
+  ... | no _ = nothing
+  ... | yes refl = do
+    A' <- derive-Entry Γ (A / η)
+    B' <- derive-Entry (Γ ∙ (A / η)) (B / η)
+    just (Σⱼ A' ▹ B')
   derive-Entry Γ E = nothing
 
 
@@ -165,11 +180,12 @@ module Typecheck (P : ModeSystem 𝑖) where
 
   -------------------
   -- standard MLTT
-  derive-Term-Sort↓,Mod↓ Γ (var x (incl (μ ⇒ η ∋ ξ))) A η' with (derive-Var-Sort↓,Mod↑ Γ x A)
-  ... | nothing = nothing
-  ... | yes (μ' , A') with (_ ↝ _ ∋ μ) ≟ μ'
+  derive-Term-Sort↓,Mod↓ Γ (var x (incl (μ ⇒ η ∋ ξ))) A η' with (infer-Var Γ x)
+  ... | ((vA // μ') , A') with (_ ↝ _ ∋ μ) ≟ μ'
   ... | no p = nothing
   ... | yes refl with (_ ↝ _ ∋ η) ≟ η'
+  ... | no p = nothing
+  ... | yes refl with vA ^[ _ ⇒ _ ∋ ξ ] ≟ A
   ... | no p = nothing
   ... | yes refl = do
     G' <- derive-Ctx Γ

@@ -65,6 +65,12 @@ module _ {X : 𝒰 𝑖} {R : X -> X -> 𝒰 𝑗} where
       hasDecidableEquality:Path : ∀{m n} -> hasDecidableEquality (Path R m n)
       hasDecidableEquality:Path = record { _≟_ = decide-≡-Path }
 
+    β-decide-≡-Path : ∀{m n} -> {x : Path R m n} -> decide-≡-Path x x ≡ yes refl
+    β-decide-≡-Path = {!!}
+
+    {-# REWRITE β-decide-≡-Path #-}
+
+
 ---------------------------------------------
 -- Visibility parametrization
 --

@@ -120,7 +120,7 @@ module Examples where
 
 
 
-  _⟶_ = _▹▹_
+  -- _⟶_ = _▹▹_
 
   private variable
     -- n m : Nat
@@ -143,25 +143,139 @@ module Examples where
   idM : (a : Mode M) -> ModeHom M a a
   idM a = id
 
+  pattern ＠ u = `＠` u ⨾ id
+  pattern ◻ = `[]` ⨾ id
+
   ---------------------------------------------
   -- small examples
 
   P0 : εε ∙ (NN / (`＠` uu ⨾ id)) ⊢ var zero (incl idT) ∶ NN / `＠` uu ⨾ id
   P0 = var zero idT
 
-  P1 : εε ⊢ ((Modal NN (`＠` uu ⨾ id) / id) ▹▹[ _ ] Modal NN (`＠` uu ⨾ id)) / id
+
+
+  P1 : εε ⊢ ⟨ NN ∣ ＠ uu ⟩ /▹▹ ⟨ NN ∣ ＠ uu ⟩ / id
        ≔ _
-  P1 = lamⱼ (Modalⱼ (NNⱼ )) (letunmodⱼ (var zero idT) (modⱼ ((var zero idT))))
+  P1 = lamⱼ (Modalⱼ (NNⱼ )) ↦ (letunmodⱼ (var zero idT) into (Modalⱼ NNⱼ) by (modⱼ ((var zero idT))))
+
+  wk-Entry : Γ ⊢Entry A / μ -> Γ ∙ (B / η) ⊢Entry wk1 A / μ
+  wk-Entry = {!!}
+
+
+  -- Axiom K
+  -- (Every modality commutes with products)
+  --
+  -- AxiomK :
+  --        (⊢Ctx Γ)
+  --        -> (Γ ⊢Entry A / μ)
+  --        -> (Γ ⊢Entry B / μ)
+  --        -> Γ ⊢ (Modal (A ×× B) μ / id) ▹▹ (Modal A μ) ×× (Modal B μ) / id
+  --          ≔ {!!}
+  -- AxiomK {Γ = Γ} {A = A} {μ = μ} {B = B} Γp Ap Bp =
+
+  --   let Cp : Γ ⊢Entry Modal (A ×× B) μ / id
+  --       Cp = Modalⱼ ((Σⱼ Ap ▹ wk-Entry Bp))
+
+  --   in lamⱼ Cp
+  --     (letunmodⱼ (Σⱼ {!Modalⱼ ?!} ▹ {!!}) (var {{because (Γp ∙ Cp)}} zero idT)
+  --     {!!})
+
+  -- AxiomK-Example :
+  --        ε ⊢ (Modal (NN ×× BB) μ / id) ▹▹ (Modal NN μ) ×× (Modal BB μ) / id
+  --          ≔ {!!}
+  -- AxiomK-Example {μ = μ} =
+
+  --   let Cp : ε ⊢Entry Modal (NN ×× BB) μ / id
+  --       Cp = Modalⱼ ((Σⱼ NNⱼ ▹ BBⱼ))
+
+  --   in lamⱼ Cp
+  --     (letunmodⱼ (Σⱼ Modalⱼ (NNⱼ {{because {!!}}}) ▹ Modalⱼ (BBⱼ {{{!!}}})) (var {{because (ε ∙ Cp)}} zero idT)
+  --     (prodⱼ (Modal NN μ) (Modal BB μ) {{{!!}}} {{{!!}}} (modⱼ (fstⱼ (var {{{!!}}} zero idT))) ((modⱼ (sndⱼ (var {{{!!}}} zero idT))))))
+
+  pattern x0 = var zero (incl idT)
+  pattern x1 = var (suc zero) (incl idT)
+  pattern x2 = var (suc (suc zero)) (incl idT)
+  pattern x0[_] ξ = var zero (incl ξ)
+  pattern x1[_] ξ = var (suc zero) (incl ξ)
+  pattern x1[_] ξ = var (suc (suc zero)) (incl ξ)
+
+  pattern x0ⱼ = var zero idT
+  pattern x1ⱼ = var (suc zero) idT
+  pattern x2ⱼ = var (suc (suc zero)) idT
+  pattern x3ⱼ = var (suc (suc (suc zero))) idT
+
+  pattern x0[_]ⱼ ξ = var zero ξ
+  pattern x1[_]ⱼ ξ = var (suc zero) ξ
+  pattern x2[_]ⱼ ξ = var (suc (suc zero)) ξ
+  pattern x3[_]ⱼ ξ = var (suc (suc (suc zero))) ξ
+
+  pattern x0ⱼ' P = var {{P}} zero idT
+  pattern x1ⱼ' P = var {{P}} (suc zero) idT
+  pattern x2ⱼ' P = var {{P}} (suc (suc zero)) idT
+  pattern x3ⱼ' P = var {{P}} (suc (suc (suc zero))) idT
+
+  _××ⱼ_  : {μ : ModeHom M k l}
+          → Γ ⊢Entry (A / μ)
+          → Γ ⊢Entry (B / μ)
+          → Γ ⊢Entry ((Σ A // k ↝ k ∋ id ▹ wk1 B) / μ)
+  _××ⱼ_ Ap Bp = Σⱼ Ap ▹ wk-Entry Bp
+
+
+  ---------------------------------------------
+  -- Prop (Axiom K): Arbitrary Modal types commute with products
+  --
+  {-
+  AxiomK : ε ⊢ Π UU / μ ▹ Π UU / μ ▹ ⟨ x1 ×× x0 ∣ μ ⟩ /▹▹ ⟨ x1 ∣ μ ⟩ ×× ⟨ x0 ∣ μ ⟩ / id
+           ≔ lam μ ↦ lam μ ↦ lam id ↦ letunmod[ μ ] x0 by (mod (fstₜ x0) ,, mod (sndₜ x0))
+  AxiomK {μ = μ} = lamⱼ UUⱼ ↦
+                   lamⱼ UUⱼ ↦
+                   lamⱼ Modalⱼ (Univⱼ x1ⱼ ××ⱼ Univⱼ x0ⱼ) ↦
+                   letunmodⱼ x0ⱼ
+                     into Modalⱼ (Univⱼ x3ⱼ) ××ⱼ Modalⱼ (Univⱼ x2ⱼ)
+                     by
+                   introⱼΣ Modalⱼ (Univⱼ x3ⱼ) ▹ Modalⱼ (Univⱼ x3ⱼ)
+                     by
+                   modⱼ (fstⱼ x0ⱼ) , modⱼ (sndⱼ x0ⱼ)
+  -}
+
+  ---------------------------------------------
+  -- Prop: We can state the unit and counit of the (＠ u ⊣ ◻) adjunction.
+  --
+  -- We call the unit of this adjunction "dispatch", because it allows
+  -- us to schedule computations (at possibly different) locations.
+  --
+  ηᵈˢ : ∀{u} -> ModalityTrans M all (▲ ↝ ▲ ∋ id) (▲ ↝ ▲ ∋ `＠` u ⨾ ◻)
+  ηᵈˢ {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (id ⌟[ send u ]⌞ id ⌟) ∷ [])) ]
+
+  dispatch : ε ⊢ Π UU /▹ x0 /▹▹ ⟨ x0 ^[ ηᵈˢ ] ∣ ＠ uu ◆ ◻  ⟩ / id
+             ≔ lam id ↦ lam id ↦ mod x0[ ηᵈˢ ]
+  dispatch = lamⱼ UUⱼ ↦
+             lamⱼ Univⱼ x0ⱼ ↦
+             modⱼ x0[ ηᵈˢ ]ⱼ
+
+  --
+  -- The counit on the other hand allows us to wait for the execution
+  -- of previously dispatched executions. We thus call it "sync".
+  --
+  εᵈˢ : ∀{u} -> ModalityTrans M all (◯ ↝ ◯ ∋ (◻ ◆ ＠ u)) (◯ ↝ ◯ ∋ id)
+  εᵈˢ {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (id ⌟[ recv u ]⌞ id ⌟) ∷ [])) ]
+
+  sync : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ var zero id ∣ ◻ ◆ ＠ uu  ⟩ /▹▹ var zero {! ?!} / id
+         ≔ {!!}
+  sync = lamⱼ UUⱼ ↦
+         lamⱼ Modalⱼ (Univⱼ {!!}) ↦
+         letunmodⱼ (var {{{!!}}} zero (_ ⇒ _ ∋ {!!})) into Univⱼ {!!} by
+         var {{{!!}}} zero εᵈˢ
 
 
   ---------------------------------------------
   -- manual examples
 
-  Com : ∀ (U V : P) -> ModalityTrans M vis (_ ↝ _ ∋ `＠` U ⨾ id) (_ ↝ _ ∋ `＠` V ⨾ id)
-  Com U V = _ ⇒ _ ∋ [ (incl
-          ( incl (id ⌟[ send V ]⌞ `＠` U ⨾ id ⌟)
-          ∷ incl (`＠` V ⨾ id ⌟[ recv U ]⌞ id ⌟)
-          ∷ [])) ] --  {!id ⨾ base (send V)!} ◇ {!!}
+  -- Com : ∀ (U V : P) -> ModalityTrans M vis (_ ↝ _ ∋ `＠` U ⨾ id) (_ ↝ _ ∋ `＠` V ⨾ id)
+  -- Com U V = _ ⇒ _ ∋ [ (incl
+  --         ( incl (id ⌟[ send V ]⌞ `＠` U ⨾ id ⌟)
+  --         ∷ incl (`＠` V ⨾ id ⌟[ recv U ]⌞ id ⌟)
+  --         ∷ [])) ] --  {!id ⨾ base (send V)!} ◇ {!!}
 
   -- sync : Γ ⊢Entry A / μ -> Γ ⊢ Π 
   --      -> Γ ⊢ t ∶ A / μ

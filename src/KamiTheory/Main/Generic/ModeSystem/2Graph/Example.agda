@@ -55,6 +55,11 @@ module SendReceiveNarrow-2Graph (P : Preorder 𝑖) {{_ : hasDecidableEquality �
     hasDecidableEquality:Mode-SRN : hasDecidableEquality Mode-SRN
     hasDecidableEquality:Mode-SRN = record { _≟_ = decide-≡-Mode-SRN }
 
+  β-decide-≡-Mode-SRN : ∀{x} -> decide-≡-Mode-SRN x x ≡ yes refl
+  β-decide-≡-Mode-SRN = {!!}
+
+  {-# REWRITE β-decide-≡-Mode-SRN #-}
+
   decide-≡-BaseModeHom-SRN : ∀{a b} -> (x y : BaseModeHom-SRN a b) → isDecidable (x ≡ y)
   decide-≡-BaseModeHom-SRN (`＠` U) (`＠` V) with U ≟ V
   ... | no p = no λ {refl -> p refl}
@@ -65,6 +70,11 @@ module SendReceiveNarrow-2Graph (P : Preorder 𝑖) {{_ : hasDecidableEquality �
     hasDecidableEquality:BaseModeHom-SRN : ∀{a b} -> hasDecidableEquality (BaseModeHom-SRN a b)
     hasDecidableEquality:BaseModeHom-SRN = record { _≟_ = decide-≡-BaseModeHom-SRN }
 
+  β-decide-≡-BaseModeHom-SRN : ∀{a b} -> {x : BaseModeHom-SRN a b} -> decide-≡-BaseModeHom-SRN x x ≡ yes refl
+  β-decide-≡-BaseModeHom-SRN = {!!}
+
+  {-# REWRITE β-decide-≡-BaseModeHom-SRN #-}
+
   decide-≡-BaseModeTrans-SRN : ∀{v a b} -> {μ η : Path BaseModeHom-SRN a b} -> (x y : BaseModeTrans-SRN v μ η) → isDecidable (x ≡ y)
   decide-≡-BaseModeTrans-SRN (send U) (send .U) = yes refl
   decide-≡-BaseModeTrans-SRN (recv U) (recv .U) = yes refl
@@ -74,6 +84,11 @@ module SendReceiveNarrow-2Graph (P : Preorder 𝑖) {{_ : hasDecidableEquality �
   instance
     hasDecidableEquality:BaseModeTrans-SRN : ∀{v a b} -> {μ η : Path BaseModeHom-SRN a b} -> hasDecidableEquality (BaseModeTrans-SRN v μ η)
     hasDecidableEquality:BaseModeTrans-SRN = record { _≟_ = decide-≡-BaseModeTrans-SRN }
+
+  β-decide-≡-BaseModeTrans-SRN : ∀{v a b} -> {μ η : Path BaseModeHom-SRN a b} -> {x : BaseModeTrans-SRN v μ η} -> decide-≡-BaseModeTrans-SRN x x ≡ yes refl
+  β-decide-≡-BaseModeTrans-SRN = {!!}
+
+  {-# REWRITE β-decide-≡-BaseModeTrans-SRN #-}
 
 
   SRN : 2Graph _

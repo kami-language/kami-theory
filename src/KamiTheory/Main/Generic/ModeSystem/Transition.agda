@@ -30,9 +30,12 @@ private variable
 data ModalityTrans (M : ModeSystem 𝑖) (r : Range) : (μ η : SomeModeHom M) -> 𝒰 𝑖 where
   _⇒_∋_ : ∀{m n : Mode M} -> (μ η : ModeHom M m n) -> (ξ : ModeTrans* M r μ η) -> ModalityTrans M r (m ↝ n ∋ μ) (m ↝ n ∋ η)
 
-idT : ∀{M : ModeSystem 𝑖} -> ∀{μ : SomeModeHom M } -> ModalityTrans M all μ μ
-idT = (_ ⇒ _ ∋ [ incl [] ∣ incl [] ])
-  where open 2CellDefinition.2CellDefinition
+open 2CellDefinition.2CellDefinition
+
+pattern idT = _ ⇒ _ ∋ [ incl [] ∣ incl [] ]
+
+-- idT : ∀{M : ModeSystem 𝑖} -> ∀{μ : SomeModeHom M } -> ModalityTrans M all μ μ
+-- idT = (_ ⇒ _ ∋ [ incl [] ∣ incl [] ])
 
 
 
