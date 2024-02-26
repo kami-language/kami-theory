@@ -260,12 +260,12 @@ module Examples where
   εᵈˢ : ∀{u} -> ModalityTrans M all (◯ ↝ ◯ ∋ (◻ ◆ ＠ u)) (◯ ↝ ◯ ∋ id)
   εᵈˢ {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (id ⌟[ recv u ]⌞ id ⌟) ∷ [])) ]
 
-  sync : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ var zero id ∣ ◻ ◆ ＠ uu  ⟩ /▹▹ var zero {! ?!} / id
-         ≔ {!!}
+  sync : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ x0 ∣ ◻ ◆ ＠ uu  ⟩ /▹▹ x0[ εᵈˢ ] / id
+         ≔ lam (◻ ◆ ＠ uu) ↦ lam id ↦ letunmod[ ◻ ◆ ＠ uu ] x0 by x0[ εᵈˢ ]
   sync = lamⱼ UUⱼ ↦
-         lamⱼ Modalⱼ (Univⱼ {!!}) ↦
-         letunmodⱼ (var {{{!!}}} zero (_ ⇒ _ ∋ {!!})) into Univⱼ {!!} by
-         var {{{!!}}} zero εᵈˢ
+         lamⱼ Modalⱼ (Univⱼ x0ⱼ) ↦
+         letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
+         x0[ εᵈˢ ]ⱼ
 
 
   ---------------------------------------------

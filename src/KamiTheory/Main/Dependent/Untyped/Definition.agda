@@ -147,13 +147,13 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
 
   -------------------
   -- Kami types (global)
-  𝓀-Modal : MainKind ((term , n0) ∷ (modality , n0) ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
+  -- 𝓀-Modal : MainKind ((term , n0) ∷ (modality , n0) ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
   -- 𝓀-＠ : MainKind ((term , n0) ∷ (location , n0) ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
   -- 𝓀-Com : MainKind ((location , n0) ∷ (term , n0) ∷ []) -- Com : ⟨ P ⟩ -> Γ ⊢Global -> Γ ⊢Global
 
   -- Kami modality terms
   𝓀-mod : MainKind ((term , n0) ∷ [])
-  𝓀-unmod : MainKind ((term , n0) ∷ [])
+  -- 𝓀-unmod : MainKind ((term , n0) ∷ [])
   𝓀-letunmod : MainKind ((term , n0) ∷ (term , n1) ∷ [])
   -- 𝓀-send : MainKind ((term , n0) ∷ [])
   -- 𝓀-recv : MainKind ((term , n0) ∷ [])
@@ -163,20 +163,20 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   -- Mode transformations (transitions)
 
   -- The type of transition spaces
-  𝓀-Tr : MainKind []
+  -- 𝓀-Tr : MainKind []
 
   -- Constructing a transition space with a single transition
-  𝓀-tr : MainKind ((term , n0) ∷ (modality , n0) ∷ (modality , n0) ∷ [])
+  -- 𝓀-tr : MainKind ((term , n0) ∷ (modality , n0) ∷ (modality , n0) ∷ [])
 
   -- identity transition
-  𝓀-end : MainKind []
+  -- 𝓀-end : MainKind []
 
   -- Constructing a space from multiple transitions
   -- 𝓀-transitions : MainKind ((transitions , n0) ∷ [])
 
   -- Concatenating two spaces
-  𝓀-≫ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
-  𝓀-∥ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
+  -- 𝓀-≫ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
+  -- 𝓀-∥ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
 
   ---------------------------------------------
   -- Combining transition spaces with types
@@ -209,6 +209,7 @@ data Kind : (ns : List (Metakind × Nat)) → Set where
   main : ∀{ns} -> MainKind ns -> Kind ns
   leaf : LeafKind -> Kind []
   𝓀-transform : Kind ((transition , n0) ∷ (term , n0) ∷ [])
+  𝓀-Modal : Kind ((term , n0) ∷ (modality , n0) ∷ []) -- _＠_ : (L : Γ ⊢Local) -> (U : ⟨ P ⟩) -> Γ ⊢Global
 
 -- Term Ps are indexed by its number of unbound variables and are either:
 -- de Bruijn style variables or
@@ -257,7 +258,7 @@ private
 -- UU      : Term P n                      -- Universe.
 pattern UU = gen (main Ukind) []
 
-pattern end        = gen (main 𝓀-end) ([])
+-- pattern end        = gen (main 𝓀-end) ([])
 
 -- Π_▹_ : (A : Term P n) (B : Term P (1+ n)) → Term P n  -- Dependent function type (B is a binder).
 
@@ -351,7 +352,7 @@ Emptyrec A e = gen (main Emptyreckind) ([] ⦊ term A ∷ [] ⦊ term e ∷ [])
 -- pattern comtype a    = gen (main 𝓀-comtype) (term a ∷ [])
 -- pattern comval a     = gen (main 𝓀-comval) (term a ∷ [])
 
-pattern Modal A μ     = gen (main 𝓀-Modal) ([] ⦊ term A ∷ [] ⦊ (modality (((_ ↝ _ ∋ μ)))) ∷ [])
+pattern Modal A μ     = gen (𝓀-Modal) ([] ⦊ term A ∷ [] ⦊ (modality (((_ ↝ _ ∋ μ)))) ∷ [])
 pattern ⟨_∣_⟩ A μ = Modal A μ
 -- pattern _＠_ L U     = gen (main 𝓀-＠) (term L ∷ (location U) ∷ [])
 -- pattern loc U t      = gen 𝓀-loc ((location U) ∷ term t ∷ []) -- NOTE, this one is *not* wrapped in `main`
@@ -361,21 +362,21 @@ pattern ⟨_∣_⟩ A μ = Modal A μ
 -- pattern send t       = gen (main 𝓀-send) ([] ⦊ term t ∷ [])
 -- pattern recv t       = gen (main 𝓀-recv) ([] ⦊ term t ∷ [])
 pattern mod t        = gen (main 𝓀-mod) ([] ⦊ term t ∷ [])
-pattern unmod t      = gen (main 𝓀-unmod) ([] ⦊ term t ∷ [])
+-- pattern unmod t      = gen (main 𝓀-unmod) ([] ⦊ term t ∷ [])
 pattern letunmod[_]_by_ μ t s  = gen (main 𝓀-letunmod) ([] ⦊ term t ∷ ((_ ↝ _ ∋ μ) ∷ []) ⦊ term s ∷ [])
 infix 25 letunmod[_]_by_
 
 
 -- Transformations / Transitions
-pattern Tr           = gen (main 𝓀-Tr) ([])
-pattern _/_⇒_ A μ η = gen (main 𝓀-tr) ([] ⦊ term A ∷ [] ⦊ modality μ ∷ [] ⦊ modality η ∷ [])
-pattern _≫_ m n     = gen (main 𝓀-≫) ([] ⦊ term m ∷ [] ⦊ term n ∷ [])
-pattern _∥_ m n     = gen (main 𝓀-∥) ([] ⦊ term m ∷ [] ⦊ term n ∷ [])
+-- pattern Tr           = gen (main 𝓀-Tr) ([])
+-- pattern _/_⇒_ A μ η = gen (main 𝓀-tr) ([] ⦊ term A ∷ [] ⦊ modality μ ∷ [] ⦊ modality η ∷ [])
+-- pattern _≫_ m n     = gen (main 𝓀-≫) ([] ⦊ term m ∷ [] ⦊ term n ∷ [])
+-- pattern _∥_ m n     = gen (main 𝓀-∥) ([] ⦊ term m ∷ [] ⦊ term n ∷ [])
 -- pattern [_]▹_ T A    = gen (main 𝓀-[]▹) (term T ∷ term A ∷ [])
 -- infixr 30 [_]▹_
 
-infixl 40 _≫_
-infixl 30 _∥_
+-- infixl 40 _≫_
+-- infixl 30 _∥_
 
 -- pattern exec t       = gen (main 𝓀-exec) ([] ⦊ term t ∷ [])
 -- pattern prepare t       = gen (main 𝓀-prepare) ([] ⦊ term t ∷ [])
@@ -385,7 +386,6 @@ pattern transform ξ t  = gen (𝓀-transform) ([] ⦊ transition ξ ∷ [] ⦊ 
 -- pattern let-tr t s   = gen (main 𝓀-let-tr) ([] ⦊ term t ∷ term s ∷ [])
 -- pattern let-in t s   = gen (main 𝓀-let-in) ([] ⦊ term t ∷ term s ∷ [])
 
-infixl 30 _/_⇒_
 
 
 -- pattern locskip      = gen (main 𝓀-locskip) []
@@ -775,6 +775,7 @@ record Transitions (P : ModeSystem 𝑖) (n : Nat) (r : Range) : 𝒰 𝑖 where
   constructor transitions
   field get : Transition P r
   field extensions : VarExtensionWk P n -- NOTE: The modalities' right point has to match with the left point of the transition
+  field postExtension : Modality P
 
 open Transitions public
 
@@ -793,7 +794,7 @@ uniformExtension {n = 1+ n} = id ∷ uniformExtension
 -- a uniform transitions collection can be created from a single
 -- transition
 uniformTransitions : ∀{v} -> Transition P v -> Transitions P n v
-uniformTransitions ξ = transitions ξ uniformExtension
+uniformTransitions ξ = transitions ξ uniformExtension id
 
 -- liftVarsSingle : Modality P -> (Fin n -> Modality P) -> (Fin n -> Modality P)
 -- liftVarsSingle μ vars = λ i -> μ ◆-Modality vars i
@@ -823,7 +824,7 @@ liftVarExtension : ∀{b} -> (μs : StdVec (SomeModeHom P) b) -> (xs : VarExtens
 liftVarExtension μs xs = intoModalities μs ++ xs
 
 liftTransitions : ∀{b} -> (StdVec (SomeModeHom P) b) -> Transitions P n all -> Transitions P (b + n) all
-liftTransitions μs (transitions ξ vars) = transitions ξ (liftVarExtension μs vars)
+liftTransitions μs (transitions ξ vars post) = transitions ξ (liftVarExtension μs vars) post
 
 
 -- Pushes a transition down the term. We push it until the next
@@ -844,8 +845,9 @@ mutual
   push ξs (gen (main x) c) = gen (main x) (push-Gen ξs c)
   push ξs (gen (leaf x) c) = gen (leaf x) []
   push ξs (transform ζ t) with ξ' , ζ' <- commute-Transition-vis ζ (get ξs)
-                          = transform ζ' (push (transitions ξ' (extensions ξs)) t)
-  push ξs (var x ζ) = var x (ζ ◆-Transition (getVarTransition (extensions ξs) x ↷-Transition get ξs))
+                          = transform ζ' (push (transitions ξ' (extensions ξs) (postExtension ξs)) t)
+  push ξs ⟨ A ∣ μ ⟩ = ⟨ push (transitions (get ξs) (extensions ξs) ((incl (_ ↝ _ ∋ μ) ◆-Modality (postExtension ξs)))) A ∣ μ ⟩
+  push ξs (var x ζ) = var x (ζ ◆-Transition ((getVarTransition (extensions ξs) x ↷-Transition get ξs) ↶-Transition postExtension ξs))
 
 
 _^[_] : Term P n -> ∀{μ η : SomeModeHom P} -> ModalityTrans P all μ η -> Term P n
@@ -863,6 +865,7 @@ mutual
   untransform-Term (gen (main x) c) = gen (main x) (untransform-Gen c)
   untransform-Term (gen (leaf x) c) = gen (leaf x) []
   untransform-Term (gen 𝓀-transform ([] ⦊ (transition ξ) ∷ [] ⦊ (term t) ∷ [])) = push (uniformTransitions (into-all-Transition ξ)) (untransform-Term t)
+  untransform-Term ⟨ A ∣ μ ⟩ = ⟨ untransform-Term A ∣ μ ⟩
   untransform-Term (var x x₁) = var x x₁
 
   untransform-KindedTerm : ∀{k} -> KindedTerm P n k -> KindedTerm P n k

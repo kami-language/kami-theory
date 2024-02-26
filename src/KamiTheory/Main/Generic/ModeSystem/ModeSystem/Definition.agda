@@ -108,6 +108,13 @@ module _ {M : ModeSystem 𝑖} where
   ϕ ↷-ModeTrans* [ ξ ] = [ incl (ϕ ⧕ ⟨ ξ ⟩) ]
   ϕ ↷-ModeTrans* [ iξ ∣ vξ ] = [ incl (ϕ ⧕ ⟨ iξ ⟩) ∣ incl (ϕ ⧕ ⟨ vξ ⟩) ]
 
+  _↶-ModeTrans*_ : {a b c : Mode M}
+                  -> {μ η : ModeHom M a b} -> ModeTrans* M r μ η
+                  -> (ϕ : ModeHom M b c)
+                  -> ModeTrans* M r (μ ◆ ϕ) (η ◆ ϕ)
+  [ ξ ] ↶-ModeTrans* ϕ = [ incl (⟨ ξ ⟩ ⧔ ϕ) ]
+  [ iξ ∣ vξ ] ↶-ModeTrans* ϕ = [ incl (⟨ iξ ⟩ ⧔ ϕ) ∣ incl (⟨ vξ ⟩ ⧔ ϕ) ]
+
 
   into-all-ModeTrans* : {a b : Mode M}
                   -> {μ η : ModeHom M a b} -> ModeTrans* M vis μ η

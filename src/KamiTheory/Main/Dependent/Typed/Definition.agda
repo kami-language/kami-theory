@@ -193,7 +193,7 @@ module Judgements (P : ModeSystem 𝑖) where
               -> Γ ∙ (X / (η ◆ μ)) ⊢ s ∶ Y [ mod (var x0 id) ]↑ / ω
               -> Γ ⊢ letunmod[ η ] t by s ∶ Y [ t ] / ω
 
-    unmodⱼ : Γ ⊢ t ∶ Modal X η / μ -> Γ ⊢ unmod t ∶ X / (η ◆ μ)
+    -- unmodⱼ : Γ ⊢ t ∶ Modal X η / μ -> Γ ⊢ unmod t ∶ X / (η ◆ μ)
 
 
 

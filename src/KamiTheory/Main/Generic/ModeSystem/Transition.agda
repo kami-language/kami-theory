@@ -89,6 +89,15 @@ module _ {M : ModeSystem 𝑖} where
   ... | no p = fail
   ... | yes refl = incl ((ϕ ◆ μ) ⇒ (ϕ ◆ η) ∋ (ϕ ↷-ModeTrans* ξ))
 
+  _↶-Transition_ : Transition M r -> Modality M -> Transition M r
+  ξ ↶-Transition id = ξ
+  ξ ↶-Transition fail = fail
+  id ↶-Transition incl ϕ = id
+  fail ↶-Transition incl ϕ = fail
+  incl (_⇒_∋_ {m = a} {n = b} μ η ξ) ↶-Transition incl (c ↝ d ∋ ϕ) with b ≟ c
+  ... | no p = fail
+  ... | yes refl = incl ((μ ◆ ϕ) ⇒ (η ◆ ϕ) ∋ (ξ ↶-ModeTrans* ϕ))
+
   into-all-Transition : Transition M vis -> Transition M all
   into-all-Transition id = id
   into-all-Transition fail = fail

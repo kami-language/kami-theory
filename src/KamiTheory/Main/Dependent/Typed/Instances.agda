@@ -64,7 +64,7 @@ module Typecheck (P : ModeSystem 𝑖) where
     t′ <- derive-Term-Sort↓,Mod↓ Γ t NN (μs)
     just (Vecⱼ A′ t′)
 
-  derive-Entry Γ (gen (main 𝓀-Modal) ([] ⦊ term A ∷ [] ⦊ modality (l ↝ k0 ∋ μ) ∷ []) // k1 ↝ m ∋ μs) with k0 ≟ k1
+  derive-Entry Γ (gen 𝓀-Modal ([] ⦊ term A ∷ [] ⦊ modality (l ↝ k0 ∋ μ) ∷ []) // k1 ↝ m ∋ μs) with k0 ≟ k1
   ... | no p = nothing
   ... | yes refl-≡ = do
           A' <- derive-Entry Γ (A / μ ◆ μs)

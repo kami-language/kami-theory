@@ -111,6 +111,7 @@ leaf x ≟-Kind leaf y with x ≟ y
 ... | no y = no λ {refl -> y refl}
 ... | yes refl = yes refl
 𝓀-transform ≟-Kind 𝓀-transform = yes refl-≡
+𝓀-Modal ≟-Kind 𝓀-Modal = yes refl
 
 instance
   hasDecidableEquality:Kind : ∀{ns} -> hasDecidableEquality (Kind ns)
