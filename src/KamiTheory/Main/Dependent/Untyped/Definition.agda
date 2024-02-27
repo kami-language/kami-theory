@@ -300,6 +300,7 @@ infix 23 lam_↦_
 
 -- _∘_    : (t u : Term P n) → Term P n     -- Application.
 pattern _∘_ t u = gen (main Appkind) ([] ⦊ term t ∷ [] ⦊ term u ∷ [])
+infixl 24 _∘_
 
 
 prod : (t u : Term P n) → Term P n       -- Dependent products

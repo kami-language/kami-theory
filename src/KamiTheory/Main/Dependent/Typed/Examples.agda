@@ -161,6 +161,9 @@ module Examples where
   wk-Entry : Γ ⊢Entry A / μ -> Γ ∙ (B / η) ⊢Entry wk1 A / μ
   wk-Entry = {!!}
 
+  wk-Term : Γ ⊢ t ∶ A / μ -> Γ ∙ (B / η) ⊢ wk1 t ∶ wk1 A / μ
+  wk-Term = {!!}
+
 
   -- Axiom K
   -- (Every modality commutes with products)
@@ -266,12 +269,23 @@ module Examples where
   εᵈˢ : ∀{u} -> ModalityTrans M all (◯ ↝ ◯ ∋ (◻ ◆ ＠ u)) (◯ ↝ ◯ ∋ id)
   εᵈˢ {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (id ⌟[ recv u ]⌞ id ⌟) ∷ [])) ]
 
+  _★εᵈˢ★_ : (μ : ModeHom M k ◯) (η : ModeHom M ◯ l) -> ∀{u} -> ModalityTrans M all (k ↝ l ∋ (μ ◆ ◻ ◆ ＠ u ◆ η)) (k ↝ l ∋ (μ ◆ η))
+  _★εᵈˢ★_ μ η {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (μ ⌟[ recv u ]⌞ η ⌟) ∷ [])) ]
+
   sync : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ x0 ∣ ◻ ◆ ＠ uu  ⟩ /▹▹ x0[ εᵈˢ ] / id
          ≔ lam (◻ ◆ ＠ uu) ↦ lam id ↦ letunmod[ ◻ ◆ ＠ uu ] x0 by x0[ εᵈˢ ]
   sync = lamⱼ UUⱼ ↦
          lamⱼ Modalⱼ (Univⱼ x0ⱼ) ↦
          letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
          x0[ εᵈˢ ]ⱼ
+
+  sync' : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ ⟨ x0 ∣ ◻ ⟩ ∣ ＠ uu ⟩ /▹▹ x0[ εᵈˢ ] / id
+         ≔ lam (◻ ◆ ＠ uu) ↦ lam id ↦ _ -- letunmod[ ◻ ◆ ＠ uu ] x0 by x0[ εᵈˢ ]
+  sync' = lamⱼ UUⱼ ↦
+          lamⱼ Modalⱼ (Modalⱼ (Univⱼ x0ⱼ)) ↦
+          letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
+          letunmodⱼ x0ⱼ into Univⱼ x3[ εᵈˢ ]ⱼ by
+          x0[ εᵈˢ ]ⱼ
 
 
   -- GG : Con (Entry M) _ -- Ctx ((Judgements.⊢Ctx
@@ -298,8 +312,18 @@ module Examples where
   ---------------------------------------------
   -- Prop: The booleans have a crisp induction
   -- principle under the `＠ u` modality.
-  boolrec-crisp-h : εε ⊢ Π (Π BB / ＠ uu ▹ UU) / ◻ ▹ Π BB /▹ ⟨ x1 ∘ falseₜ ∣ ◻ ⟩ /▹▹ ⟨ x1 ∘ trueₜ ∣ ◻ ⟩ /▹▹ ⟨ x1 ∘ x0[ id ★ηᵈˢ★ ＠ uu ] ∣ ◻ ⟩ / ＠ uu
-                       ≔ lam ◻ ↦ lam id ↦ lam id ↦ lam id ↦ boolrec _ ⟨ x4 ∘ x0[ id ★ηᵈˢ★ _ ] ∣ ◻ ⟩ x1 x0 x2
+  boolrec-crisp-h : εε ⊢ Π (Π BB / ＠ uu ▹ UU) / ◻ ▹
+                         Π BB /▹
+                         ⟨ x1 ∘ falseₜ ∣ ◻ ⟩ /▹▹
+                         ⟨ x1 ∘ trueₜ ∣ ◻ ⟩ /▹▹
+                         ⟨ x1 ∘ x0[ id ★ηᵈˢ★ ＠ uu ] ∣ ◻ ⟩ / ＠ uu
+                       ≔
+                       lam ◻ ↦
+                       lam id ↦
+                       lam id ↦
+                       lam id ↦
+                       boolrec _ ⟨ x4 ∘ x0[ id ★ηᵈˢ★ _ ] ∣ ◻ ⟩ x1 x0 x2
+
   boolrec-crisp-h = lamⱼ Πⱼ BBⱼ ▹ UUⱼ ↦
                     lamⱼ BBⱼ ↦
                     lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ falseⱼ)) ↦
@@ -307,6 +331,22 @@ module Examples where
                     boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ _ ]ⱼ))
                       false: x1ⱼ
                       true: x0ⱼ
+
+  boolrec-crisp : εε ⊢
+    Π (Π BB / ＠ uu ▹ UU) / (◻ ◆ ＠ uu) ▹
+    Π BB / ＠ uu ▹
+    (x1 ∘ falseₜ) / (◻ ◆ ＠ uu) ▹▹
+    (x1 ∘ trueₜ)  / (◻ ◆ ＠ uu) ▹▹
+    (x1[ id ★εᵈˢ★ id ] ∘ x0[ idT ]) / id -- ＠ uu ★εᵈˢ★ id
+    ≔ {!!}
+  boolrec-crisp =
+    lamⱼ proof ↦
+    lamⱼ proof ↦
+    lamⱼ proof ↦
+    lamⱼ proof ↦ ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ {!x3[ ? ]ⱼ ∘ⱼ x2[ ? ]ⱼ!})
+                 ∘ⱼ {!!} )
+                 -- modⱼ (wk-Term (wk-Term (wk-Term (wk-Term boolrec-crisp-h))) ∘ⱼ x3[ {!!} ]ⱼ ∘ⱼ x2[ {!!} ]ⱼ ∘ⱼ modⱼ x1ⱼ ∘ⱼ modⱼ x0ⱼ))
+
 
 
   ---------------------------------------------

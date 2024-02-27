@@ -60,6 +60,7 @@ module Judgements (P : ModeSystem 𝑖) where
   infixl 30 _∙_
   infix 30 Πⱼ_▹_
   infix 30 Σⱼ_▹_
+  infixl 24 _∘ⱼ_
   -- infix 30 ⟦_⟧ⱼ_▹_
 
   open Term
