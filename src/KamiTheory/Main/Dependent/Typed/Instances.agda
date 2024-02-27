@@ -14,7 +14,7 @@ open import KamiTheory.Main.Dependent.Typed.Definition
 -- open import KamiTheory.Main.Dependent.Modality.Definition
 
 open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
-open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition
+open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition hiding ([_])
 open import KamiTheory.Main.Generic.ModeSystem.Modality
 open import KamiTheory.Main.Generic.ModeSystem.Transition
 open import Data.Vec using ([] ; _∷_ ; _++_) renaming (Vec to StdVec)
@@ -48,24 +48,41 @@ module Typecheck (P : ModeSystem 𝑖) where
     E F : Entry P n
     -- W : P
 
+
+  Result : 𝒰 𝑖 -> 𝒰 𝑖
+  Result X = String +-𝒰 X
+
+  map-Result : ∀{A B : 𝒰 𝑖} -> (A -> B) -> Result A -> Result B
+  map-Result f (left a) = left a
+  map-Result f (right b) = right (f b)
+
+  bind-Result : ∀{A B : 𝒰 𝑖} -> Result A -> (A -> Result B) -> Result B
+  bind-Result (left a) f = left a
+  bind-Result (right b) f = f b
+
   private
-    _>>=_ = bind-Maybe
+    -- _>>=_ = bind-Maybe
+    _>>=_ = bind-Result
+
 
   {-# TERMINATING #-}
-  derive-Entry : ∀ (Γ : Con (Entry P) n) E -> Maybe (Γ ⊢Entry E)
-  derive-Ctx : ∀ (Γ : Con (Entry P) n) -> Maybe (⊢Ctx Γ)
-  derive-Term-Sort↓,Mod↓ : ∀ Γ -> (t A : Term P n) → (p : SomeModeHom P) -> Maybe (Γ ⊢ t ∶ A // p)
+  derive-Entry : ∀ (Γ : Con (Entry P) n) E -> Result (Γ ⊢Entry E)
+  derive-Ctx : ∀ (Γ : Con (Entry P) n) -> Result (⊢Ctx Γ)
+  derive-Term-Sort↓,Mod↓ : ∀ Γ -> (t A : Term P n) → (p : SomeModeHom P) -> Result (Γ ⊢ t ∶ A // p)
 
-  derive-Entry Γ (UU / μs)    = map-Maybe (λ P -> UUⱼ {{ΓP = because P}}) (derive-Ctx Γ)
-  derive-Entry Γ (NN / μs)    = map-Maybe (λ P -> NNⱼ {{ΓP = because P}}) (derive-Ctx Γ)
-  derive-Entry Γ (BB / μs)    = map-Maybe (λ P -> BBⱼ {{ΓP = because P}}) (derive-Ctx Γ)
+  derive-Term-Sort↑,Mod↑ : ∀ Γ -> (t : Term P n) → Result (∑ λ (E : Entry P n) -> (Γ ⊢ t ∶ E))
+
+
+  derive-Entry Γ (UU / μs)    = map-Result (λ P -> UUⱼ {{ΓP = because P}}) (derive-Ctx Γ)
+  derive-Entry Γ (NN / μs)    = map-Result (λ P -> NNⱼ {{ΓP = because P}}) (derive-Ctx Γ)
+  derive-Entry Γ (BB / μs)    = map-Result (λ P -> BBⱼ {{ΓP = because P}}) (derive-Ctx Γ)
   derive-Entry Γ (Vec A t // μs) = do
     A′ <- derive-Entry Γ (A // μs )
     t′ <- derive-Term-Sort↓,Mod↓ Γ t NN (μs)
     just (Vecⱼ A′ t′)
 
   derive-Entry Γ (gen 𝓀-Modal ([] ⦊ term A ∷ [] ⦊ modality (l ↝ k0 ∋ μ) ∷ []) // k1 ↝ m ∋ μs) with k0 ≟ k1
-  ... | no p = nothing
+  ... | no p = no ""
   ... | yes refl-≡ = do
           A' <- derive-Entry Γ (A / μ ◆ μs)
           just (Modalⱼ A')
@@ -86,23 +103,26 @@ module Typecheck (P : ModeSystem 𝑖) where
   derive-Entry Γ (var x ξ // η) = do
     res <- derive-Term-Sort↓,Mod↓ Γ (var x ξ) UU η
     just (Univⱼ res)
+  derive-Entry Γ ((t ∘ s) // η) = do
+    res <- derive-Term-Sort↓,Mod↓ Γ (t ∘ s) UU η
+    just (Univⱼ res)
   derive-Entry Γ ((Π A // (_ ↝ k ∋ μ) ▹ B) // l ↝ _ ∋ η) with k ≟ l
-  ... | no _ = nothing
+  ... | no _ = no "fail in Entry Π"
   ... | yes refl = do
     A' <- derive-Entry Γ (A / (μ ◆ η))
     B' <- derive-Entry (Γ ∙ (A / μ ◆ η)) (B / η)
     just (Πⱼ A' ▹ B')
   derive-Entry Γ ((Σ A // (k0 ↝ k ∋ μ) ▹ B) // l ↝ _ ∋ η) with k ≟ l
-  ... | no _ = nothing
+  ... | no _ = no "fail in Entry Σ"
   ... | yes refl with k0 ≟ k
-  ... | no _ = nothing
+  ... | no _ = no "fail in Entry Σ"
   ... | yes refl with μ ≟ id
-  ... | no _ = nothing
+  ... | no _ = no "fail in Entry Σ"
   ... | yes refl = do
     A' <- derive-Entry Γ (A / η)
     B' <- derive-Entry (Γ ∙ (A / η)) (B / η)
     just (Σⱼ A' ▹ B')
-  derive-Entry Γ E = nothing
+  derive-Entry Γ E = no "fail in Entry: not implemented"
 
 
   derive-Ctx ε = just ε
@@ -141,9 +161,15 @@ module Typecheck (P : ModeSystem 𝑖) where
   -- Terms (infering Sort, infering Mod)
 
   -- derive-Term-Sort↑,Mod↑ : ∀ Γ -> (t : Term P n) -> Maybe (∑ λ (E : Entry P n) -> Γ ⊢ t ∶ E)
-  -- derive-Term-Sort↑,Mod↑ Γ (var x) with ((A / p) , Ep) <- infer-Var Γ x = do
-  --   G' <- derive-Ctx Γ
-  --   just ((A / p) , var {{ΓP = because G'}} Ep)
+  derive-Term-Sort↑,Mod↑ Γ (var x (incl (μ ⇒ η ∋ ξ)))
+    with ((vA // μ') , A') <- infer-Var Γ x
+    with (_ ↝ _ ∋ μ) ≟ μ'
+  ... | no p = no "fail in Sort↑,Mod↑: var, modalities don't match"
+  ... | yes refl = do
+    G' <- derive-Ctx Γ
+    just ((vA ^[ _ ⇒ _ ∋ ξ ] / η) , var {{ΓP = because G'}} A' (_ ⇒ _ ∋ ξ))
+
+  derive-Term-Sort↑,Mod↑ Γ _ = no "fail in Sort↑,Mod↑: not implemented"
 
   -- derive-Term-Sort↑,Mod↑ Γ t = nothing
 
@@ -163,7 +189,7 @@ module Typecheck (P : ModeSystem 𝑖) where
 
   -------------------
   -- modalities
-  derive-Term-Sort↓,Mod↓ Γ (mod t) (Modal A q) p = nothing
+  derive-Term-Sort↓,Mod↓ Γ (mod t) (Modal A q) p = no "fail in Sort↓,Mod↓: `mod` not implemented"
 
   -- modality interactions
   -- derive-Term-Sort↓,Mod↓ Γ (narrow t) A (k ↝ l ∋ (`＠` V ⨾ μs)) with derive-Term-Sort↓,Mod↑ Γ t A
@@ -182,25 +208,50 @@ module Typecheck (P : ModeSystem 𝑖) where
   -- standard MLTT
   derive-Term-Sort↓,Mod↓ Γ (var x (incl (μ ⇒ η ∋ ξ))) A η' with (infer-Var Γ x)
   ... | ((vA // μ') , A') with (_ ↝ _ ∋ μ) ≟ μ'
-  ... | no p = nothing
+  ... | no p = no "fail in Sort↓,Mod↓: var (incl)"
   ... | yes refl with (_ ↝ _ ∋ η) ≟ η'
-  ... | no p = nothing
+  ... | no p = no "fail in Sort↓,Mod↓: var (incl)"
   ... | yes refl with vA ^[ _ ⇒ _ ∋ ξ ] ≟ A
-  ... | no p = nothing
+  ... | no p = no "fail in Sort↓,Mod↓: var (incl)"
   ... | yes refl = do
     G' <- derive-Ctx Γ
     just (var {{ΓP = because G'}} A' (_ ⇒ _ ∋ ξ))
 
 
-  derive-Term-Sort↓,Mod↓ Γ (var x id) A μ = nothing
-  derive-Term-Sort↓,Mod↓ Γ (var x fail) A μ = nothing
+  derive-Term-Sort↓,Mod↓ Γ (var x id) A μ = no "fail in Sort↓,Mod↓: var (id)"
+  derive-Term-Sort↓,Mod↓ Γ (var x fail) A μ = no "fail in Sort↓,Mod↓: var (fail)"
 
   -- derive-Term-Sort↓,Mod↓ Γ (lam t) (Π (A / p) ▹ B) q = do
   --   A' <- derive-Entry Γ (A / p)
   --   t' <- derive-Term-Sort↓,Mod↓ (Γ ∙ (A / p)) t B q
   --   just (lamⱼ A' t')
-  -- derive-Term-Sort↓,Mod↓ Γ (t ∘ s) B p = nothing -- for checking an application we need `infer-Term`
-  derive-Term-Sort↓,Mod↓ Γ _ A p = nothing
+  derive-Term-Sort↓,Mod↓ Γ (t ∘ s) B' μ' with derive-Term-Sort↑,Mod↑ Γ t
+  ... | no p = no "fail in Sort↓,Mod↓: ∘"
+  ... | yes ((F // μ) , Fp) with μ ≟ μ'
+  ... | no p = no "fail in Sort↓,Mod↓: ∘"
+  ... | yes refl with F
+  ... | (Π A // η ▹ B) with dom μ ≟ cod η
+  ... | no p = no "fail in Sort↓,Mod↓: ∘"
+  ... | yes refl with derive-Term-Sort↓,Mod↓ Γ s A (_ ↝ _ ∋ (hom η ◆ hom μ))
+  ... | no p = no "fail in Sort↓,Mod↓: ∘"
+  ... | yes sP with B' ≟ (B [ untransform-Term s ])
+  ... | no p = no "fail in Sort↓,Mod↓: ∘"
+  ... | yes refl = just (Fp ∘ⱼ sP)
+  derive-Term-Sort↓,Mod↓ Γ (t ∘ s) B' p | yes _ | yes _ | _ = no "fail in Sort↓,Mod↓: ∘, expected Π type"
+  -- derive- nothing -- for checking an application we need `infer-Term`
+
+
+  -- Boleans
+  derive-Term-Sort↓,Mod↓ Γ (trueₜ) BB μ with derive-Ctx Γ
+  ... | no p = no p
+  ... | yes Γp = just (trueⱼ {{because Γp}})
+
+  derive-Term-Sort↓,Mod↓ Γ (falseₜ) BB μ with derive-Ctx Γ
+  ... | no p = no p
+  ... | yes Γp = just (falseⱼ {{because Γp}})
+
+
+  derive-Term-Sort↓,Mod↓ Γ _ A p = no "fail in Sort↓,Mod↓: not implemented"
 
   instance
     isDerivable:Con : isDerivable (⊢Ctx Γ)

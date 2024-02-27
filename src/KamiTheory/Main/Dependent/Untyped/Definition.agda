@@ -847,7 +847,8 @@ mutual
   push ξs (transform ζ t) with ξ' , ζ' <- commute-Transition-vis ζ (get ξs)
                           = transform ζ' (push (transitions ξ' (extensions ξs) (postExtension ξs)) t)
   push ξs ⟨ A ∣ μ ⟩ = ⟨ push (transitions (get ξs) (extensions ξs) ((incl (_ ↝ _ ∋ μ) ◆-Modality (postExtension ξs)))) A ∣ μ ⟩
-  push ξs (var x ζ) = var x (ζ ◆-Transition ((getVarTransition (extensions ξs) x ↷-Transition get ξs) ↶-Transition postExtension ξs))
+  -- push ξs (var x ζ) = var x (ζ ◆-Transition ((getVarTransition (extensions ξs) x ↷-Transition get ξs) ↶-Transition postExtension ξs))
+  push ξs (var x ζ) = var x (ζ ◆-Transition ((postExtension ξs ↷-Transition get ξs)))
 
 
 _^[_] : Term P n -> ∀{μ η : SomeModeHom P} -> ModalityTrans P all μ η -> Term P n

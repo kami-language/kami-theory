@@ -271,12 +271,12 @@ module Judgements (P : ModeSystem 𝑖) where
     trueⱼ     : {{ΓP : isTrue (⊢Ctx Γ)}}
                → Γ ⊢ trueₜ ∶ BB  / μ
 
-    boolrecⱼ   : ∀ {G} -> {μ : ModeHom P k l}
+    boolrecⱼ_into_false:_true:_   : ∀ {G} -> {μ : ModeHom P k l}
+              → Γ       ⊢ b ∶ BB  / μ
               → Γ ∙ (BB / μ) ⊢Entry G / μ
               → Γ       ⊢ f ∶ G [ falseₜ ]  / μ
               → Γ       ⊢ t ∶ G [ trueₜ ]  / μ
-              → Γ       ⊢ b ∶ BB  / μ
-              → Γ       ⊢ natrec k G f t b ∶ G [ b ]  / μ
+              → Γ       ⊢ boolrec l G f t b ∶ G [ b ]  / μ
 
     --------------------------------------------------
     -- Natural numbers

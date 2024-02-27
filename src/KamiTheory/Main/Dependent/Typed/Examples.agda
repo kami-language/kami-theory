@@ -195,14 +195,17 @@ module Examples where
   pattern x0 = var zero (incl idT)
   pattern x1 = var (suc zero) (incl idT)
   pattern x2 = var (suc (suc zero)) (incl idT)
+  pattern x3 = var (suc (suc (suc zero))) (incl idT)
+  pattern x4 = var (suc (suc (suc (suc zero)))) (incl idT)
   pattern x0[_] ξ = var zero (incl ξ)
   pattern x1[_] ξ = var (suc zero) (incl ξ)
-  pattern x1[_] ξ = var (suc (suc zero)) (incl ξ)
+  pattern x2[_] ξ = var (suc (suc zero)) (incl ξ)
 
   pattern x0ⱼ = var zero idT
   pattern x1ⱼ = var (suc zero) idT
   pattern x2ⱼ = var (suc (suc zero)) idT
   pattern x3ⱼ = var (suc (suc (suc zero))) idT
+  pattern x4ⱼ = var (suc (suc (suc (suc zero)))) idT
 
   pattern x0[_]ⱼ ξ = var zero ξ
   pattern x1[_]ⱼ ξ = var (suc zero) ξ
@@ -247,6 +250,9 @@ module Examples where
   ηᵈˢ : ∀{u} -> ModalityTrans M all (▲ ↝ ▲ ∋ id) (▲ ↝ ▲ ∋ `＠` u ⨾ ◻)
   ηᵈˢ {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (id ⌟[ send u ]⌞ id ⌟) ∷ [])) ]
 
+  _★ηᵈˢ★_ : (μ : ModeHom M k ▲) (η : ModeHom M ▲ l) -> ∀{u} -> ModalityTrans M all (k ↝ l ∋ (μ ◆ η)) (k ↝ l ∋ (μ ◆ ＠ u ◆ ◻ ◆ η))
+  _★ηᵈˢ★_ μ η {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (μ ⌟[ send u ]⌞ η ⌟) ∷ [])) ]
+
   dispatch : ε ⊢ Π UU /▹ x0 /▹▹ ⟨ x0 ^[ ηᵈˢ ] ∣ ＠ uu ◆ ◻  ⟩ / id
              ≔ lam id ↦ lam id ↦ mod x0[ ηᵈˢ ]
   dispatch = lamⱼ UUⱼ ↦
@@ -266,6 +272,41 @@ module Examples where
          lamⱼ Modalⱼ (Univⱼ x0ⱼ) ↦
          letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
          x0[ εᵈˢ ]ⱼ
+
+
+  -- GG : Con (Entry M) _ -- Ctx ((Judgements.⊢Ctx
+  --       -- SendReceiveNarrow-ModeSystem.SRN-ModeSystem ′ StdVec Bool 3 ′)
+  -- GG = (ε ∙
+  --       (Π BB // ▲ ↝ ◯ ∋ ＠ (true ∷ false ∷ false ∷ []) ▹ UU //
+  --        ◯ ↝ ◯ ∋ `[]` ⨾ ＠ (true ∷ false ∷ false ∷ []))
+  --       ∙ (BB // ▲ ↝ ◯ ∋ ＠ (true ∷ false ∷ false ∷ []))
+  --       ∙
+  --       (gen 𝓀-Modal
+  --        ([] ⦊
+  --         term
+  --         (x1[
+  --          (`[]` ⨾ ＠ (true ∷ false ∷ false ∷ [])) ⇒
+  --          `[]` ⨾ ＠ (true ∷ false ∷ false ∷ []) ∋ [ incl [] ∣ incl [] ]
+  --          ]
+  --          ∘ trueₜ)
+  --         ∷ [] ⦊ modality (◯ ↝ ▲ ∋ ◻) ∷ [])
+  --        // ▲ ↝ ◯ ∋ ＠ (true ∷ false ∷ false ∷ [])))
+
+  -- Res = derive-Ctx GG
+
+
+  ---------------------------------------------
+  -- Prop: The booleans have a crisp induction
+  -- principle under the `＠ u` modality.
+  boolrec-crisp-h : εε ⊢ Π (Π BB / ＠ uu ▹ UU) / ◻ ▹ Π BB /▹ ⟨ x1 ∘ falseₜ ∣ ◻ ⟩ /▹▹ ⟨ x1 ∘ trueₜ ∣ ◻ ⟩ /▹▹ ⟨ x1 ∘ x0[ id ★ηᵈˢ★ ＠ uu ] ∣ ◻ ⟩ / ＠ uu
+                       ≔ lam ◻ ↦ lam id ↦ lam id ↦ lam id ↦ boolrec _ ⟨ x4 ∘ x0[ id ★ηᵈˢ★ _ ] ∣ ◻ ⟩ x1 x0 x2
+  boolrec-crisp-h = lamⱼ Πⱼ BBⱼ ▹ UUⱼ ↦
+                    lamⱼ BBⱼ ↦
+                    lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ falseⱼ)) ↦
+                    lamⱼ Modalⱼ (Univⱼ (x2ⱼ ∘ⱼ trueⱼ)) ↦
+                    boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ _ ]ⱼ))
+                      false: x1ⱼ
+                      true: x0ⱼ
 
 
   ---------------------------------------------

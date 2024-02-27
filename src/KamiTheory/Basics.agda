@@ -55,10 +55,10 @@ module _ {A : 𝒰 𝑖} {{_ : hasDecidableEquality A}} where
 -- derivability syntax sugar
 
 
-open import Agora.Conventions using (Maybe ; just)
+open import Agora.Conventions using (Maybe ; just ; _､_ ; _+-𝒰_)
 
-record isDerivable {𝑖} (A : Set 𝑖) : Set 𝑖 where
-  field derive : Maybe A
+record isDerivable {𝑖} {𝑗} {B : Set 𝑗} (A : Set 𝑖) : Set (𝑖 ､ 𝑗) where
+  field derive : B +-𝒰 A
 
 open isDerivable {{...}} public
 
@@ -69,7 +69,7 @@ record isTrue {𝑖} (A : Set 𝑖) : Set 𝑖 where
 open isTrue {{...}} public
 
 instance
-  isTrue:isDerivable : ∀{𝑖} {A : Set 𝑖} -> {{der : isDerivable A}} {a : A} -> {{_ :  derive {{der}} ≡ just a}} -> isTrue A
+  isTrue:isDerivable : ∀{𝑖} {A : Set 𝑖} {𝑗} {B : Set 𝑗} -> {{der : isDerivable {B = B} A}} {a : A} -> {{_ :  derive {{der}} ≡ just a}} -> isTrue A
   isTrue:isDerivable {a = a} = record { proof = a }
 
 
