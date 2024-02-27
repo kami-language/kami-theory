@@ -135,6 +135,7 @@ module Examples where
   pattern x3ⱼ = var (suc (suc (suc zero))) idT
   pattern x4ⱼ = var (suc (suc (suc (suc zero)))) idT
   pattern x5ⱼ = var (suc (suc (suc (suc (suc zero))))) idT
+  pattern x6ⱼ = var (suc (suc (suc (suc (suc (suc zero)))))) idT
 
   pattern x0[_]ⱼ ξ = var zero ξ
   pattern x1[_]ⱼ ξ = var (suc zero) ξ
@@ -185,8 +186,7 @@ module Examples where
 
   P1 : εε ⊢ ⟨ NN ∣ ＠ uu ⟩ /▹▹ ⟨ NN ∣ ＠ uu ⟩ / id
        ≔ lam↦ letunmod x0 into ⟨ NN ∣ ＠ uu ⟩ by mod[ ＠ uu ] x0
-  P1 = proof
-       -- lamⱼ (Modalⱼ (NNⱼ )) ↦ (letunmodⱼ (var zero idT) into (Modalⱼ NNⱼ) by (modⱼ ((var zero idT))))
+  P1 = lamⱼ (Modalⱼ (NNⱼ )) ↦ (letunmodⱼ (var zero idT) into (Modalⱼ NNⱼ) by (modⱼ ((var zero idT))))
 
 
 
@@ -266,10 +266,9 @@ module Examples where
 
   dispatch : ε ⊢ Π UU /▹ x0 /▹▹ ⟨ x0[ ηᵈˢ ] ∣ ＠ uu ◆ ◻  ⟩ / id
              ≔ lam↦ lam↦ mod[ ＠ uu ◆ ◻ ] x0[ ηᵈˢ ]
-  dispatch = proof
-             -- lamⱼ UUⱼ ↦
-             -- lamⱼ Univⱼ x0ⱼ ↦
-             -- modⱼ x0[ ηᵈˢ ]ⱼ
+  dispatch = lamⱼ UUⱼ ↦
+             lamⱼ Univⱼ x0ⱼ ↦
+             modⱼ x0[ ηᵈˢ ]ⱼ
 
   --
   -- The counit on the other hand allows us to wait for the execution
@@ -283,20 +282,18 @@ module Examples where
 
   sync : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ x0 ∣ ◻ ◆ ＠ uu  ⟩ /▹▹ x0[ εᵈˢ ] / id
          ≔ lam↦ lam↦ letunmod x0 into x2[ εᵈˢ ] by x0[ εᵈˢ ]
-  sync = proof
-         -- lamⱼ UUⱼ ↦
-         -- lamⱼ Modalⱼ (Univⱼ x0ⱼ) ↦
-         -- letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
-         -- x0[ εᵈˢ ]ⱼ
+  sync = lamⱼ UUⱼ ↦
+         lamⱼ Modalⱼ (Univⱼ x0ⱼ) ↦
+         letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
+         x0[ εᵈˢ ]ⱼ
 
   sync' : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ ⟨ x0 ∣ ◻ ⟩ ∣ ＠ uu ⟩ /▹▹ x0[ εᵈˢ ] / id
          ≔ lam↦ lam↦ letunmod x0 into x2[ εᵈˢ ] by (letunmod[ ＠ uu ] x0 into x3[ εᵈˢ ] by x0[ εᵈˢ ])
-  sync' = proof
-          -- lamⱼ UUⱼ ↦
-          -- lamⱼ Modalⱼ (Modalⱼ (Univⱼ x0ⱼ)) ↦
-          -- letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
-          -- letunmodⱼ x0ⱼ into Univⱼ x3[ εᵈˢ ]ⱼ by
-          -- x0[ εᵈˢ ]ⱼ
+  sync' = lamⱼ UUⱼ ↦
+          lamⱼ Modalⱼ (Modalⱼ (Univⱼ x0ⱼ)) ↦
+          letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
+          letunmodⱼ[ ＠ uu ] x0ⱼ into Univⱼ x3[ εᵈˢ ]ⱼ by
+          x0[ εᵈˢ ]ⱼ
 
 
   -- GG : Con (Entry M) _ -- Ctx ((⊢Ctx
@@ -344,9 +341,6 @@ module Examples where
                       false: x1ⱼ
                       true: x0ⱼ
 
-{-
-  {-
-{-
 
   boolrec-crisp : εε ⊢
     Π (Π BB / ＠ uu ▹ UU) / (◻ ◆ ＠ uu) ▹
@@ -361,7 +355,6 @@ module Examples where
     lamⱼ proof ↦
     lamⱼ proof ↦ ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ (x3ⱼ ∘ⱼ x2[ id ★ηᵈˢ★ ＠ uu ]ⱼ))
                  ∘ⱼ modⱼ (wk-Term (wk-Term (wk-Term (wk-Term boolrec-crisp-h))) ∘ⱼ x3ⱼ ∘ⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ ∘ⱼ modⱼ x0ⱼ))
-                 -}
 
   ---------------------------------------------
   -- Prop: The naturals have a crisp induction
@@ -369,7 +362,6 @@ module Examples where
   --
   -- We again begin by creating our helper function.
 
-{-
   natrec-crisp-h : εε ⊢
     Π NN /▹
     Π (Π NN / ＠ uu ▹ UU) / ◻ ▹
@@ -387,16 +379,28 @@ module Examples where
       zero: var (suc zero) idT
       suc: lamⱼ NNⱼ ↦
            lamⱼ Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ uu ]ⱼ)) ↦
-           (letunmodⱼ x2ⱼ into Modalⱼ (Univⱼ (x5ⱼ ∘ⱼ ?))
-             by {!!})
--}
+           (letunmodⱼ x2ⱼ into Modalⱼ (Univⱼ (x5ⱼ ∘ⱼ sucⱼ (x2[ id ★ηᵈˢ★ ＠ uu ]ⱼ)))
+             by letunmodⱼ x1ⱼ into Modalⱼ (Univⱼ (x6ⱼ ∘ⱼ sucⱼ (x3[ id ★ηᵈˢ★ ＠ uu ]ⱼ)))
+             by modⱼ (x1ⱼ ∘ⱼ x3[ id ★ηᵈˢ★ ＠ uu ]ⱼ ∘ⱼ x0ⱼ)
+             )
 
 
 
+
+  {-
+{-
 
 
 {-
-  send-vec : εε ⊢
+  send-vec : εε ∙
+    (
+      Π NN /▹
+      Π (Π NN / ＠ uu ▹ UU) / ◻ ▹
+      ⟨ x0 ∘[ ＠ uu ] zeroₜ ∣ ◻ ⟩ /▹▹
+      ⟨ Π NN / ＠ uu ▹ (x1 ∘[ ＠ uu ] x0) /▹▹ (x1 ∘[ ＠ uu ] sucₜ x0)  ∣ ◻ ⟩ /▹▹
+      ⟨ x0 ∘[ ＠ uu ] x1[ id ★ηᵈˢ★ ＠ uu ] ∣ ◻ ⟩ / ＠ uu
+    )
+  ⊢
     Π NN / ＠ uuvv ▹
     Π Vec BB (letunmod[ ＠ uuvv ] x0 by x0[ {!!} ]) / ＠ uu ▹
     ⟨ Vec BB (letunmod[ ＠ uuvv ] x0 by x0[ {!!} ]) ∣ ＠ vv ⟩ / id

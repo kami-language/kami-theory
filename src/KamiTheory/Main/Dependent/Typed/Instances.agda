@@ -167,7 +167,8 @@ module Typecheck (P : ModeSystem 𝑖) where
   ... | no p = no "fail in Sort↑,Mod↑: var, modalities don't match"
   ... | yes refl = do
     G' <- derive-Ctx Γ
-    just ((vA ^[ _ ⇒ _ ∋ ξ ] / η) , var {{ΓP = because G'}} A' (_ ⇒ _ ∋ ξ))
+    just ((vA ^[ _ ⇒ _ ∋ ξ ] / η) , var A' (_ ⇒ _ ∋ ξ))
+    -- just ((vA ^[ _ ⇒ _ ∋ ξ ] / η) , var {{ΓP = because G'}} A' (_ ⇒ _ ∋ ξ))
 
   derive-Term-Sort↑,Mod↑ Γ _ = no "fail in Sort↑,Mod↑: not implemented"
 
@@ -230,7 +231,7 @@ module Typecheck (P : ModeSystem 𝑖) where
   ... | no _ = no ("fail in Sort↓,Mod↓: letunmod, motive type doesn't match")
   ... | yes refl
 
-    = yes (letunmodⱼ tP into Yp by sP)
+    = yes (letunmodⱼ[ hom μ ] tP into Yp by sP)
 
   derive-Term-Sort↓,Mod↓ Γ (letunmod[[ incl μ ]] t into Y by s) Y' ω | yes _ | yes _ | _ = no ("fail in Sort↓,Mod↓: letunmod, first term is not of modal type")
 
@@ -262,7 +263,8 @@ module Typecheck (P : ModeSystem 𝑖) where
   ... | no p = no "fail in Sort↓,Mod↓: var (incl)"
   ... | yes refl = do
     G' <- derive-Ctx Γ
-    just (var {{ΓP = because G'}} A' (_ ⇒ _ ∋ ξ))
+    just (var A' (_ ⇒ _ ∋ ξ))
+    -- just (var {{ΓP = because G'}} A' (_ ⇒ _ ∋ ξ))
 
 
   derive-Term-Sort↓,Mod↓ Γ (var x id) A μ = no "fail in Sort↓,Mod↓: var (id)"
@@ -297,11 +299,13 @@ module Typecheck (P : ModeSystem 𝑖) where
   -- Boleans
   derive-Term-Sort↓,Mod↓ Γ (trueₜ) BB μ with derive-Ctx Γ
   ... | no p = no p
-  ... | yes Γp = just (trueⱼ {{because Γp}})
+  ... | yes Γp = just (trueⱼ)
+  -- ... | yes Γp = just (trueⱼ {{because Γp}})
 
   derive-Term-Sort↓,Mod↓ Γ (falseₜ) BB μ with derive-Ctx Γ
   ... | no p = no p
-  ... | yes Γp = just (falseⱼ {{because Γp}})
+  ... | yes Γp = just (falseⱼ )
+  -- ... | yes Γp = just (falseⱼ {{because Γp}})
 
   derive-Term-Sort↓,Mod↓ Γ (boolrec b into G false: f true: t) X μ with X ≟ G [ b ]
   ... | no p = no "fail in Sort↓,Mod↓: boolrec, Motive does not match"
@@ -317,7 +321,8 @@ module Typecheck (P : ModeSystem 𝑖) where
   -- Naturals
   derive-Term-Sort↓,Mod↓ Γ (zeroₜ) NN μ with derive-Ctx Γ
   ... | no p = no p
-  ... | yes Γp = just (zeroⱼ {{because Γp}})
+  ... | yes Γp = just (zeroⱼ)
+  -- ... | yes Γp = just (zeroⱼ {{because Γp}})
 
   derive-Term-Sort↓,Mod↓ Γ (sucₜ t) NN μ with derive-Term-Sort↓,Mod↓ Γ t NN μ
   ... | no p = no p

@@ -63,6 +63,7 @@ module Judgements (P : ModeSystem 𝑖) where
   infixl 24 _∘ⱼ_
   -- infix 30 ⟦_⟧ⱼ_▹_
 
+
   open Term
 
   private variable
@@ -188,8 +189,9 @@ module Judgements (P : ModeSystem 𝑖) where
 
     modⱼ : Γ ⊢ t ∶ X / (η ◆ μ) -> Γ ⊢ mod[ η ] t ∶ ⟨ X ∣ η ⟩ / μ
 
-    letunmodⱼ_into_by_ :
-                 Γ ⊢ t ∶ ⟨ X ∣ η ⟩ / μ ◆ ω
+    letunmodⱼ[_]_into_by_ :
+                 ∀ (μ : ModeHom P k l)
+              -> Γ ⊢ t ∶ ⟨ X ∣ η ⟩ / μ ◆ ω
               -> Γ ∙ (⟨ X ∣ η ⟩ / μ ◆ ω) ⊢Entry Y / ω
               -> Γ ∙ (X / (η ◆ μ ◆ ω)) ⊢ s ∶ Y [ mod[ μ ] (var x0 id) ]↑ / ω
               -> Γ ⊢ letunmod[ μ ] t into Y by s ∶ Y [ t ] / ω
@@ -223,7 +225,7 @@ module Judgements (P : ModeSystem 𝑖) where
 
     -- Vars allow mode transformations between modalities
     var       : ∀ {A x}
-              -> {{ΓP : isTrue (⊢Ctx Γ)}}
+--               -> {{ΓP : isTrue (⊢Ctx Γ)}}
               → x ∶ (A // (k ↝ l ∋ μ)) ∈ Γ
               → (ζ : ModalityTrans P all (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
               → Γ ⊢ (Term.var x (incl ζ)) ∶ A ^[ ζ ] // (k ↝ l ∋ η)
@@ -266,11 +268,11 @@ module Judgements (P : ModeSystem 𝑖) where
 
     --------------------------------------------------
     -- Booleans
-    falseⱼ     : {{ΓP : isTrue (⊢Ctx Γ)}}
-               → Γ ⊢ falseₜ ∶ BB  / μ
+    falseⱼ     : -- {{ΓP : isTrue (⊢Ctx Γ)}} →
+                 Γ ⊢ falseₜ ∶ BB  / μ
 
-    trueⱼ     : {{ΓP : isTrue (⊢Ctx Γ)}}
-               → Γ ⊢ trueₜ ∶ BB  / μ
+    trueⱼ     : -- {{ΓP : isTrue (⊢Ctx Γ)}} →
+                Γ ⊢ trueₜ ∶ BB  / μ
 
     boolrecⱼ_into_false:_true:_   : ∀ {G} -> {μ : ModeHom P k l}
               → Γ       ⊢ b ∶ BB  / μ
@@ -282,8 +284,8 @@ module Judgements (P : ModeSystem 𝑖) where
     --------------------------------------------------
     -- Natural numbers
 
-    zeroⱼ     :  {{ΓP : isTrue (⊢Ctx Γ)}}
-              → Γ ⊢ zeroₜ ∶ NN  / μ
+    zeroⱼ     : --  {{ΓP : isTrue (⊢Ctx Γ)}} →
+                 Γ ⊢ zeroₜ ∶ NN  / μ
 
     sucⱼ      : ∀ {n}
               → Γ ⊢      n ∶ NN  / μ
@@ -295,6 +297,9 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ       ⊢ z ∶ G [ zeroₜ ]  / μ
               → Γ       ⊢ s ∶ (Π NN / id {m = k} ▹ (G / id {m = k} ▹▹ (G [ sucₜ (var x0 id) ]↑)))  / μ
               → Γ       ⊢ natrec G z s n ∶ G [ n ]  / μ
+
+
+  pattern letunmodⱼ_into_by_ t G s = letunmodⱼ[ id ] t into G by  s
 
 {-
     nilⱼ      : ∀ {A}
@@ -319,6 +324,8 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢ l ∶ NN / `＠` (U ∧ V) ⨾ μs
               → Γ ⊢ vs ∶ Vec A l / `＠` U ⨾ μs
               → Γ ⊢ vecrec G z s l vs ∶ G [ wk1 vs ] [ l ]  / `＠` V ⨾ ηs
+
+
 
 
 {-
