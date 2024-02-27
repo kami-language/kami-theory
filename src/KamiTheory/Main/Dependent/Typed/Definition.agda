@@ -186,13 +186,13 @@ module Judgements (P : ModeSystem 𝑖) where
     -------------------
     -- Standard modality intro and "elim"
 
-    modⱼ : Γ ⊢ t ∶ X / (η ◆ μ) -> Γ ⊢ mod t ∶ Modal X η / μ
+    modⱼ : Γ ⊢ t ∶ X / (η ◆ μ) -> Γ ⊢ mod[ η ] t ∶ Modal X η / μ
 
     letunmodⱼ_into_by_ :
-                 Γ ⊢ t ∶ Modal X η / μ
-              -> Γ ∙ (Modal X η / μ) ⊢Entry Y / ω
-              -> Γ ∙ (X / (η ◆ μ)) ⊢ s ∶ Y [ mod (var x0 id) ]↑ / ω
-              -> Γ ⊢ letunmod[ η ] t by s ∶ Y [ t ] / ω
+                 Γ ⊢ t ∶ Modal X η / μ ◆ ω
+              -> Γ ∙ (Modal X η / μ ◆ ω) ⊢Entry Y / ω
+              -> Γ ∙ (X / (η ◆ μ ◆ ω)) ⊢ s ∶ Y [ mod[ μ ] (var x0 id) ]↑ / ω
+              -> Γ ⊢ letunmod[ μ ] t by s ∶ Y [ t ] / ω
 
     -- unmodⱼ : Γ ⊢ t ∶ Modal X η / μ -> Γ ⊢ unmod t ∶ X / (η ◆ μ)
 
@@ -289,12 +289,12 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢      n ∶ NN  / μ
               → Γ ⊢ sucₜ n ∶ NN  / μ
 
-    -- natrecⱼ   : ∀ {G s z n} -> {μ : ModeHom P k l}
-    --           → Γ ∙ (NN / μ) ⊢Entry G / μ
-    --           → Γ       ⊢ z ∶ G [ zeroₜ ]  / μ
-    --           → Γ       ⊢ s ∶ (Π NN / μ ▹ (G / μ ▹▹ G [ sucₜ (var x0 id) ]↑))  / μ
-    --           → Γ       ⊢ n ∶ NN  / μ
-    --           → Γ       ⊢ natrec k G z s n ∶ G [ n ]  / μ
+    natrecⱼ_into_zero:_suc:_   : ∀ {G s z n} -> {μ : ModeHom P k l}
+              → Γ       ⊢ n ∶ NN  / μ
+              → Γ ∙ (NN / μ) ⊢Entry G / μ
+              → Γ       ⊢ z ∶ G [ zeroₜ ]  / μ
+              → Γ       ⊢ s ∶ (Π NN / id {m = k} ▹ (G / id {m = k} ▹▹ (G [ sucₜ (var x0 id) ]↑)))  / μ
+              → Γ       ⊢ natrec G z s n ∶ G [ n ]  / μ
 
 {-
     nilⱼ      : ∀ {A}

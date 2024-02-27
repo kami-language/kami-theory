@@ -320,14 +320,14 @@ sndₜ : (t : Term P n) → Term P n          -- Second projection
 sndₜ t = gen (main Sndkind) (id ⦊ term t ∷ [])
 
 -- Introduction and elimination of natural numbers.
-zeroₜ   : Term P n                      -- Natural number zero.
-zeroₜ = gen (main Zerokind) []
+-- zeroₜ   : Term P n                      -- Natural number zero.
+pattern zeroₜ = gen (main Zerokind) []
 
-sucₜ    : (t : Term P n)       → Term P n -- Successor.
-sucₜ t = gen (main Suckind) (id ⦊ term t ∷ [])
+-- sucₜ    : (t : Term P n)       → Term P n -- Successor.
+pattern sucₜ t = gen (main Suckind) (id ⦊ term t ∷ [])
 
 -- natrec : (μ : Modality P) (A : Term P (1+ n)) (t u v : Term P n) → Term P n  -- Natural number recursor (A is a binder).
-pattern natrec m A t u v = gen (main Natreckind) (((m ↝ _ ∋ id) ∷ []) ⦊ term A ∷ id ⦊ term t ∷ id ⦊ term u ∷ id ⦊ term v ∷ [])
+pattern natrec A t u v = gen (main Natreckind) (id ⦊ term A ∷ id ⦊ term t ∷ id ⦊ term u ∷ id ⦊ term v ∷ [])
 
 pattern BB = gen (main 𝓀-BB) []
 pattern trueₜ = gen (main 𝓀-trueₜ) []
@@ -368,10 +368,13 @@ pattern ⟨_∣_⟩ A μ = Modal A μ
 
 -- pattern send t       = gen (main 𝓀-send) (id ⦊ term t ∷ [])
 -- pattern recv t       = gen (main 𝓀-recv) (id ⦊ term t ∷ [])
-pattern mod t        = gen (main 𝓀-mod) (id ⦊ term t ∷ [])
+pattern mod[[_]] μ t        = gen (main 𝓀-mod) (μ ⦊ term t ∷ [])
+pattern mod[_] μ t        = mod[[ incl (_ ↝ _ ∋ μ) ]] t
 -- pattern unmod t      = gen (main 𝓀-unmod) (id ⦊ term t ∷ [])
+pattern letunmod[[_]]_by_ μ t s  = gen (main 𝓀-letunmod) (μ ⦊ term t ∷ id ⦊ term s ∷ [])
 pattern letunmod[_]_by_ μ t s  = gen (main 𝓀-letunmod) (incl (_ ↝ _ ∋ μ) ⦊ term t ∷ id ⦊ term s ∷ [])
-infix 25 letunmod[_]_by_
+pattern letunmod_by_ t s = letunmod[ id ] t by s
+infix 25 letunmod[_]_by_ letunmod_by_
 
 
 -- Transformations / Transitions

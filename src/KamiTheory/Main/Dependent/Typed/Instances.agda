@@ -189,7 +189,29 @@ module Typecheck (P : ModeSystem 𝑖) where
 
   -------------------
   -- modalities
-  derive-Term-Sort↓,Mod↓ Γ (mod t) (Modal A q) p = no "fail in Sort↓,Mod↓: `mod` not implemented"
+  derive-Term-Sort↓,Mod↓ Γ (mod[[ incl μ ]] t) (Modal A μ') η with μ ≟ (_ ↝ _ ∋ μ')
+  ... | no _ = no "fail in Sort↓,Mod↓: mod, modalities don't match"
+  ... | yes refl with μ .cod ≟ η .dom
+  ... | no _ = no "fail in Sort↓,Mod↓: mod, modalities don't match"
+  ... | yes refl with derive-Term-Sort↓,Mod↓ Γ t A (_ ↝ _ ∋ (hom μ ◆ hom η))
+  ... | no msg =  no ("fail in Sort↓,Mod↓: mod:: " <> msg)
+  ... | yes Ap = yes (modⱼ Ap)
+
+
+  derive-Term-Sort↓,Mod↓ Γ (letunmod[[ incl μ ]] t by s) B η with derive-Term-Sort↑,Mod↑ Γ t
+  ... | no msg = no ("fail in Sort↓,Mod↓: letunmod:: " <> msg)
+  ... | yes ((A' // μ') , Ap) with derive-Term-Sort↑,Mod↑ (Γ ∙ (A' // μ')) s
+  ... | no msg = no ("fail in Sort↓,Mod↓: letunmod:: " <> msg)
+  ... | yes ((B' // η') , Bp) with (η ≟ η')
+  ... | no _ = no ("fail in Sort↓,Mod↓: letunmod, modalities don't match ")
+  ... | yes refl = no "not implemented"
+  -- with (B' [ mod[[ incl η ]] (var x0 id) ]↑) ≟ B
+  -- ... | no _ = no ("fail in Sort↓,Mod↓: letunmod, types don't match ")
+  -- ... | yes refl = ?
+
+
+
+-- no "fail in Sort↓,Mod↓: `mod` not implemented"
 
   -- modality interactions
   -- derive-Term-Sort↓,Mod↓ Γ (narrow t) A (k ↝ l ∋ (`＠` V ⨾ μs)) with derive-Term-Sort↓,Mod↑ Γ t A
@@ -251,6 +273,15 @@ module Typecheck (P : ModeSystem 𝑖) where
   derive-Term-Sort↓,Mod↓ Γ (falseₜ) BB μ with derive-Ctx Γ
   ... | no p = no p
   ... | yes Γp = just (falseⱼ {{because Γp}})
+
+  -- Naturals
+  derive-Term-Sort↓,Mod↓ Γ (zeroₜ) NN μ with derive-Ctx Γ
+  ... | no p = no p
+  ... | yes Γp = just (zeroⱼ {{because Γp}})
+
+  derive-Term-Sort↓,Mod↓ Γ (sucₜ t) NN μ with derive-Term-Sort↓,Mod↓ Γ t NN μ
+  ... | no p = no p
+  ... | yes tp = just (sucⱼ tp)
 
 
   derive-Term-Sort↓,Mod↓ Γ _ A p = no "fail in Sort↓,Mod↓: not implemented"

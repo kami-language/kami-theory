@@ -119,6 +119,34 @@ module Examples where
   uuvv = true ∷ (true ∷ (false ∷ []))
 
 
+  pattern x0 = var zero (incl idT)
+  pattern x1 = var (suc zero) (incl idT)
+  pattern x2 = var (suc (suc zero)) (incl idT)
+  pattern x3 = var (suc (suc (suc zero))) (incl idT)
+  pattern x4 = var (suc (suc (suc (suc zero)))) (incl idT)
+  pattern x0[_] ξ = var zero (incl ξ)
+  pattern x1[_] ξ = var (suc zero) (incl ξ)
+  pattern x2[_] ξ = var (suc (suc zero)) (incl ξ)
+
+  pattern x0ⱼ = var zero idT
+  pattern x1ⱼ = var (suc zero) idT
+  pattern x2ⱼ = var (suc (suc zero)) idT
+  pattern x3ⱼ = var (suc (suc (suc zero))) idT
+  pattern x4ⱼ = var (suc (suc (suc (suc zero)))) idT
+  pattern x5ⱼ = var (suc (suc (suc (suc (suc zero))))) idT
+
+  pattern x0[_]ⱼ ξ = var zero ξ
+  pattern x1[_]ⱼ ξ = var (suc zero) ξ
+  pattern x2[_]ⱼ ξ = var (suc (suc zero)) ξ
+  pattern x3[_]ⱼ ξ = var (suc (suc (suc zero))) ξ
+  pattern x4[_]ⱼ ξ = var (suc (suc (suc (suc zero)))) ξ
+
+  pattern x0ⱼ' P = var {{P}} zero idT
+  pattern x1ⱼ' P = var {{P}} (suc zero) idT
+  pattern x2ⱼ' P = var {{P}} (suc (suc zero)) idT
+  pattern x3ⱼ' P = var {{P}} (suc (suc (suc zero))) idT
+
+
 
   -- _⟶_ = _▹▹_
 
@@ -150,13 +178,15 @@ module Examples where
   -- small examples
 
   P0 : εε ∙ (NN / (`＠` uu ⨾ id)) ⊢ var zero (incl idT) ∶ NN / `＠` uu ⨾ id
-  P0 = var zero idT
+  P0 = proof
 
 
 
   P1 : εε ⊢ ⟨ NN ∣ ＠ uu ⟩ /▹▹ ⟨ NN ∣ ＠ uu ⟩ / id
-       ≔ _
+       ≔ lam↦ letunmod x0 by mod[ ＠ uu ] x0
   P1 = lamⱼ (Modalⱼ (NNⱼ )) ↦ (letunmodⱼ (var zero idT) into (Modalⱼ NNⱼ) by (modⱼ ((var zero idT))))
+
+
 
   wk-Entry : Γ ⊢Entry A / μ -> Γ ∙ (B / η) ⊢Entry wk1 A / μ
   wk-Entry = {!!}
@@ -195,30 +225,6 @@ module Examples where
   --     (letunmodⱼ (Σⱼ Modalⱼ (NNⱼ {{because {!!}}}) ▹ Modalⱼ (BBⱼ {{{!!}}})) (var {{because (ε ∙ Cp)}} zero idT)
   --     (prodⱼ (Modal NN μ) (Modal BB μ) {{{!!}}} {{{!!}}} (modⱼ (fstⱼ (var {{{!!}}} zero idT))) ((modⱼ (sndⱼ (var {{{!!}}} zero idT))))))
 
-  pattern x0 = var zero (incl idT)
-  pattern x1 = var (suc zero) (incl idT)
-  pattern x2 = var (suc (suc zero)) (incl idT)
-  pattern x3 = var (suc (suc (suc zero))) (incl idT)
-  pattern x4 = var (suc (suc (suc (suc zero)))) (incl idT)
-  pattern x0[_] ξ = var zero (incl ξ)
-  pattern x1[_] ξ = var (suc zero) (incl ξ)
-  pattern x2[_] ξ = var (suc (suc zero)) (incl ξ)
-
-  pattern x0ⱼ = var zero idT
-  pattern x1ⱼ = var (suc zero) idT
-  pattern x2ⱼ = var (suc (suc zero)) idT
-  pattern x3ⱼ = var (suc (suc (suc zero))) idT
-  pattern x4ⱼ = var (suc (suc (suc (suc zero)))) idT
-
-  pattern x0[_]ⱼ ξ = var zero ξ
-  pattern x1[_]ⱼ ξ = var (suc zero) ξ
-  pattern x2[_]ⱼ ξ = var (suc (suc zero)) ξ
-  pattern x3[_]ⱼ ξ = var (suc (suc (suc zero))) ξ
-
-  pattern x0ⱼ' P = var {{P}} zero idT
-  pattern x1ⱼ' P = var {{P}} (suc zero) idT
-  pattern x2ⱼ' P = var {{P}} (suc (suc zero)) idT
-  pattern x3ⱼ' P = var {{P}} (suc (suc (suc zero))) idT
 
   _××ⱼ_  : {μ : ModeHom M k l}
           → Γ ⊢Entry (A / μ)
@@ -232,7 +238,7 @@ module Examples where
   --
   {-
   AxiomK : ε ⊢ Π UU / μ ▹ Π UU / μ ▹ ⟨ x1 ×× x0 ∣ μ ⟩ /▹▹ ⟨ x1 ∣ μ ⟩ ×× ⟨ x0 ∣ μ ⟩ / id
-           ≔ lam μ ↦ lam μ ↦ lam↦ letunmod[ μ ] x0 by (mod (fstₜ x0) ,, mod (sndₜ x0))
+           ≔ lam↦ lam↦ lam↦ letunmod x0 by (mod[ μ ] (fstₜ x0) ,, mod[ μ ] (sndₜ x0))
   AxiomK {μ = μ} = lamⱼ UUⱼ ↦
                    lamⱼ UUⱼ ↦
                    lamⱼ Modalⱼ (Univⱼ x1ⱼ ××ⱼ Univⱼ x0ⱼ) ↦
@@ -244,6 +250,7 @@ module Examples where
                    modⱼ (fstⱼ x0ⱼ) , modⱼ (sndⱼ x0ⱼ)
   -}
 
+{-
   ---------------------------------------------
   -- Prop: We can state the unit and counit of the (＠ u ⊣ ◻) adjunction.
   --
@@ -288,7 +295,7 @@ module Examples where
           x0[ εᵈˢ ]ⱼ
 
 
-  -- GG : Con (Entry M) _ -- Ctx ((Judgements.⊢Ctx
+  -- GG : Con (Entry M) _ -- Ctx ((⊢Ctx
   --       -- SendReceiveNarrow-ModeSystem.SRN-ModeSystem ′ StdVec Bool 3 ′)
   -- GG = (ε ∙
   --       (Π BB // ▲ ↝ ◯ ∋ ＠ (true ∷ false ∷ false ∷ []) ▹ UU //
@@ -312,6 +319,7 @@ module Examples where
   ---------------------------------------------
   -- Prop: The booleans have a crisp induction
   -- principle under the `＠ u` modality.
+  {-
   boolrec-crisp-h : εε ⊢ Π (Π BB / ＠ uu ▹ UU) / ◻ ▹
                          Π BB /▹
                          ⟨ x1 ∘[ ＠ uu ] falseₜ ∣ ◻ ⟩ /▹▹
@@ -337,7 +345,7 @@ module Examples where
     Π BB / ＠ uu ▹
     (x1 ∘[ ＠ uu ] falseₜ) / (◻ ◆ ＠ uu) ▹▹
     (x1 ∘[ ＠ uu ] trueₜ)  / (◻ ◆ ＠ uu) ▹▹
-    (x1[ id ★εᵈˢ★ id ] ∘[ ＠ uu ] x0[ idT ]) / id -- ＠ uu ★εᵈˢ★ id
+    (x1[ id ★εᵈˢ★ id ] ∘[ ＠ uu ] x0[ idT ]) / id
     ≔ _
   boolrec-crisp =
     lamⱼ proof ↦
@@ -345,8 +353,50 @@ module Examples where
     lamⱼ proof ↦
     lamⱼ proof ↦ ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ (x3ⱼ ∘ⱼ x2[ id ★ηᵈˢ★ ＠ uu ]ⱼ))
                  ∘ⱼ modⱼ (wk-Term (wk-Term (wk-Term (wk-Term boolrec-crisp-h))) ∘ⱼ x3ⱼ ∘ⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ ∘ⱼ modⱼ x0ⱼ))
+                 -}
+
+  ---------------------------------------------
+  -- Prop: The naturals have a crisp induction
+  -- principle under the `＠ u` modality.
+  --
+  -- We again begin by creating our helper function.
+
+{-
+  natrec-crisp-h : εε ⊢
+    Π NN /▹
+    Π (Π NN / ＠ uu ▹ UU) / ◻ ▹
+    ⟨ x0 ∘[ ＠ uu ] zeroₜ ∣ ◻ ⟩ /▹▹
+    ⟨ Π NN / ＠ uu ▹ (x1 ∘[ ＠ uu ] x0) /▹▹ (x1 ∘[ ＠ uu ] sucₜ x0)  ∣ ◻ ⟩ /▹▹
+    ⟨ x0 ∘[ ＠ uu ] x1[ id ★ηᵈˢ★ ＠ uu ] ∣ ◻ ⟩ / ＠ uu
+    ≔
+    _
+  natrec-crisp-h =
+    lamⱼ proof ↦
+    lamⱼ proof ↦
+    lamⱼ Modalⱼ (Univⱼ (x0ⱼ ∘ⱼ zeroⱼ)) ↦
+    lamⱼ Modalⱼ (Πⱼ NNⱼ ▹ (Πⱼ Univⱼ (x2ⱼ ∘ⱼ x0ⱼ) ▹ Univⱼ (x3ⱼ ∘ⱼ sucⱼ x1ⱼ))) ↦
+    natrecⱼ x3ⱼ into Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ uu ]ⱼ))
+      zero: var (suc zero) idT
+      suc: lamⱼ NNⱼ ↦
+           lamⱼ Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ uu ]ⱼ)) ↦
+           (letunmodⱼ x2ⱼ into Modalⱼ (Univⱼ (x5ⱼ ∘ⱼ ?))
+             by {!!})
+-}
 
 
+
+
+
+{-
+  send-vec : εε ⊢
+    Π NN / ＠ uuvv ▹
+    Π Vec BB (letunmod[ ＠ uuvv ] x0 by x0[ {!!} ]) / ＠ uu ▹
+    ⟨ Vec BB (letunmod[ ＠ uuvv ] x0 by x0[ {!!} ]) ∣ ＠ vv ⟩ / id
+    ≔ {!!}
+  send-vec =
+    lamⱼ NNⱼ ↦
+    {!!}
+    -}
 
 {-
                  -}
@@ -583,5 +633,6 @@ module Examples where
       (comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))
         >ⱼ comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))) )))
   -}
+-}
 -}
 -}
