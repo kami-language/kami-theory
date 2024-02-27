@@ -111,7 +111,7 @@ leaf x ≟-Kind leaf y with x ≟ y
 ... | no y = no λ {refl -> y refl}
 ... | yes refl = yes refl
 𝓀-transform ≟-Kind 𝓀-transform = yes refl-≡
-𝓀-Modal ≟-Kind 𝓀-Modal = yes refl
+-- 𝓀-Modal ≟-Kind 𝓀-Modal = yes refl
 
 instance
   hasDecidableEquality:Kind : ∀{ns} -> hasDecidableEquality (Kind ns)
@@ -276,7 +276,7 @@ module _ {A : 𝒰 𝑖} {B : 𝒰 𝑗} {{_ : hasDecidableEquality A}} {{_ : ha
 
 module _ {P : ModeSystem 𝑖} where
 
-  _≟-GenTs_ : ∀{n bs} -> (k l : GenTs (StdVec (SomeModeHom P)) (KindedTerm P) n bs) -> isDecidable (k ≡ l)
+  _≟-GenTs_ : ∀{n bs} -> (k l : GenTs (Modality P) (KindedTerm P) n bs) -> isDecidable (k ≡ l)
   _≟-Term_ : ∀{n} -> (k l : Term P n) -> isDecidable (k ≡ l)
   _≟-KindedTerm_ : ∀{n mk} -> (k l : KindedTerm P n mk) -> isDecidable (k ≡ l)
 

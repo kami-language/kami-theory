@@ -223,7 +223,7 @@ module Examples where
   _××ⱼ_  : {μ : ModeHom M k l}
           → Γ ⊢Entry (A / μ)
           → Γ ⊢Entry (B / μ)
-          → Γ ⊢Entry ((Σ A // k ↝ k ∋ id ▹ wk1 B) / μ)
+          → Γ ⊢Entry ((Σ A // incl (k ↝ k ∋ id) ▹ wk1 B) / μ)
   _××ⱼ_ Ap Bp = Σⱼ Ap ▹ wk-Entry Bp
 
 
@@ -232,7 +232,7 @@ module Examples where
   --
   {-
   AxiomK : ε ⊢ Π UU / μ ▹ Π UU / μ ▹ ⟨ x1 ×× x0 ∣ μ ⟩ /▹▹ ⟨ x1 ∣ μ ⟩ ×× ⟨ x0 ∣ μ ⟩ / id
-           ≔ lam μ ↦ lam μ ↦ lam id ↦ letunmod[ μ ] x0 by (mod (fstₜ x0) ,, mod (sndₜ x0))
+           ≔ lam μ ↦ lam μ ↦ lam↦ letunmod[ μ ] x0 by (mod (fstₜ x0) ,, mod (sndₜ x0))
   AxiomK {μ = μ} = lamⱼ UUⱼ ↦
                    lamⱼ UUⱼ ↦
                    lamⱼ Modalⱼ (Univⱼ x1ⱼ ××ⱼ Univⱼ x0ⱼ) ↦
@@ -257,7 +257,7 @@ module Examples where
   _★ηᵈˢ★_ μ η {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (μ ⌟[ send u ]⌞ η ⌟) ∷ [])) ]
 
   dispatch : ε ⊢ Π UU /▹ x0 /▹▹ ⟨ x0 ^[ ηᵈˢ ] ∣ ＠ uu ◆ ◻  ⟩ / id
-             ≔ lam id ↦ lam id ↦ mod x0[ ηᵈˢ ]
+             ≔ lam↦ lam↦ mod x0[ ηᵈˢ ]
   dispatch = lamⱼ UUⱼ ↦
              lamⱼ Univⱼ x0ⱼ ↦
              modⱼ x0[ ηᵈˢ ]ⱼ
@@ -273,14 +273,14 @@ module Examples where
   _★εᵈˢ★_ μ η {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (μ ⌟[ recv u ]⌞ η ⌟) ∷ [])) ]
 
   sync : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ x0 ∣ ◻ ◆ ＠ uu  ⟩ /▹▹ x0[ εᵈˢ ] / id
-         ≔ lam (◻ ◆ ＠ uu) ↦ lam id ↦ letunmod[ ◻ ◆ ＠ uu ] x0 by x0[ εᵈˢ ]
+         ≔ lam↦ lam↦ letunmod[ ◻ ◆ ＠ uu ] x0 by x0[ εᵈˢ ]
   sync = lamⱼ UUⱼ ↦
          lamⱼ Modalⱼ (Univⱼ x0ⱼ) ↦
          letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
          x0[ εᵈˢ ]ⱼ
 
   sync' : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ ⟨ x0 ∣ ◻ ⟩ ∣ ＠ uu ⟩ /▹▹ x0[ εᵈˢ ] / id
-         ≔ lam (◻ ◆ ＠ uu) ↦ lam id ↦ _ -- letunmod[ ◻ ◆ ＠ uu ] x0 by x0[ εᵈˢ ]
+         ≔ lam↦ lam↦ _ -- letunmod[ ◻ ◆ ＠ uu ] x0 by x0[ εᵈˢ ]
   sync' = lamⱼ UUⱼ ↦
           lamⱼ Modalⱼ (Modalⱼ (Univⱼ x0ⱼ)) ↦
           letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
@@ -314,15 +314,15 @@ module Examples where
   -- principle under the `＠ u` modality.
   boolrec-crisp-h : εε ⊢ Π (Π BB / ＠ uu ▹ UU) / ◻ ▹
                          Π BB /▹
-                         ⟨ x1 ∘ falseₜ ∣ ◻ ⟩ /▹▹
-                         ⟨ x1 ∘ trueₜ ∣ ◻ ⟩ /▹▹
-                         ⟨ x1 ∘ x0[ id ★ηᵈˢ★ ＠ uu ] ∣ ◻ ⟩ / ＠ uu
+                         ⟨ x1 ∘[ ＠ uu ] falseₜ ∣ ◻ ⟩ /▹▹
+                         ⟨ x1 ∘[ ＠ uu ] trueₜ ∣ ◻ ⟩ /▹▹
+                         ⟨ x1 ∘[ ＠ uu ] x0[ id ★ηᵈˢ★ ＠ uu ] ∣ ◻ ⟩ / ＠ uu
                        ≔
-                       lam ◻ ↦
-                       lam id ↦
-                       lam id ↦
-                       lam id ↦
-                       boolrec _ ⟨ x4 ∘ x0[ id ★ηᵈˢ★ _ ] ∣ ◻ ⟩ x1 x0 x2
+                       lam↦
+                       lam↦
+                       lam↦
+                       lam↦
+                       boolrec ⟨ x4 ∘[ ＠ uu ] x0[ id ★ηᵈˢ★ _ ] ∣ ◻ ⟩ x1 x0 x2
 
   boolrec-crisp-h = lamⱼ Πⱼ BBⱼ ▹ UUⱼ ↦
                     lamⱼ BBⱼ ↦
@@ -335,20 +335,21 @@ module Examples where
   boolrec-crisp : εε ⊢
     Π (Π BB / ＠ uu ▹ UU) / (◻ ◆ ＠ uu) ▹
     Π BB / ＠ uu ▹
-    (x1 ∘ falseₜ) / (◻ ◆ ＠ uu) ▹▹
-    (x1 ∘ trueₜ)  / (◻ ◆ ＠ uu) ▹▹
-    (x1[ id ★εᵈˢ★ id ] ∘ x0[ idT ]) / id -- ＠ uu ★εᵈˢ★ id
-    ≔ {!!}
+    (x1 ∘[ ＠ uu ] falseₜ) / (◻ ◆ ＠ uu) ▹▹
+    (x1 ∘[ ＠ uu ] trueₜ)  / (◻ ◆ ＠ uu) ▹▹
+    (x1[ id ★εᵈˢ★ id ] ∘[ ＠ uu ] x0[ idT ]) / id -- ＠ uu ★εᵈˢ★ id
+    ≔ _
   boolrec-crisp =
     lamⱼ proof ↦
     lamⱼ proof ↦
     lamⱼ proof ↦
-    lamⱼ proof ↦ ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ {!x3[ ? ]ⱼ ∘ⱼ x2[ ? ]ⱼ!})
-                 ∘ⱼ {!!} )
-                 -- modⱼ (wk-Term (wk-Term (wk-Term (wk-Term boolrec-crisp-h))) ∘ⱼ x3[ {!!} ]ⱼ ∘ⱼ x2[ {!!} ]ⱼ ∘ⱼ modⱼ x1ⱼ ∘ⱼ modⱼ x0ⱼ))
+    lamⱼ proof ↦ ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ (x3ⱼ ∘ⱼ x2[ id ★ηᵈˢ★ ＠ uu ]ⱼ))
+                 ∘ⱼ modⱼ (wk-Term (wk-Term (wk-Term (wk-Term boolrec-crisp-h))) ∘ⱼ x3ⱼ ∘ⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ ∘ⱼ modⱼ x0ⱼ))
 
 
 
+{-
+                 -}
   ---------------------------------------------
   -- manual examples
 

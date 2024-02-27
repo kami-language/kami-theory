@@ -152,7 +152,7 @@ module Judgements (P : ModeSystem 𝑖) where
     Σⱼ_▹_  : {μ : ModeHom P k l}
             → Γ ⊢Entry (A / μ)
             → Γ ∙ (A / μ) ⊢Entry (B / μ)
-            → Γ ⊢Entry ((Σ A // k ↝ k ∋ id ▹ B) / μ)
+            → Γ ⊢Entry ((Σ A // incl (k ↝ k ∋ id) ▹ B) / μ)
 
     -------------------
     -- Kami universes
@@ -232,12 +232,12 @@ module Judgements (P : ModeSystem 𝑖) where
     lamⱼ_↦_      : ∀ {t}
               → Γ ⊢Entry (A / (η ◆ μ))
               → Γ ∙ (A / (η ◆ μ)) ⊢ t ∶ B / μ
-              → Γ ⊢ lam η ↦ t ∶ (Π A / η ▹ B) / μ
+              → Γ ⊢ lam↦ t ∶ (Π A / η ▹ B) / μ
 
     _∘ⱼ_      : ∀ {g a}
               → Γ ⊢ g ∶ (Π A / η ▹ B) / μ
               → Γ ⊢ a ∶ A / (η ◆ μ)
-              → Γ ⊢ g ∘ a ∶ B [ untransform-Term a ] / μ
+              → Γ ⊢ g ∘[ η ] a ∶ B [ untransform-Term a ] / μ
 
 
     introⱼΣ_▹_by_,_  : ∀ {A B} -> ∀{t u}
@@ -246,20 +246,20 @@ module Judgements (P : ModeSystem 𝑖) where
               → (Γ ∙ (A / μ) ⊢Entry B / μ)
               → Γ ⊢ t ∶ A / μ
               → Γ ⊢ u ∶ B [ t ] / μ
-              → Γ ⊢ t ,, u ∶ (Σ A // k ↝ k ∋ id ▹ B) / μ
+              → Γ ⊢ t ,, u ∶ (Σ A // incl (k ↝ k ∋ id) ▹ B) / μ
 
     fstⱼ      : ∀ {A B} -> ∀{t}
               -> {μ : ModeHom P k l}
               -- → {{_ : isTrue (Γ ⊢Entry (A / μ))}}
               -- → {{_ : isTrue (Γ ∙ (A / μ) ⊢Sort B)}}
-              → Γ ⊢ t ∶ (Σ A // k ↝ k ∋ id ▹ B) / μ
+              → Γ ⊢ t ∶ (Σ A // incl (k ↝ k ∋ id) ▹ B) / μ
               → Γ ⊢ fstₜ t ∶ A / μ
 
     sndⱼ      : ∀ {A B} -> ∀{t}
               -> {μ : ModeHom P k l}
               -- → {{_ : isTrue (Γ ⊢Entry (A / μ))}}
               -- → {{_ : isTrue (Γ ∙ (A / μ) ⊢Sort B)}}
-              → Γ ⊢ t ∶ (Σ A // k ↝ k ∋ id ▹ B) / μ
+              → Γ ⊢ t ∶ (Σ A // incl (k ↝ k ∋ id) ▹ B) / μ
               → Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / μ
 {-
               -}
@@ -277,7 +277,7 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ∙ (BB / μ) ⊢Entry G / μ
               → Γ       ⊢ f ∶ G [ falseₜ ]  / μ
               → Γ       ⊢ t ∶ G [ trueₜ ]  / μ
-              → Γ       ⊢ boolrec l G f t b ∶ G [ b ]  / μ
+              → Γ       ⊢ boolrec G f t b ∶ G [ b ]  / μ
 
     --------------------------------------------------
     -- Natural numbers
@@ -289,12 +289,12 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢      n ∶ NN  / μ
               → Γ ⊢ sucₜ n ∶ NN  / μ
 
-    natrecⱼ   : ∀ {G s z n} -> {μ : ModeHom P k l}
-              → Γ ∙ (NN / μ) ⊢Entry G / μ
-              → Γ       ⊢ z ∶ G [ zeroₜ ]  / μ
-              → Γ       ⊢ s ∶ (Π NN / μ ▹ (G / μ ▹▹ G [ sucₜ (var x0 id) ]↑))  / μ
-              → Γ       ⊢ n ∶ NN  / μ
-              → Γ       ⊢ natrec k G z s n ∶ G [ n ]  / μ
+    -- natrecⱼ   : ∀ {G s z n} -> {μ : ModeHom P k l}
+    --           → Γ ∙ (NN / μ) ⊢Entry G / μ
+    --           → Γ       ⊢ z ∶ G [ zeroₜ ]  / μ
+    --           → Γ       ⊢ s ∶ (Π NN / μ ▹ (G / μ ▹▹ G [ sucₜ (var x0 id) ]↑))  / μ
+    --           → Γ       ⊢ n ∶ NN  / μ
+    --           → Γ       ⊢ natrec k G z s n ∶ G [ n ]  / μ
 
 {-
     nilⱼ      : ∀ {A}
