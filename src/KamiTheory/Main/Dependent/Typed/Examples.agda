@@ -178,14 +178,16 @@ module Examples where
   ---------------------------------------------
   -- small examples
 
-  P0 : εε ∙ (NN / (`＠` uu ⨾ id)) ⊢ var zero (incl idT) ∶ NN / `＠` uu ⨾ id
-  P0 = proof
+  P0 : εε ∙ (NN / (`＠` uu ⨾ id)) ⊢ var zero (incl idT[ ＠ uu ]) ∶ NN / `＠` uu ⨾ id
+  P0 = typecheck
 
 
 
   P1 : εε ⊢ ⟨ NN ∣ ＠ uu ⟩ /▹▹ ⟨ NN ∣ ＠ uu ⟩ / id
        ≔ lam↦ letunmod x0 into ⟨ NN ∣ ＠ uu ⟩ by mod[ ＠ uu ] x0
-  P1 = proof -- lamⱼ (Modalⱼ (NNⱼ )) ↦ (letunmodⱼ (var zero idT) into (Modalⱼ NNⱼ) by (modⱼ ((var zero idT))))
+  P1 = proof
+       -- lamⱼ (Modalⱼ (NNⱼ )) ↦ (letunmodⱼ (var zero idT) into (Modalⱼ NNⱼ) by (modⱼ ((var zero idT))))
+
 
 
   wk-Entry : Γ ⊢Entry A / μ -> Γ ∙ (B / η) ⊢Entry wk1 A / μ
@@ -296,7 +298,6 @@ module Examples where
           -- letunmodⱼ x0ⱼ into Univⱼ x3[ εᵈˢ ]ⱼ by
           -- x0[ εᵈˢ ]ⱼ
 
-{-
 
   -- GG : Con (Entry M) _ -- Ctx ((⊢Ctx
   --       -- SendReceiveNarrow-ModeSystem.SRN-ModeSystem ′ StdVec Bool 3 ′)
@@ -322,26 +323,30 @@ module Examples where
   ---------------------------------------------
   -- Prop: The booleans have a crisp induction
   -- principle under the `＠ u` modality.
-  {-
   boolrec-crisp-h : εε ⊢ Π (Π BB / ＠ uu ▹ UU) / ◻ ▹
                          Π BB /▹
                          ⟨ x1 ∘[ ＠ uu ] falseₜ ∣ ◻ ⟩ /▹▹
                          ⟨ x1 ∘[ ＠ uu ] trueₜ ∣ ◻ ⟩ /▹▹
-                         ⟨ x1 ∘[ ＠ uu ] x0[ id ★ηᵈˢ★ ＠ uu ] ∣ ◻ ⟩ / ＠ uu
+                         ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id (＠ uu) {u = uu} ] ∣ ◻ ⟩ / ＠ uu
                        ≔
                        lam↦
                        lam↦
                        lam↦
                        lam↦
-                       boolrec ⟨ x4 ∘[ ＠ uu ] x0[ id ★ηᵈˢ★ _ ] ∣ ◻ ⟩ x1 x0 x2
+                       (boolrec x2 into ⟨ x4 ∘[ ＠ uu ] x0[  _★ηᵈˢ★_ id (＠ uu) {u = uu} ] ∣ ◻ ⟩ false: x1 true: x0)
 
-  boolrec-crisp-h = lamⱼ Πⱼ BBⱼ ▹ UUⱼ ↦
+  boolrec-crisp-h = -- proof
+                    lamⱼ Πⱼ BBⱼ ▹ UUⱼ ↦
                     lamⱼ BBⱼ ↦
                     lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ falseⱼ)) ↦
                     lamⱼ Modalⱼ (Univⱼ (x2ⱼ ∘ⱼ trueⱼ)) ↦
                     boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ _ ]ⱼ))
                       false: x1ⱼ
                       true: x0ⱼ
+
+{-
+  {-
+{-
 
   boolrec-crisp : εε ⊢
     Π (Π BB / ＠ uu ▹ UU) / (◻ ◆ ＠ uu) ▹
@@ -636,6 +641,7 @@ module Examples where
       (comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))
         >ⱼ comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))) )))
   -}
+-}
 -}
 -}
 -}

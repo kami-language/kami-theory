@@ -303,6 +303,17 @@ module Typecheck (P : ModeSystem 𝑖) where
   ... | no p = no p
   ... | yes Γp = just (falseⱼ {{because Γp}})
 
+  derive-Term-Sort↓,Mod↓ Γ (boolrec b into G false: f true: t) X μ with X ≟ G [ b ]
+  ... | no p = no "fail in Sort↓,Mod↓: boolrec, Motive does not match"
+  ... | yes refl = do
+    bP <- derive-Term-Sort↓,Mod↓ Γ b BB μ
+    GP <- derive-Entry (Γ ∙ (BB // μ)) (G // μ)
+    fP <- derive-Term-Sort↓,Mod↓ Γ f (G [ falseₜ ]) μ
+    tP <- derive-Term-Sort↓,Mod↓ Γ t (G [ trueₜ ]) μ
+    yes (boolrecⱼ bP into GP false: fP true: tP)
+
+
+
   -- Naturals
   derive-Term-Sort↓,Mod↓ Γ (zeroₜ) NN μ with derive-Ctx Γ
   ... | no p = no p
@@ -335,4 +346,7 @@ module Typecheck (P : ModeSystem 𝑖) where
   --   isDerivable:ModeTrans : ∀{m n v} -> {μs ηs : ModeHom P m n} -> isDerivable (ModeTrans μs ηs v)
   --   isDerivable:ModeTrans = record { derive = derive-ModeTrans _ _ }
 
+
+  typecheck : ∀{μs} -> {@(tactic solveWith (derive-Term-Sort↓,Mod↓ Γ t A μs)) derivation : Γ ⊢ t ∶ A // μs} -> Γ ⊢ t ∶ A // μs
+  typecheck {derivation = derivation} = derivation
 

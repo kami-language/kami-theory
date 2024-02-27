@@ -33,6 +33,7 @@ data ModalityTrans (M : ModeSystem 𝑖) (r : Range) : (μ η : SomeModeHom M) -
 open 2CellDefinition.2CellDefinition
 
 pattern idT = _ ⇒ _ ∋ [ incl [] ∣ incl [] ]
+pattern idT[_] μ = μ ⇒ _ ∋ [ incl [] ∣ incl [] ]
 
 -- idT : ∀{M : ModeSystem 𝑖} -> ∀{μ : SomeModeHom M } -> ModalityTrans M all μ μ
 -- idT = (_ ⇒ _ ∋ [ incl [] ∣ incl [] ])

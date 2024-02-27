@@ -277,7 +277,7 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ∙ (BB / μ) ⊢Entry G / μ
               → Γ       ⊢ f ∶ G [ falseₜ ]  / μ
               → Γ       ⊢ t ∶ G [ trueₜ ]  / μ
-              → Γ       ⊢ boolrec G f t b ∶ G [ b ]  / μ
+              → Γ       ⊢ boolrec b into G false: f true: t ∶ G [ b ]  / μ
 
     --------------------------------------------------
     -- Natural numbers

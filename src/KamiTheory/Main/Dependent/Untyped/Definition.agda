@@ -133,7 +133,7 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   𝓀-BB : MainKind []
   𝓀-trueₜ : MainKind []
   𝓀-falseₜ : MainKind []
-  𝓀-boolrec : MainKind ((term , n1) ∷ (term , n0) ∷ (term , n0) ∷ (term , n0) ∷ [])
+  𝓀-boolrec : MainKind ((term , n0) ∷ (term , n1) ∷ (term , n0) ∷ (term , n0) ∷ [])
 
   -- Kami modality system
   -- 𝓀-/ : MainKind ((term , n0) ∷ (term , n0) ∷ [])
@@ -332,7 +332,7 @@ pattern natrec A t u v = gen (main Natreckind) (id ⦊ term A ∷ id ⦊ term t 
 pattern BB = gen (main 𝓀-BB) []
 pattern trueₜ = gen (main 𝓀-trueₜ) []
 pattern falseₜ = gen (main 𝓀-falseₜ) []
-pattern boolrec A t u v = gen (main 𝓀-boolrec) (id ⦊ term A ∷ id ⦊ term t ∷ id ⦊ term u ∷ id ⦊ term v ∷ [])
+pattern boolrec_into_false:_true:_ t A u v = gen (main 𝓀-boolrec) (id ⦊ term t ∷ id ⦊ term A ∷ id ⦊ term u ∷ id ⦊ term v ∷ [])
 
 -- Introduction and elimination of vectors.
 nilₜ : Term P n                         -- Empty vector.
