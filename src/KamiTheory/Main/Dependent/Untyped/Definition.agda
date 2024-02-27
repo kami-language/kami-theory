@@ -157,7 +157,7 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
 
   𝓀-mod : MainKind ((term , n0) ∷ [])
   -- 𝓀-unmod : MainKind ((term , n0) ∷ [])
-  𝓀-letunmod : MainKind ((term , n0) ∷ (term , n1) ∷ [])
+  𝓀-letunmod : MainKind ((term , n0) ∷ (term , n1) ∷ (term , n1) ∷ [])
   -- 𝓀-send : MainKind ((term , n0) ∷ [])
   -- 𝓀-recv : MainKind ((term , n0) ∷ [])
   -- 𝓀-narrow : MainKind ((term , n0) ∷ [])
@@ -359,8 +359,8 @@ Emptyrec A e = gen (main Emptyreckind) (id ⦊ term A ∷ id ⦊ term e ∷ [])
 -- pattern comtype a    = gen (main 𝓀-comtype) (term a ∷ [])
 -- pattern comval a     = gen (main 𝓀-comval) (term a ∷ [])
 
-pattern Modal A μ     = gen (main 𝓀-Modal) (incl (_ ↝ _ ∋ μ) ⦊ term A ∷ []) --  id ⦊ (modality (((_ ↝ _ ∋ μ)))) ∷ [])
-pattern ⟨_∣_⟩ A μ = Modal A μ
+pattern Modal A μ     = gen (main 𝓀-Modal) (μ ⦊ term A ∷ []) --  id ⦊ (modality (((_ ↝ _ ∋ μ)))) ∷ [])
+pattern ⟨_∣_⟩ A μ = Modal A (incl (_ ↝ _ ∋ μ))
 -- pattern _＠_ L U     = gen (main 𝓀-＠) (term L ∷ (location U) ∷ [])
 -- pattern loc U t      = gen 𝓀-loc ((location U) ∷ term t ∷ []) -- NOTE, this one is *not* wrapped in `main`
 -- pattern unloc t      = gen (main 𝓀-unloc) (id ⦊ term t ∷ [])
@@ -371,10 +371,10 @@ pattern ⟨_∣_⟩ A μ = Modal A μ
 pattern mod[[_]] μ t        = gen (main 𝓀-mod) (μ ⦊ term t ∷ [])
 pattern mod[_] μ t        = mod[[ incl (_ ↝ _ ∋ μ) ]] t
 -- pattern unmod t      = gen (main 𝓀-unmod) (id ⦊ term t ∷ [])
-pattern letunmod[[_]]_by_ μ t s  = gen (main 𝓀-letunmod) (μ ⦊ term t ∷ id ⦊ term s ∷ [])
-pattern letunmod[_]_by_ μ t s  = gen (main 𝓀-letunmod) (incl (_ ↝ _ ∋ μ) ⦊ term t ∷ id ⦊ term s ∷ [])
-pattern letunmod_by_ t s = letunmod[ id ] t by s
-infix 25 letunmod[_]_by_ letunmod_by_
+pattern letunmod[[_]]_into_by_ μ t Y s  = gen (main 𝓀-letunmod) (μ ⦊ term t ∷ id ⦊ term Y ∷ id ⦊ term s ∷ [])
+pattern letunmod[_]_into_by_ μ t Y s  = letunmod[[ incl (_ ↝ _ ∋ μ) ]] t into Y by s
+pattern letunmod_into_by_ t Y s = letunmod[ id ] t into Y by s
+infix 25 letunmod[[_]]_into_by_ letunmod[_]_into_by_ letunmod_into_by_
 
 
 -- Transformations / Transitions
@@ -745,6 +745,9 @@ wkWhnf ρ (ne x)  = ne (wkNeutral ρ x)
 
 
 -- Non-dependent version of Π.
+
+_//_▹▹_ : Term P n → Modality P -> Term P n → Term P n
+A // μ ▹▹ B = Π A // μ ▹ wk1 B
 
 _/_▹▹_ : ∀{k l} -> Term P n → ModeHom P k l -> Term P n → Term P n
 A / μ ▹▹ B = Π A / μ ▹ wk1 B

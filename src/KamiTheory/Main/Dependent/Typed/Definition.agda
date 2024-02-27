@@ -167,7 +167,7 @@ module Judgements (P : ModeSystem 𝑖) where
 
     -------------------
     -- Kami modality system
-    Modalⱼ : Γ ⊢Entry (A / (η ◆ μ)) -> Γ ⊢Entry Modal A η / μ
+    Modalⱼ : Γ ⊢Entry (A / (η ◆ μ)) -> Γ ⊢Entry ⟨ A ∣ η ⟩ / μ
 
     -- narrowⱼ : (ϕ : U ≤ V)
     --            -> Γ ⊢Entry X / `＠` U ⨾ μs
@@ -186,13 +186,13 @@ module Judgements (P : ModeSystem 𝑖) where
     -------------------
     -- Standard modality intro and "elim"
 
-    modⱼ : Γ ⊢ t ∶ X / (η ◆ μ) -> Γ ⊢ mod[ η ] t ∶ Modal X η / μ
+    modⱼ : Γ ⊢ t ∶ X / (η ◆ μ) -> Γ ⊢ mod[ η ] t ∶ ⟨ X ∣ η ⟩ / μ
 
     letunmodⱼ_into_by_ :
-                 Γ ⊢ t ∶ Modal X η / μ ◆ ω
-              -> Γ ∙ (Modal X η / μ ◆ ω) ⊢Entry Y / ω
+                 Γ ⊢ t ∶ ⟨ X ∣ η ⟩ / μ ◆ ω
+              -> Γ ∙ (⟨ X ∣ η ⟩ / μ ◆ ω) ⊢Entry Y / ω
               -> Γ ∙ (X / (η ◆ μ ◆ ω)) ⊢ s ∶ Y [ mod[ μ ] (var x0 id) ]↑ / ω
-              -> Γ ⊢ letunmod[ μ ] t by s ∶ Y [ t ] / ω
+              -> Γ ⊢ letunmod[ μ ] t into Y by s ∶ Y [ t ] / ω
 
     -- unmodⱼ : Γ ⊢ t ∶ Modal X η / μ -> Γ ⊢ unmod t ∶ X / (η ◆ μ)
 

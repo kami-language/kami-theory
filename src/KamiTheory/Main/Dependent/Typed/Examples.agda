@@ -127,6 +127,7 @@ module Examples where
   pattern x0[_] ξ = var zero (incl ξ)
   pattern x1[_] ξ = var (suc zero) (incl ξ)
   pattern x2[_] ξ = var (suc (suc zero)) (incl ξ)
+  pattern x3[_] ξ = var (suc (suc (suc zero))) (incl ξ)
 
   pattern x0ⱼ = var zero idT
   pattern x1ⱼ = var (suc zero) idT
@@ -183,9 +184,8 @@ module Examples where
 
 
   P1 : εε ⊢ ⟨ NN ∣ ＠ uu ⟩ /▹▹ ⟨ NN ∣ ＠ uu ⟩ / id
-       ≔ lam↦ letunmod x0 by mod[ ＠ uu ] x0
-  P1 = lamⱼ (Modalⱼ (NNⱼ )) ↦ (letunmodⱼ (var zero idT) into (Modalⱼ NNⱼ) by (modⱼ ((var zero idT))))
-
+       ≔ lam↦ letunmod x0 into ⟨ NN ∣ ＠ uu ⟩ by mod[ ＠ uu ] x0
+  P1 = proof -- lamⱼ (Modalⱼ (NNⱼ )) ↦ (letunmodⱼ (var zero idT) into (Modalⱼ NNⱼ) by (modⱼ ((var zero idT))))
 
 
   wk-Entry : Γ ⊢Entry A / μ -> Γ ∙ (B / η) ⊢Entry wk1 A / μ
@@ -250,7 +250,6 @@ module Examples where
                    modⱼ (fstⱼ x0ⱼ) , modⱼ (sndⱼ x0ⱼ)
   -}
 
-{-
   ---------------------------------------------
   -- Prop: We can state the unit and counit of the (＠ u ⊣ ◻) adjunction.
   --
@@ -263,11 +262,12 @@ module Examples where
   _★ηᵈˢ★_ : (μ : ModeHom M k ▲) (η : ModeHom M ▲ l) -> ∀{u} -> ModalityTrans M all (k ↝ l ∋ (μ ◆ η)) (k ↝ l ∋ (μ ◆ ＠ u ◆ ◻ ◆ η))
   _★ηᵈˢ★_ μ η {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (μ ⌟[ send u ]⌞ η ⌟) ∷ [])) ]
 
-  dispatch : ε ⊢ Π UU /▹ x0 /▹▹ ⟨ x0 ^[ ηᵈˢ ] ∣ ＠ uu ◆ ◻  ⟩ / id
-             ≔ lam↦ lam↦ mod x0[ ηᵈˢ ]
-  dispatch = lamⱼ UUⱼ ↦
-             lamⱼ Univⱼ x0ⱼ ↦
-             modⱼ x0[ ηᵈˢ ]ⱼ
+  dispatch : ε ⊢ Π UU /▹ x0 /▹▹ ⟨ x0[ ηᵈˢ ] ∣ ＠ uu ◆ ◻  ⟩ / id
+             ≔ lam↦ lam↦ mod[ ＠ uu ◆ ◻ ] x0[ ηᵈˢ ]
+  dispatch = proof
+             -- lamⱼ UUⱼ ↦
+             -- lamⱼ Univⱼ x0ⱼ ↦
+             -- modⱼ x0[ ηᵈˢ ]ⱼ
 
   --
   -- The counit on the other hand allows us to wait for the execution
@@ -280,20 +280,23 @@ module Examples where
   _★εᵈˢ★_ μ η {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (μ ⌟[ recv u ]⌞ η ⌟) ∷ [])) ]
 
   sync : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ x0 ∣ ◻ ◆ ＠ uu  ⟩ /▹▹ x0[ εᵈˢ ] / id
-         ≔ lam↦ lam↦ letunmod[ ◻ ◆ ＠ uu ] x0 by x0[ εᵈˢ ]
-  sync = lamⱼ UUⱼ ↦
-         lamⱼ Modalⱼ (Univⱼ x0ⱼ) ↦
-         letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
-         x0[ εᵈˢ ]ⱼ
+         ≔ lam↦ lam↦ letunmod x0 into x2[ εᵈˢ ] by x0[ εᵈˢ ]
+  sync = proof
+         -- lamⱼ UUⱼ ↦
+         -- lamⱼ Modalⱼ (Univⱼ x0ⱼ) ↦
+         -- letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
+         -- x0[ εᵈˢ ]ⱼ
 
   sync' : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ ⟨ x0 ∣ ◻ ⟩ ∣ ＠ uu ⟩ /▹▹ x0[ εᵈˢ ] / id
-         ≔ lam↦ lam↦ _ -- letunmod[ ◻ ◆ ＠ uu ] x0 by x0[ εᵈˢ ]
-  sync' = lamⱼ UUⱼ ↦
-          lamⱼ Modalⱼ (Modalⱼ (Univⱼ x0ⱼ)) ↦
-          letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
-          letunmodⱼ x0ⱼ into Univⱼ x3[ εᵈˢ ]ⱼ by
-          x0[ εᵈˢ ]ⱼ
+         ≔ lam↦ lam↦ letunmod x0 into x2[ εᵈˢ ] by (letunmod[ ＠ uu ] x0 into x3[ εᵈˢ ] by x0[ εᵈˢ ])
+  sync' = proof
+          -- lamⱼ UUⱼ ↦
+          -- lamⱼ Modalⱼ (Modalⱼ (Univⱼ x0ⱼ)) ↦
+          -- letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
+          -- letunmodⱼ x0ⱼ into Univⱼ x3[ εᵈˢ ]ⱼ by
+          -- x0[ εᵈˢ ]ⱼ
 
+{-
 
   -- GG : Con (Entry M) _ -- Ctx ((⊢Ctx
   --       -- SendReceiveNarrow-ModeSystem.SRN-ModeSystem ′ StdVec Bool 3 ′)
