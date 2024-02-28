@@ -306,11 +306,6 @@ module _ {P : ModeSystem 𝑖} where
   term x ≟-KindedTerm term y with x ≟-Term y
   ... | no p = no λ {refl -> p refl}
   ... | yes refl = yes refl
-  (x // p) ≟-KindedTerm (y // q) with x ≟-Term y
-  ... | no p = no λ {refl -> p refl}
-  ... | yes refl with p ≟ q
-  ... | no p = no λ {refl -> p refl}
-  ... | yes refl = yes refl
   modality x₁ ≟-KindedTerm modality x with x ≟ x₁
   ... | no p = no λ {refl -> p refl}
   ... | yes refl = yes refl
@@ -318,10 +313,21 @@ module _ {P : ModeSystem 𝑖} where
   ... | no p = no λ {refl -> p refl}
   ... | yes refl = yes refl
 
+  _≟-Entry_ : ∀{n} -> (k l : Entry P n) -> isDecidable (k ≡ l)
+  (x // p) ≟-Entry (y // q) with x ≟-Term y
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl with p ≟ q
+  ... | no p = no λ {refl -> p refl}
+  ... | yes refl = yes refl
+
 
   instance
     hasDecidableEquality:Term : ∀{n} -> hasDecidableEquality (Term P n)
     hasDecidableEquality:Term = record { _≟_ = _≟-Term_ }
+
+  instance
+    hasDecidableEquality:Entry : ∀{n} -> hasDecidableEquality (Entry P n)
+    hasDecidableEquality:Entry = record { _≟_ = _≟-Entry_ }
 
   instance
     hasDecidableEquality:KindedTerm : ∀{n k} -> hasDecidableEquality (KindedTerm P n k)

@@ -90,7 +90,7 @@ private
 
 
 data Metakind : Set where
-  term entry modality : Metakind
+  term modality : Metakind
   transition : Metakind
 
 -- Representation of sub terms using a list of binding levels
@@ -234,7 +234,9 @@ data KindedTerm (P : ModeSystem 𝑖) (n : Nat) : (k : Metakind) -> 𝒰 𝑖 wh
   term : Term P n -> KindedTerm P n term
   modality : SomeModeHom P -> KindedTerm P n modality
   transition : Transition P vis -> KindedTerm P n transition
-  _//_ : Term P n -> SomeModeHom P -> KindedTerm P n entry
+
+data Entry (P : ModeSystem 𝑖) (n : Nat) : 𝒰 𝑖 where
+  _//_ : Term P n -> SomeModeHom P -> Entry P n
 
 pattern _/_ A μs = A // (_ ↝ _ ∋ μs)
 infixl 21 _//_ _/_
@@ -246,8 +248,8 @@ data Term P n where
   var : (x : Fin n) → Transition P all → Term P n
 
 
-Entry : (P : ModeSystem 𝑖) (n : Nat) -> 𝒰 𝑖
-Entry P n = KindedTerm P n entry
+-- Entry : (P : ModeSystem 𝑖) (n : Nat) -> 𝒰 𝑖
+-- Entry P n = KindedTerm P n entry
 
 
 
@@ -675,7 +677,7 @@ mutual
   wk-Kinded ρ (term x) = term (wk ρ x)
   wk-Kinded ρ (transition ξ) = transition ξ
   wk-Kinded ρ (modality μ) = modality μ
-  wk-Kinded ρ (x // p) = wk ρ x // p
+  -- wk-Kinded ρ (x // p) = wk ρ x // p
 
   wk : {m n : Nat} (ρ : Wk m n) (t : Term P n) → Term P m
   wk ρ (var x ξ)   = var (wkVar ρ x) ξ
@@ -878,7 +880,7 @@ mutual
   push-Kinded ξs (modality μ) = modality μ
   push-Kinded ξs (transition ζ) = transition ζ
   -- t)
-  push-Kinded ξs (x // μ) = push ξs x // μ
+  -- push-Kinded ξs (x // μ) = push ξs x // μ
 
   push : Transitions P n all -> Term P n -> Term P n
   push ξs (gen (main x) c) = gen (main x) (push-Gen ξs c)
@@ -914,7 +916,7 @@ mutual
   untransform-KindedTerm (term x) = term (untransform-Term x)
   untransform-KindedTerm (modality μ) = modality μ
   untransform-KindedTerm (transition ξ) = transition ξ
-  untransform-KindedTerm (x // p) = untransform-Term x // p
+  -- untransform-KindedTerm (x // p) = untransform-Term x // p
 
 ------------------------------------------------------------------------
 -- Substitution
@@ -1008,7 +1010,7 @@ mutual
   subst-Kinded σ (term x) = term (subst σ x)
   subst-Kinded σ (transition ξ) = transition ξ --  (subst σ t)
   subst-Kinded σ (modality μ) = modality μ
-  subst-Kinded σ (x // p) = subst σ x // p
+  -- subst-Kinded σ (x // p) = subst σ x // p
 
   subst : (σ : Subst P m n) (t : Term P n) → Term P m
   subst σ (var x ξ) = push (uniformTransitions ξ) (substVar σ x) -- if we substitute a variable with an annotation, we have to push this annotation down the term
