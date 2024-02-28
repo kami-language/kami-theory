@@ -46,7 +46,8 @@ open import KamiTheory.Main.Generic.ModeSystem.Modality
 open import KamiTheory.Main.Generic.ModeSystem.Transition
 open import Data.Vec using ([] ; _∷_ ; _++_) renaming (Vec to StdVec)
 
-open import Agora.Conventions using (𝑖 ; 𝑗 ; 𝒰 ; _､_)
+open import Agora.Conventions using (𝑖 ; 𝑗 ; 𝒰 ; _､_ ; hasDecidableEquality ; _≡_ ; yes ; no)
+open import KamiTheory.Basics
 
 -- Kami: We additionally parametrize over a set P, describing the set of locations
 -- module KamiUntyped (P : ModeSystem 𝑖) where
@@ -66,6 +67,13 @@ infixr 32 _××_
 infixl 30 _ₛ•ₛ_ _•ₛ_ _ₛ•_
 infix 25 _[_]
 infix 25 _[_]↑
+
+
+module _ {A : 𝒰 𝑖} {{_ : hasDecidableEquality A}} where
+  β-decide-≡-Vec : ∀{n} -> {x : StdVec A n} -> decide-≡-Vec x x ≡ yes refl
+  β-decide-≡-Vec = {!!}
+
+  {-# REWRITE β-decide-≡-Vec #-}
 
 
 -- Typing contexts (length indexed snoc-lists, isomorphic to lists).

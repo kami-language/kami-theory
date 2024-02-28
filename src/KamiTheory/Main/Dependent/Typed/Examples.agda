@@ -74,7 +74,7 @@ module Examples where
   -- 𝔽 3 →# 𝟚
 
   singleton : Fin 3 -> ⟨ PP ⟩
-  singleton i = singletonVec false true i 
+  singleton i = singletonVec true false i 
 
   M : ModeSystem _
   M = SendReceiveNarrow-ModeSystem.SRN-ModeSystem PP {{it}} {{{!!}}}
@@ -116,7 +116,11 @@ module Examples where
   ww = singleton (# 2)
 
   uuvv : P
-  uuvv = true ∷ (true ∷ (false ∷ []))
+  uuvv = false ∷ (false ∷ (true ∷ []))
+
+  pattern UVP = false ∷ false ∷ true ∷ []
+  pattern UP = false ∷ true ∷ true ∷ []
+  pattern VP = true ∷ false ∷ true ∷ []
 
 
   pattern x0 = var zero (incl idT)
@@ -175,6 +179,7 @@ module Examples where
 
   pattern ＠ u = `＠` u ⨾ id
   pattern ◻ = `[]` ⨾ id
+
 
   ---------------------------------------------
   -- small examples
@@ -287,13 +292,14 @@ module Examples where
          letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
          x0[ εᵈˢ ]ⱼ
 
-  sync' : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ ⟨ x0 ∣ ◻ ⟩ ∣ ＠ uu ⟩ /▹▹ x0[ εᵈˢ ] / id
-         ≔ lam↦ lam↦ letunmod x0 into x2[ εᵈˢ ] by (letunmod[ ＠ uu ] x0 into x3[ εᵈˢ ] by x0[ εᵈˢ ])
-  sync' = lamⱼ UUⱼ ↦
-          lamⱼ Modalⱼ (Modalⱼ (Univⱼ x0ⱼ)) ↦
-          letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
-          letunmodⱼ[ ＠ uu ] x0ⱼ into Univⱼ x3[ εᵈˢ ]ⱼ by
-          x0[ εᵈˢ ]ⱼ
+  sync' : ∀{u} -> ε ⊢ Π UU / (◻ ◆ ＠ u) ▹ ⟨ ⟨ x0 ∣ ◻ ⟩ ∣ ＠ u ⟩ /▹▹ x0[ εᵈˢ ] / id
+         ≔ lam↦ lam↦ letunmod x0 into x2[ εᵈˢ ] by (letunmod[ ＠ u ] x0 into x3[ εᵈˢ ] by x0[ εᵈˢ ])
+  sync' {u = u} =
+    lamⱼ UUⱼ ↦
+    lamⱼ Modalⱼ (Modalⱼ (Univⱼ x0ⱼ)) ↦
+    letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
+    letunmodⱼ[ ＠ u ] x0ⱼ into Univⱼ x3[ εᵈˢ ]ⱼ by
+    x0[ εᵈˢ ]ⱼ
 
 
   -- GG : Con (Entry M) _ -- Ctx ((⊢Ctx
@@ -362,28 +368,74 @@ module Examples where
   --
   -- We again begin by creating our helper function.
 
-  natrec-crisp-h : εε ⊢
+  natrec-crisp-h : ∀{u} -> εε ⊢
     Π NN /▹
-    Π (Π NN / ＠ uu ▹ UU) / ◻ ▹
-    ⟨ x0 ∘[ ＠ uu ] zeroₜ ∣ ◻ ⟩ /▹▹
-    ⟨ Π NN / ＠ uu ▹ (x1 ∘[ ＠ uu ] x0) /▹▹ (x1 ∘[ ＠ uu ] sucₜ x0)  ∣ ◻ ⟩ /▹▹
-    ⟨ x0 ∘[ ＠ uu ] x1[ id ★ηᵈˢ★ ＠ uu ] ∣ ◻ ⟩ / ＠ uu
+    Π (Π NN / ＠ u ▹ UU) / ◻ ▹
+    ⟨ x0 ∘[ ＠ u ] zeroₜ ∣ ◻ ⟩ /▹▹
+    ⟨ Π NN / ＠ u ▹ (x1 ∘[ ＠ u ] x0) /▹▹ (x1 ∘[ ＠ u ] sucₜ x0)  ∣ ◻ ⟩ /▹▹
+    ⟨ x0 ∘[ ＠ u ] x1[ id ★ηᵈˢ★ ＠ u ] ∣ ◻ ⟩ / ＠ u
     ≔
     _
-  natrec-crisp-h =
+  natrec-crisp-h {u = u} =
     lamⱼ proof ↦
     lamⱼ proof ↦
     lamⱼ Modalⱼ (Univⱼ (x0ⱼ ∘ⱼ zeroⱼ)) ↦
     lamⱼ Modalⱼ (Πⱼ NNⱼ ▹ (Πⱼ Univⱼ (x2ⱼ ∘ⱼ x0ⱼ) ▹ Univⱼ (x3ⱼ ∘ⱼ sucⱼ x1ⱼ))) ↦
-    natrecⱼ x3ⱼ into Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ uu ]ⱼ))
+    natrecⱼ x3ⱼ into Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ u ]ⱼ))
       zero: var (suc zero) idT
       suc: lamⱼ NNⱼ ↦
-           lamⱼ Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ uu ]ⱼ)) ↦
-           (letunmodⱼ x2ⱼ into Modalⱼ (Univⱼ (x5ⱼ ∘ⱼ sucⱼ (x2[ id ★ηᵈˢ★ ＠ uu ]ⱼ)))
-             by letunmodⱼ x1ⱼ into Modalⱼ (Univⱼ (x6ⱼ ∘ⱼ sucⱼ (x3[ id ★ηᵈˢ★ ＠ uu ]ⱼ)))
-             by modⱼ (x1ⱼ ∘ⱼ x3[ id ★ηᵈˢ★ ＠ uu ]ⱼ ∘ⱼ x0ⱼ)
+           lamⱼ Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ u ]ⱼ)) ↦
+           (letunmodⱼ x2ⱼ into Modalⱼ (Univⱼ (x5ⱼ ∘ⱼ sucⱼ (x2[ id ★ηᵈˢ★ ＠ u ]ⱼ)))
+             by letunmodⱼ x1ⱼ into Modalⱼ (Univⱼ (x6ⱼ ∘ⱼ sucⱼ (x3[ id ★ηᵈˢ★ ＠ u ]ⱼ)))
+             by modⱼ (x1ⱼ ∘ⱼ x3[ id ★ηᵈˢ★ ＠ u ]ⱼ ∘ⱼ x0ⱼ)
              )
 
+  natrec-crisp : ∀{u} -> εε ⊢
+    Π NN / ＠ u ▹
+    Π (Π NN / ＠ u ▹ UU) / (◻ ◆ ＠ u) ▹
+    (x0 ∘[ ＠ u ] zeroₜ) / (◻ ◆ ＠ u) ▹▹
+    (Π NN / ＠ u ▹ (x1 ∘[ ＠ u ] x0) /▹▹ (x1 ∘[ ＠ u ] sucₜ x0)) / (◻ ◆ ＠ u) ▹▹
+    (x0[ id ★εᵈˢ★ id ] ∘[ ＠ u ] x1) / id
+    ≔ _
+  natrec-crisp {u = u} =
+    lamⱼ proof ↦
+    lamⱼ proof ↦
+    lamⱼ proof ↦
+    lamⱼ proof ↦ ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ (x2ⱼ ∘ⱼ x3[ id ★ηᵈˢ★ ＠ u ]ⱼ))
+                 ∘ⱼ modⱼ (wk-Term (wk-Term (wk-Term (wk-Term natrec-crisp-h))) ∘ⱼ x3ⱼ ∘ⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ ∘ⱼ modⱼ x0ⱼ))
+
+
+  ---------------------------------------------
+  -- For sending vectors we need the narrowing
+  -- transformation:
+
+  τᵈˢ : ∀{u v} -> u ≤ v -> ModalityTrans M all (▲ ↝ ◯ ∋ ＠ u) (▲ ↝ ◯ ∋ ＠ v)
+  τᵈˢ {u = u} ϕ = _ ⇒ _ ∋ [ (incl (incl (id ⌟[ narrow ϕ ]⌞ id ⌟) ∷ [])) ∣ incl [] ]
+
+  _★τᵈˢ[_]★_ : (μ : ModeHom M k ▲) -> ∀{u v} -> (ϕ : u ≤ v) -> (η : ModeHom M ◯ l) -> ModalityTrans M all (k ↝ l ∋ (μ ◆ ＠ u ◆ η)) (k ↝ l ∋ (μ ◆ ＠ v ◆ η))
+  _★τᵈˢ[_]★_ μ ϕ η = _ ⇒ _ ∋ [ (incl (incl (μ ⌟[ narrow ϕ ]⌞ η ⌟) ∷ [])) ∣ incl [] ]
+
+  ϕu : uuvv ≤ uu
+  ϕu = refl-≤-𝟚 ∷ (step ∷ (refl-≤-𝟚 ∷ []))
+
+  ϕv : uuvv ≤ vv
+  ϕv = step ∷ (refl-≤-𝟚 ∷ (refl-≤-𝟚 ∷ []))
+
+  send-vec : εε
+    ⊢
+      Π NN / ＠ uuvv ▹
+      Π Vec BB (x0[ τᵈˢ ϕu ]) / ＠ uu ▹
+      ⟨ Vec BB (x1[ τᵈˢ ϕv ]) ∣ ＠ vv ⟩ / id
+      ≔ {!!}
+  send-vec =
+    lamⱼ NNⱼ ↦
+    conv {!!} -- (transₑ ({!Π-cong ? ? ?!}) (univ (β-red (NNⱼ) ((Πⱼ Vecⱼ BBⱼ x0[ (id) ★τᵈˢ[ ϕu ]★ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ BBⱼ (var (suc zero) {!!})))) {!!})))
+      ((wk-Term natrec-crisp)
+      ∘ⱼ x0ⱼ
+      ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ_▹_ {μ = ＠ uu} (Vecⱼ BBⱼ x0[ {!!} ]ⱼ) (Modalⱼ {η = ＠ vv} (Vecⱼ BBⱼ x1[ {!!} ]ⱼ))))
+      -- ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ Vecⱼ BBⱼ ? x0[ id ★τᵈˢ[ ϕu ]★ (◻ ◆ ＠ uuvv) ]ⱼ ▹ Modalⱼ (Vecⱼ BBⱼ x1[ id ★τᵈˢ[ ϕv ]★ (◻ ◆ ＠ uuvv) ]ⱼ)))
+      ∘ⱼ {!lamⱼ ? ↦ ?!}
+      ∘ⱼ {!!})
 
 
 

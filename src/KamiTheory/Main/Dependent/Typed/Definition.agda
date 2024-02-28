@@ -33,7 +33,7 @@ open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
 -- open import Agora.Order.Preorder
 -- open import Agora.Order.Lattice
 
-open import KamiTheory.Basics
+open import KamiTheory.Basics hiding (typed)
 open import KamiTheory.Main.Dependent.Untyped.Definition
 
 open import KamiTheory.ThirdParty.logrel-mltt.Tools.Fin
@@ -48,13 +48,8 @@ open import KamiTheory.Main.Generic.ModeSystem.Transition
 
 
 
--- module _ {P : 𝒰 _} {{_ : Preorder (ℓ₀ , ℓ₀ , ℓ₀) on P}} {{_ : hasDecidableEquality P}} where
 module Judgements (P : ModeSystem 𝑖) where
--- {{_ : isSetoid {ℓ₀} P}} {{_ : isPreorder ℓ₀ ′ P ′}} {{_ : hasFiniteMeets ′ P ′ }} where
-       -- {{_ : hasDecidableEquality P}} where
 
-  -- open DUN.KamiUntyped P hiding (_∷_)
-  _★_ = _◆-Modality_
 
 
   infixl 30 _∙_
@@ -67,7 +62,6 @@ module Judgements (P : ModeSystem 𝑖) where
   open Term
 
   private variable
-    -- n m : Nat
     k l o q r mm nn : Mode P
     μs : Modality P
     ωs : Modality P
@@ -75,11 +69,11 @@ module Judgements (P : ModeSystem 𝑖) where
     μ : ModeHom P k l
     η : ModeHom P o q
     ω : ModeHom P mm nn
-    -- ω : ModeHom P q r
     τ σ : Term P n -- Transitions
     ξ ξ₀ ξ₁ : Term P n -- Transitions
     Γ  : Con (Entry P) n
     A B : Term P n
+    C D : Term P n
     a b : Term P n
     X Y : Term P n
     L K : Term P n
@@ -104,9 +98,10 @@ module Judgements (P : ModeSystem 𝑖) where
 
 
   data ⊢Ctx_ : Con (Entry P) n → 𝒰 𝑖
-  data _⊢Sort_ (Γ : Con (Entry P) n) : Term P n -> 𝒰 𝑖
   data _⊢Entry_ (Γ : Con (Entry P) n) : Entry P n -> 𝒰 𝑖
   data _⊢_∶_ (Γ : Con (Entry P) n) : Term P n → Entry P n → 𝒰 𝑖
+  data _⊢Entry_＝_ (Γ : Con (Entry P) n) : Entry P n → Entry P n → 𝒰 𝑖
+  data _⊢_＝_∶_ (Γ : Con (Entry P) n) : Term P n → Term P n → Entry P n → 𝒰 𝑖
 
 
   -- Well-formed context
@@ -118,21 +113,7 @@ module Judgements (P : ModeSystem 𝑖) where
 
 
 
-  -- Well-formed type
-  data _⊢Sort_ Γ where
-    UUⱼ    : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Sort UU
-    NNⱼ    : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Sort NN
-    -- Vecⱼ   : Γ ⊢Sort A → Γ ⊢ t ∶ NN / ▲ U → Γ ⊢Sort Vec A t
-    Emptyⱼ : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Sort Empty
-    Unitⱼ  : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Sort Unit
 
-    Πⱼ_▹_  : Γ ⊢Entry (A / μ) → Γ ∙ E ⊢Sort B → Γ ⊢Sort (Π A / μ ▹ B)
-    Σⱼ_▹_  : Γ ⊢Entry (A / μ) → Γ ∙ F ⊢Sort G → Γ ⊢Sort (Σ A / μ ▹ G)
-    -- univ   : Γ ⊢Sort A ∶ UU
-    --       → Γ ⊢Sort A
-
-    -- Kami types
-    -- Locⱼ : (U : P) -> Γ ⊢Sort L -> Γ ⊢Sort (L ＠ U)
 
     -- Well-formed entry
   data _⊢Entry_ Γ where
@@ -162,20 +143,9 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢Entry (X / μ)
 
     -------------------
-    -- Kami types (global ◯)
-    -- Locⱼ : (U : P) -> Γ ⊢Entry (L / ▲ U) -> Γ ⊢Entry ((L ＠ U) / ◯)
-    -- Comⱼ : Γ ⊢Entry (A / ◯) -> Γ ⊢Entry (Com R A / ◯)
-
-    -------------------
     -- Kami modality system
     Modalⱼ : Γ ⊢Entry (A / (η ◆ μ)) -> Γ ⊢Entry ⟨ A ∣ η ⟩ / μ
 
-    -- narrowⱼ : (ϕ : U ≤ V)
-    --            -> Γ ⊢Entry X / `＠` U ⨾ μs
-    --            -> Γ ⊢Entry X / `＠` V ⨾ μs
-
-    -------------------
-    -- Mode transformations (transitions)
 
 
 
@@ -183,6 +153,26 @@ module Judgements (P : ModeSystem 𝑖) where
 
   -- Well-formed term of a type
   data _⊢_∶_ Γ where
+
+    -------------------
+    -- Types as terms of UU
+    NNⱼ    : Γ ⊢ NN ∶ UU / μ
+    BBⱼ    : Γ ⊢ BB ∶ UU / μ
+
+    UUⱼ    : Γ ⊢ UU ∶ UU / μ
+
+    Vecⱼ   : Γ ⊢ A ∶ UU / μ → Γ ⊢ t ∶ NN / μ  → Γ ⊢ Vec A t ∶ UU / μ
+
+    Πⱼ_▹_  : Γ ⊢ A ∶ UU / μ ◆ η
+              → Γ ∙ (A / μ ◆ η) ⊢ B ∶ UU / η
+              → Γ ⊢ (Π A / μ ▹ B) ∶ UU / η
+
+    Σⱼ_▹_  : {μ : ModeHom P k l}
+            → Γ ⊢ A ∶ UU / μ
+            → Γ ∙ (A / μ) ⊢ B ∶ UU / μ
+            → Γ ⊢ (Σ A // incl (k ↝ k ∋ id) ▹ B) ∶ UU / μ
+
+    Modalⱼ : Γ ⊢ A ∶ UU / (η ◆ μ) -> Γ ⊢ ⟨ A ∣ η ⟩ ∶ UU / μ
 
     -------------------
     -- Standard modality intro and "elim"
@@ -196,8 +186,6 @@ module Judgements (P : ModeSystem 𝑖) where
               -> Γ ∙ (X / (η ◆ μ ◆ ω)) ⊢ s ∶ Y [ mod[ μ ] (var x0 id) ]↑ / ω
               -> Γ ⊢ letunmod[ μ ] t into Y by s ∶ Y [ t ] / ω
 
-    -- unmodⱼ : Γ ⊢ t ∶ Modal X η / μ -> Γ ⊢ unmod t ∶ X / (η ◆ μ)
-
 
 
     -------------------
@@ -207,17 +195,6 @@ module Judgements (P : ModeSystem 𝑖) where
     transformⱼ : ∀ (ζ : ModalityTrans P vis (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
                  -> Γ ⊢ t ∶ A / μ
                  -> Γ ⊢ transform (incl ζ) t ∶ A / η
-
-
-    -- let-inⱼ : Γ ⊢ t ∶ A / ηs
-    --         → Γ ∙ (A / ηs) ⊢[ σ ] s ∶ B / ωs
-    --         → Γ ⊢[ σ [ t ] ] let-in t s ∶ B [ t ] / ωs
-
-
-    -------------------
-    -- Interactions between modalities
-    -- sendⱼ : ∀ U -> Γ ⊢ t ∶ X / μ -> Γ ⊢ send t ∶ X / `＠` U ⨾ `[]` ⨾ μs
-    -- recvⱼ : ∀ U -> Γ ⊢ t ∶ X / `[]` ⨾ `＠` U ⨾ μs -> Γ ⊢ recv t ∶ X / μ
 
 
     -------------------
@@ -298,6 +275,11 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ       ⊢ s ∶ (Π NN / id {m = k} ▹ (G / id {m = k} ▹▹ (G [ sucₜ (var x0 id) ]↑)))  / μ
               → Γ       ⊢ natrec G z s n ∶ G [ n ]  / μ
 
+    conv      : ∀ {t A B}
+              → Γ ⊢Entry (A / μ) ＝ (B / μ)
+              → Γ ⊢ t ∶ A / μ
+              → Γ ⊢ t ∶ B / μ
+
 
   pattern letunmodⱼ_into_by_ t G s = letunmodⱼ[ id ] t into G by  s
 
@@ -325,99 +307,13 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢ vs ∶ Vec A l / `＠` U ⨾ μs
               → Γ ⊢ vecrec G z s l vs ∶ G [ wk1 vs ] [ l ]  / `＠` V ⨾ ηs
 
-
-
-
-{-
-    -------------------
-    -- Interaction of Communication with global types
-
-    -- If we have a communication value, we can create a global value
-    -- by packing the comm-type and the comm-value into a "tuple" with `com`
-    -- comⱼ : Γ ⊢Entry (X / ⇄ R A)
-    --         -> Γ ⊢ t ∶ X / ⇄ R A
-    --         -> Γ ⊢ com X t ∶ Com R A / ◯
-
-    -- -- we can project to the first (type) component
-    -- comtypeⱼ : Γ ⊢Entry (A / ◯)
-    --         -> Γ ⊢ a ∶ Com R A / ◯
-    --         -> Γ ⊢ comtype a ∶ Univ-⇄ R A / ◯
-
-    -- -- we can project to the second (value) component
-    -- comvalⱼ : Γ ⊢Entry (A / ◯)
-    --         -> Γ ⊢ a ∶ Com R A / ◯
-    --         -> Γ ⊢ comval a ∶ comtype a / ⇄ R A
-
--}
-    -------------------
-    -- Communication
-
-    -- We end a communication by giving a value of the
-    -- required type
-    -- endⱼ : Γ ⊢ a ∶ A / ◯ -> Γ ⊢ end a ∶ End / ⇄ R A
-
-{-
-    -- If we have:
-    --  - `a`: a com of type `X` which gives us a value of type A
-    --  - `b`: a com of type `Y` which (assuming a : A) gives us B,
-    -- we can compose these communications to get one of type `X ≫ Y`
-    -- _>ⱼ_ : Γ ⊢ a ∶ X / ⇄ R A
-    --       -> Γ ∙ (A / ◯) ⊢ b ∶ Y / ⇄ R (wk1 B)
-    --       -> Γ ⊢ (a > b) ∶ X ≫ Y / ⇄ R B
-
-    -- -- If we have a value (a ∶ A ＠ U) then we can share it so it is
-    -- -- available at V.
-    -- shareⱼ : Γ ⊢Entry (A / ▲ V)
-    --       -> Γ ⊢ a ∶ (A ＠ U) / ◯
-    --       -> (ϕ : V ≤ U)
-    --       -> Γ ⊢ share a ∶ Share A U V / ⇄ R (A ＠ V)
 -}
 
-    -------------------
-    -- Location
 
 
-    -- If we have a value of a local type `A` (i.e. with ▲ U annotation), we can view it
-    -- as `(A ＠ U)` which is a global type (with ◯ annotation). Note that if U is not subset
-    -- of the currently implemented locations, it is not allowed to give a term here. Instead,
-    -- the `locskip` constructor has to be used
-    -- locⱼ : (U ≤ W)
-    --      -> Γ ⊢ t ∶ A / ▲ U
-    --      -> Γ ⊢ loc U t ∶ (A ＠ U) / ◯
 
-    -- locskipⱼ : ¬(U ≤ W)
-    --      -> Γ ⊢ loc U star ∶ (A ＠ U) / ◯
 
-{-
-    -- If the currently to be implemented type (`A ＠ U`) is not part of the currently to
-    -- be implemented locations (U ≰ W), then we can trivially give a term by using `locskip`.
-    -- locskipⱼ : ¬(U ≤ W) -> Γ ⊢ locskip ∶ (A ＠ U) / ◯
 
-    -- If we have a global term `A ＠ U` we can view it as a local term.
-    -- unlocⱼ : Γ ⊢ t ∶ (A ＠ U) / ◯ -> Γ ⊢ unloc t ∶ A / ▲ U
-
-    -------------------
-    -- Generic
-
-    -- Πⱼ_▹_     : ∀ {F G}
-    --           → Γ     ⊢ F ∶ U
-    --           → Γ ∙ F ⊢ G ∶ U
-    --           → Γ     ⊢ Π F ▹ G ∶ U
-    -- Σⱼ_▹_     : ∀ {F G}
-    --           → Γ     ⊢ F ∶ U
-    --           → Γ ∙ F ⊢ G ∶ U
-    --           → Γ     ⊢ Σ F ▹ G ∶ U
-    ℕⱼ        : {{_ : isTrue (⊢Ctx Γ)}} → Γ ⊢ NN ∶ UU / μ
-    Vecⱼ      : ∀ {F l}
-              → Γ ⊢ F ∶ UU / μ
-              → Γ ⊢ l ∶ NN / μ
-              → Γ ⊢ Vec F l ∶ UU / μ
-
-    -- Emptyⱼ    : ⊢ Γ → Γ ⊢Sort Empty ∶ U
-    -- Unitⱼ     : ⊢ Γ → Γ ⊢Sort Unit ∶ U
--}
-
-{-
 
       -- zeroⱼ     : ⊢ Γ
       --           → Γ ⊢Sort zero ∶ ℕ
@@ -436,88 +332,94 @@ module Judgements (P : ModeSystem 𝑖) where
 
       -- starⱼ     : ⊢ Γ → Γ ⊢Sort star ∶ Unit
 
-      -- conv      : ∀ {t A B}
-      --           → Γ ⊢Sort t ∶ A
-      --           → Γ ⊢Sort A ≡ B
-      --           → Γ ⊢Sort t ∶ B
 
-    -- Type equality
-    -- data _⊢_≡_ (Γ : Con (Entry P) n) : Term P n → Term P n → Set where
-    --   univ   : ∀ {A B}
-    --         → Γ ⊢Sort A ≡ B ∶ U
-    --         → Γ ⊢Sort A ≡ B
-    --   refl   : ∀ {A}
-    --         → Γ ⊢Sort A
-    --         → Γ ⊢Sort A ≡ A
-    --   sym    : ∀ {A B}
-    --         → Γ ⊢Sort A ≡ B
-    --         → Γ ⊢Sort B ≡ A
-    --   trans  : ∀ {A B C}
-    --         → Γ ⊢Sort A ≡ B
-    --         → Γ ⊢Sort B ≡ C
-    --         → Γ ⊢Sort A ≡ C
-    --   Π-cong : ∀ {F H G E}
-    --         → Γ     ⊢ F
-    --         → Γ     ⊢ F ≡ H
-    --         → Γ ∙ F ⊢ G ≡ E
-    --         → Γ     ⊢ Π F ▹ G ≡ Π H ▹ E
-    --   Σ-cong : ∀ {F H G E}
-    --         → Γ     ⊢ F
-    --         → Γ     ⊢ F ≡ H
-    --         → Γ ∙ F ⊢ G ≡ E
-    --         → Γ     ⊢ Σ F ▹ G ≡ Σ H ▹ E
 
-    -- Term equality
-  --   data _⊢_≡_∶_ (Γ : Con (Entry P) n) : Term P n → Term P n → Term P n → Set where
-  --     refl          : ∀ {t A}
-  --                   → Γ ⊢Sort t ∶ A
-  --                   → Γ ⊢Sort t ≡ t ∶ A
+
+  -- Type equality
+  data _⊢Entry_＝_ Γ where
+    univ   : ∀ {A B}
+          → Γ ⊢ A ＝ B ∶ UU / μ
+          → Γ ⊢Entry (A / μ) ＝ (B / μ)
+
+    reflₑ   : ∀ {A}
+          → Γ ⊢Entry A
+          → Γ ⊢Entry A ＝ A
+
+    symₑ    : ∀ {A B}
+          → Γ ⊢Entry A ＝ B
+          → Γ ⊢Entry B ＝ A
+
+    transₑ  : ∀ {A B C}
+          → Γ ⊢Entry A ＝ B
+          → Γ ⊢Entry B ＝ C
+          → Γ ⊢Entry A ＝ C
+
+    Π-cong :
+             Γ     ⊢Entry (A / μ)
+          → Γ     ⊢Entry A / μ ＝ (B / μ)
+          → Γ ∙ (A / μ) ⊢Entry (C / η) ＝ (D / η)
+          → Γ     ⊢Entry (Π A / μ ▹ C / η) ＝ (Π B / μ ▹ D / η)
+
+    Σ-cong :
+             Γ     ⊢Entry (A / μ)
+          → Γ     ⊢Entry A / μ ＝ (B / μ)
+          → Γ ∙ (A / μ) ⊢Entry (C / η) ＝ (D / η)
+          → Γ     ⊢Entry (Σ A / μ ▹ C / η) ＝ (Σ B / μ ▹ D / η)
+
+  -- Term equality
+  data _⊢_＝_∶_ Γ where
+    reflₑ          : ∀ {t A}
+                  → Γ ⊢ t ∶ A
+                  → Γ ⊢ t ＝ t ∶ A
+
+
   --     sym           : ∀ {t u A}
-  --                   → Γ ⊢Sort t ≡ u ∶ A
-  --                   → Γ ⊢Sort u ≡ t ∶ A
+  --                   → Γ ⊢Sort t ＝ u ∶ A
+  --                   → Γ ⊢Sort u ＝ t ∶ A
   --     trans         : ∀ {t u r A}
-  --                   → Γ ⊢Sort t ≡ u ∶ A
-  --                   → Γ ⊢Sort u ≡ r ∶ A
-  --                   → Γ ⊢Sort t ≡ r ∶ A
+  --                   → Γ ⊢Sort t ＝ u ∶ A
+  --                   → Γ ⊢Sort u ＝ r ∶ A
+  --                   → Γ ⊢Sort t ＝ r ∶ A
   --     conv          : ∀ {A B t u}
-  --                   → Γ ⊢Sort t ≡ u ∶ A
-  --                   → Γ ⊢Sort A ≡ B
-  --                   → Γ ⊢Sort t ≡ u ∶ B
+  --                   → Γ ⊢Sort t ＝ u ∶ A
+  --                   → Γ ⊢Sort A ＝ B
+  --                   → Γ ⊢Sort t ＝ u ∶ B
   --     Π-cong        : ∀ {E F G H}
   --                   → Γ     ⊢ F
-  --                   → Γ     ⊢ F ≡ H       ∶ U
-  --                   → Γ ∙ F ⊢ G ≡ E       ∶ U
-  --                   → Γ     ⊢ Π F ▹ G ≡ Π H ▹ E ∶ U
+  --                   → Γ     ⊢ F ＝ H       ∶ U
+  --                   → Γ ∙ F ⊢ G ＝ E       ∶ U
+  --                   → Γ     ⊢ Π F ▹ G ＝ Π H ▹ E ∶ U
   --     Σ-cong        : ∀ {E F G H}
   --                   → Γ     ⊢ F
-  --                   → Γ     ⊢ F ≡ H       ∶ U
-  --                   → Γ ∙ F ⊢ G ≡ E       ∶ U
-  --                   → Γ     ⊢ Σ F ▹ G ≡ Σ H ▹ E ∶ U
+  --                   → Γ     ⊢ F ＝ H       ∶ U
+  --                   → Γ ∙ F ⊢ G ＝ E       ∶ U
+  --                   → Γ     ⊢ Σ F ▹ G ＝ Σ H ▹ E ∶ U
   --     app-cong      : ∀ {a b f g F G}
-  --                   → Γ ⊢Sort f ≡ g ∶ Π F ▹ G
-  --                   → Γ ⊢Sort a ≡ b ∶ F
-  --                   → Γ ⊢Sort f ∘ a ≡ g ∘ b ∶ G [ a ]
-  --     β-red         : ∀ {a t F G}
-  --                   → Γ     ⊢ F
-  --                   → Γ ∙ F ⊢ t ∶ G
-  --                   → Γ     ⊢ a ∶ F
-  --                   → Γ     ⊢ (lam t) ∘ a ≡ t [ a ] ∶ G [ a ]
+  --                   → Γ ⊢Sort f ＝ g ∶ Π F ▹ G
+  --                   → Γ ⊢Sort a ＝ b ∶ F
+  --                   → Γ ⊢Sort f ∘ a ＝ g ∘ b ∶ G [ a ]
+
+    β-red         : ∀ {a t F G}
+                  → Γ     ⊢Entry F / (η ◆ μ)
+                  → Γ ∙ (F / (η ◆ μ)) ⊢ t ∶ G / μ
+                  → Γ     ⊢ a ∶ F / (η ◆ μ)
+                  → Γ     ⊢ (lam↦ t) ∘[ η ] a ＝ t [ a ] ∶ G [ a ] / μ
   --     η-eq          : ∀ {f g F G}
   --                   → Γ     ⊢ F
   --                   → Γ     ⊢ f ∶ Π F ▹ G
   --                   → Γ     ⊢ g ∶ Π F ▹ G
-  --                   → Γ ∙ F ⊢ wk1 f ∘ var x0 ≡ wk1 g ∘ var x0 ∶ G
-  --                   → Γ     ⊢ f ≡ g ∶ Π F ▹ G
+  --                   → Γ ∙ F ⊢ wk1 f ∘ var x0 ＝ wk1 g ∘ var x0 ∶ G
+  --                   → Γ     ⊢ f ＝ g ∶ Π F ▹ G
   --     fst-cong      : ∀ {t t' F G}
   --                   → Γ ⊢Sort F
   --                   → Γ ∙ F ⊢ G
-  --                   → Γ ⊢Sort t ≡ t' ∶ Σ F ▹ G
-  --                   → Γ ⊢Sort fst t ≡ fst t' ∶ F
+  --                   → Γ ⊢Sort t ＝ t' ∶ Σ F ▹ G
+  --                   → Γ ⊢Sort fst t ＝ fst t' ∶ F
   --     snd-cong      : ∀ {t t' F G}
   --                   → Γ ⊢Sort F
   --                   → Γ ∙ F ⊢ G
-  --                   → Γ ⊢Sort t ≡ t' ∶ Σ F ▹ G
-  --                   → Γ ⊢Sort snd t ≡ snd t' ∶ G [ fst t ]
+  --                   → Γ ⊢Sort t ＝ t' ∶ Σ F ▹ G
+  --                   → Γ ⊢Sort snd t ＝ snd t' ∶ G [ fst t ]
   --     Σ-β₁          : ∀ {F G t u}
   --                   → Γ ⊢Sort F
   --                   → Γ ∙ F ⊢ G
@@ -567,6 +469,9 @@ module Judgements (P : ModeSystem 𝑖) where
   --                   → Γ ⊢Sort e ∶ Unit
   --                   → Γ ⊢Sort e' ∶ Unit
   --                   → Γ ⊢Sort e ≡ e' ∶ Unit
+
+{-
+{-
 
   -- -- Term reduction
   -- data _⊢_⇒_∶_ (Γ : Con (Entry P) n) : Term P n → Term P n → Term P n → Set where

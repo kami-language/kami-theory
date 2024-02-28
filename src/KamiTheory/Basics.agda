@@ -1,4 +1,6 @@
 
+
+
 module KamiTheory.Basics where
 
 open import Agda.Primitive using (Level; lsuc; _⊔_)
@@ -47,6 +49,7 @@ module _ {A : 𝒰 𝑖} {{_ : hasDecidableEquality A}} where
   instance
     hasDecidableEquality:Vec : ∀{n} -> hasDecidableEquality (StdVec A n)
     hasDecidableEquality:Vec = record { _≟_ = decide-≡-Vec }
+
 
 
 
