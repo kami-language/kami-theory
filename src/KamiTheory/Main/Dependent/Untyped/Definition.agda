@@ -316,7 +316,8 @@ pattern _∘[[_]]_ t μ u = gen (main Appkind) (id ⦊ term t ∷ μ ⦊ term u 
 pattern _∘[_]_ t μ u = gen (main Appkind) (id ⦊ term t ∷ incl (_ ↝ _ ∋ μ) ⦊ term u ∷ [])
 infixl 24 _∘[[_]]_ _∘[_]_ _∘_
 
-pattern _∘_ t u = t ∘[ id ] u
+-- pattern _∘_ t u = t ∘[ id ] u
+pattern _∘_ t u = gen (main Appkind) (id ⦊ term t ∷ id ⦊ term u ∷ [])
 
 
 prod : (t u : Term P n) → Term P n       -- Dependent products
@@ -861,7 +862,7 @@ liftVarExtension μs xs = intoModalities μs ++ xs
 
 
 liftPostTransition : ∀{b} -> Modality P -> Transitions P n all -> Transitions P (b + n) all
-liftPostTransition μ (transitions ξ post reqs) = transitions ξ (μ ◆-Modality post) (fillVec notRequired ++ reqs)
+liftPostTransition μ (transitions ξ post reqs) = transitions ξ (μ ◆-Modality post) (fillVec required ++ reqs)
 
 getTransition : Fin n -> Transitions P n all -> Transition P all
 getTransition x ξs with lookup (requirements ξs) x
@@ -883,6 +884,8 @@ mutual
   -- push-Kinded ξs (x // μ) = push ξs x // μ
 
   push : Transitions P n all -> Term P n -> Term P n
+  push ξs (t ∘[ α ] s) = push ξs t ∘[ α ] s
+  push ξs (t ∘ s) = push ξs t ∘ s
   push ξs (gen (main x) c) = gen (main x) (push-Gen ξs c)
   push ξs (gen (leaf x) c) = gen (leaf x) []
   push ξs (transform ζ t) with ξ' , ζ' <- commute-Transition-vis ζ (get ξs)

@@ -320,23 +320,25 @@ module Examples where
   --         ∷ [] ⦊ modality (◯ ↝ ▲ ∋ ◻) ∷ [])
   --        // ▲ ↝ ◯ ∋ ＠ (true ∷ false ∷ false ∷ [])))
 
+
   -- Res = derive-Ctx GG
 
 
   ---------------------------------------------
   -- Prop: The booleans have a crisp induction
   -- principle under the `＠ u` modality.
-  boolrec-crisp-h : εε ⊢ Π (Π BB / ＠ uu ▹ UU) / ◻ ▹
-                         Π BB /▹
-                         ⟨ x1 ∘[ ＠ uu ] falseₜ ∣ ◻ ⟩ /▹▹
-                         ⟨ x1 ∘[ ＠ uu ] trueₜ ∣ ◻ ⟩ /▹▹
+  {-
+  boolrec-crisp-h : εε ⊢ Π (Π BB / (＠ uu ◆ ◻ ◆ ＠ uu) ▹ UU) / (◻ ◆ ＠ uu) ▹
+                         Π BB / ＠ uu ▹
+                         ⟨ x1 ∘[ ＠ uu ] falseₜ ∣ ◻ ⟩ / ＠ uu ▹▹
+                         ⟨ x1 ∘[ ＠ uu ] trueₜ ∣ ◻ ⟩ / ＠ uu ▹▹
                          ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id (＠ uu) {u = uu} ] ∣ ◻ ⟩ / ＠ uu
-                       ≔
-                       lam↦
-                       lam↦
-                       lam↦
-                       lam↦
-                       (boolrec x2 into ⟨ x4 ∘[ ＠ uu ] x0[  _★ηᵈˢ★_ id (＠ uu) {u = uu} ] ∣ ◻ ⟩ false: x1 true: x0)
+                       ≔ _
+                       -- lam↦
+                       -- lam↦
+                       -- lam↦
+                       -- lam↦
+                       -- (boolrec x2 into ⟨ x4 ∘[ ＠ uu ] x0[  _★ηᵈˢ★_ id (＠ uu) {u = uu} ] ∣ ◻ ⟩ false: x1 true: x0)
 
   boolrec-crisp-h = -- proof
                     lamⱼ Πⱼ BBⱼ ▹ UUⱼ ↦
@@ -348,19 +350,58 @@ module Examples where
                       true: x0ⱼ
 
 
+
+
   boolrec-crisp : εε ⊢
-    Π (Π BB / ＠ uu ▹ UU) / (◻ ◆ ＠ uu) ▹
+    Π (Π BB / (＠ uu) ▹ UU) / (◻ ◆ ＠ uu) ▹
     Π BB / ＠ uu ▹
     (x1 ∘[ ＠ uu ] falseₜ) / (◻ ◆ ＠ uu) ▹▹
     (x1 ∘[ ＠ uu ] trueₜ)  / (◻ ◆ ＠ uu) ▹▹
     (x1[ id ★εᵈˢ★ id ] ∘[ ＠ uu ] x0[ idT ]) / id
     ≔ _
+  -}
+
+
+  boolrec-crisp-h : εε ⊢ Π (Π BB / (＠ uu) ▹ UU) / (◻ ◆ ＠ uu) ▹
+                         Π BB / ＠ uu ▹
+                         ⟨ x1 ∘ falseₜ ∣ ◻ ⟩ / ＠ uu ▹▹
+                         ⟨ x1 ∘ trueₜ ∣ ◻ ⟩ / ＠ uu ▹▹
+                         ⟨ x1 ∘ x0 ∣ ◻ ⟩ / ＠ uu
+                       ≔ _
+                       -- lam↦
+                       -- lam↦
+                       -- lam↦
+                       -- lam↦
+                       -- (boolrec x2 into ⟨ x4 ∘[ ＠ uu ] x0[  _★ηᵈˢ★_ id (＠ uu) {u = uu} ] ∣ ◻ ⟩ false: x1 true: x0)
+
+  boolrec-crisp-h = -- proof
+                    lamⱼ Πⱼ BBⱼ ▹ UUⱼ ↦
+                    lamⱼ BBⱼ ↦
+                    lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ falseⱼ)) ↦
+                    lamⱼ Modalⱼ (Univⱼ (x2ⱼ ∘ⱼ trueⱼ)) ↦
+                    boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0ⱼ))
+                      false: x1ⱼ
+                      true: x0ⱼ
+
+
+  boolrec-crisp : εε ⊢
+    Π (Π BB / (＠ uu) ▹ UU) / (◻ ◆ ＠ uu) ▹
+    Π BB / ＠ uu ▹
+    (x1 ∘ falseₜ) / (◻ ◆ ＠ uu) ▹▹
+    (x1 ∘ trueₜ)  / (◻ ◆ ＠ uu) ▹▹
+    (x1[ id ★εᵈˢ★ id ] ∘ x0[ idT ]) / id
+    ≔ _
   boolrec-crisp =
     lamⱼ proof ↦
     lamⱼ proof ↦
-    lamⱼ proof ↦
-    lamⱼ proof ↦ ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ (x3ⱼ ∘ⱼ x2[ id ★ηᵈˢ★ ＠ uu ]ⱼ))
-                 ∘ⱼ modⱼ (wk-Term (wk-Term (wk-Term (wk-Term boolrec-crisp-h))) ∘ⱼ x3ⱼ ∘ⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ ∘ⱼ modⱼ x0ⱼ))
+    lamⱼ Univⱼ (x1ⱼ ∘ⱼ falseⱼ) ↦
+    -- lamⱼ proof ↦ ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ (x3[ ? ]ⱼ ∘ⱼ x2[ id ★ηᵈˢ★ ＠ uu ]ⱼ))
+    lamⱼ Univⱼ (x2ⱼ ∘ⱼ trueⱼ) ↦ ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ (x3ⱼ ∘ⱼ x2ⱼ) ) -- (x3ⱼ ∘ⱼ x2ⱼ))
+                              ∘ⱼ modⱼ (wk-Term (wk-Term (wk-Term (wk-Term boolrec-crisp-h))) ∘ⱼ x3ⱼ ∘ⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ ∘ⱼ modⱼ x0ⱼ))
+
+    -- lamⱼ Univⱼ (x2ⱼ ∘ⱼ trueⱼ) ↦ ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ (x3ⱼ ∘ⱼ x2ⱼ))
+    --                           ∘ⱼ modⱼ (wk-Term (wk-Term (wk-Term (wk-Term boolrec-crisp-h))) ∘ⱼ x3ⱼ ∘ⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ ∘ⱼ modⱼ x0ⱼ))
+
 
   ---------------------------------------------
   -- Prop: The naturals have a crisp induction
@@ -369,27 +410,36 @@ module Examples where
   -- We again begin by creating our helper function.
 
   natrec-crisp-h : ∀{u} -> εε ⊢
-    Π NN /▹
-    Π (Π NN / ＠ u ▹ UU) / ◻ ▹
-    ⟨ x0 ∘[ ＠ u ] zeroₜ ∣ ◻ ⟩ /▹▹
-    ⟨ Π NN / ＠ u ▹ (x1 ∘[ ＠ u ] x0) /▹▹ (x1 ∘[ ＠ u ] sucₜ x0)  ∣ ◻ ⟩ /▹▹
-    ⟨ x0 ∘[ ＠ u ] x1[ id ★ηᵈˢ★ ＠ u ] ∣ ◻ ⟩ / ＠ u
+    Π NN / ＠ u ▹
+    Π (Π NN / ＠ u ▹ UU) / ◻ ◆ ＠ u ▹
+    ⟨ x0 ∘ zeroₜ ∣ ◻ ⟩ / ＠ u ▹▹
+    ⟨ Π NN / (＠ u ◆ ◻ ◆ ＠ u) ▹ (x1 ∘ x0[ {!!} ]) / (◻ ◆ ＠ u) ▹▹ (x1 ∘ sucₜ x0[ {!!} ])  ∣ ◻ ⟩ / ＠ u ▹▹
+    ⟨ x0 ∘ x1 ∣ ◻ ⟩ / ＠ u
     ≔
     _
   natrec-crisp-h {u = u} =
     lamⱼ proof ↦
     lamⱼ proof ↦
     lamⱼ Modalⱼ (Univⱼ (x0ⱼ ∘ⱼ zeroⱼ)) ↦
-    lamⱼ Modalⱼ (Πⱼ NNⱼ ▹ (Πⱼ Univⱼ (x2ⱼ ∘ⱼ x0ⱼ) ▹ Univⱼ (x3ⱼ ∘ⱼ sucⱼ x1ⱼ))) ↦
-    natrecⱼ x3ⱼ into Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ u ]ⱼ))
+    lamⱼ Modalⱼ (Πⱼ NNⱼ {{because {!!}}} ▹ (Πⱼ Univⱼ (x2ⱼ ∘ⱼ x0[ {!!} ]ⱼ) ▹ Univⱼ (x3ⱼ ∘ⱼ sucⱼ x1[ {!!} ]ⱼ))) ↦
+    natrecⱼ x3ⱼ into Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0ⱼ))
       zero: var (suc zero) idT
-      suc: lamⱼ NNⱼ ↦
-           lamⱼ Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ u ]ⱼ)) ↦
-           (letunmodⱼ x2ⱼ into Modalⱼ (Univⱼ (x5ⱼ ∘ⱼ sucⱼ (x2[ id ★ηᵈˢ★ ＠ u ]ⱼ)))
-             by letunmodⱼ x1ⱼ into Modalⱼ (Univⱼ (x6ⱼ ∘ⱼ sucⱼ (x3[ id ★ηᵈˢ★ ＠ u ]ⱼ)))
-             by modⱼ (x1ⱼ ∘ⱼ x3[ id ★ηᵈˢ★ ＠ u ]ⱼ ∘ⱼ x0ⱼ)
+      suc: lamⱼ NNⱼ {{{!!}}} ↦
+           lamⱼ Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0ⱼ)) ↦
+           (letunmodⱼ x2ⱼ into {!!} -- Modalⱼ (Univⱼ (x5ⱼ ∘ⱼ sucⱼ (x2ⱼ)))
+             by {!!}
+             -- letunmodⱼ x1ⱼ into Modalⱼ (Univⱼ (x6ⱼ ∘ⱼ sucⱼ (x3ⱼ)))
+             -- by modⱼ ((x1ⱼ ∘ⱼ x3ⱼ) ∘ⱼ {!x0[ ? ]ⱼ!})
+             -- modⱼ (x1ⱼ ∘ⱼ x3ⱼ ∘ⱼ x0ⱼ)
              )
 
+           -- lamⱼ Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ u ]ⱼ)) ↦ ?
+           -- (letunmodⱼ x2ⱼ into Modalⱼ (Univⱼ (x5ⱼ ∘ⱼ sucⱼ (x2[ id ★ηᵈˢ★ ＠ u ]ⱼ)))
+           --   by letunmodⱼ x1ⱼ into Modalⱼ (Univⱼ (x6ⱼ ∘ⱼ sucⱼ (x3[ id ★ηᵈˢ★ ＠ u ]ⱼ)))
+           --   by modⱼ (x1ⱼ ∘ⱼ x3[ id ★ηᵈˢ★ ＠ u ]ⱼ ∘ⱼ x0ⱼ)
+           --   )
+
+  {-
   natrec-crisp : ∀{u} -> εε ⊢
     Π NN / ＠ u ▹
     Π (Π NN / ＠ u ▹ UU) / (◻ ◆ ＠ u) ▹
@@ -439,7 +489,6 @@ module Examples where
 
 
 
-  {-
 {-
 
 

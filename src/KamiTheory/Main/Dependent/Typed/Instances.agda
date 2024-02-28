@@ -109,8 +109,8 @@ module Typecheck (P : ModeSystem 𝑖) where
   derive-Entry Γ ((Π A // incl (_ ↝ k ∋ μ) ▹ B) // l ↝ _ ∋ η) with k ≟ l
   ... | no _ = no "fail in Entry Π"
   ... | yes refl = do
-    A' <- derive-Entry Γ (A / (μ ◆ η))
-    B' <- derive-Entry (Γ ∙ (A / μ ◆ η)) (B / η)
+    A' <- derive-Entry Γ (A / (μ))
+    B' <- derive-Entry (Γ ∙ (A / μ)) (B / η)
     just (Πⱼ A' ▹ B')
   derive-Entry Γ ((Σ A // incl (k0 ↝ k ∋ μ) ▹ B) // l ↝ _ ∋ η) with k ≟ l
   ... | no _ = no "fail in Entry Σ"
@@ -271,28 +271,32 @@ module Typecheck (P : ModeSystem 𝑖) where
   derive-Term-Sort↓,Mod↓ Γ (var x fail) A μ = no "fail in Sort↓,Mod↓: var (fail)"
 
   derive-Term-Sort↓,Mod↓ Γ (lam↦ t) (Π A // (incl η) ▹ B) μ
-    with cod η ≟ dom μ
-  ... | no _ = no "fail in Sort↓,Mod↓: lam, modalities don't match."
-  ... | yes refl = do
-    A' <- derive-Entry Γ (A / (hom η ◆ hom μ))
-    t' <- derive-Term-Sort↓,Mod↓ (Γ ∙ (A / (hom η ◆ hom μ))) t B μ
+  --   with cod η ≟ dom μ
+  -- ... | no _ = no "fail in Sort↓,Mod↓: lam, modalities don't match."
+  -- ... | yes refl = do
+    -- A' <- derive-Entry Γ (A / (hom η ◆ hom μ))
+    -- t' <- derive-Term-Sort↓,Mod↓ (Γ ∙ (A / (hom η ◆ hom μ))) t B μ
+    -- just (lamⱼ A' ↦ t')
+      = do
+    A' <- derive-Entry Γ (A / (hom η))
+    t' <- derive-Term-Sort↓,Mod↓ (Γ ∙ (A / (hom η))) t B μ
     just (lamⱼ A' ↦ t')
 
-  derive-Term-Sort↓,Mod↓ Γ (t ∘[[ incl η' ]] s) B' μ' with derive-Term-Sort↑,Mod↑ Γ t
-  ... | no p = no "fail in Sort↓,Mod↓: ∘"
-  ... | yes ((F // μ) , Fp) with μ ≟ μ'
-  ... | no p = no "fail in Sort↓,Mod↓: ∘"
-  ... | yes refl with F
-  ... | (Π A // incl η ▹ B) with dom μ ≟ cod η
-  ... | no p = no "fail in Sort↓,Mod↓: ∘"
-  ... | yes refl with η ≟ η'
-  ... | no p = no "fail in Sort↓,Mod↓: ∘"
-  ... | yes refl with derive-Term-Sort↓,Mod↓ Γ s A (_ ↝ _ ∋ (hom η ◆ hom μ))
-  ... | no p = no "fail in Sort↓,Mod↓: ∘"
-  ... | yes sP with B' ≟ (B [ untransform-Term s ])
-  ... | no p = no "fail in Sort↓,Mod↓: ∘"
-  ... | yes refl = just (Fp ∘ⱼ sP)
-  derive-Term-Sort↓,Mod↓ Γ (t ∘[[ incl η' ]] s) B' p | yes _ | yes _ | _ = no "fail in Sort↓,Mod↓: ∘, expected Π type"
+  derive-Term-Sort↓,Mod↓ Γ (t ∘[[ incl η' ]] s) B' μ' = no "not implemented!" --  with derive-Term-Sort↑,Mod↑ Γ t
+  -- ... | no p = no "fail in Sort↓,Mod↓: ∘"
+  -- ... | yes ((F // μ) , Fp) with μ ≟ μ'
+  -- ... | no p = no "fail in Sort↓,Mod↓: ∘"
+  -- ... | yes refl with F
+  -- ... | (Π A // incl ημ ▹ B) with dom μ ≟ cod η
+  -- ... | no p = no "fail in Sort↓,Mod↓: ∘"
+  -- ... | yes refl with η ≟ η'
+  -- ... | no p = no "fail in Sort↓,Mod↓: ∘"
+  -- ... | yes refl with derive-Term-Sort↓,Mod↓ Γ s A (_ ↝ _ ∋ (hom η ◆ hom μ))
+  -- ... | no p = no "fail in Sort↓,Mod↓: ∘"
+  -- ... | yes sP with B' ≟ (B [ untransform-Term s ])
+  -- ... | no p = no "fail in Sort↓,Mod↓: ∘"
+  -- ... | yes refl = just (Fp ∘ⱼ sP)
+  -- derive-Term-Sort↓,Mod↓ Γ (t ∘[[ incl η' ]] s) B' p | yes _ | yes _ | _ = no "fail in Sort↓,Mod↓: ∘, expected Π type"
   -- derive- nothing -- for checking an application we need `infer-Term`
 
 
