@@ -44,7 +44,7 @@ open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
 open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition
 open import KamiTheory.Main.Generic.ModeSystem.Modality
 open import KamiTheory.Main.Generic.ModeSystem.Transition
-open import Data.Vec using ([] ; _∷_ ; _++_) renaming (Vec to StdVec)
+open import Data.Vec using ([] ; _∷_ ; _++_ ; lookup) renaming (Vec to StdVec)
 
 open import Agora.Conventions using (𝑖 ; 𝑗 ; 𝒰 ; _､_ ; hasDecidableEquality ; _≡_ ; yes ; no)
 open import KamiTheory.Basics
@@ -792,11 +792,15 @@ _××_ {k = k} A B = Σ A // incl (k ↝ k ∋ id) ▹ wk1 B
 VarExtensionWk : (P : ModeSystem 𝑖) (n : Nat) -> 𝒰 _
 VarExtensionWk P n = StdVec (Modality P) n
 
-record Transitions (P : ModeSystem 𝑖) (r : Range) : 𝒰 𝑖 where
+data isTransitionRequired : Set where
+  required notRequired : isTransitionRequired
+
+record Transitions (P : ModeSystem 𝑖) (n : Nat) (r : Range) : 𝒰 𝑖 where
   constructor transitions
   field get : Transition P r
   -- field extensions : VarExtensionWk P n -- NOTE: The modalities' right point has to match with the left point of the transition
   field postExtension : Modality P
+  field requirements : StdVec isTransitionRequired n
 
 open Transitions public
 
@@ -812,10 +816,15 @@ uniformExtension : VarExtensionWk P n
 uniformExtension {n = n0} = []
 uniformExtension {n = 1+ n} = id ∷ uniformExtension
 
+fillVec : ∀{A : Set} -> A -> StdVec A n
+fillVec {n = n0} a = []
+fillVec {n = 1+ n} a = a ∷ (fillVec a)
+
 -- a uniform transitions collection can be created from a single
 -- transition
-uniformTransitions : ∀{v} -> Transition P v -> Transitions P v
-uniformTransitions ξ = transitions ξ id
+uniformTransitions : ∀{v} -> Transition P v -> Transitions P n v
+uniformTransitions ξ = transitions ξ id (fillVec required)
+
 
 -- liftVarsSingle : Modality P -> (Fin n -> Modality P) -> (Fin n -> Modality P)
 -- liftVarsSingle μ vars = λ i -> μ ◆-Modality vars i
@@ -847,31 +856,37 @@ liftVarExtension μs xs = intoModalities μs ++ xs
 -- liftTransitions : ∀{b} -> (StdVec (SomeModeHom P) b) -> Transitions P n all -> Transitions P (b + n) all
 -- liftTransitions μs (transitions ξ vars post) = transitions ξ (liftVarExtension μs vars) post
 
-liftPostTransition : Modality P -> Transitions P all -> Transitions P all
-liftPostTransition μ (transitions ξ post) = transitions ξ (μ ◆-Modality post)
+
+
+liftPostTransition : ∀{b} -> Modality P -> Transitions P n all -> Transitions P (b + n) all
+liftPostTransition μ (transitions ξ post reqs) = transitions ξ (μ ◆-Modality post) (fillVec notRequired ++ reqs)
+
+getTransition : Fin n -> Transitions P n all -> Transition P all
+getTransition x ξs with lookup (requirements ξs) x
+... | notRequired = id
+... | required = (postExtension ξs ↷-Transition get ξs)
 
 -- Pushes a transition down the term. We push it until the next
 -- `transform` term or variable.
 mutual
-  push-Gen : ∀{bs} -> Transitions P all -> GenTs (Modality P) (KindedTerm P) n bs -> GenTs (Modality P) (KindedTerm P) n bs
+  push-Gen : ∀{bs} -> Transitions P n all -> GenTs (Modality P) (KindedTerm P) n bs -> GenTs (Modality P) (KindedTerm P) n bs
   push-Gen ξs [] = []
   push-Gen ξs (μ ⦊ t ∷ ts) = μ ⦊ push-Kinded (liftPostTransition μ ξs) t ∷ push-Gen ξs ts
 
-  push-Kinded : ∀{k} -> Transitions P all -> KindedTerm P n k -> KindedTerm P n k
+  push-Kinded : ∀{k} -> Transitions P n all -> KindedTerm P n k -> KindedTerm P n k
   push-Kinded ξs (term x) = term (push ξs x)
   push-Kinded ξs (modality μ) = modality μ
   push-Kinded ξs (transition ζ) = transition ζ
   -- t)
   push-Kinded ξs (x // μ) = push ξs x // μ
 
-  push : Transitions P all -> Term P n -> Term P n
+  push : Transitions P n all -> Term P n -> Term P n
   push ξs (gen (main x) c) = gen (main x) (push-Gen ξs c)
   push ξs (gen (leaf x) c) = gen (leaf x) []
   push ξs (transform ζ t) with ξ' , ζ' <- commute-Transition-vis ζ (get ξs)
-                          = transform ζ' (push (transitions ξ' (postExtension ξs)) t)
-  -- push ξs ⟨ A ∣ μ ⟩ = ⟨ push (transitions (get ξs) (extensions ξs) ((incl (_ ↝ _ ∋ μ) ◆-Modality (postExtension ξs)))) A ∣ μ ⟩
-  -- push ξs (var x ζ) = var x (ζ ◆-Transition ((getVarTransition (extensions ξs) x ↷-Transition get ξs) ↶-Transition postExtension ξs))
-  push ξs (var x ζ) = var x (ζ ◆-Transition ((postExtension ξs ↷-Transition get ξs)))
+                          = transform ζ' (push (transitions ξ' (postExtension ξs) ((requirements ξs))) t)
+  push ξs (var x ζ) = var x (ζ ◆-Transition (getTransition x ξs))
+  -- push ξs (var x ζ) = var x (ζ ◆-Transition ((postExtension ξs ↷-Transition get ξs)))
 
   -- TODO change system so we don't need this case.
   push x (gen 𝓀-transform (_ ⦊ transition x₁ ∷ _ ⦊ term x₂ ∷ [])) = zeroₜ

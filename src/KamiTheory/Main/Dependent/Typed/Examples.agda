@@ -429,10 +429,10 @@ module Examples where
       ≔ {!!}
   send-vec =
     lamⱼ NNⱼ ↦
-    conv {!!} -- (transₑ ({!Π-cong ? ? ?!}) (univ (β-red (NNⱼ) ((Πⱼ Vecⱼ BBⱼ x0[ (id) ★τᵈˢ[ ϕu ]★ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ BBⱼ (var (suc zero) {!!})))) {!!})))
+    conv (transₑ ({!Π-cong ? ? ?!}) (univ (β-red (NNⱼ) ((Πⱼ Vecⱼ BBⱼ x0[ (id) ★τᵈˢ[ ϕu ]★ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ BBⱼ (var (suc zero) {!!})))) x0ⱼ)))
       ((wk-Term natrec-crisp)
       ∘ⱼ x0ⱼ
-      ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ_▹_ {μ = ＠ uu} (Vecⱼ BBⱼ x0[ {!!} ]ⱼ) (Modalⱼ {η = ＠ vv} (Vecⱼ BBⱼ x1[ {!!} ]ⱼ))))
+      ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ_▹_ {μ = ＠ uu} (Vecⱼ BBⱼ x0[ id ★τᵈˢ[ ϕu ]★ (◻ ◆ ＠ uuvv) ]ⱼ) (Modalⱼ {η = ＠ vv} (Vecⱼ BBⱼ x1[ {!!} ]ⱼ))))
       -- ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ Vecⱼ BBⱼ ? x0[ id ★τᵈˢ[ ϕu ]★ (◻ ◆ ＠ uuvv) ]ⱼ ▹ Modalⱼ (Vecⱼ BBⱼ x1[ id ★τᵈˢ[ ϕv ]★ (◻ ◆ ＠ uuvv) ]ⱼ)))
       ∘ⱼ {!lamⱼ ? ↦ ?!}
       ∘ⱼ {!!})
