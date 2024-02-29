@@ -279,8 +279,9 @@ module Judgements (P : ModeSystem 𝑖) where
 --               -> {{ΓP : isTrue (⊢Ctx Γ)}}
               → x ∶[ ρ ] (A // (k ↝ l ∋ μ)) ⇒ η ∈ Γ ∥ M
               -- → (ζ : ModalityTrans P all (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
-              → (ζ : ModeTrans* P all μ η)
-              → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ (ζ ↶-ModeTrans* ρ) ] ∥ M
+              → (ζ : ModeTrans* P all (μ ◆ ρ) (η ◆ ρ))
+              → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ (ζ) ] ∥ M
+              -- → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ (ζ ↶-ModeTrans* ρ) ] ∥ M
 
 
 
