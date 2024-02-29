@@ -127,7 +127,7 @@ module Judgements (P : ModeSystem 𝑖) where
 
     Vecⱼ   : Γ ⊢Entry (A / μ) → Γ ⊢ t ∶ NN / μ  → Γ ⊢Entry (Vec A t / μ)
 
-    Πⱼ_▹_  : Γ ⊢Entry (A / μ)
+    Πⱼ_▹_  : Γ ⊢Entry (A / μ ◆ η)
               → Γ ∙ (A / μ) ⊢Entry (B / η)
               → Γ ⊢Entry ((Π A / μ ▹ B) / η)
 
@@ -209,7 +209,7 @@ module Judgements (P : ModeSystem 𝑖) where
 
 
     lamⱼ_↦_      : ∀ {t}
-              → Γ ⊢Entry (A / η)
+              → Γ ⊢Entry (A / η ◆ μ)
               → Γ ∙ (A / η) ⊢ t ∶ B / μ
               → Γ ⊢ lam↦ t ∶ (Π A / η ▹ B) / μ
 
@@ -217,8 +217,8 @@ module Judgements (P : ModeSystem 𝑖) where
               -- → Γ ⊢ g ∶ (Π A / (η ◆ μ) ▹ B) / μ
               -- → Γ ⊢ a ∶ A / (η ◆ μ)
               → Γ ⊢ g ∶ (Π A / (η) ▹ B) / μ
-              → Γ ⊢ a ∶ A / (η)
-              → Γ ⊢ g ∘ a ∶ B [ untransform-Term a ] / μ
+              → Γ ⊢ a ∶ A / (η ◆ μ)
+              → Γ ⊢ g ∘[ η ] a ∶ B [ untransform-Term a ] / μ
 
 
     introⱼΣ_▹_by_,_  : ∀ {A B} -> ∀{t u}

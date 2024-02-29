@@ -185,8 +185,12 @@ module Examples where
   -- small examples
 
   P0 : εε ∙ (NN / (`＠` uu ⨾ id)) ⊢ var zero (incl idT[ ＠ uu ]) ∶ NN / `＠` uu ⨾ id
-  P0 = typecheck
+  P0 = x0ⱼ
 
+
+  P1' : εε ⊢ ⟨ NN ∣ ＠ uu ⟩ /▹▹ ⟨ NN ∣ ＠ uu ⟩ / id
+       ≔ _
+  P1' = lamⱼ (Modalⱼ (NNⱼ)) ↦ (letunmodⱼ (var zero idT) into (Modalⱼ (NNⱼ)) by (modⱼ ((var zero idT))))
 
 
   P1 : εε ⊢ ⟨ NN ∣ ＠ uu ⟩ /▹▹ ⟨ NN ∣ ＠ uu ⟩ / id
@@ -302,6 +306,7 @@ module Examples where
     x0[ εᵈˢ ]ⱼ
 
 
+
   -- GG : Con (Entry M) _ -- Ctx ((⊢Ctx
   --       -- SendReceiveNarrow-ModeSystem.SRN-ModeSystem ′ StdVec Bool 3 ′)
   -- GG = (ε ∙
@@ -324,6 +329,36 @@ module Examples where
   -- Res = derive-Ctx GG
 
 
+  boolrec-crisp-h : εε ⊢ Π (Π BB / (＠ uu) ▹ UU) / ◻ ◆ ＠ uu ▹
+                         ⟨
+                          Π BB /▹
+                          ⟨ x1 ∘[ ＠ uu ] falseₜ ∣ ◻ ⟩ /▹▹
+                          ⟨ x1 ∘[ ＠ uu ] trueₜ ∣ ◻ ⟩ /▹▹
+                          ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id (＠ uu) {u = uu} ] ∣ ◻ ⟩
+                         ∣
+                          ＠ uu
+                         ⟩
+                          / id
+                       ≔ _
+
+  boolrec-crisp-h = lamⱼ Πⱼ BBⱼ ▹ UUⱼ ↦ modⱼ
+                    (lamⱼ BBⱼ ↦
+                     lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ falseⱼ)) ↦
+                     lamⱼ Modalⱼ (Univⱼ (x2ⱼ ∘ⱼ trueⱼ)) ↦
+                     boolrecⱼ {!x2[ ? ]ⱼ!} into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ _ ]ⱼ))
+                       false: {!!} -- x1ⱼ
+                       true: {!!} -- x0ⱼ
+                    )
+
+                     -- boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ _ ]ⱼ))
+                     --   false: x1ⱼ
+                     --   true: x0ⱼ
+
+
+
+
+
+{-
   ---------------------------------------------
   -- Prop: The booleans have a crisp induction
   -- principle under the `＠ u` modality.
@@ -746,6 +781,7 @@ module Examples where
       (comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))
         >ⱼ comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))) )))
   -}
+-}
 -}
 -}
 -}
