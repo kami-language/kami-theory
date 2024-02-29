@@ -90,6 +90,14 @@ module SendReceiveNarrow-2Graph (P : Preorder 𝑖) {{_ : hasDecidableEquality �
 
   {-# REWRITE β-decide-≡-BaseModeTrans-SRN #-}
 
+  show-BaseModeHom : ∀{a b} -> BaseModeHom-SRN a b → Text
+  show-BaseModeHom (`＠` U) = "＠"
+  show-BaseModeHom `[]` = "◻"
+
+  instance
+    hasShow:BaseModeHom-SRN : ∀{a b} -> hasShow (BaseModeHom-SRN a b)
+    hasShow:BaseModeHom-SRN = record { show = show-BaseModeHom }
+
 
   SRN : 2Graph _
   SRN = record

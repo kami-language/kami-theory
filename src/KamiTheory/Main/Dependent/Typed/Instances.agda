@@ -96,12 +96,12 @@ module Typecheck (P : ModeSystem 𝑖) where
   -- derive-Entry Γ ((t ∘[ μ ] s) // η) = do
   --   res <- derive-Term-Sort↓,Mod↓ Γ (t ∘[ μ ] s) UU η
   --   just (Univⱼ res)
-  -- derive-Entry Γ ((Π A // incl (_ ↝ k ∋ μ) ▹ B) // l ↝ _ ∋ η) with k ≟ l
-  -- ... | no _ = no "fail in Entry Π"
-  -- ... | yes refl = do
-  --   A' <- derive-Entry Γ (A / (μ ◆ η))
-  --   B' <- derive-Entry (Γ ∙ (A / μ)) (B / η)
-  --   just (Πⱼ A' ▹ B')
+  derive-Entry Γ ((Π A // incl (_ ↝ k ∋ μ) ▹ B) ∥[ l ] M) with k ≟ l
+  ... | no _ = no "fail in Entry Π"
+  ... | yes refl = do
+    A' <- derive-Entry Γ (A ∥ (μ ↳ M))
+    B' <- derive-Entry (Γ ∙ (A / μ)) (B ∥ (id ∷ M))
+    just (Πⱼ A' ▹ B')
   -- derive-Entry Γ ((Σ A // incl (k0 ↝ k ∋ μ) ▹ B) // l ↝ _ ∋ η) with k ≟ l
   -- ... | no _ = no "fail in Entry Σ"
   -- ... | yes refl with k0 ≟ k

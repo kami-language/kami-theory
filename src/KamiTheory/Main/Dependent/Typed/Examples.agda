@@ -17,7 +17,7 @@ open import Agora.Setoid.Definition
 -- open import Agora.Data.Normal.Instance.Lattice
 -- open import Agora.Data.Normal.Instance.DecidableEquality
 
-open import KamiTheory.Basics
+open import KamiTheory.Basics hiding (typed)
 open import KamiTheory.Order.Preorder.Instances
 open import KamiTheory.Main.Dependent.Untyped.Definition
 open import KamiTheory.Main.Dependent.Untyped.Instances
@@ -28,7 +28,7 @@ open import KamiTheory.Main.Dependent.Typed.Instances
 open import KamiTheory.Main.Generic.ModeSystem.2Cell.Definition
 open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
 open import KamiTheory.Main.Generic.ModeSystem.2Graph.Example
-open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition
+open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition hiding ([_])
 open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Example
 open import KamiTheory.Main.Generic.ModeSystem.Modality
 open import KamiTheory.Main.Generic.ModeSystem.Transition
@@ -85,7 +85,7 @@ module Examples where
   open Typecheck M
 
   open SendReceiveNarrow-2Graph
-  open 2CellDefinition (graph M)
+  open 2CellDefinition (graph M) hiding ( [_])
 
   instance
     _ : ∀{a b : ⟨ PP ⟩} -> isProp (a ≤ b)
@@ -128,18 +128,18 @@ module Examples where
   pattern x2 = var (suc (suc zero)) (incl idT)
   pattern x3 = var (suc (suc (suc zero))) (incl idT)
   pattern x4 = var (suc (suc (suc (suc zero)))) (incl idT)
-  pattern x0[_] ξ = var zero (incl ξ)
-  pattern x1[_] ξ = var (suc zero) (incl ξ)
-  pattern x2[_] ξ = var (suc (suc zero)) (incl ξ)
-  pattern x3[_] ξ = var (suc (suc (suc zero))) (incl ξ)
+  pattern x0[_] ξ = var zero (incl (_ ⇒ _ ∋ ξ))
+  pattern x1[_] ξ = var (suc zero) (incl (_ ⇒ _ ∋ ξ))
+  pattern x2[_] ξ = var (suc (suc zero)) (incl (_ ⇒ _ ∋ ξ))
+  pattern x3[_] ξ = var (suc (suc (suc zero))) (incl (_ ⇒ _ ∋ ξ))
 
-  pattern x0ⱼ = var zero idT
-  pattern x1ⱼ = var (suc zero) idT
-  pattern x2ⱼ = var (suc (suc zero)) idT
-  pattern x3ⱼ = var (suc (suc (suc zero))) idT
-  pattern x4ⱼ = var (suc (suc (suc (suc zero)))) idT
-  pattern x5ⱼ = var (suc (suc (suc (suc (suc zero))))) idT
-  pattern x6ⱼ = var (suc (suc (suc (suc (suc (suc zero)))))) idT
+  pattern x0ⱼ = var zero idTⱼ
+  pattern x1ⱼ = var (suc zero) idTⱼ
+  pattern x2ⱼ = var (suc (suc zero)) idTⱼ
+  pattern x3ⱼ = var (suc (suc (suc zero))) idTⱼ
+  pattern x4ⱼ = var (suc (suc (suc (suc zero)))) idTⱼ
+  pattern x5ⱼ = var (suc (suc (suc (suc (suc zero))))) idTⱼ
+  pattern x6ⱼ = var (suc (suc (suc (suc (suc (suc zero)))))) idTⱼ
 
   pattern x0[_]ⱼ ξ = var zero ξ
   pattern x1[_]ⱼ ξ = var (suc zero) ξ
@@ -147,10 +147,10 @@ module Examples where
   pattern x3[_]ⱼ ξ = var (suc (suc (suc zero))) ξ
   pattern x4[_]ⱼ ξ = var (suc (suc (suc (suc zero)))) ξ
 
-  pattern x0ⱼ' P = var {{P}} zero idT
-  pattern x1ⱼ' P = var {{P}} (suc zero) idT
-  pattern x2ⱼ' P = var {{P}} (suc (suc zero)) idT
-  pattern x3ⱼ' P = var {{P}} (suc (suc (suc zero))) idT
+  pattern x0ⱼ' P = var {{P}} zero idTⱼ
+  pattern x1ⱼ' P = var {{P}} (suc zero) idTⱼ
+  pattern x2ⱼ' P = var {{P}} (suc (suc zero)) idTⱼ
+  pattern x3ⱼ' P = var {{P}} (suc (suc (suc zero))) idTⱼ
 
 
 
@@ -159,13 +159,16 @@ module Examples where
   private variable
     -- n m : Nat
     p q : Term M n
-    t u : Term M n
+    s t u : Term M n
     Γ  : Con (Entry M) n
-    A B C : Term M n
+    A C : Term M n
+    B : Term M m
     U V W R : P
     k l o r : Mode M
     μ : ModeHom M k l
     η : ModeHom M o r
+    ν : ModeHom M o r
+    μs : Restriction k n
 
   _⊢_≔_ : (Γ : Con (Entry M) n) → Target n → Term M n → Set
   Γ ⊢ E ≔ t = Γ ⊢ t ∶ E
@@ -181,11 +184,15 @@ module Examples where
   pattern ◻ = `[]` ⨾ id
 
 
+
   ---------------------------------------------
   -- small examples
 
-  P0 : εε ∙ (NN / (＠ uu)) ⊢ var zero (incl idT[ ＠ uu ]) ∶ NN ∥ ((＠ uu) ∷ [])
-  P0 = x0ⱼ
+  -- P0 : εε ∙ (NN / (＠ uu)) ⊢ var zero (incl idT[ ＠ uu ]) ∶ NN ∥ ((＠ uu) ∷ [])
+  P0 : εε ∙ (NN / (＠ uu)) ⊢ _ ∶ NN ∥ ((＠ uu) ∷ [])
+  P0 = var zero idTⱼ
+  -- x0[ ? ]ⱼ
+
 
   Test : ⊢Ctx (εε ∙ (NN / (＠ uu))) ∥ (＠ uu ∷ [])
   Test = ε ∙ NNⱼ {{because ε}}
@@ -193,16 +200,22 @@ module Examples where
 
   P1 : εε ⊢ ⟨ NN ∣ ＠ uu ⟩ /▹▹ ⟨ NN ∣ ＠ uu ⟩ ∥ []
        ≔ lam↦ letunmod x0 into ⟨ NN ∣ ＠ uu ⟩ by mod[ ＠ uu ] x0
-  P1 = lamⱼ (Modalⱼ (NNⱼ)) ↦ (letunmodⱼ[ id ] (var zero idT) into (Modalⱼ (NNⱼ)) by (modⱼ ((var zero idT))))
+  P1 = lamⱼ (Modalⱼ (NNⱼ)) ↦ (letunmodⱼ[ id ] (var zero idTⱼ) into (Modalⱼ (NNⱼ)) by (modⱼ ((var zero idTⱼ))))
 
 
-{-
 
-  wk-Entry : Γ ⊢Entry A / μ -> Γ ∙ (B / η) ⊢Entry wk1 A / μ
-  wk-Entry = {!!}
+  -- wk-Entry : Γ ⊢Entry A / μ -> Γ ∙ (B / η) ⊢Entry wk1 A / μ
+  -- wk-Entry = {!!}
 
-  wk-Term : Γ ⊢ t ∶ A / μ -> Γ ∙ (B / η) ⊢ wk1 t ∶ wk1 A / μ
+  wk-Term : Γ ⊢ t ∶ A ∥ μs -> Γ ∙ (B / η) ⊢ wk1 t ∶ wk1 A ∥ (id ∷ μs)
   wk-Term = {!!}
+
+  -- wk-Term : Γ ⊢ t ∶ A ∥ (μ ◆ ν) ↳ μs -> Γ ∙ (B / η) ⊢ wk1 t ∶ wk1 A ∥ (μ ∷ ν ↳ μs)
+  -- wk-Term = {!!}
+
+  wk-Term[_,_] : ∀ (μ : ModeHom M k l) (ν : ModeHom M l o) -> Γ ⊢ t ∶ A ∥ (μ ◆ ν) ↳ μs -> Γ ∙ (B / η) ⊢ wk1 t ∶ wk1 A ∥ (μ ∷ ν ↳ μs)
+  wk-Term[_,_] μ ν tp = {!!}
+
 
 
   -- Axiom K
@@ -236,11 +249,11 @@ module Examples where
   --     (prodⱼ (Modal NN μ) (Modal BB μ) {{{!!}}} {{{!!}}} (modⱼ (fstⱼ (var {{{!!}}} zero idT))) ((modⱼ (sndⱼ (var {{{!!}}} zero idT))))))
 
 
-  _××ⱼ_  : {μ : ModeHom M k l}
-          → Γ ⊢Entry (A / μ)
-          → Γ ⊢Entry (B / μ)
-          → Γ ⊢Entry ((Σ A // incl (k ↝ k ∋ id) ▹ wk1 B) / μ)
-  _××ⱼ_ Ap Bp = Σⱼ Ap ▹ wk-Entry Bp
+  -- _××ⱼ_  : {μ : ModeHom M k l}
+  --         → Γ ⊢Entry (A / μ)
+  --         → Γ ⊢Entry (B / μ)
+  --         → Γ ⊢Entry ((Σ A // incl (k ↝ k ∋ id) ▹ wk1 B) / μ)
+  -- _××ⱼ_ Ap Bp = Σⱼ Ap ▹ wk-Entry Bp
 
 
   ---------------------------------------------
@@ -266,13 +279,13 @@ module Examples where
   -- We call the unit of this adjunction "dispatch", because it allows
   -- us to schedule computations (at possibly different) locations.
   --
-  ηᵈˢ : ∀{u} -> ModalityTrans M all (▲ ↝ ▲ ∋ id) (▲ ↝ ▲ ∋ `＠` u ⨾ ◻)
-  ηᵈˢ {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (id ⌟[ send u ]⌞ id ⌟) ∷ [])) ]
+  ηᵈˢ : ∀{u} -> ModeTrans* M all (id) (`＠` u ⨾ ◻)
+  ηᵈˢ {u = u} = [ incl [] ∣ (incl (incl (id ⌟[ send u ]⌞ id ⌟) ∷ [])) ]
 
-  _★ηᵈˢ★_ : (μ : ModeHom M k ▲) (η : ModeHom M ▲ l) -> ∀{u} -> ModalityTrans M all (k ↝ l ∋ (μ ◆ η)) (k ↝ l ∋ (μ ◆ ＠ u ◆ ◻ ◆ η))
-  _★ηᵈˢ★_ μ η {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (μ ⌟[ send u ]⌞ η ⌟) ∷ [])) ]
+  _★ηᵈˢ★_ : (μ : ModeHom M k ▲) (η : ModeHom M ▲ l) -> ∀{u} -> ModeTrans* M all ((μ ◆ η)) ((μ ◆ ＠ u ◆ ◻ ◆ η))
+  _★ηᵈˢ★_ μ η {u = u} = [ incl [] ∣ (incl (incl (μ ⌟[ send u ]⌞ η ⌟) ∷ [])) ]
 
-  dispatch : ε ⊢ Π UU /▹ x0 /▹▹ ⟨ x0[ ηᵈˢ ] ∣ ＠ uu ◆ ◻  ⟩ / id
+  dispatch : ε ⊢ (Π UU /▹ x0 /▹▹ ⟨ x0[ ηᵈˢ ] ∣ ＠ uu ◆ ◻  ⟩) ∥ []
              ≔ lam↦ lam↦ mod[ ＠ uu ◆ ◻ ] x0[ ηᵈˢ ]
   dispatch = lamⱼ UUⱼ ↦
              lamⱼ Univⱼ x0ⱼ ↦
@@ -282,20 +295,20 @@ module Examples where
   -- The counit on the other hand allows us to wait for the execution
   -- of previously dispatched executions. We thus call it "sync".
   --
-  εᵈˢ : ∀{u} -> ModalityTrans M all (◯ ↝ ◯ ∋ (◻ ◆ ＠ u)) (◯ ↝ ◯ ∋ id)
-  εᵈˢ {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (id ⌟[ recv u ]⌞ id ⌟) ∷ [])) ]
+  εᵈˢ : ∀{u} -> ModeTrans* M all ((◻ ◆ ＠ u)) (id)
+  εᵈˢ {u = u} = [ incl [] ∣ (incl (incl (id ⌟[ recv u ]⌞ id ⌟) ∷ [])) ]
 
-  _★εᵈˢ★_ : (μ : ModeHom M k ◯) (η : ModeHom M ◯ l) -> ∀{u} -> ModalityTrans M all (k ↝ l ∋ (μ ◆ ◻ ◆ ＠ u ◆ η)) (k ↝ l ∋ (μ ◆ η))
-  _★εᵈˢ★_ μ η {u = u} = _ ⇒ _ ∋ [ incl [] ∣ (incl (incl (μ ⌟[ recv u ]⌞ η ⌟) ∷ [])) ]
+  _★εᵈˢ★_ : (μ : ModeHom M k ◯) (η : ModeHom M ◯ l) -> ∀{u} -> ModeTrans* M all ((μ ◆ ◻ ◆ ＠ u ◆ η)) ((μ ◆ η))
+  _★εᵈˢ★_ μ η {u = u} = [ incl [] ∣ (incl (incl (μ ⌟[ recv u ]⌞ η ⌟) ∷ [])) ]
 
-  sync : ε ⊢ Π UU / (◻ ◆ ＠ uu) ▹ ⟨ x0 ∣ ◻ ◆ ＠ uu  ⟩ /▹▹ x0[ εᵈˢ ] / id
+  sync : ε ⊢ (Π UU / (◻ ◆ ＠ uu) ▹ ⟨ x0 ∣ ◻ ◆ ＠ uu  ⟩ /▹▹ x0[ εᵈˢ ]) ∥ []
          ≔ lam↦ lam↦ letunmod x0 into x2[ εᵈˢ ] by x0[ εᵈˢ ]
   sync = lamⱼ UUⱼ ↦
          lamⱼ Modalⱼ (Univⱼ x0ⱼ) ↦
          letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
          x0[ εᵈˢ ]ⱼ
 
-  sync' : ∀{u} -> ε ⊢ Π UU / (◻ ◆ ＠ u) ▹ ⟨ ⟨ x0 ∣ ◻ ⟩ ∣ ＠ u ⟩ /▹▹ x0[ εᵈˢ ] / id
+  sync' : ∀{u} -> ε ⊢ (Π UU / (◻ ◆ ＠ u) ▹ ⟨ ⟨ x0 ∣ ◻ ⟩ ∣ ＠ u ⟩ /▹▹ x0[ εᵈˢ ]) ∥ []
          ≔ lam↦ lam↦ letunmod x0 into x2[ εᵈˢ ] by (letunmod[ ＠ u ] x0 into x3[ εᵈˢ ] by x0[ εᵈˢ ])
   sync' {u = u} =
     lamⱼ UUⱼ ↦
@@ -303,6 +316,7 @@ module Examples where
     letunmodⱼ x0ⱼ into Univⱼ x2[ εᵈˢ ]ⱼ by
     letunmodⱼ[ ＠ u ] x0ⱼ into Univⱼ x3[ εᵈˢ ]ⱼ by
     x0[ εᵈˢ ]ⱼ
+
 
 
 
@@ -327,37 +341,130 @@ module Examples where
 
   -- Res = derive-Ctx GG
 
+  _[_]ⱼ : Γ ∙ (A / μ) ⊢ s ∶ B ∥ (id ∷ μs) -> Γ ⊢ t ∶ A ∥ (μ ↳ μs) -> Γ ⊢ (s [ t ]) ∶ B [ t ] ∥ μs
+  _[_]ⱼ = {!!}
 
-  boolrec-crisp-h : εε ⊢ Π (Π BB / (＠ uu) ▹ UU) / ◻ ◆ ＠ uu ▹
+  -- WITHOUT APP
+  -- boolrecⱼ-crisp-h : (Γ ∙ (BB / ＠ uu) ⊢ C ∶ UU  ∥ (id ∷ (◻ ◆ ＠ uu ↳ μs)))
+  --                    -> Γ ⊢ 
+  --                         Π BB /▹
+  --                         ⟨ C [ falseₜ ]  ∣ ◻ ⟩ /▹▹
+  --                         ⟨ x1 ∘[ ＠ uu ] trueₜ ∣ ◻ ⟩ /▹▹
+  --                         ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id id ] ∣ ◻ ⟩
+  --                         ∥ (＠ uu ↳ μs) ≔ _
+  -- boolrecⱼ-crisp-h Cp = lamⱼ BBⱼ {{{!!}}} ↦
+  --                       lamⱼ Modalⱼ ((Univⱼ ({!wk-Term Cp [ ? ]ⱼ!}))) ↦
+  --                       lamⱼ {!!} ↦
+  --                       {!!}
+
+
+
+{-
+  -- WITH APP
+  boolrecⱼ-crisp-h : (Γ ⊢ C ∶ (Π BB / (＠ uu) ▹ UU) ∥ ◻ ◆ ＠ uu ↳ μs)
+                     -> Γ ⊢ 
+                          Π BB /▹
+                          ⟨ wk1 C ∘[ ＠ uu ] falseₜ ∣ ◻ ⟩ /▹▹
+                          ⟨ wk1 C ∘[ ＠ uu ] trueₜ ∣ ◻ ⟩ /▹▹
+                          ⟨ wk1 C ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id id ] ∣ ◻ ⟩
+                          ∥ (＠ uu ↳ μs) ≔ _
+  boolrecⱼ-crisp-h Cp = lamⱼ BBⱼ {{{!!}}} ↦
+                        lamⱼ Modalⱼ ((Univⱼ ((wk-Term[ ◻ , ＠ uu ] Cp) ∘ⱼ falseⱼ))) ↦
+                        lamⱼ Modalⱼ ((Univⱼ (wk-Term (wk-Term Cp) ∘ⱼ trueⱼ))) ↦
+                        (boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ ({!? ∘ⱼ ?!})) false: {!!} true: {!!})
+                        -}
+{-
+                        -}
+
+
+  --                    εε ⊢ (Π (Π BB / (＠ uu) ▹ UU) / ◻ ◆ ＠ uu ▹
+  --                        ⟨
+  --                         Π BB /▹
+  --                         ⟨ x1 ∘[ ＠ uu ] falseₜ ∣ ◻ ⟩ /▹▹
+  --                         ⟨ x1 ∘[ ＠ uu ] trueₜ ∣ ◻ ⟩ /▹▹
+  --                         ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id id ] ∣ ◻ ⟩
+  --                        ∣
+  --                         ＠ uu
+  --                        ⟩)
+  --                         ∥ []
+  --                      ≔ _
+
+  -- boolrecⱼ-crisp-h =
+  -- lamⱼ Πⱼ BBⱼ ▹ UUⱼ ↦ modⱼ
+  --                   (lamⱼ BBⱼ ↦
+  --                    lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ falseⱼ)) ↦
+  --                    lamⱼ Modalⱼ (Univⱼ (x2ⱼ ∘ⱼ trueⱼ)) ↦
+  --                    boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ id ]ⱼ))
+  --                      false: {!!}
+  --                      true: {!!} -- x0ⱼ
+  --                   )
+
+
+  boolrec-crisp-h : εε ⊢ (Π (Π BB / (＠ uu) ▹ UU) / ◻ ◆ ＠ uu ▹
                          ⟨
                           Π BB /▹
                           ⟨ x1 ∘[ ＠ uu ] falseₜ ∣ ◻ ⟩ /▹▹
                           ⟨ x1 ∘[ ＠ uu ] trueₜ ∣ ◻ ⟩ /▹▹
-                          ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id (＠ uu) {u = uu} ] ∣ ◻ ⟩
+                          -- ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id id ] ∣ ◻ ⟩
+                          ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id id ] ∣ ◻ ⟩
                          ∣
                           ＠ uu
-                         ⟩
-                          / id
+                         ⟩)
+                          ∥ []
                        ≔ _
 
   boolrec-crisp-h = lamⱼ Πⱼ BBⱼ ▹ UUⱼ ↦ modⱼ
                     (lamⱼ BBⱼ ↦
                      lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ falseⱼ)) ↦
                      lamⱼ Modalⱼ (Univⱼ (x2ⱼ ∘ⱼ trueⱼ)) ↦
-                     boolrecⱼ {!x2[ ? ]ⱼ!} into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ _ ]ⱼ))
-                       false: {!!} -- x1ⱼ
-                       true: {!!} -- x0ⱼ
+                     -- boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ id ]ⱼ))
+                     boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id id ]ⱼ))
+                       false: x1ⱼ
+                       true: x0ⱼ -- x0ⱼ
                     )
 
-                     -- boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ id ★ηᵈˢ★ ＠ _ ]ⱼ))
-                     --   false: x1ⱼ
-                     --   true: x0ⱼ
+
+
+  boolrec-crisp : εε ⊢
+    Π (Π BB / (＠ uu) ▹ UU) / (◻ ◆ ＠ uu) ▹
+    Π BB / ＠ uu ▹
+    (x1 ∘[ ＠ uu ] falseₜ) / (◻ ◆ ＠ uu) ▹▹
+    (x1 ∘[ ＠ uu ] trueₜ)  / (◻ ◆ ＠ uu) ▹▹
+    (x1[ id ★εᵈˢ★ id ] ∘[ ＠ uu ] x0[ idTⱼ ]) ∥ []
+    ≔ _
+  boolrec-crisp =
+    lamⱼ proof ↦
+    lamⱼ proof ↦
+    lamⱼ Univⱼ (x1ⱼ ∘ⱼ falseⱼ) ↦
+    lamⱼ Univⱼ (x2ⱼ ∘ⱼ trueⱼ) ↦
+      letunmodⱼ[ id ] wk-Term (wk-Term (wk-Term (wk-Term (boolrec-crisp-h)))) ∘ⱼ x3ⱼ
+        into (Univⱼ (x4[ εᵈˢ ]ⱼ ∘ⱼ x3[ idTⱼ ]ⱼ))
+        by
+        (
+          (wk-Term (wk-Term (wk-Term (wk-Term (wk-Term sync')))) ∘ⱼ (x4[ idTⱼ ]ⱼ ∘ⱼ x3[ id ★ηᵈˢ★ ＠ uu ]ⱼ))
+          ∘ⱼ
+          modⱼ ((x0ⱼ ∘ⱼ {!x3[ ? ]ⱼ!} ∘ⱼ {!!} ∘ⱼ {!!}))
+        )
+
+          -- {!modⱼ (x0ⱼ ∘ⱼ x3ⱼ ∘ⱼ modⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ)!}
+
+
+
+    -- ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ (x3[ idTⱼ ]ⱼ ∘ⱼ x2[ id ★ηᵈˢ★ ＠ uu ]ⱼ))
+    --                           ∘ⱼ (
+    --                           ))
+                              -- modⱼ (wk-Term (wk-Term (wk-Term (wk-Term boolrec-crisp-h))) ∘ⱼ x3ⱼ ∘ⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ ∘ⱼ modⱼ x0ⱼ))
+
+    -- lamⱼ Univⱼ (x2ⱼ ∘ⱼ trueⱼ) ↦ ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ (x3ⱼ ∘ⱼ x2ⱼ) ) -- (x3ⱼ ∘ⱼ x2ⱼ))
+
+    -- -- lamⱼ Univⱼ (x2ⱼ ∘ⱼ trueⱼ) ↦ ((wk-Term (wk-Term (wk-Term (wk-Term sync'))) ∘ⱼ (x3ⱼ ∘ⱼ x2ⱼ))
+    -- --                           ∘ⱼ modⱼ (wk-Term (wk-Term (wk-Term (wk-Term boolrec-crisp-h))) ∘ⱼ x3ⱼ ∘ⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ ∘ⱼ modⱼ x0ⱼ))
 
 
 
 
 
-{-
+
   ---------------------------------------------
   -- Prop: The booleans have a crisp induction
   -- principle under the `＠ u` modality.
@@ -384,8 +491,10 @@ module Examples where
                       true: x0ⱼ
 
 
+{-
 
 
+{-
   boolrec-crisp : εε ⊢
     Π (Π BB / (＠ uu) ▹ UU) / (◻ ◆ ＠ uu) ▹
     Π BB / ＠ uu ▹
@@ -393,6 +502,8 @@ module Examples where
     (x1 ∘[ ＠ uu ] trueₜ)  / (◻ ◆ ＠ uu) ▹▹
     (x1[ id ★εᵈˢ★ id ] ∘[ ＠ uu ] x0[ idT ]) / id
     ≔ _
+
+
   -}
 
 

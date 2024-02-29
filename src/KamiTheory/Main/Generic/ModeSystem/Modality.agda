@@ -43,6 +43,13 @@ module _ {M : ModeSystem 𝑖} where
   ... | no _ = fail
   ... | yes refl = incl (_ ↝ _ ∋ (μ ◆ η))
 
+  show-SomeModeHom : SomeModeHom M → Text
+  show-SomeModeHom x = show (hom x)
+
+  instance
+    hasShow:SomeModeHom : hasShow (SomeModeHom M)
+    hasShow:SomeModeHom = record { show = show-SomeModeHom }
+
   ------------------------------------------------------------------------
   -- Decidability
 

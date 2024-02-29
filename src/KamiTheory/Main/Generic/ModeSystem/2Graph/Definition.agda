@@ -70,6 +70,16 @@ module _ {X : 𝒰 𝑖} {R : X -> X -> 𝒰 𝑗} where
 
     {-# REWRITE β-decide-≡-Path #-}
 
+    module _ {{_ : ∀{a b} -> hasShow (R a b)}} where
+
+      show-Path : ∀{a b} -> (Path R a b) -> String
+      show-Path id = "id"
+      show-Path (x ⨾ p) = show x <> " ; " <> show-Path p
+
+      instance
+        hasShow:Path : ∀{a b} -> hasShow (Path R a b)
+        hasShow:Path = record { show = show-Path }
+
 
 ---------------------------------------------
 -- Visibility parametrization
@@ -104,6 +114,8 @@ record 2Graph (𝑖 : 𝔏 ^ 3) : 𝒰 (𝑖 ⁺) where
   field {{decide-≡-Point}} : hasDecidableEquality Point
   field {{decide-≡-Edge}} : ∀{a b} -> hasDecidableEquality (Edge a b)
   field {{decide-≡-Face}} : ∀{a b} -> {p q : Path Edge a b} -> ∀{v} -> hasDecidableEquality (Face v p q)
+
+  field {{hasShow:Edge}} : ∀{a b} -> hasShow (Edge a b)
 
 open 2Graph public
 

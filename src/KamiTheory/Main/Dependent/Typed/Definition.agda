@@ -78,6 +78,10 @@ module Judgements (P : ModeSystem 𝑖) where
     [] : Restriction k 0
     _∷_ : ModeHom P k l -> Restriction l n -> Restriction k (suc n)
 
+  getRest : Restriction k n -> ∑ λ l -> ModeHom P k l
+  getRest [] = _ , id
+  getRest (x ∷ xs) = _ , x ◆ getRest xs .snd
+
   -- Restriction : (Mode P) -> ℕ -> 𝒰 _
   -- Restriction k n = StdVec (RModeHom P k) n
 
@@ -86,8 +90,10 @@ module Judgements (P : ModeSystem 𝑖) where
     ωs : Modality P
     ηs : Modality P
     μ : ModeHom P k l
+    ν : ModeHom P o q
     η : ModeHom P o q
     ω : ModeHom P mm nn
+    ρ : ModeHom P mm nn
     τ σ : Term P n -- Transitions
     ξ ξ₀ ξ₁ : Term P n -- Transitions
     Γ  : Con (Entry P) n
@@ -113,22 +119,34 @@ module Judgements (P : ModeSystem 𝑖) where
     zero :                       x0 ∶ wk1-Entry E ∈ (Γ ∙ E)
     suc  : (h : x ∶ E ∈ Γ) → (x +1) ∶ wk1-Entry E ∈ (Γ ∙ F)
 
-  data _∶_⇒_∈_∥_ : (x : Fin n) (E : Entry P n) (η : ModeHom P k l) (Γ : Con (Entry P) n) (M : Restriction k n) → 𝒰 𝑖 where
-    zero :          x0 ∶ wk1-Entry E ⇒ η ∈ (Γ ∙ E) ∥ (η ∷ M)
-    suc  : (h : x ∶ E ⇒ η ∈ Γ ∥ M) → (x +1) ∶ wk1-Entry E ⇒ (μ ◆ η) ∈ (Γ ∙ F) ∥ (μ ∷ M)
+  data _∶[_]_⇒_∈_∥_ : (x : Fin n) (ρ : ModeHom P mm nn) (E : Entry P n) (η : ModeHom P k l) (Γ : Con (Entry P) n) (M : Restriction k n) → 𝒰 𝑖 where
+    zero :          x0 ∶[ getRest M .snd ] wk1-Entry E ⇒ η ∈ (Γ ∙ E) ∥ (η ∷ M)
+    suc  : (h : x ∶[ ρ ] E ⇒ η ∈ Γ ∥ M) → (x +1) ∶[ ρ ] wk1-Entry E ⇒ (μ ◆ η) ∈ (Γ ∙ F) ∥ (μ ∷ M)
 
 
   _↳_ : ModeHom P l k -> Restriction k n -> Restriction l n
   μ ↳ [] = []
   μ ↳ (x ∷ M) = μ ◆ x ∷ M
+
+
+  postulate
+    comp-↳ : (ν ◆ μ ↳ M) ≡ ν ↳ μ ↳ M
+    id-↳ : (id ↳ M) ≡ M
+
+  {-# REWRITE comp-↳ #-}
+  {-# REWRITE id-↳ #-}
+
+
   -- map-Vec (λ η -> incl (μ ◆ hom η))
 
   data Target (n : ℕ) : 𝒰 𝑖 where
     _∥_ : Term P n -> Restriction k n -> Target n
 
-  infix 30 _∥_
+  infix 21 _∥_
 
-  infixr 40 _↳_
+  infixr 22 _↳_
+
+  pattern _∥[_]_ T k M = _∥_ {k = k} T M
 
 
 
@@ -259,9 +277,10 @@ module Judgements (P : ModeSystem 𝑖) where
     -- Vars allow mode transformations between modalities
     var       : ∀ {A x}
 --               -> {{ΓP : isTrue (⊢Ctx Γ)}}
-              → x ∶ (A // (k ↝ l ∋ μ)) ⇒ η ∈ Γ ∥ M
-              → (ζ : ModalityTrans P all (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
-              → Γ ⊢ (Term.var x (incl ζ)) ∶ A ^[ ζ ] ∥ M
+              → x ∶[ ρ ] (A // (k ↝ l ∋ μ)) ⇒ η ∈ Γ ∥ M
+              -- → (ζ : ModalityTrans P all (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
+              → (ζ : ModeTrans* P all μ η)
+              → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ (ζ ↶-ModeTrans* ρ) ] ∥ M
 
 
 
@@ -270,14 +289,14 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ∙ (A / η) ⊢ t ∶ B ∥ (id ∷ M)
               → Γ ⊢ lam↦ t ∶ (Π A / η ▹ B) ∥ M
 
-{-
     _∘ⱼ_      : ∀ {g a}
               -- → Γ ⊢ g ∶ (Π A / (η ◆ μ) ▹ B) / μ
               -- → Γ ⊢ a ∶ A / (η ◆ μ)
-              → Γ ⊢ g ∶ (Π A / (η) ▹ B) / μ
-              → Γ ⊢ a ∶ A / (η ◆ μ)
-              → Γ ⊢ g ∘[ η ] a ∶ B [ untransform-Term a ] / μ
+              → Γ ⊢ g ∶ (Π A / (η) ▹ B) ∥ M
+              → Γ ⊢ a ∶ A ∥ (η ↳ M)
+              → Γ ⊢ g ∘[ η ] a ∶ B [ untransform-Term a ] ∥ M
 
+{-
 
     introⱼΣ_▹_by_,_  : ∀ {A B} -> ∀{t u}
               -> {μ : ModeHom P k l}
@@ -300,24 +319,25 @@ module Judgements (P : ModeSystem 𝑖) where
               -- → {{_ : isTrue (Γ ∙ (A / μ) ⊢Sort B)}}
               → Γ ⊢ t ∶ (Σ A // incl (k ↝ k ∋ id) ▹ B) / μ
               → Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / μ
-{-
               -}
+
 
     --------------------------------------------------
     -- Booleans
     falseⱼ     : -- {{ΓP : isTrue (⊢Ctx Γ)}} →
-                 Γ ⊢ falseₜ ∶ BB  / μ
+                 Γ ⊢ falseₜ ∶ BB  ∥ M
 
     trueⱼ     : -- {{ΓP : isTrue (⊢Ctx Γ)}} →
-                Γ ⊢ trueₜ ∶ BB  / μ
+                Γ ⊢ trueₜ ∶ BB  ∥ M
 
-    boolrecⱼ_into_false:_true:_   : ∀ {G} -> {μ : ModeHom P k l}
-              → Γ       ⊢ b ∶ BB  / μ
-              → Γ ∙ (BB / μ) ⊢Entry G / μ
-              → Γ       ⊢ f ∶ G [ falseₜ ]  / μ
-              → Γ       ⊢ t ∶ G [ trueₜ ]  / μ
-              → Γ       ⊢ boolrec b into G false: f true: t ∶ G [ b ]  / μ
+    boolrecⱼ_into_false:_true:_   : ∀ {G}
+              → Γ       ⊢ b ∶ BB  ∥ M
+              → Γ ∙ (BB // _ ↝ k ∋ id) ⊢Entry G ∥ (_∷_ {k = k} id M)
+              → Γ       ⊢ f ∶ G [ falseₜ ]  ∥ M
+              → Γ       ⊢ t ∶ G [ trueₜ ]  ∥ M
+              → Γ       ⊢ boolrec b into G false: f true: t ∶ G [ b ]  ∥ M
 
+{-
     --------------------------------------------------
     -- Natural numbers
 
@@ -340,8 +360,11 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢ t ∶ A / μ
               → Γ ⊢ t ∶ B / μ
 
+-}
 
   pattern letunmodⱼ_into_by_ t G s = letunmodⱼ[ id ] t into G by  s
+
+{-
 
 {-
     nilⱼ      : ∀ {A}
