@@ -167,7 +167,7 @@ module Examples where
     μ : ModeHom M k l
     η : ModeHom M o r
 
-  _⊢_≔_ : (Γ : Con (Entry M) n) → Entry M n → Term M n → Set
+  _⊢_≔_ : (Γ : Con (Entry M) n) → Target n → Term M n → Set
   Γ ⊢ E ≔ t = Γ ⊢ t ∶ E
 
   εε : Con (Entry M) zero
@@ -184,20 +184,19 @@ module Examples where
   ---------------------------------------------
   -- small examples
 
-  P0 : εε ∙ (NN / (`＠` uu ⨾ id)) ⊢ var zero (incl idT[ ＠ uu ]) ∶ NN / `＠` uu ⨾ id
+  P0 : εε ∙ (NN / (＠ uu)) ⊢ var zero (incl idT[ ＠ uu ]) ∶ NN ∥ ((＠ uu) ∷ [])
   P0 = x0ⱼ
 
-
-  P1' : εε ⊢ ⟨ NN ∣ ＠ uu ⟩ /▹▹ ⟨ NN ∣ ＠ uu ⟩ / id
-       ≔ _
-  P1' = lamⱼ (Modalⱼ (NNⱼ)) ↦ (letunmodⱼ (var zero idT) into (Modalⱼ (NNⱼ)) by (modⱼ ((var zero idT))))
+  Test : ⊢Ctx (εε ∙ (NN / (＠ uu))) ∥ (＠ uu ∷ [])
+  Test = ε ∙ NNⱼ {{because ε}}
 
 
-  P1 : εε ⊢ ⟨ NN ∣ ＠ uu ⟩ /▹▹ ⟨ NN ∣ ＠ uu ⟩ / id
+  P1 : εε ⊢ ⟨ NN ∣ ＠ uu ⟩ /▹▹ ⟨ NN ∣ ＠ uu ⟩ ∥ []
        ≔ lam↦ letunmod x0 into ⟨ NN ∣ ＠ uu ⟩ by mod[ ＠ uu ] x0
-  P1 = lamⱼ (Modalⱼ (NNⱼ )) ↦ (letunmodⱼ (var zero idT) into (Modalⱼ NNⱼ) by (modⱼ ((var zero idT))))
+  P1 = lamⱼ (Modalⱼ (NNⱼ)) ↦ (letunmodⱼ[ id ] (var zero idT) into (Modalⱼ (NNⱼ)) by (modⱼ ((var zero idT))))
 
 
+{-
 
   wk-Entry : Γ ⊢Entry A / μ -> Γ ∙ (B / η) ⊢Entry wk1 A / μ
   wk-Entry = {!!}
@@ -781,6 +780,7 @@ module Examples where
       (comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))
         >ⱼ comvalⱼ (Locⱼ _ NNⱼ) ((var (suc (suc zero)) ∘ⱼ var zero))) )))
   -}
+-}
 -}
 -}
 -}

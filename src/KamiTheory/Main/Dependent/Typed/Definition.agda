@@ -33,6 +33,8 @@ open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
 -- open import Agora.Order.Preorder
 -- open import Agora.Order.Lattice
 
+open import Data.Vec using ([] ; _∷_ ; _++_ ; lookup) renaming (Vec to StdVec ; map to map-Vec)
+
 open import KamiTheory.Basics hiding (typed)
 open import KamiTheory.Main.Dependent.Untyped.Definition
 
@@ -48,6 +50,13 @@ open import KamiTheory.Main.Generic.ModeSystem.Transition
 
 
 
+record RModeHom (P : ModeSystem 𝑖) (k : Mode P) : 𝒰 𝑖 where
+  constructor incl
+  field {cod} : Mode P
+  field hom : ModeHom P k cod
+
+open RModeHom public
+
 module Judgements (P : ModeSystem 𝑖) where
 
 
@@ -59,10 +68,20 @@ module Judgements (P : ModeSystem 𝑖) where
   -- infix 30 ⟦_⟧ⱼ_▹_
 
 
+
   open Term
 
   private variable
     k l o q r mm nn : Mode P
+
+  data Restriction : (Mode P) -> ℕ -> 𝒰 𝑖 where
+    [] : Restriction k 0
+    _∷_ : ModeHom P k l -> Restriction l n -> Restriction k (suc n)
+
+  -- Restriction : (Mode P) -> ℕ -> 𝒰 _
+  -- Restriction k n = StdVec (RModeHom P k) n
+
+  private variable
     μs : Modality P
     ωs : Modality P
     ηs : Modality P
@@ -82,6 +101,7 @@ module Judgements (P : ModeSystem 𝑖) where
     f g : Term P n
     G : Term P (1+ n)
     x : Fin n
+    M : Restriction k n
     -- U V R : P
 
 
@@ -93,23 +113,45 @@ module Judgements (P : ModeSystem 𝑖) where
     zero :                       x0 ∶ wk1-Entry E ∈ (Γ ∙ E)
     suc  : (h : x ∶ E ∈ Γ) → (x +1) ∶ wk1-Entry E ∈ (Γ ∙ F)
 
+  data _∶_⇒_∈_∥_ : (x : Fin n) (E : Entry P n) (η : ModeHom P k l) (Γ : Con (Entry P) n) (M : Restriction k n) → 𝒰 𝑖 where
+    zero :          x0 ∶ wk1-Entry E ⇒ η ∈ (Γ ∙ E) ∥ (η ∷ M)
+    suc  : (h : x ∶ E ⇒ η ∈ Γ ∥ M) → (x +1) ∶ wk1-Entry E ⇒ (μ ◆ η) ∈ (Γ ∙ F) ∥ (μ ∷ M)
+
+
+  _↳_ : ModeHom P l k -> Restriction k n -> Restriction l n
+  μ ↳ [] = []
+  μ ↳ (x ∷ M) = μ ◆ x ∷ M
+  -- map-Vec (λ η -> incl (μ ◆ hom η))
+
+  data Target (n : ℕ) : 𝒰 𝑖 where
+    _∥_ : Term P n -> Restriction k n -> Target n
+
+  infix 30 _∥_
+
+  infixr 40 _↳_
 
 
 
+  data ⊢Ctx_∥_ : Con (Entry P) n → Restriction k n → 𝒰 𝑖
 
-  data ⊢Ctx_ : Con (Entry P) n → 𝒰 𝑖
-  data _⊢Entry_ (Γ : Con (Entry P) n) : Entry P n -> 𝒰 𝑖
-  data _⊢_∶_ (Γ : Con (Entry P) n) : Term P n → Entry P n → 𝒰 𝑖
-  data _⊢Entry_＝_ (Γ : Con (Entry P) n) : Entry P n → Entry P n → 𝒰 𝑖
-  data _⊢_＝_∶_ (Γ : Con (Entry P) n) : Term P n → Term P n → Entry P n → 𝒰 𝑖
+  data _⊢Entry_ (Γ : Con (Entry P) n) : Target n -> 𝒰 𝑖
+
+  data _⊢_∶_ (Γ : Con (Entry P) n) : Term P n → Target n → 𝒰 𝑖
+  -- data _⊢Entry_＝_ (Γ : Con (Entry P) n) : Entry P n → Entry P n → 𝒰 𝑖
+  -- data _⊢_＝_∶_ (Γ : Con (Entry P) n) : Term P n → Term P n → Entry P n → 𝒰 𝑖
+
 
 
   -- Well-formed context
-  data ⊢Ctx_ where
-    ε   : ⊢Ctx ε
-    _∙_ : ⊢Ctx Γ
-        → Γ ⊢Entry E
-        → ⊢Ctx Γ ∙ E
+  data ⊢Ctx_∥_ where
+    ε   : ⊢Ctx_∥_ {k = k} ε []
+    _∙_ : ∀{M : Restriction o n}
+        -> ⊢Ctx Γ ∥ M
+        -> ∀{η : ModeHom P q o}
+        -> ∀{μ : ModeHom P l o}
+        → Γ ⊢Entry A ∥ μ ↳ M
+        → ⊢Ctx Γ ∙ (A / μ) ∥ (η ∷ M)
+
 
 
 
@@ -117,34 +159,35 @@ module Judgements (P : ModeSystem 𝑖) where
 
     -- Well-formed entry
   data _⊢Entry_ Γ where
-    NNⱼ    : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (NN / μ)
-    BBⱼ    : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (BB / μ)
+    NNⱼ    : {{ΓP : isTrue (⊢Ctx Γ ∥ M)}} → Γ ⊢Entry (NN ∥ M)
+
+    BBⱼ    : {{ΓP : isTrue (⊢Ctx Γ ∥ M)}} → Γ ⊢Entry (BB ∥ M)
     -- Emptyⱼ : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (Empty / ▲ U)
     -- Unitⱼ  : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (Unit / ▲ U)
     -- Leafⱼ : ∀{l} -> {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (gen (leaf l) [] / ▲ U) -- leafs are NN, Unit, Empty
 
-    UUⱼ    : {{ΓP : isTrue (⊢Ctx Γ)}} → Γ ⊢Entry (UU / μ)
+    UUⱼ    : {{ΓP : isTrue (⊢Ctx Γ ∥ M)}} → Γ ⊢Entry (UU ∥ M)
 
-    Vecⱼ   : Γ ⊢Entry (A / μ) → Γ ⊢ t ∶ NN / μ  → Γ ⊢Entry (Vec A t / μ)
+    Vecⱼ   : Γ ⊢Entry (A ∥ M) → Γ ⊢ t ∶ NN ∥ M  → Γ ⊢Entry (Vec A t ∥ M)
 
-    Πⱼ_▹_  : Γ ⊢Entry (A / μ ◆ η)
-              → Γ ∙ (A / μ) ⊢Entry (B / η)
-              → Γ ⊢Entry ((Π A / μ ▹ B) / η)
+    Πⱼ_▹_  : Γ ⊢Entry (A ∥ μ ↳ M)
+              → Γ ∙ (A / μ) ⊢Entry (B ∥ (id ∷ M))
+              → Γ ⊢Entry ((Π A / μ ▹ B) ∥ M)
 
-    Σⱼ_▹_  : {μ : ModeHom P k l}
-            → Γ ⊢Entry (A / μ)
-            → Γ ∙ (A / μ) ⊢Entry (B / μ)
-            → Γ ⊢Entry ((Σ A // incl (k ↝ k ∋ id) ▹ B) / μ)
+    -- Σⱼ_▹_  : {μ : ModeHom P k l}
+    --         → Γ ⊢Entry (A / μ)
+    --         → Γ ∙ (A / μ) ⊢Entry (B / μ)
+    --         → Γ ⊢Entry ((Σ A // incl (k ↝ k ∋ id) ▹ B) / μ)
 
     -------------------
     -- Kami universes
 
-    Univⱼ : Γ ⊢ X ∶ UU / μ
-              → Γ ⊢Entry (X / μ)
+    Univⱼ : Γ ⊢ X ∶ UU ∥ M
+              → Γ ⊢Entry (X ∥ M)
 
     -------------------
     -- Kami modality system
-    Modalⱼ : Γ ⊢Entry (A / (η ◆ μ)) -> Γ ⊢Entry ⟨ A ∣ η ⟩ / μ
+    Modalⱼ : Γ ⊢Entry (A ∥ (η ↳ M)) -> Γ ⊢Entry ⟨ A ∣ η ⟩ ∥ M
 
 
 
@@ -154,6 +197,7 @@ module Judgements (P : ModeSystem 𝑖) where
   -- Well-formed term of a type
   data _⊢_∶_ Γ where
 
+{-
     -------------------
     -- Types as terms of UU
     NNⱼ    : Γ ⊢ NN ∶ UU / μ
@@ -174,20 +218,31 @@ module Judgements (P : ModeSystem 𝑖) where
 
     Modalⱼ : Γ ⊢ A ∶ UU / (η ◆ μ) -> Γ ⊢ ⟨ A ∣ η ⟩ ∶ UU / μ
 
+-}
+
     -------------------
     -- Standard modality intro and "elim"
 
-    modⱼ : Γ ⊢ t ∶ X / (η ◆ μ) -> Γ ⊢ mod[ η ] t ∶ ⟨ X ∣ η ⟩ / μ
+    modⱼ : Γ ⊢ t ∶ X ∥ (η ↳ M) -> Γ ⊢ mod[ η ] t ∶ ⟨ X ∣ η ⟩ ∥ M
+
 
     letunmodⱼ[_]_into_by_ :
                  ∀ (μ : ModeHom P k l)
-              -> Γ ⊢ t ∶ ⟨ X ∣ η ⟩ / μ ◆ ω
-              -> Γ ∙ (⟨ X ∣ η ⟩ / μ ◆ ω) ⊢Entry Y / ω
-              -> Γ ∙ (X / (η ◆ μ ◆ ω)) ⊢ s ∶ Y [ mod[ μ ] (var x0 id) ]↑ / ω
-              -> Γ ⊢ letunmod[ μ ] t into Y by s ∶ Y [ t ] / ω
+              -> Γ ⊢ t ∶ ⟨ X ∣ η ⟩ ∥ μ ↳ M
+              -> Γ ∙ (⟨ X ∣ η ⟩ / μ) ⊢Entry Y ∥ (id ∷ M)
+              -> Γ ∙ (X / (η ◆ μ)) ⊢ s ∶ (Y [ mod[ μ ] (var x0 id) ]↑) ∥ (id ∷ M)
+              -> Γ ⊢ letunmod[ μ ] t into Y by s ∶ (Y [ t ]) ∥ M
+
+    -- letunmodⱼ[_]_into_by_ :
+    --              ∀ (μ : ModeHom P k l)
+    --           -> Γ ⊢ t ∶ ⟨ X ∣ η ⟩ / μ ◆ ω
+    --           -> Γ ∙ (⟨ X ∣ η ⟩ / μ ◆ ω) ⊢Entry Y / ω
+    --           -> Γ ∙ (X / (η ◆ μ ◆ ω)) ⊢ s ∶ Y [ mod[ μ ] (var x0 id) ]↑ / ω
+    --           -> Γ ⊢ letunmod[ μ ] t into Y by s ∶ Y [ t ] / ω
 
 
 
+{-
     -------------------
     -- Transformations between modehoms (transitions)
 
@@ -199,20 +254,23 @@ module Judgements (P : ModeSystem 𝑖) where
 
     -------------------
     -- normal terms
+    -}
 
     -- Vars allow mode transformations between modalities
     var       : ∀ {A x}
 --               -> {{ΓP : isTrue (⊢Ctx Γ)}}
-              → x ∶ (A // (k ↝ l ∋ μ)) ∈ Γ
+              → x ∶ (A // (k ↝ l ∋ μ)) ⇒ η ∈ Γ ∥ M
               → (ζ : ModalityTrans P all (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
-              → Γ ⊢ (Term.var x (incl ζ)) ∶ A ^[ ζ ] // (k ↝ l ∋ η)
+              → Γ ⊢ (Term.var x (incl ζ)) ∶ A ^[ ζ ] ∥ M
+
 
 
     lamⱼ_↦_      : ∀ {t}
-              → Γ ⊢Entry (A / η ◆ μ)
-              → Γ ∙ (A / η) ⊢ t ∶ B / μ
-              → Γ ⊢ lam↦ t ∶ (Π A / η ▹ B) / μ
+              → Γ ⊢Entry (A ∥ η ↳ M)
+              → Γ ∙ (A / η) ⊢ t ∶ B ∥ (id ∷ M)
+              → Γ ⊢ lam↦ t ∶ (Π A / η ▹ B) ∥ M
 
+{-
     _∘ⱼ_      : ∀ {g a}
               -- → Γ ⊢ g ∶ (Π A / (η ◆ μ) ▹ B) / μ
               -- → Γ ⊢ a ∶ A / (η ◆ μ)
@@ -632,4 +690,5 @@ module Judgements (P : ModeSystem 𝑖) where
 
   -}
 
+-}
 -}
