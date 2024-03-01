@@ -338,23 +338,23 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ       ⊢ t ∶ G [ trueₜ ]  ∥ M
               → Γ       ⊢ boolrec b into G false: f true: t ∶ G [ b ]  ∥ M
 
-{-
     --------------------------------------------------
     -- Natural numbers
 
     zeroⱼ     : --  {{ΓP : isTrue (⊢Ctx Γ)}} →
-                 Γ ⊢ zeroₜ ∶ NN  / μ
+                 Γ ⊢ zeroₜ ∶ NN  ∥ M
 
     sucⱼ      : ∀ {n}
-              → Γ ⊢      n ∶ NN  / μ
-              → Γ ⊢ sucₜ n ∶ NN  / μ
+              → Γ ⊢      n ∶ NN  ∥ M
+              → Γ ⊢ sucₜ n ∶ NN  ∥ M
 
-    natrecⱼ_into_zero:_suc:_   : ∀ {G s z n} -> {μ : ModeHom P k l}
-              → Γ       ⊢ n ∶ NN  / μ
-              → Γ ∙ (NN / μ) ⊢Entry G / μ
-              → Γ       ⊢ z ∶ G [ zeroₜ ]  / μ
-              → Γ       ⊢ s ∶ (Π NN / μ ▹ (G / μ ▹▹ (G [ sucₜ (var x0 id) ]↑)))  / μ
-              → Γ       ⊢ natrec G z s n ∶ G [ n ]  / μ
+    natrecⱼ_into_zero:_suc:_   : ∀ {G s z n}
+              → Γ       ⊢ n ∶ NN  ∥ M
+              → Γ ∙ (NN // _ ↝ k ∋ id) ⊢Entry (G ∥[ k ] (id ∷ M))
+              → Γ       ⊢ z ∶ G [ zeroₜ ]  ∥ M
+              → Γ       ⊢ s ∶ (Π NN // incl (k ↝ _ ∋ id) ▹ (G // incl (k ↝ _ ∋ id) ▹▹ (G [ sucₜ (var x0 id) ]↑)))  ∥ M
+              → Γ       ⊢ natrec G z s n ∶ G [ n ]  ∥ M
+{-
 
     conv      : ∀ {t A B}
               → Γ ⊢Entry (A / μ) ＝ (B / μ)

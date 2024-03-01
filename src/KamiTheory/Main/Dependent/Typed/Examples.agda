@@ -140,6 +140,7 @@ module Examples where
   pattern x4ⱼ = var (suc (suc (suc (suc zero)))) idTⱼ
   pattern x5ⱼ = var (suc (suc (suc (suc (suc zero))))) idTⱼ
   pattern x6ⱼ = var (suc (suc (suc (suc (suc (suc zero)))))) idTⱼ
+  pattern x7ⱼ = var (suc (suc (suc (suc (suc (suc (suc zero))))))) idTⱼ
 
   pattern x0[_]ⱼ ξ = var zero ξ
   pattern x1[_]ⱼ ξ = var (suc zero) ξ
@@ -347,6 +348,7 @@ module Examples where
   -- Canonical boolrec
   ----------------------------------------------------------
 
+  {-
   boolrec-crisp-h : εε ⊢ (Π (Π BB / (＠ uu) ▹ UU) / ◻ ◆ ＠ uu ▹
                          ⟨
                           Π BB /▹
@@ -391,7 +393,7 @@ module Examples where
           modⱼ ((x0ⱼ ∘ⱼ x3ⱼ ∘ⱼ modⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ))
         )
 
-
+  -}
 
 
 
@@ -403,6 +405,50 @@ module Examples where
   -- principle under the `＠ u` modality.
   --
   -- We again begin by creating our helper function.
+
+
+  natrec-crisp-h : εε ⊢ (Π (Π NN / (＠ uu) ▹ UU) / ◻ ◆ ＠ uu ▹
+                         ⟨
+                          Π NN /▹
+                          ⟨ x1 ∘[ ＠ uu ] zeroₜ ∣ ◻ ⟩ /▹▹
+                          ⟨ Π NN / ＠ uu ▹ ((x2 ∘[ ＠ uu ] x0) /▹▹ (x2 ∘[ ＠ uu ] (sucₜ x0))) ∣ ◻ ⟩ /▹▹
+                          ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id (＠ uu) ] ∣ ◻ ⟩
+                         ∣
+                          ＠ uu
+                         ⟩)
+                          ∥ []
+                       ≔ _
+
+  natrec-crisp-h = lamⱼ Πⱼ NNⱼ ▹ UUⱼ ↦ modⱼ
+                    (lamⱼ NNⱼ ↦
+                     lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ zeroⱼ)) ↦
+                     lamⱼ Modalⱼ (Πⱼ NNⱼ {{{!!}}} ▹ (Πⱼ Univⱼ (x3ⱼ ∘ⱼ x0ⱼ) ▹ Univⱼ (x4ⱼ ∘ⱼ sucⱼ x1ⱼ))) ↦
+                     natrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id (＠ uu) ]ⱼ))
+                       zero: x1ⱼ
+                       suc: (lamⱼ NNⱼ {{{!!}}} ↦
+                             lamⱼ Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id (＠ uu) ]ⱼ)) ↦
+                             letunmodⱼ x0ⱼ
+                               into (Modalⱼ (Univⱼ (x6ⱼ ∘ⱼ sucⱼ (x2[ _★ηᵈˢ★_ id (＠ uu) ]ⱼ))))
+                               by (letunmodⱼ x3ⱼ
+                                     into (Modalⱼ (Univⱼ (x7ⱼ ∘ⱼ sucⱼ (x3[ _★ηᵈˢ★_ id (＠ uu) ]ⱼ))))
+                                     by modⱼ (x0ⱼ ∘ⱼ x3[ _★ηᵈˢ★_ id (＠ uu) ]ⱼ ∘ⱼ x1ⱼ))
+                            )
+                    )
+
+
+    -- natrecⱼ x3ⱼ into Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0ⱼ))
+    --   zero: var (suc zero) idT
+    --   suc: lamⱼ NNⱼ {{{!!}}} ↦
+    --        lamⱼ Modalⱼ (Univⱼ (x3ⱼ ∘ⱼ x0ⱼ)) ↦
+    --        (letunmodⱼ x2ⱼ into {!!} -- Modalⱼ (Univⱼ (x5ⱼ ∘ⱼ sucⱼ (x2ⱼ)))
+    --          by {!!}
+    --          -- letunmodⱼ x1ⱼ into Modalⱼ (Univⱼ (x6ⱼ ∘ⱼ sucⱼ (x3ⱼ)))
+    --          -- by modⱼ ((x1ⱼ ∘ⱼ x3ⱼ) ∘ⱼ {!x0[ ? ]ⱼ!})
+    --          -- modⱼ (x1ⱼ ∘ⱼ x3ⱼ ∘ⱼ x0ⱼ)
+    --          )
+
+
+
 
 {-
   {-
