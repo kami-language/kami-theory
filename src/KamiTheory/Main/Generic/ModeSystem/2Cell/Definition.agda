@@ -329,6 +329,16 @@ module 2CellDefinition (G : 2Graph 𝑖) where
 
   infixr 30 _◆[_]
 
+  checkSplit : (μ : 1Cell G a b) -> (η : 1Cell G a c) -> Maybe (μ ⊴ η)
+  checkSplit id η = yes (incl (η , refl))
+  checkSplit (x ⨾ μ) id = nothing
+  checkSplit (_⨾_ {n = n} x μ) (_⨾_ {n = n₁} x₁ η) with n ≟ n₁
+  ... | no _ = nothing
+  ... | yes refl with x ≟ x₁
+  ... | no _ = nothing
+  ... | yes refl with checkSplit μ η
+  ... | no _ = nothing
+  ... | yes (P) = yes ((x ⨾ id) ↷-⊴ P)
 
 
   ----------------------------------------------------------

@@ -69,6 +69,12 @@ data Transition (M : ModeSystem 𝑖) : (r : Range) -> 𝒰 𝑖 where
 
 
 module _ {M : ModeSystem 𝑖} where
+  private variable
+    a b c : Mode m
+
+
+  -- We want to allow transition composition where the domain of the second morphism is a
+  -- prefix of the codomain of the first.
 
   -- Monoid structure on transitions
   _◆-Transition_ : Transition M r -> Transition M r -> Transition M r
@@ -76,9 +82,21 @@ module _ {M : ModeSystem 𝑖} where
   (fail msg) ◆-Transition s = (fail msg)
   _◆-Transition_ t@(incl x) id = t
   _◆-Transition_ t@(incl x) (fail msg) = (fail msg)
-  _◆-Transition_ t@(incl {η = η₀} x) (incl {μ = η₁} y) with η₀ ≟ η₁
+  _◆-Transition_ t@(incl {η = η₀} x@(_ ⇒ _ ∋ xx)) (incl {μ = η₁} y@(_ ⇒ _ ∋ yy))
+    with dom η₁ ≟ dom η₀
+  ... | no p = (fail ("◆ at codomain point " <> show η₀ <> " ↔ " <> show η₁))
+  ... | yes refl
+    with checkSplit (graph M) (hom η₁) (hom η₀)
+  ... | yes (incl (η₁' , refl)) = incl (x ◆-ModalityTrans (_ ⇒ _ ∋ (yy ↶-ModeTrans* η₁')))
+  ... | no p
+    with checkSplit (graph M) (hom η₀) (hom η₁)
   ... | no p = (fail ("◆ at boundary " <> show η₀ <> " ↔ " <> show η₁))
-  ... | yes refl = incl (x ◆-ModalityTrans y)
+  ... | yes (incl (η₁' , refl)) = incl ((_ ⇒ _ ∋ (xx ↶-ModeTrans* η₁')) ◆-ModalityTrans y)
+
+-- with η₀ ≟ η₁
+--   ... | no p = (fail ("◆ at boundary " <> show η₀ <> " ↔ " <> show η₁))
+--   ... | yes refl = incl (x ◆-ModalityTrans y)
+
 
 
   -- whiskering of transitions with modalities
@@ -146,5 +164,4 @@ module _ {M : ModeSystem 𝑖} where
   instance
     hasDecidableEquality:Transition : ∀{r} -> hasDecidableEquality (Transition M r)
     hasDecidableEquality:Transition = record { _≟_ = decide-≡-Transition }
-
 

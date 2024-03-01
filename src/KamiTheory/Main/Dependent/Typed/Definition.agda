@@ -121,8 +121,8 @@ module Judgements (P : ModeSystem 𝑖) where
     suc  : (h : x ∶ E ∈ Γ) → (x +1) ∶ wk1-Entry E ∈ (Γ ∙ F)
 
   data _∶[_]_⇒_∈_∥_ : (x : Fin n) (ρ : ModeHom P mm nn) (E : Entry P n) (η : ModeHom P k l) (Γ : Con (Entry P) n) (M : Restriction k n) → 𝒰 𝑖 where
-    zero :          x0 ∶[ getRest M .snd ] wk1-Entry ((A ↶[ η ]) / ω) ⇒ η ∈ (Γ ∙ (A / ω)) ∥ (η ∷ M)
-    suc  : (h : x ∶[ ρ ] (A / ω) ⇒ η ∈ Γ ∥ M) → (x +1) ∶[ ρ ] wk1-Entry ((A ↶[ μ ]) / ω) ⇒ (μ ◆ η) ∈ (Γ ∙ F) ∥ (μ ∷ M)
+    zero :          x0 ∶[ getRest M .snd ] wk1-Entry ((A) / ω) ⇒ η ∈ (Γ ∙ (A / ω)) ∥ (η ∷ M)
+    suc  : (h : x ∶[ ρ ] (A / ω) ⇒ η ∈ Γ ∥ M) → (x +1) ∶[ ρ ] wk1-Entry ((A) / ω) ⇒ (μ ◆ η) ∈ (Γ ∙ F) ∥ (μ ∷ M)
 
 
   _↳_ : ModeHom P l k -> Restriction k n -> Restriction l n
@@ -291,7 +291,8 @@ module Judgements (P : ModeSystem 𝑖) where
               -- → (ζ : ModalityTrans P all (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
               → (ζ : ModeTrans* P all (μ) (η))
               -- → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ (ζ) ] ∥ M
-              → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ (ζ ↶-ModeTrans* ρ) ] ∥ M
+              -- → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ (ζ ↶-ModeTrans* ρ) ] ∥ M
+              → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ ζ ] ∥ M
 
 
 

@@ -344,6 +344,29 @@ module Examples where
 
 
 
+  -- boolrec-crisp-h : εε ⊢ (Π (Π BB / (＠ uu) ▹ UU) / ◻ ◆ ＠ uu ▹
+  --                        ⟨
+  --                         Π BB /▹
+  --                         ⟨ x1 ∘[ ＠ uu ] falseₜ ∣ ◻ ⟩ /▹▹
+  --                         ⟨ x1 ∘[ ＠ uu ] trueₜ ∣ ◻ ⟩ /▹▹
+  --                         ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id id ] ∣ ◻ ⟩
+  --                        ∣
+  --                         ＠ uu
+  --                        ⟩)
+  --                         ∥ []
+  --                      ≔ _
+
+  -- boolrec-crisp-h = lamⱼ Πⱼ BBⱼ ▹ UUⱼ ↦ modⱼ
+  --                   (lamⱼ BBⱼ ↦
+  --                    lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ falseⱼ)) ↦
+  --                    lamⱼ Modalⱼ (Univⱼ (x2ⱼ ∘ⱼ trueⱼ)) ↦
+  --                    boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id id ]ⱼ))
+  --                      false: x1ⱼ
+  --                      true: x0ⱼ
+  --                   )
+
+
+
 
   ----------------------------------------------------------
   -- Canonical boolrec
@@ -353,9 +376,9 @@ module Examples where
   boolrec-crisp-h : εε ⊢ (Π (Π BB / (＠ uu) ▹ UU) / ◻ ◆ ＠ uu ▹
                          ⟨
                           Π BB /▹
-                          ⟨ x1 ∘[ ＠ uu ] falseₜ ∣ ◻ ⟩ /▹▹
-                          ⟨ x1 ∘[ ＠ uu ] trueₜ ∣ ◻ ⟩ /▹▹
-                          ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id id ] ∣ ◻ ⟩
+                          ⟨ x1 ∘[ _ ] falseₜ ∣ ◻ ⟩ /▹▹
+                          ⟨ x1 ∘[ _ ] trueₜ ∣ ◻ ⟩ /▹▹
+                          ⟨ x1 ∘[ _ ] x0[ _★ηᵈˢ★_ id id ] ∣ ◻ ⟩
                          ∣
                           ＠ uu
                          ⟩)
@@ -366,13 +389,13 @@ module Examples where
                     (lamⱼ BBⱼ ↦
                      lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ falseⱼ)) ↦
                      lamⱼ Modalⱼ (Univⱼ (x2ⱼ ∘ⱼ trueⱼ)) ↦
+                     -- boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id id ]ⱼ))
                      boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id id ]ⱼ))
                        false: x1ⱼ
                        true: x0ⱼ
                     )
 
 
-{-
 
   boolrec-crisp : εε ⊢
     Π (Π BB / (＠ uu) ▹ UU) / (◻ ◆ ＠ uu) ▹
@@ -394,7 +417,6 @@ module Examples where
           ∘ⱼ
           modⱼ ((x0ⱼ ∘ⱼ x3ⱼ ∘ⱼ modⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ))
         )
-        -}
 
 
 
@@ -402,7 +424,6 @@ module Examples where
 
 
 
-  {-
 
   ---------------------------------------------
   -- Prop: The naturals have a crisp induction
@@ -435,8 +456,7 @@ module Examples where
                                into (Modalⱼ (Univⱼ (x6ⱼ ∘ⱼ sucⱼ (x2[ _★ηᵈˢ★_ id id ]ⱼ))))
                                by (letunmodⱼ x3ⱼ
                                      into (Modalⱼ (Univⱼ (x7ⱼ ∘ⱼ sucⱼ (x3[ _★ηᵈˢ★_ id id ]ⱼ))))
-                                     by modⱼ {!!}
-                                     -- (x0ⱼ ∘ⱼ x3[ _★ηᵈˢ★_ id id ]ⱼ ∘ⱼ x1ⱼ)
+                                     by modⱼ (x0ⱼ ∘ⱼ x3[ _★ηᵈˢ★_ id id ]ⱼ ∘ⱼ x1[ idTⱼ ]ⱼ) -- (x0ⱼ ∘ⱼ x3[ _★ηᵈˢ★_ id id ]ⱼ ∘ⱼ x1ⱼ)
                                      )
                             )
                     )
@@ -463,6 +483,8 @@ module Examples where
           modⱼ ((x0ⱼ ∘ⱼ x3ⱼ ∘ⱼ modⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ))
         )
 
+
+  {-
 {-
 -}
 -}

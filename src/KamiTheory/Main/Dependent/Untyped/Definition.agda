@@ -884,8 +884,6 @@ mutual
   -- push-Kinded ξs (x // μ) = push ξs x // μ
 
   push : Transitions P n all -> Term P n -> Term P n
-  -- push ξs (t ∘[ α ] s) = push ξs t ∘[ α ] s
-  -- push ξs (t ∘ s) = push ξs t ∘ s
   push ξs (gen (main x) c) = gen (main x) (push-Gen ξs c)
   push ξs (gen (leaf x) c) = gen (leaf x) []
   push ξs (transform ζ t) with ξ' , ζ' <- commute-Transition-vis ζ (get ξs)

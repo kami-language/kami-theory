@@ -112,10 +112,16 @@ module Examples2 where
     lamⱼ NNⱼ ↦
     conv ((univ (β-red (NNⱼ) ((Πⱼ Vecⱼ BBⱼ x0[ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) {!!})))) x0[ {!!} ]ⱼ)))
       ((wk-Term natrec-crisp)
-      ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ_▹_ {μ = ＠ uu} (Vecⱼ (BBⱼ {{{!!}}}) (var2 zero (τᵈˢ ϕu))) (Modalⱼ {η = ＠ vv} (Vecⱼ (BBⱼ {{{!!}}}) (var2 (suc zero) (τᵈˢ ϕv))))))
+      ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ_▹_ {μ = ＠ uu} (Vecⱼ (BBⱼ {{{!!}}}) (var zero (τᵈˢ ϕu))) (Modalⱼ {η = ＠ vv} (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) (τᵈˢ ϕv))))))
       ∘ⱼ x0ⱼ
-      ∘ⱼ {!lamⱼ ? ↦ ?!}
-      ∘ⱼ {!!})
+      ∘ⱼ conv (symₑ (univ (β-red NNⱼ ((Πⱼ Vecⱼ BBⱼ x0[ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) {!!})))) zeroⱼ)))
+         (lamⱼ {!!} ↦ {!!})
+      ∘ⱼ (
+         lamⱼ NNⱼ ↦
+         lamⱼ Univⱼ ((lamⱼ NNⱼ ↦ (Πⱼ {!!} ▹ {!!})) ∘ⱼ x0ⱼ) ↦ 
+         conv (symₑ (univ (β-red (NNⱼ {{{!!}}}) ((Πⱼ Vecⱼ (BBⱼ {{{!!}}}) x0[ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) {!!})))) {!!})))
+              (lamⱼ {!!} ↦ {!!})
+         ))
 
 
 {-
