@@ -39,18 +39,62 @@ open import KamiTheory.Main.Dependent.Typed.Examples.CrispInduction
 module Examples2 where
   open Examples
 
+  open Judgements M
+
+  open Typecheck M
+
+  open SendReceiveNarrow-2Graph
+  open 2CellDefinition (graph M) hiding ( [_])
+
+  private variable
+    -- n m : Nat
+    p q : Term M n
+    s t u : Term M n
+    Γ  : Con (Entry M) n
+    A C : Term M n
+    B : Term M m
+    U V W R : P
+    k l o r : Mode M
+    μ : ModeHom M k l
+    η : ModeHom M o r
+    ν : ModeHom M o r
+    μs : Restriction k n
+
+
+
+  -- natrec-crisp2 : ∀{u} -> εε ⊢
+  --   Π (Π NN / ＠ u ▹ UU) / (◻ ◆ ＠ u) ▹
+  --   Π NN / ＠ u ▹
+  --   (x1 ∘[ ＠ u ] zeroₜ) / (◻ ◆ ＠ u) ▹▹
+  --   (Π NN / ＠ u ▹ ((x2 ∘[ ＠ u ] x0) /▹▹ (x2 ∘[ ＠ u ] sucₜ x0))) / (◻ ◆ ＠ u) ▹▹
+  --   (x1[ id ★εᵈˢ★ id ] ∘[ ＠ u ] x0) ∥ []
+  --   ≔ _
+  -- natrec-crisp2 {u = u} =
+  --   lamⱼ proof ↦
+  --   lamⱼ proof ↦
+  --   lamⱼ Univⱼ (x1ⱼ ∘ⱼ zeroⱼ) ↦
+  --   lamⱼ (Πⱼ NNⱼ {{{!!}}} ▹ (Πⱼ Univⱼ (x3ⱼ ∘ⱼ x0ⱼ) ▹ Univⱼ (x4ⱼ ∘ⱼ sucⱼ x1ⱼ))) ↦
+  --     letunmodⱼ[ id ] wk-Term (wk-Term (wk-Term (wk-Term (natrec-crisp-h)))) ∘ⱼ x3ⱼ
+  --       into (Univⱼ (x4[ εᵈˢ ]ⱼ ∘ⱼ x3[ idTⱼ ]ⱼ))
+  --       by
+  --       (
+  --         (wk-Term (wk-Term (wk-Term (wk-Term (wk-Term sync')))) ∘ⱼ (x4[ idTⱼ ]ⱼ ∘ⱼ x3[ id ★ηᵈˢ★ ＠ u ]ⱼ))
+  --         ∘ⱼ
+  --         modⱼ ((x0ⱼ ∘ⱼ x3ⱼ ∘ⱼ modⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ))
+  --       )
+
+
 
 
   ---------------------------------------------
   -- For sending vectors we need the narrowing
   -- transformation:
 
-  τᵈˢ : ∀{u v} -> u ≤ v -> ModalityTrans M all (▲ ↝ ◯ ∋ ＠ u) (▲ ↝ ◯ ∋ ＠ v)
-  τᵈˢ {u = u} ϕ = _ ⇒ _ ∋ [ (incl (incl (id ⌟[ narrow ϕ ]⌞ id ⌟) ∷ [])) ∣ incl [] ]
+  τᵈˢ : ∀{u v} -> u ≤ v -> ModeTrans* M all (＠ u) (＠ v)
+  τᵈˢ {u = u} ϕ = [ (incl (incl (id ⌟[ narrow ϕ ]⌞ id ⌟) ∷ [])) ∣ incl [] ]
 
-{-
-  _★τᵈˢ[_]★_ : (μ : ModeHom M k ▲) -> ∀{u v} -> (ϕ : u ≤ v) -> (η : ModeHom M ◯ l) -> ModalityTrans M all (k ↝ l ∋ (μ ◆ ＠ u ◆ η)) (k ↝ l ∋ (μ ◆ ＠ v ◆ η))
-  _★τᵈˢ[_]★_ μ ϕ η = _ ⇒ _ ∋ [ (incl (incl (μ ⌟[ narrow ϕ ]⌞ η ⌟) ∷ [])) ∣ incl [] ]
+  _★τᵈˢ[_]★_ : (μ : ModeHom M k ▲) -> ∀{u v} -> (ϕ : u ≤ v) -> (η : ModeHom M ◯ l) -> ModeTrans* M all ((μ ◆ ＠ u ◆ η)) ((μ ◆ ＠ v ◆ η))
+  _★τᵈˢ[_]★_ μ ϕ η = [ (incl (incl (μ ⌟[ narrow ϕ ]⌞ η ⌟) ∷ [])) ∣ incl [] ]
 
   ϕu : uuvv ≤ uu
   ϕu = refl-≤-𝟚 ∷ (step ∷ (refl-≤-𝟚 ∷ []))
@@ -62,15 +106,21 @@ module Examples2 where
     ⊢
       Π NN / ＠ uuvv ▹
       Π Vec BB (x0[ τᵈˢ ϕu ]) / ＠ uu ▹
-      ⟨ Vec BB (x1[ τᵈˢ ϕv ]) ∣ ＠ vv ⟩ / id
+      ⟨ Vec BB (x1[ τᵈˢ ϕv ]) ∣ ＠ vv ⟩ ∥ []
       ≔ {!!}
   send-vec =
     lamⱼ NNⱼ ↦
-    conv (transₑ ({!Π-cong ? ? ?!}) (univ (β-red (NNⱼ) ((Πⱼ Vecⱼ BBⱼ x0[ (id) ★τᵈˢ[ ϕu ]★ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ BBⱼ (var (suc zero) {!!})))) x0ⱼ)))
+    conv ((univ (β-red (NNⱼ) ((Πⱼ Vecⱼ BBⱼ x0[ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) {!!})))) x0[ {!!} ]ⱼ)))
       ((wk-Term natrec-crisp)
+      ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ_▹_ {μ = ＠ uu} (Vecⱼ (BBⱼ {{{!!}}}) (var2 zero (τᵈˢ ϕu))) (Modalⱼ {η = ＠ vv} (Vecⱼ (BBⱼ {{{!!}}}) (var2 (suc zero) (τᵈˢ ϕv))))))
       ∘ⱼ x0ⱼ
-      ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ_▹_ {μ = ＠ uu} (Vecⱼ BBⱼ x0[ id ★τᵈˢ[ ϕu ]★ (◻ ◆ ＠ uuvv) ]ⱼ) (Modalⱼ {η = ＠ vv} (Vecⱼ BBⱼ x1[ {!!} ]ⱼ))))
-      -- ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ Vecⱼ BBⱼ ? x0[ id ★τᵈˢ[ ϕu ]★ (◻ ◆ ＠ uuvv) ]ⱼ ▹ Modalⱼ (Vecⱼ BBⱼ x1[ id ★τᵈˢ[ ϕv ]★ (◻ ◆ ＠ uuvv) ]ⱼ)))
       ∘ⱼ {!lamⱼ ? ↦ ?!}
       ∘ⱼ {!!})
+
+
+{-
+      -- ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ Vecⱼ BBⱼ ? x0[ id ★τᵈˢ[ ϕu ]★ (◻ ◆ ＠ uuvv) ]ⱼ ▹ Modalⱼ (Vecⱼ BBⱼ x1[ id ★τᵈˢ[ ϕv ]★ (◻ ◆ ＠ uuvv) ]ⱼ)))
+
+-- transₑ ({!Π-cong ? ? ?!}) (univ (β-red (NNⱼ) ((Πⱼ Vecⱼ BBⱼ x0[ (id) ★τᵈˢ[ ϕu ]★ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ BBⱼ (var (suc zero) {!!})))) x0ⱼ))
+
       -}

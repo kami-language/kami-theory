@@ -862,7 +862,7 @@ liftVarExtension μs xs = intoModalities μs ++ xs
 
 
 liftPostTransition : ∀{b} -> Modality P -> Transitions P n all -> Transitions P (b + n) all
-liftPostTransition μ (transitions ξ post reqs) = transitions ξ (μ ◆-Modality post) (fillVec required ++ reqs)
+liftPostTransition μ (transitions ξ post reqs) = transitions ξ (μ ◆-Modality post) (fillVec notRequired ++ reqs)
 
 getTransition : Fin n -> Transitions P n all -> Transition P all
 getTransition x ξs with lookup (requirements ξs) x
@@ -901,6 +901,54 @@ _^[_] : Term P n -> ∀{μ η : SomeModeHom P} -> ModalityTrans P all μ η -> T
 _^[_] A ξ = push (uniformTransitions (incl ξ)) A
 
 infix 60 _^[_]
+
+
+
+record Shiftings (P : ModeSystem 𝑖) (n : Nat) : 𝒰 𝑖 where
+  constructor shiftings
+  field get : SomeModeHom P
+  field requirements : StdVec isTransitionRequired n
+
+open Shiftings public
+
+-- NOTE: we currently ignore μ, but it might be required in the future
+liftShifting : ∀{b} -> Modality P -> Shiftings P n -> Shiftings P (b + n)
+liftShifting μ (shiftings ξ reqs) = shiftings ξ (fillVec required ++ reqs)
+
+getShifting : Fin n -> Shiftings P n -> Modality P
+getShifting x ξs with lookup (requirements ξs) x
+... | notRequired = id
+... | required = (incl (get ξs))
+
+
+mutual
+  shift-Gen : ∀{bs} -> Shiftings P n -> GenTs (Modality P) (KindedTerm P) n bs -> GenTs (Modality P) (KindedTerm P) n bs
+  shift-Gen ξs [] = []
+  shift-Gen ξs (μ ⦊ t ∷ ts) = μ ⦊ shift-Kinded (liftShifting μ ξs) t ∷ shift-Gen ξs ts
+
+  shift-Kinded : ∀{k} -> Shiftings P n -> KindedTerm P n k -> KindedTerm P n k
+  shift-Kinded ξs (term x) = term (shift ξs x)
+  shift-Kinded ξs (modality μ) = modality μ
+  shift-Kinded ξs (transition ζ) = transition ζ
+  -- t)
+  -- shift-Kinded ξs (x // μ) = shift ξs x // μ
+
+  shift : Shiftings P n -> Term P n -> Term P n
+  shift ξs (Π A // μ ▹ B) = Π (shift ξs A) // μ ◆-Modality (incl (get ξs)) ▹ shift (liftShifting μ ξs) B
+  -- shift ξs (t ∘[ α ] s) = shift ξs t ∘[ α ] s
+  -- shift ξs (t ∘ s) = shift ξs t ∘ s
+  shift ξs (gen (main x) c) = gen (main x) (shift-Gen ξs c)
+  shift ξs (gen (leaf x) c) = gen (leaf x) []
+  shift ξs (transform ζ t) = transform ζ (shift ξs t)
+  shift ξs (var x ζ) = var x (ζ ↶-Transition getShifting x ξs)
+  -- shift ξs (var x ζ) = var x (ζ ◆-Transition ((postExtension ξs ↷-Transition get ξs)))
+
+  -- TODO change system so we don't need this case.
+  shift x (gen 𝓀-transform (_ ⦊ transition x₁ ∷ _ ⦊ term x₂ ∷ [])) = zeroₜ
+
+_↶[_] : ∀{a b} -> Term P n -> ModeHom P a b -> Term P n
+_↶[_] t μ = shift (shiftings (_ ↝ _ ∋ μ) (fillVec notRequired)) t
+
 
 
 mutual

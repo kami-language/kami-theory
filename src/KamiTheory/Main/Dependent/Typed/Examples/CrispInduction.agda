@@ -292,6 +292,7 @@ module Examples where
              lamⱼ Univⱼ x0ⱼ ↦
              modⱼ x0[ ηᵈˢ ]ⱼ
 
+
   --
   -- The counit on the other hand allows us to wait for the execution
   -- of previously dispatched executions. We thus call it "sync".
@@ -348,13 +349,13 @@ module Examples where
   -- Canonical boolrec
   ----------------------------------------------------------
 
-  {-
+
   boolrec-crisp-h : εε ⊢ (Π (Π BB / (＠ uu) ▹ UU) / ◻ ◆ ＠ uu ▹
                          ⟨
                           Π BB /▹
                           ⟨ x1 ∘[ ＠ uu ] falseₜ ∣ ◻ ⟩ /▹▹
                           ⟨ x1 ∘[ ＠ uu ] trueₜ ∣ ◻ ⟩ /▹▹
-                          ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id (＠ uu) ] ∣ ◻ ⟩
+                          ⟨ x1 ∘[ ＠ uu ] x0[ _★ηᵈˢ★_ id id ] ∣ ◻ ⟩
                          ∣
                           ＠ uu
                          ⟩)
@@ -365,12 +366,13 @@ module Examples where
                     (lamⱼ BBⱼ ↦
                      lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ falseⱼ)) ↦
                      lamⱼ Modalⱼ (Univⱼ (x2ⱼ ∘ⱼ trueⱼ)) ↦
-                     boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id (＠ uu) ]ⱼ))
+                     boolrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id id ]ⱼ))
                        false: x1ⱼ
                        true: x0ⱼ
                     )
 
 
+{-
 
   boolrec-crisp : εε ⊢
     Π (Π BB / (＠ uu) ▹ UU) / (◻ ◆ ＠ uu) ▹
@@ -388,17 +390,19 @@ module Examples where
         into (Univⱼ (x4[ εᵈˢ ]ⱼ ∘ⱼ x3[ idTⱼ ]ⱼ))
         by
         (
-          (wk-Term (wk-Term (wk-Term (wk-Term (wk-Term sync')))) ∘ⱼ (x4[ idTⱼ ]ⱼ ∘ⱼ x3[ id ★ηᵈˢ★ ＠ uu ]ⱼ))
+          (wk-Term (wk-Term (wk-Term (wk-Term (wk-Term sync')))) ∘ⱼ (x4ⱼ ∘ⱼ x3[ id ★ηᵈˢ★ ＠ uu ]ⱼ))
           ∘ⱼ
           modⱼ ((x0ⱼ ∘ⱼ x3ⱼ ∘ⱼ modⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ))
         )
-
-  -}
-
+        -}
 
 
 
 
+
+
+
+  {-
 
   ---------------------------------------------
   -- Prop: The naturals have a crisp induction
@@ -412,7 +416,7 @@ module Examples where
                           Π NN /▹
                           ⟨ x1 ∘[ ＠ u ] zeroₜ ∣ ◻ ⟩ /▹▹
                           ⟨ Π NN / ＠ u ▹ ((x2 ∘[ ＠ u ] x0) /▹▹ (x2 ∘[ ＠ u ] (sucₜ x0))) ∣ ◻ ⟩ /▹▹
-                          ⟨ x1 ∘[ ＠ u ] x0[ _★ηᵈˢ★_ id (＠ u) ] ∣ ◻ ⟩
+                          ⟨ x1 ∘[ ＠ u ] x0[ _★ηᵈˢ★_ id id ] ∣ ◻ ⟩
                          ∣
                           ＠ u
                          ⟩)
@@ -423,15 +427,17 @@ module Examples where
                     (lamⱼ NNⱼ ↦
                      lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ zeroⱼ)) ↦
                      lamⱼ Modalⱼ (Πⱼ NNⱼ {{{!!}}} ▹ (Πⱼ Univⱼ (x3ⱼ ∘ⱼ x0ⱼ) ▹ Univⱼ (x4ⱼ ∘ⱼ sucⱼ x1ⱼ))) ↦
-                     natrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id (＠ u) ]ⱼ))
+                     natrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id id ]ⱼ))
                        zero: x1ⱼ
                        suc: (lamⱼ NNⱼ {{{!!}}} ↦
-                             lamⱼ Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id (＠ u) ]ⱼ)) ↦
+                             lamⱼ Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id id ]ⱼ)) ↦
                              letunmodⱼ x0ⱼ
-                               into (Modalⱼ (Univⱼ (x6ⱼ ∘ⱼ sucⱼ (x2[ _★ηᵈˢ★_ id (＠ u) ]ⱼ))))
+                               into (Modalⱼ (Univⱼ (x6ⱼ ∘ⱼ sucⱼ (x2[ _★ηᵈˢ★_ id id ]ⱼ))))
                                by (letunmodⱼ x3ⱼ
-                                     into (Modalⱼ (Univⱼ (x7ⱼ ∘ⱼ sucⱼ (x3[ _★ηᵈˢ★_ id (＠ u) ]ⱼ))))
-                                     by modⱼ (x0ⱼ ∘ⱼ x3[ _★ηᵈˢ★_ id (＠ u) ]ⱼ ∘ⱼ x1ⱼ))
+                                     into (Modalⱼ (Univⱼ (x7ⱼ ∘ⱼ sucⱼ (x3[ _★ηᵈˢ★_ id id ]ⱼ))))
+                                     by modⱼ {!!}
+                                     -- (x0ⱼ ∘ⱼ x3[ _★ηᵈˢ★_ id id ]ⱼ ∘ⱼ x1ⱼ)
+                                     )
                             )
                     )
 
@@ -456,3 +462,7 @@ module Examples where
           ∘ⱼ
           modⱼ ((x0ⱼ ∘ⱼ x3ⱼ ∘ⱼ modⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ))
         )
+
+{-
+-}
+-}
