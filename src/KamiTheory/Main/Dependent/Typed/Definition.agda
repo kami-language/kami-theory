@@ -63,7 +63,7 @@ module Judgements (P : ModeSystem 𝑖) where
 
   infixl 30 _∙_
   infix 30 Πⱼ_▹_
-  infix 30 Σⱼ_▹_
+  -- infix 30 Σⱼ_▹_
   infixl 24 _∘ⱼ_
   -- infix 30 ⟦_⟧ⱼ_▹_
 
@@ -108,6 +108,7 @@ module Judgements (P : ModeSystem 𝑖) where
     G : Term P (1+ n)
     x : Fin n
     M : Restriction k n
+    N : Restriction k n
     -- U V R : P
 
 
@@ -155,8 +156,8 @@ module Judgements (P : ModeSystem 𝑖) where
   data _⊢Entry_ (Γ : Con (Entry P) n) : Target n -> 𝒰 𝑖
 
   data _⊢_∶_ (Γ : Con (Entry P) n) : Term P n → Target n → 𝒰 𝑖
-  -- data _⊢Entry_＝_ (Γ : Con (Entry P) n) : Entry P n → Entry P n → 𝒰 𝑖
-  -- data _⊢_＝_∶_ (Γ : Con (Entry P) n) : Term P n → Term P n → Entry P n → 𝒰 𝑖
+  data _⊢Entry_＝_∥_ (Γ : Con (Entry P) n) : Term P n → Term P n -> Restriction k n → 𝒰 𝑖
+  data _⊢_＝_∶_ (Γ : Con (Entry P) n) : Term P n → Term P n → Target n → 𝒰 𝑖
 
 
 
@@ -365,7 +366,6 @@ module Judgements (P : ModeSystem 𝑖) where
 
   pattern letunmodⱼ_into_by_ t G s = letunmodⱼ[ id ] t into G by  s
 
-{-
 
 {-
     nilⱼ      : ∀ {A}
@@ -420,35 +420,36 @@ module Judgements (P : ModeSystem 𝑖) where
 
 
   -- Type equality
-  data _⊢Entry_＝_ Γ where
+  data _⊢Entry_＝_∥_ Γ where
     univ   : ∀ {A B}
-          → Γ ⊢ A ＝ B ∶ UU / μ
-          → Γ ⊢Entry (A / μ) ＝ (B / μ)
+          → Γ ⊢ A ＝ B ∶ UU ∥ M
+          → Γ ⊢Entry A ＝ B ∥ M
 
     reflₑ   : ∀ {A}
-          → Γ ⊢Entry A
-          → Γ ⊢Entry A ＝ A
+          → Γ ⊢Entry A ∥ M
+          → Γ ⊢Entry A ＝ A ∥ M
 
     symₑ    : ∀ {A B}
-          → Γ ⊢Entry A ＝ B
-          → Γ ⊢Entry B ＝ A
+          → Γ ⊢Entry A ＝ B ∥ M
+          → Γ ⊢Entry B ＝ A ∥ M
 
     transₑ  : ∀ {A B C}
-          → Γ ⊢Entry A ＝ B
-          → Γ ⊢Entry B ＝ C
-          → Γ ⊢Entry A ＝ C
+          → Γ ⊢Entry A ＝ B ∥ M
+          → Γ ⊢Entry B ＝ C ∥ M
+          → Γ ⊢Entry A ＝ C ∥ M
 
     Π-cong :
-             Γ     ⊢Entry (A / μ)
-          → Γ     ⊢Entry A / μ ＝ (B / μ)
-          → Γ ∙ (A / μ) ⊢Entry (C / η) ＝ (D / η)
-          → Γ     ⊢Entry (Π A / μ ▹ C / η) ＝ (Π B / μ ▹ D / η)
+             Γ     ⊢Entry (A ∥ M)
+          → Γ     ⊢Entry A ＝ B ∥ M
+          → Γ ∙ (A / μ) ⊢Entry C ＝ D ∥ (η ∷ N)
+          → Γ     ⊢Entry (Π A / μ ▹ C) ＝ (Π B / μ ▹ D) ∥ N
 
     Σ-cong :
-             Γ     ⊢Entry (A / μ)
-          → Γ     ⊢Entry A / μ ＝ (B / μ)
-          → Γ ∙ (A / μ) ⊢Entry (C / η) ＝ (D / η)
-          → Γ     ⊢Entry (Σ A / μ ▹ C / η) ＝ (Σ B / μ ▹ D / η)
+             Γ     ⊢Entry (A ∥ M)
+          → Γ     ⊢Entry A ＝ B ∥ M
+          → Γ ∙ (A / μ) ⊢Entry C ＝ D ∥ (η ∷ N)
+          → Γ     ⊢Entry (Σ A / μ ▹ C) ＝ (Σ B / μ ▹ D) ∥ N
+
 
   -- Term equality
   data _⊢_＝_∶_ Γ where
@@ -484,10 +485,12 @@ module Judgements (P : ModeSystem 𝑖) where
   --                   → Γ ⊢Sort f ∘ a ＝ g ∘ b ∶ G [ a ]
 
     β-red         : ∀ {a t F G}
-                  → Γ     ⊢Entry F / (η ◆ μ)
-                  → Γ ∙ (F / (η ◆ μ)) ⊢ t ∶ G / μ
-                  → Γ     ⊢ a ∶ F / (η ◆ μ)
-                  → Γ     ⊢ (lam↦ t) ∘[ η ] a ＝ t [ a ] ∶ G [ a ] / μ
+                  → Γ     ⊢Entry F ∥ (η ↳ M)
+                  → Γ ∙ (F / η) ⊢ t ∶ G ∥ (id ∷ M)
+                  → Γ     ⊢ a ∶ F ∥ (η ↳ M)
+                  → Γ     ⊢ (lam↦ t) ∘[ η ] a ＝ t [ a ] ∶ G [ a ] ∥ M
+
+{-
   --     η-eq          : ∀ {f g F G}
   --                   → Γ     ⊢ F
   --                   → Γ     ⊢ f ∶ Π F ▹ G
