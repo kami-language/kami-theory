@@ -373,18 +373,26 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢ t ∶ B ∥ M
 
 
-  pattern letunmodⱼ_into_by_ t G s = letunmodⱼ[ id ] t into G by  s
 
-
-{-
     nilⱼ      : ∀ {A}
-              → Γ ⊢ nilₜ ∶ Vec A zeroₜ  / μ
+              → Γ ⊢ nilₜ ∶ Vec A zeroₜ  ∥ M
  
     consⱼ     : ∀ {A v vs n}
-              → Γ ⊢         v ∶ A  / μ
-              → Γ ⊢        vs ∶ Vec A n  / μ
-              → Γ ⊢ consₜ v vs ∶ Vec A (sucₜ n)  / μ
+              → Γ ⊢         v ∶ A  ∥ M
+              → Γ ⊢        vs ∶ Vec A n  ∥ M
+              → Γ ⊢ consₜ v vs ∶ Vec A (sucₜ n)  ∥ M
 
+    headⱼ     : ∀ {A vs n}
+              → Γ ⊢ vs ∶ Vec A (sucₜ n)  ∥ M
+              → Γ ⊢ headₜ vs ∶ A  ∥ M
+
+    tailⱼ     : ∀ {A vs n}
+              → Γ ⊢ vs ∶ Vec A (sucₜ n)  ∥ M
+              → Γ ⊢ tailₜ  vs ∶ Vec A n  ∥ M
+
+  pattern letunmodⱼ_into_by_ t G s = letunmodⱼ[ id ] t into G by  s
+
+{-
     vecrecⱼ   : ∀ {G A z s l vs}
               → Γ ∙ (NN / `＠` (U ∧ V) ⨾ μs) ∙ (Vec (wk1 A) (var x0) / `＠` U ⨾ μs) ⊢Entry G / `＠` V ⨾ ηs -- note l and vs don't have to be in the same location as G
               → Γ ⊢ z ∶ (G [ nilₜ ] [ zeroₜ ]) / `＠` V ⨾ ηs -- we have a proof of G for zero vector

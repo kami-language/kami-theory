@@ -132,6 +132,8 @@ data MainKind : (ns : List (Metakind × Nat)) → Set where
   Nilkind    : MainKind []
   Conskind   : MainKind ((term , n0) ∷ (term , n0) ∷ [])
   Vecreckind : MainKind ((term , (suc n1)) ∷ (term , n0) ∷ (term , n0) ∷ (term , n0) ∷ (term , n0) ∷ [])
+  𝓀-head : MainKind ((term , n0) ∷ [])
+  𝓀-tail : MainKind ((term , n0) ∷ [])
 
   Starkind : MainKind []
 
@@ -354,6 +356,9 @@ consₜ v vs = gen (main Conskind) (id ⦊ term v ∷ id ⦊ term vs ∷ [])
 
 vecrec : (μ η : SomeModeHom P) -> (G : Term P (1+ (1+ n))) (z s l vs : Term P n) → Term P n  -- Vector recursor ( is a binder).
 vecrec μ η G z s l vs = gen (main Vecreckind) ((id) ⦊ term G ∷ id ⦊ term z ∷ id ⦊ term s ∷ id ⦊ term l ∷ id ⦊ term vs ∷ [])
+
+pattern headₜ vs = gen (main 𝓀-head) (id ⦊ term vs ∷ [])
+pattern tailₜ vs = gen (main 𝓀-tail) (id ⦊ term vs ∷ [])
 
 
 star : Term P n                        -- Unit element

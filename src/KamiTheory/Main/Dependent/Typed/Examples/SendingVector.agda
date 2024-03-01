@@ -110,17 +110,37 @@ module Examples2 where
       ≔ {!!}
   send-vec =
     lamⱼ NNⱼ ↦
-    conv ((univ (β-red (NNⱼ) ((Πⱼ Vecⱼ BBⱼ x0[ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) {!!})))) x0[ {!!} ]ⱼ)))
+    conv ((univ (β-red (NNⱼ) ((Πⱼ Vecⱼ BBⱼ x0[ τᵈˢ ϕu ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) (τᵈˢ ϕv))))) x0[ idTⱼ ]ⱼ)))
       ((wk-Term natrec-crisp)
       ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ_▹_ {μ = ＠ uu} (Vecⱼ (BBⱼ {{{!!}}}) (var zero (τᵈˢ ϕu))) (Modalⱼ {η = ＠ vv} (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) (τᵈˢ ϕv))))))
       ∘ⱼ x0ⱼ
-      ∘ⱼ conv (symₑ (univ (β-red NNⱼ ((Πⱼ Vecⱼ BBⱼ x0[ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) {!!})))) zeroⱼ)))
-         (lamⱼ {!!} ↦ {!!})
+      ∘ⱼ conv (symₑ (univ (β-red NNⱼ ((Πⱼ Vecⱼ BBⱼ x0[ τᵈˢ ϕu ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) (τᵈˢ ϕv))))) zeroⱼ)))
+         (lamⱼ Vecⱼ BBⱼ zeroⱼ ↦ modⱼ nilⱼ)
       ∘ⱼ (
          lamⱼ NNⱼ ↦
-         lamⱼ Univⱼ ((lamⱼ NNⱼ ↦ (Πⱼ {!!} ▹ {!!})) ∘ⱼ x0ⱼ) ↦ 
-         conv (symₑ (univ (β-red (NNⱼ {{{!!}}}) ((Πⱼ Vecⱼ (BBⱼ {{{!!}}}) x0[ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) {!!})))) {!!})))
-              (lamⱼ {!!} ↦ {!!})
+         lamⱼ Univⱼ ((lamⱼ NNⱼ ↦ (Πⱼ Vecⱼ BBⱼ x0[ τᵈˢ ϕu ]ⱼ ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) x1[ τᵈˢ ϕv ]ⱼ))) ∘ⱼ x0ⱼ) ↦ 
+         conv (symₑ (univ (β-red (NNⱼ {{{!!}}}) ((Πⱼ Vecⱼ (BBⱼ {{{!!}}}) x0[ τᵈˢ ϕu ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) (τᵈˢ ϕv))))) (sucⱼ x1ⱼ))))
+              (lamⱼ Vecⱼ (BBⱼ {{{!!}}}) (sucⱼ x1[ τᵈˢ ϕu ]ⱼ) ↦
+                letunmodⱼ[ id ]
+                  (
+                    -- (conv (univ (β-red (NNⱼ {{{!!}}}) ((Πⱼ Vecⱼ (BBⱼ {{{!!}}}) ?  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) ?))) {!!}))
+                    (conv (univ (let xx = (β-red ((NNⱼ {{{!!}}})) (((Πⱼ Vecⱼ (BBⱼ {{{!!}}}) x0[ τᵈˢ ϕu ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) x1[ τᵈˢ ϕv ]ⱼ)))) x2ⱼ) in xx))
+                      x1[ idTⱼ ]ⱼ
+                     ) ∘ⱼ tailⱼ x0[ idTⱼ ]ⱼ
+                  )
+                  into Modalⱼ ((Vecⱼ (BBⱼ {{{!!}}}) (sucⱼ x3[ τᵈˢ ϕv ]ⱼ)))
+                  by
+                  (letunmodⱼ[ id ] modⱼ {η = ＠ uu} (headⱼ x1ⱼ) into (Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (sucⱼ x4[ τᵈˢ ϕv ]ⱼ)))
+                  -- by x0[ {! (? ★ηᵈˢ★ id) ◆*₂ₘ (id ★εᵈˢ★ ?)!} ]ⱼ)
+                  by
+                  modⱼ (
+                    consⱼ
+                      x0[ (id ★ηᵈˢ★ ＠ uu) ◆*₂ₘ (＠ vv ★εᵈˢ★ id) ]ⱼ
+
+                      (x1ⱼ
+                      )
+                      )
+              ))
          ))
 
 
