@@ -31,11 +31,38 @@ This repository contains an Agda implementation of the MTT type theory, in parti
 
 ### Structure
 
+All relevant implementation details are located under the `src/KamiTheory/Main` path. The most important files pertaining
+to the type theory are:
+  - `../Main/Dependent/Untyped/Definition.agda` contains the raw terms of dependent Kami.
+  - `../Main/Dependent/Typed/Definition.agda` contains all typing judgements.
+  - `../Main/Dependent/Typed/Instances.agda` contains a partial type checking algorithm useful for the examples.
+  - `../Main/Dependent/Typed/Examples` contains various examples culminating in the vector-sending choreography.
 
+The type theory is built on top of a generic mode theory parametrized by a 2-category given by generators and rewrite rules.
+For Kami, we implemented the type theory generically, but afterwards specialize to our particular mode theory of local and
+global computations.
 
+The generic formalization of mode theories is under the path `../Main/Generic/ModeSystem`. Especially the interactions
+between 2-cells required quite some implementation work, to be found in the various subfolders of `ModeSystem/2Cell`.
+The instantiation of the particular mode theory of Kami happens in `../ModeSystem/2Graph/Example.agda` and `../ModeSystem/ModeSystem/Example.agda`.
 
 ### Dependencies
 
+In order to re-check or edit the Agda files, the following dependencies are required:
+ - A recent version of [Agda](https://github.com/agda/agda)
+ - The [agda standard library](https://github.com/agda/agda-stdlib)
+ - The [agda-prelude](https://github.com/UlfNorell/agda-prelude)
+ - The [agora](https://github.com/determi-io/agora) library, which was mostly developed previously by the author,
+   but required some changes to faciliate the current project.
 
+The libraries have to be installed as described in the [agda manual](https://agda.readthedocs.io/en/v2.6.4.2/tools/package-system.html).
 
+After having added all dependencies, in the folder `src/KamiTheory/Main/Dependent/Typed/Examples/`, run
+
+```
+agda SendingVector2.agda
+```
+
+to typecheck the main example and all its dependencies. Note that, while the example may look deceptively simple, it depends on the previous examples,
+and in particular on the normalization algorithms for 2-cells.
 
