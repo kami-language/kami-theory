@@ -1,14 +1,14 @@
 
 # Formalization of the theory of the Kami language
 
-[Kami]() aims to become a programming language for building distributed systems integrated with the rust ecosystem.
+[Kami](https://nlnet.nl/project/Kami/) aims to become a programming language for building distributed systems integrated with the rust ecosystem.
 The language will be built on solid theoretical foundations. This repository contains a first formalization of the
 core type theory behind the language.
 
 ## Description
-Kami is based on [Modal Type Theory]() (MTT), with a system of modalities that encodes the location of computation. Its
+Kami is based on [Modal Type Theory](http://www.danielgratzer.com/papers/phd-thesis.pdf) (MTT), with a system of modalities that encodes the location of computation. Its
 nearest relative in the space of languages for distributed systems are "choreographic programming languages", in
-particular [Chor-Lambda](). The difference is that, being an instance of MTT, we support full dependent types. Nevertheless,
+particular [Chor-Lambda](https://arxiv.org/abs/2111.03701). The difference is that, being an instance of MTT, we support full dependent types. Nevertheless,
 early implementation will keep dependent types out of scope.
 
 A full description of the language will follow in a forthcoming document.
