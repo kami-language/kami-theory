@@ -423,8 +423,6 @@ module Examples where
 
 
 
-
-
   ---------------------------------------------
   -- Prop: The naturals have a crisp induction
   -- principle under the `＠ u` modality.
@@ -447,10 +445,10 @@ module Examples where
   natrec-crisp-h {u = u} = lamⱼ Πⱼ NNⱼ ▹ UUⱼ ↦ modⱼ
                     (lamⱼ NNⱼ ↦
                      lamⱼ Modalⱼ (Univⱼ (x1ⱼ ∘ⱼ zeroⱼ)) ↦
-                     lamⱼ Modalⱼ (Πⱼ NNⱼ {{{!!}}} ▹ (Πⱼ Univⱼ (x3ⱼ ∘ⱼ x0ⱼ) ▹ Univⱼ (x4ⱼ ∘ⱼ sucⱼ x1ⱼ))) ↦
+                     lamⱼ Modalⱼ (Πⱼ NNⱼ ▹ (Πⱼ Univⱼ (x3ⱼ ∘ⱼ x0ⱼ) ▹ Univⱼ (x4ⱼ ∘ⱼ sucⱼ x1ⱼ))) ↦
                      natrecⱼ x2ⱼ into Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id id ]ⱼ))
                        zero: x1ⱼ
-                       suc: (lamⱼ NNⱼ {{{!!}}} ↦
+                       suc: (lamⱼ NNⱼ ↦
                              lamⱼ Modalⱼ (Univⱼ (x4ⱼ ∘ⱼ x0[ _★ηᵈˢ★_ id id ]ⱼ)) ↦
                              letunmodⱼ x0ⱼ
                                into (Modalⱼ (Univⱼ (x6ⱼ ∘ⱼ sucⱼ (x2[ _★ηᵈˢ★_ id id ]ⱼ))))
@@ -473,7 +471,7 @@ module Examples where
     lamⱼ proof ↦
     lamⱼ proof ↦
     lamⱼ Univⱼ (x1ⱼ ∘ⱼ zeroⱼ) ↦
-    lamⱼ (Πⱼ NNⱼ {{{!!}}} ▹ (Πⱼ Univⱼ (x3ⱼ ∘ⱼ x0ⱼ) ▹ Univⱼ (x4ⱼ ∘ⱼ sucⱼ x1ⱼ))) ↦
+    lamⱼ (Πⱼ NNⱼ ▹ (Πⱼ Univⱼ (x3ⱼ ∘ⱼ x0ⱼ) ▹ Univⱼ (x4ⱼ ∘ⱼ sucⱼ x1ⱼ))) ↦
       letunmodⱼ[ id ] wk-Term (wk-Term (wk-Term (wk-Term (natrec-crisp-h)))) ∘ⱼ x3ⱼ
         into (Univⱼ (x4[ εᵈˢ ]ⱼ ∘ⱼ x3[ idTⱼ ]ⱼ))
         by
@@ -484,7 +482,9 @@ module Examples where
         )
 
 
+{-
   {-
 {-
+-}
 -}
 -}

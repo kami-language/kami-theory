@@ -10,12 +10,6 @@ open import Data.Vec using ([] ; _∷_ ; _++_) renaming (Vec to StdVec)
 open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
 open import Agora.Order.Preorder
 open import Agora.Setoid.Definition
--- open import Agora.Order.Lattice
--- open import Agora.Data.Normal.Definition
--- open import Agora.Data.Normal.Instance.Setoid
--- open import Agora.Data.Normal.Instance.Preorder
--- open import Agora.Data.Normal.Instance.Lattice
--- open import Agora.Data.Normal.Instance.DecidableEquality
 
 open import KamiTheory.Basics hiding (typed)
 open import KamiTheory.Order.Preorder.Instances
@@ -55,7 +49,7 @@ module Examples3 where
       Π NN / ＠ uu ▹
       Π Vec BB (x0) / ＠ uu ▹
       ⟨ Vec BB (x1[ (id ★ηᵈˢ★ ＠ uu) ◆*₂ₘ (＠ vv ★εᵈˢ★ id) ]) ∣ ＠ vv ⟩ ∥ []
-      ≔ {!!}
+      ≔ _
   send-vec2 =
     lamⱼ NNⱼ ↦
     (wk-Term send-vec ∘ⱼ x0[ (id ★ηᵈˢ★ ＠ uu) ◆*₂ₘ (＠ uuvv ★εᵈˢ★ id) ]ⱼ)

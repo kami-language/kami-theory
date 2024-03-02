@@ -110,16 +110,16 @@ module Examples2 where
       ≔ {!!}
   send-vec =
     lamⱼ NNⱼ ↦
-    conv ((univ (β-red (NNⱼ) ((Πⱼ Vecⱼ BBⱼ x0[ τᵈˢ ϕu ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) (τᵈˢ ϕv))))) x0[ idTⱼ ]ⱼ)))
+    conv ((univ (β-red (NNⱼ) ((Πⱼ Vecⱼ BBⱼ x0[ τᵈˢ ϕu ]ⱼ  ▹ Modalⱼ (Vecⱼ BBⱼ (var (suc zero) (τᵈˢ ϕv))))) x0[ idTⱼ ]ⱼ)))
       ((wk-Term natrec-crisp)
-      ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ_▹_ {μ = ＠ uu} (Vecⱼ (BBⱼ {{{!!}}}) (var zero (τᵈˢ ϕu))) (Modalⱼ {η = ＠ vv} (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) (τᵈˢ ϕv))))))
+      ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ_▹_ {μ = ＠ uu} (Vecⱼ (BBⱼ) (var zero (τᵈˢ ϕu))) (Modalⱼ {η = ＠ vv} (Vecⱼ (BBⱼ) (var (suc zero) (τᵈˢ ϕv))))))
       ∘ⱼ x0ⱼ
-      ∘ⱼ conv (symₑ (univ (β-red NNⱼ ((Πⱼ Vecⱼ BBⱼ x0[ τᵈˢ ϕu ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) (τᵈˢ ϕv))))) zeroⱼ)))
+      ∘ⱼ conv (symₑ (univ (β-red NNⱼ ((Πⱼ Vecⱼ BBⱼ x0[ τᵈˢ ϕu ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ) (var (suc zero) (τᵈˢ ϕv))))) zeroⱼ)))
          (lamⱼ Vecⱼ BBⱼ zeroⱼ ↦ modⱼ nilⱼ)
       ∘ⱼ (
          lamⱼ NNⱼ ↦
-         lamⱼ Univⱼ ((lamⱼ NNⱼ ↦ (Πⱼ Vecⱼ BBⱼ x0[ τᵈˢ ϕu ]ⱼ ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) x1[ τᵈˢ ϕv ]ⱼ))) ∘ⱼ x0ⱼ) ↦ 
-         conv (symₑ (univ (β-red (NNⱼ {{{!!}}}) ((Πⱼ Vecⱼ (BBⱼ {{{!!}}}) x0[ τᵈˢ ϕu ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) (τᵈˢ ϕv))))) (sucⱼ x1ⱼ))))
+         lamⱼ Univⱼ ((lamⱼ NNⱼ ↦ (Πⱼ Vecⱼ BBⱼ x0[ τᵈˢ ϕu ]ⱼ ▹ Modalⱼ (Vecⱼ (BBⱼ ) x1[ τᵈˢ ϕv ]ⱼ))) ∘ⱼ x0ⱼ) ↦ 
+         conv (symₑ (univ (β-red (NNⱼ {{{!!}}}) ((Πⱼ Vecⱼ (BBⱼ {{{!!}}} ) x0[ τᵈˢ ϕu ]ⱼ  ▹ Modalⱼ (Vecⱼ (BBⱼ {{{!!}}}) (var (suc zero) (τᵈˢ ϕv))))) (sucⱼ x1ⱼ))))
               (lamⱼ Vecⱼ (BBⱼ {{{!!}}}) (sucⱼ x1[ τᵈˢ ϕu ]ⱼ) ↦
                 letunmodⱼ[ id ]
                   (
