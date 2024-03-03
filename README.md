@@ -52,7 +52,7 @@ In order to re-check or edit the Agda files, the following dependencies are requ
  - A recent version of [Agda](https://github.com/agda/agda)
  - The [agda standard library](https://github.com/agda/agda-stdlib)
  - The [agda-prelude](https://github.com/UlfNorell/agda-prelude)
- - The [agora](https://github.com/determi-io/agora) library, which was mostly developed previously by the author,
+ - The [agora](https://codeberg.org/determi-io/agora) library, which was developed previously by the author,
    but required some changes to faciliate the current project.
 
 The libraries have to be installed as described in the [agda manual](https://agda.readthedocs.io/en/v2.6.4.2/tools/package-system.html).
