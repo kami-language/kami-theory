@@ -4,7 +4,7 @@
 -- Typing rules of the Kami language
 --
 -- This file contains the typing rules for terms and types. It
--- very closely follows the setup of MTT [1], and differs only in
+-- very closely follows the setup of MTT [1] (pages 108ff.), and differs only in
 -- the fact that our representation of terms is *not* intrinsically
 -- typed, and the substitution calculus works without typing
 -- information - the required data is already part of the untyped
@@ -235,7 +235,8 @@ module Judgements (P : ModeSystem 𝑖) where
   -- Well-formed term of a type
   data _⊢_∶_ Γ where
 
-    -- Types as terms of UU
+    -- For every typing rule, there is a similar term rule,
+    -- which describes the elements of the universe:
     NNⱼ    : {{ΓP : isTrue (⊢Ctx Γ ∥ M)}} → Γ ⊢ NN ∶ UU ∥ M
     BBⱼ    : {{ΓP : isTrue (⊢Ctx Γ ∥ M)}} → Γ ⊢ BB ∶ UU ∥ M
     UUⱼ    : {{ΓP : isTrue (⊢Ctx Γ ∥ M)}} → Γ ⊢ UU ∶ UU ∥ M
@@ -243,28 +244,23 @@ module Judgements (P : ModeSystem 𝑖) where
     Πⱼ_▹_  : Γ ⊢ A ∶ UU ∥ μ ↳ M
               → Γ ∙ (A / μ) ⊢ B ∶ UU ∥ (id ∷ M)
               → Γ ⊢ (Π A / μ ▹ B) ∶ UU ∥ M
-
     Σⱼ_▹_  : {M : Restriction k _}
-            → Γ ⊢Type (A ∥ M)
-            → Γ ∙ (A // (k ↝ k ∋ id)) ⊢Type (B ∥ (id ∷ M))
-            → Γ ⊢Type ((Σ A // incl (k ↝ k ∋ id) ▹ B) ∥ M)
-
-    -- Σⱼ_▹_  : {μ : ModeHom P k l}
-    --         → Γ ⊢Type (A / μ)
-    --         → Γ ∙ (A / μ) ⊢Type (B / μ)
-    --         → Γ ⊢Type ((Σ A // incl (k ↝ k ∋ id) ▹ B) / μ)
-
-    -------------------
-    -- Kami modality system
+            → Γ ⊢ A ∶ UU ∥ M
+            → Γ ∙ (A // (k ↝ k ∋ id)) ⊢ B ∶ UU ∥ (id ∷ M)
+            → Γ ⊢ (Σ A // incl (k ↝ k ∋ id) ▹ B) ∶ UU ∥ M
     Modalⱼ : Γ ⊢ A ∶ UU ∥ (η ↳ M) -> Γ ⊢ ⟨ A ∣ η ⟩ ∶ UU ∥ M
 
 
-    -------------------
-    -- Standard modality intro and "elim"
-
+    -- The rules for introducing and eliminating modality types
+    -- are the same as in MTT
+    --
+    -- A type X under modality η can be introduced if X can
+    -- be derived in an η-restricted context.
     modⱼ : Γ ⊢ t ∶ X ∥ (η ↳ M) -> Γ ⊢ mod[ η ] t ∶ ⟨ X ∣ η ⟩ ∥ M
-
-
+    --
+    -- The elimination rule is inverse, a modal type can be eliminated
+    -- by assuming a value under a modality annotation. Note that
+    -- we also support a "framing modality" μ.
     letunmodⱼ[_]_into_by_ :
                  ∀ (μ : ModeHom P k l)
               -> Γ ⊢ t ∶ ⟨ X ∣ η ⟩ ∥ μ ↳ M
@@ -272,59 +268,43 @@ module Judgements (P : ModeSystem 𝑖) where
               -> Γ ∙ (X / (η ◆ μ)) ⊢ s ∶ (Y [ mod[ μ ] (var x0 id) ]↑) ∥ (id ∷ M)
               -> Γ ⊢ letunmod[ μ ] t into Y by s ∶ (Y [ t ]) ∥ M
 
-    -- letunmodⱼ[_]_into_by_ :
-    --              ∀ (μ : ModeHom P k l)
-    --           -> Γ ⊢ t ∶ ⟨ X ∣ η ⟩ / μ ◆ ω
-    --           -> Γ ∙ (⟨ X ∣ η ⟩ / μ ◆ ω) ⊢Type Y / ω
-    --           -> Γ ∙ (X / (η ◆ μ ◆ ω)) ⊢ s ∶ Y [ mod[ μ ] (var x0 id) ]↑ / ω
-    --           -> Γ ⊢ letunmod[ μ ] t into Y by s ∶ Y [ t ] / ω
 
 
 
-{-
-    -------------------
     -- Transformations between modehoms (transitions)
+    --
+    --
+    -- transformⱼ : ∀ (ζ : ModalityTrans P vis (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
+    --              -> Γ ⊢ t ∶ A / μ
+    --              -> Γ ⊢ transform (incl ζ) t ∶ A / η
 
 
-    transformⱼ : ∀ (ζ : ModalityTrans P vis (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
-                 -> Γ ⊢ t ∶ A / μ
-                 -> Γ ⊢ transform (incl ζ) t ∶ A / η
 
 
-    -------------------
-    -- normal terms
-    -}
-
-    -- Vars allow mode transformations between modalities
---     var2       : ∀ {A x}
--- --               -> {{ΓP : isTrue (⊢Ctx Γ)}}
---               → x ∶[ ρ ] (A // (k ↝ l ∋ μ)) ⇒ η ∈ Γ ∥ M
---               -- → (ζ : ModalityTrans P all (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
---               → (ζ : ModeTrans* P all (μ ◆ ρ) (η ◆ ρ))
---               → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ (ζ) ] ∥ M
-              -- → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ (ζ ↶-ModeTrans* ρ) ] ∥ M
-
+    -- The variable rule is special, and is the main interaction point between
+    -- the system of modalities and the terms of the type theory:
+    -- Variables are annotated with mode-transformations, which denote transitions
+    -- between different modalities. These transitions commute with all terms,
+    -- and thus only have to be recorded at those nodes of the term tree, whose
+    -- value is unknown: the variables.
     var       : ∀ {A x}
---               -> {{ΓP : isTrue (⊢Ctx Γ)}}
+              -- -> {{ΓP : isTrue (⊢Ctx Γ)}}
               → x ∶ (A // (k ↝ l ∋ μ)) ⇒ η ∈ Γ ∥ M
-              -- → (ζ : ModalityTrans P all (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
               → (ζ : ModeTrans* P all (μ) (η))
-              -- → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ (ζ) ] ∥ M
-              -- → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ (ζ ↶-ModeTrans* ρ) ] ∥ M
-              → Γ ⊢ (Term.var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ ζ ] ∥ M
+              → Γ ⊢ (var x (incl (_ ⇒ _ ∋ ζ))) ∶ A ^[ _ ⇒ _ ∋ ζ ] ∥ M
 
 
-
-
+    -- The lambda rule allows to move a variable with modality annotation into
+    -- the context.
     lamⱼ_↦_      : ∀ {t}
               → Γ ⊢Type (A ∥ η ↳ M)
               → Γ ∙ (A / η) ⊢ t ∶ B ∥ (id ∷ M)
               → Γ ⊢ lam↦ t ∶ (Π A / η ▹ B) ∥ M
 
+    -- The application rule does the reverse - to apply a function whose variable
+    -- is under η, the argument has to be well-formed under η-restriction.
     _∘ⱼ_      : ∀ {g a}
-              -- → Γ ⊢ g ∶ (Π A / (η ◆ μ) ▹ B) / μ
-              -- → Γ ⊢ a ∶ A / (η ◆ μ)
-              → Γ ⊢ g ∶ (Π A / (η) ▹ B) ∥ M
+              → Γ ⊢ g ∶ (Π A / η ▹ B) ∥ M
               → Γ ⊢ a ∶ A ∥ (η ↳ M)
               → Γ ⊢ g ∘[ η ] a ∶ B [ untransform-Term a ] ∥ M
 
@@ -354,14 +334,15 @@ module Judgements (P : ModeSystem 𝑖) where
               -}
 
 
-    --------------------------------------------------
-    -- Booleans
+    -- Introduction and elimination for booleans, standard.
     falseⱼ     : -- {{ΓP : isTrue (⊢Ctx Γ)}} →
                  Γ ⊢ falseₜ ∶ BB  ∥ M
 
     trueⱼ     : -- {{ΓP : isTrue (⊢Ctx Γ)}} →
                 Γ ⊢ trueₜ ∶ BB  ∥ M
 
+    -- Note that we only allow elimination if the value is
+    -- under identity modality.
     boolrecⱼ_into_false:_true:_   : ∀ {G}
               → Γ       ⊢ b ∶ BB  ∥ M
               → Γ ∙ (BB // _ ↝ k ∋ id) ⊢Type G ∥ (_∷_ {k = k} id M)
@@ -369,9 +350,7 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ       ⊢ t ∶ G [ trueₜ ]  ∥ M
               → Γ       ⊢ boolrec b into G false: f true: t ∶ G [ b ]  ∥ M
 
-    --------------------------------------------------
-    -- Natural numbers
-
+    -- Introduction and elimination for natural numbers, standard.
     zeroⱼ     : --  {{ΓP : isTrue (⊢Ctx Γ)}} →
                  Γ ⊢ zeroₜ ∶ NN  ∥ M
 
@@ -386,16 +365,11 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ       ⊢ s ∶ (Π NN // incl (k ↝ _ ∋ id) ▹ (G // incl (k ↝ _ ∋ id) ▹▹ (G [ sucₜ (var x0 id) ]↑)))  ∥ M
               → Γ       ⊢ natrec G z s n ∶ G [ n ]  ∥ M
 
-    conv      : ∀ {t A B}
-              → Γ ⊢Type A ＝ B ∥ M
-              → Γ ⊢ t ∶ A ∥ M
-              → Γ ⊢ t ∶ B ∥ M
 
-
-
+    -- Introduction and elimination of vectors.
     nilⱼ      : ∀ {A}
               → Γ ⊢ nilₜ ∶ Vec A zeroₜ  ∥ M
- 
+
     consⱼ     : ∀ {A v vs n}
               → Γ ⊢         v ∶ A  ∥ M
               → Γ ⊢        vs ∶ Vec A n  ∥ M
@@ -409,49 +383,16 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢ vs ∶ Vec A (sucₜ n)  ∥ M
               → Γ ⊢ tailₜ  vs ∶ Vec A n  ∥ M
 
+
+    -- The conversion rule: If it can be shown that two types A and B are equal,
+    -- then terms of type A can be converted into terms of type B.
+    conv      : ∀ {t A B}
+              → Γ ⊢Type A ＝ B ∥ M
+              → Γ ⊢ t ∶ A ∥ M
+              → Γ ⊢ t ∶ B ∥ M
+
+
   pattern letunmodⱼ_into_by_ t G s = letunmodⱼ[ id ] t into G by  s
-
-{-
-    vecrecⱼ   : ∀ {G A z s l vs}
-              → Γ ∙ (NN / `＠` (U ∧ V) ⨾ μs) ∙ (Vec (wk1 A) (var x0) / `＠` U ⨾ μs) ⊢Type G / `＠` V ⨾ ηs -- note l and vs don't have to be in the same location as G
-              → Γ ⊢ z ∶ (G [ nilₜ ] [ zeroₜ ]) / `＠` V ⨾ ηs -- we have a proof of G for zero vector
-              → Γ ⊢ s ∶ Π (NN / `＠` (U ∧ V) ⨾ μs) ▹ -- for all vector lengths l
-                            Π (Vec (wk1 A) (var x0) / `＠` U ⨾ μs) ▹ -- for all vectors vs of that length
-                            Π (wk1 (wk1 A) / `＠` U ⨾ μs) ▹ -- for all v : A
-                              (((wk1 G) / `＠` V ⨾ ηs) ▹▹ -- given a proof of G we get a proof of G [ l+1 ] [ v :: vs ]
-                                -- (wk1 (wk1 (wk1 G)) [ consₜ (var (x0 +1)) (var ((x0 +1) +1 +1)) ])) / `＠` V ⨾ ηs -- vector is innermost A var v appended to Vec var vs
-                                --                    [ sucₜ (var (((x0 +1) +1 ))) ] -- length is suc of outermost NN var l
-                                (wk1 (wk1 (wk1 G)) [ sucₜ (var (((x0 +1) +1 ) +1)) ] -- length is suc of outermost NN var l
-                                                   [ consₜ (var (x0 +1)) (var ((x0 +1) +1)) ])) / `＠` V ⨾ ηs -- vector is innermost A var v appended to Vec var vs
-              → Γ ⊢ l ∶ NN / `＠` (U ∧ V) ⨾ μs
-              → Γ ⊢ vs ∶ Vec A l / `＠` U ⨾ μs
-              → Γ ⊢ vecrec G z s l vs ∶ G [ wk1 vs ] [ l ]  / `＠` V ⨾ ηs
-
--}
-
-
-
-
-
-
-
-      -- zeroⱼ     : ⊢ Γ
-      --           → Γ ⊢Sort zero ∶ ℕ
-      -- sucⱼ      : ∀ {n}
-      --           → Γ ⊢Sort       n ∶ ℕ
-      --           → Γ ⊢Sort suc n ∶ ℕ
-      -- natrecⱼ   : ∀ {G s z n}
-      --           → Γ ∙ ℕ ⊢ G
-      --           → Γ       ⊢ z ∶ G [ zero ]
-      --           → Γ       ⊢ s ∶ Π ℕ ▹ (G ▹▹ G [ suc (var x0) ]↑)
-      --           → Γ       ⊢ n ∶ ℕ
-      --           → Γ       ⊢ natrec G z s n ∶ G [ n ]
-
-      -- Emptyrecⱼ : ∀ {A e}
-      --           → Γ ⊢Sort A → Γ ⊢Sort e ∶ Empty → Γ ⊢Sort Emptyrec A e ∶ A
-
-      -- starⱼ     : ⊢ Γ → Γ ⊢Sort star ∶ Unit
-
 
 
 
