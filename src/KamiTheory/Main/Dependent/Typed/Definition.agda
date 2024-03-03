@@ -1,3 +1,15 @@
+
+----------------------------------------------------------
+--
+-- Typing judgements of the Kami language
+--
+--
+-- The file is originally from a project by Joakim Öhman et al.,
+-- but quite some changes were required to integrate a modesystem
+-- into it. The overall structure remains the same.
+--
+----------------------------------------------------------
+--
 -- Original file by Joakim Öhman et al.
 -- See here: https://github.com/mr-ohman/logrel-mltt/blob/master/Definition/Untyped.agda
 --

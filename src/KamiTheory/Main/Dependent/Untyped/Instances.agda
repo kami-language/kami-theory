@@ -1,4 +1,19 @@
 
+----------------------------------------------------------
+--
+-- Decidable equality for terms
+--
+-- In this file the (trivial) algorithm for deciding equality
+-- of untyped terms is stated. Equality for `Kind`s is automatically
+-- derived using the reflection machinery from the agda-prelude [1].
+--
+-- The rest of the file deals more or less with lifting this equality
+-- to the actual datatype of terms.
+--
+-- -[1]: https://github.com/UlfNorell/agda-prelude/blob/master/src/Tactic/Deriving/Eq.agda
+--
+----------------------------------------------------------
+
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
 module KamiTheory.Main.Dependent.Untyped.Instances where
@@ -17,7 +32,6 @@ open import Prelude.Decidable using () renaming (Dec to Dec-Prelude)
 open import Prelude.Empty using () renaming (⊥-elim to ⊥-elim-Prelude)
 open import Tactic.Deriving.Eq
 
--- open import Relation.Binary.Definitions using () renaming (Decidable to Dec-Std)
 open import Relation.Nullary.Decidable.Core using () renaming (Dec to Dec-Std ; yes to yes-Std ; no to no-Std)
 open import Data.Vec using ([] ; _∷_ ; _++_) renaming (Vec to StdVec)
 
@@ -43,7 +57,7 @@ cast⁻¹-Dec-Std (no a)  = (no-Std a)
 ---------------------------------------------
 -- Deriving eq for Metakind using Prelude
 
-eqMetakind : deriveEqType Metakind -- {l : List (Metakind ×-𝒰 ℕ)} (k k₁ : Metakind l) → Dec-Prelude (StrId k k₁)
+eqMetakind : deriveEqType Metakind
 unquoteDef eqMetakind = deriveEqDef eqMetakind (quote Metakind)
 
 _≟-Metakind_ : (k l : Metakind) -> isDecidable (k ≡ l)
@@ -68,21 +82,6 @@ instance
   hasDecidableEquality:MainKind = record { _≟_ = _≟-MainKind_ }
 
 ---------------------------------------------
--- Deriving eq for Mode using Prelude
-
-{-
-eqMode : deriveEqType Mode -- {l : List (Metakind ×-𝒰 ℕ)} (k k₁ : Mode l) → Dec-Prelude (StrId k k₁)
-unquoteDef eqMode = deriveEqDef eqMode (quote Mode)
-
-_≟-Mode_ : (k l : Mode) -> isDecidable (k ≡ l)
-_≟-Mode_ = λ k l -> cast-Dec-Prelude (eqMode k l)
-
-instance
-  hasDecidableEquality:Mode : hasDecidableEquality Mode
-  hasDecidableEquality:Mode = record { _≟_ = _≟-Mode_ }
-  -}
-
----------------------------------------------
 -- Deriving eq for LeafKind using Prelude
 
 eqLeafKind : deriveEqType LeafKind -- {l : List (Metakind ×-𝒰 ℕ)} (k k₁ : LeafKind l) → Dec-Prelude (StrId k k₁)
@@ -97,9 +96,6 @@ instance
 
 ---------------------------------------------
 -- Deriving eq for Kind using Prelude
-
--- eqKind : {l : List (Metakind ×-𝒰 ℕ)} (k k₁ : Kind l) → Dec-Prelude (StrId k k₁)
--- unquoteDef eqKind = deriveEqDef eqKind (quote Kind)
 
 _≟-Kind_ : ∀{ns} -> (k l : Kind ns) -> isDecidable (k ≡ l)
 main x ≟-Kind main y with x ≟ y
@@ -117,103 +113,6 @@ instance
   hasDecidableEquality:Kind : ∀{ns} -> hasDecidableEquality (Kind ns)
   hasDecidableEquality:Kind = record { _≟_ = _≟-Kind_ }
 
----------------------------------------------
--- Deriving eq for BaseModeHom using Prelude
-
-{-
--- eqConstTerm : {l : List ℕ} (k k₁ : ConstTerm l) → Dec-Prelude (StrId k k₁)
-eqBaseModeHom : deriveEqType BaseModeHom
-unquoteDef eqBaseModeHom = deriveEqDef eqBaseModeHom (quote BaseModeHom)
-
-_≟-BaseModeHom_ : ∀{P m n} -> {{_ : hasDecidableEquality P}} -> (k l : BaseModeHom P m n) -> isDecidable (k ≡ l)
-_≟-BaseModeHom_ {P} = λ k l -> cast-Dec-Prelude (eqBaseModeHom k l)
-  where
-    instance
-      _ : Eq P
-      _ = record { _==_ = λ x y -> cast⁻¹-Dec-Prelude (x ≟ y) }
-
-instance
-  hasDecidableEquality:BaseModeHom : ∀{P m n} {{_ : hasDecidableEquality P}} -> hasDecidableEquality (BaseModeHom P m n)
-  hasDecidableEquality:BaseModeHom = record { _≟_ = _≟-BaseModeHom_ }
-
-instance
-  Eq:BaseModeHom : ∀{P m n} -> {{_ : Eq P}} -> Eq (BaseModeHom P m n)
-  Eq:BaseModeHom = record { _==_ = eqBaseModeHom }
-
----------------------------------------------
--- Deriving eq for ModeHom using Prelude
-
--- eqConstTerm : {l : List ℕ} (k k₁ : ConstTerm l) → Dec-Prelude (StrId k k₁)
-_≟-ModeHom_ : ∀{P m n} -> {{_ : hasDecidableEquality P}} -> (k l : ModeHom P m n) -> isDecidable (k ≡ l)
-_≟-ModeHom_ {P} id id = yes refl-≡
-_≟-ModeHom_ {P} id (x ⨾ l) = no (λ ())
-_≟-ModeHom_ {P} (x ⨾ k) id = no (λ ())
-_≟-ModeHom_ {P} (_⨾_ {n = n} x k) (_⨾_ {n = n₁} y l) with n ≟ n₁
-... | no p = no λ {refl -> p refl}
-... | yes refl with x ≟ y
-... | no p = no λ {refl -> p refl}
-... | yes refl with k ≟-ModeHom l
-... | no p = no λ {refl -> p refl}
-... | yes refl = yes refl
-
-instance
-  hasDecidableEquality:ModeHom : ∀{P m n} {{_ : hasDecidableEquality P}} -> hasDecidableEquality (ModeHom P m n)
-  hasDecidableEquality:ModeHom = record { _≟_ = _≟-ModeHom_ }
-
-
----------------------------------------------
--- Deriving eq for Modality using Prelude
-
--- eqConstTerm : {l : List ℕ} (k k₁ : ConstTerm l) → Dec-Prelude (StrId k k₁)
-_≟-Modality_ : ∀{P} -> {{_ : hasDecidableEquality P}} -> (k l : Modality P) -> isDecidable (k ≡ l)
-(k₁ ↝ l₁ ∋ hom₁) ≟-Modality (k₂ ↝ l₂ ∋ hom₂) with k₁ ≟ k₂
-... | no p = no λ {refl -> p refl}
-... | yes refl with l₁ ≟ l₂
-... | no p = no λ {refl -> p refl }
-... | yes refl with hom₁ ≟ hom₂
-... | no p = no λ {refl -> p refl }
-... | yes refl = yes refl-≡
-
-
-instance
-  hasDecidableEquality:Modality : ∀{P} {{_ : hasDecidableEquality P}} -> hasDecidableEquality (Modality P)
-  hasDecidableEquality:Modality = record { _≟_ = _≟-Modality_ }
-
--}
----------------------------------------------
--- Deriving eq for Kind using Prelude
-
--- eqKindedTerm : {l : List ℕ} (k k₁ : KindedTerm l) → Dec-Prelude (StrId k k₁)
-
--- mutual
---   instance
---     eqGenTs : deriveEqType GenTs
---     unquoteDef eqGenTs = deriveEqDef eqGenTs (quote GenTs)
-
---   instance
---     eqKindedTerm : deriveEqType KindedTerm
---     unquoteDef eqKindedTerm = deriveEqDef eqKindedTerm (quote KindedTerm)
-
---   instance
---     eqTerm : deriveEqType Term
---     unquoteDef eqTerm = deriveEqDef eqTerm (quote Term)
-
-
-{-
-module _ {P} {{_  : hasDecidableEquality P}} where
-  _≟-KindedTerm_ : (k l : KindedTerm P) -> isDecidable (k ≡ l)
-  _≟-KindedTerm_ = λ k l -> cast-Dec-Prelude (eqKindedTerm k l)
-    where
-      instance
-        _ : Eq P
-        _ = record { _==_ = λ x y -> cast⁻¹-Dec-Prelude (x ≟ y) }
-
-  instance
-    hasDecidableEquality:KindedTerm : hasDecidableEquality (KindedTerm P)
-    hasDecidableEquality:KindedTerm = record { _≟_ = _≟-KindedTerm_ }
-
--}
-
 
 ---------------------------------------------
 -- Stating eq for Fin
@@ -226,18 +125,6 @@ _≟-Fin_ k l = cast-Dec-Std (k ≟-Fin-Std l)
 instance
   hasDecidableEquality:Fin : ∀{ns} -> hasDecidableEquality (Fin ns)
   hasDecidableEquality:Fin = record { _≟_ = _≟-Fin_ }
-
----------------------------------------------
--- Stating eq for Nat
-
--- open import Data.Nat using () renaming (_≟_ to _≟-Nat-Std_)
-
--- _≟-ℕ_ : (k l : ℕ) -> isDecidable (k ≡ l)
--- _≟-ℕ_ k l = cast-Dec-Std (k ≟-Nat-Std l)
-
--- instance
---   hasDecidableEquality:ℕ : hasDecidableEquality ℕ
---   hasDecidableEquality:ℕ = record { _≟_ = _≟-ℕ_ }
 
 ---------------------------------------------
 -- Stating eq for List
@@ -272,7 +159,7 @@ module _ {A : 𝒰 𝑖} {B : 𝒰 𝑗} {{_ : hasDecidableEquality A}} {{_ : ha
 
 
 ---------------------------------------------
--- Stating eq for Kind
+-- Stating eq for Terms
 
 module _ {P : ModeSystem 𝑖} where
 
