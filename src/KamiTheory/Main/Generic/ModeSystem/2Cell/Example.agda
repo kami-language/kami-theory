@@ -1,4 +1,12 @@
 
+----------------------------------------------------------
+--
+-- In this file we give examples of the 2cells of the
+-- (＠ ⊣ ◻) adjuction, and in particular state the rewrite
+-- rule for both triangle identities.
+--
+----------------------------------------------------------
+
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
 module KamiTheory.Main.Generic.ModeSystem.2Cell.Example where
@@ -75,7 +83,15 @@ module SendReceiveNarrow-2Cells (P : Preorder 𝑖) {{_ : hasDecidableEquality �
 
 
     ------------------------------------------------------------------------
-    -- We state the rewriting laws
+    -- We state the rewriting law
+    --
+    -- Interestingly enough, our rewriting algorithm is formulated in such
+    -- a way that a single rewrite rule is applicable for both triangle identities.
+    --
+    -- It is given as a simple finite state machine which matches on faces
+    -- and returns their transformation if applicable, while also carrying
+    -- state to remember the location-annotations of our modalities.
+    --
     Pat-SR : 2CellLinePattern SRN vis _ 2
     Pat-SR = record { State = S ; start = lift tt ; step = s }
       where
@@ -101,6 +117,10 @@ module SendReceiveNarrow-2Cells (P : Preorder 𝑖) {{_ : hasDecidableEquality �
 
 
 
+------------------------------------------------------------------------
+-- Here are some examples to test that the rewriting algorithm works
+-- correctly.
+------------------------------------------------------------------------
 
 module Examples where
 
@@ -123,7 +143,6 @@ module Examples where
 
   PP : Preorder _
   PP = -- QQ
-    -- ′_′ (Normalform ((𝒪ᶠⁱⁿ⁻ʷᵏ (𝒫ᶠⁱⁿ (𝔽 3))) since isNormalizable:𝒪ᶠⁱⁿ⁻ʷᵏ)) {_} {{isPreorder:𝒩 {{isPreorder:𝒪ᶠⁱⁿ⁻ʷᵏ {{isSetoid:𝒫ᶠⁱⁿ}} {{isPreorder:𝒫ᶠⁱⁿ}} {{isDecidablePreorder:≤-𝒫ᶠⁱⁿ}}}}}}
     ′_′ (𝒫ᶠⁱⁿ (𝔽 3)) {_} {{isPreorder:𝒫ᶠⁱⁿ}}
 
   MyInst : hasDecidableEquality ⟨ PP ⟩
@@ -160,7 +179,6 @@ module Examples where
       ... | yes p = yes ( record { top = _ ; bottom = _ ; get = incl (ϕ ⌟[ send U ]⌞ ψ ⌟) }
                           , tt)
       s _ st (idₗ₁ ⌟[ recv U ]⌞ idᵣ₁) = nothing
-      -- s st (idₗ₁ ⌟[ narrow x ]⌞ idᵣ₁) = nothing
 
 
   ξ₀ : Some2CellGen G vis id _

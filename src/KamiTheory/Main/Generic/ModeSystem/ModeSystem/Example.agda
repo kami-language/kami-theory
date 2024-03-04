@@ -1,4 +1,13 @@
 
+----------------------------------------------------------
+--
+-- In this file the interaction of visible and invisible
+-- faces is stated.
+--
+-- Finally we construct the SRN mode system of Kami.
+--
+----------------------------------------------------------
+
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
 module KamiTheory.Main.Generic.ModeSystem.ModeSystem.Example where
@@ -8,7 +17,6 @@ open import Agora.Order.Preorder
 open import KamiTheory.Basics
 open import KamiTheory.Main.Generic.ModeSystem.2Graph.Definition
 open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition
--- open import KamiTheory.Main.Generic.ModeSystem.Modality
 
 open import KamiTheory.Main.Generic.ModeSystem.2Cell.Definition
 open 2CellDefinition
@@ -30,6 +38,19 @@ module SendReceiveNarrow-ModeSystem (P : Preorder 𝑖) {{_ : hasDecidableEquali
   open 2GraphExample.SendReceiveNarrow-2Graph P
   open 2CellExample.SendReceiveNarrow-2Cells P {{it}} {{it}}
 
+  --
+  -- We state the commutation law between visible (send, recv) and invisible (narrow) faces.
+  --
+  -- We have to consider all 4 ways (situation1 ⋯ situation4) in which such faces can intersect.
+  -- Most cases are impossible, and we effectively only have to consider the case where a
+  -- narrowing follows after a send. That is, if we have
+  --
+  --  `send u ◆ narrow (u → v)`
+  --
+  -- we have to rewrite this to
+  --
+  --  `narrow u → v ◆ id`.
+  --
   commute-intersecting-SRN : ∀{a b : 0Cell SRN} -> ∀{μ η : 1Cell SRN a b}
                              -> Intersecting SRN μ η
                              -> ∑ λ ω -> MaybeSparse2CellGen SRN invis μ ω ×-𝒰 MaybeSparse2CellGen SRN vis ω η
@@ -58,6 +79,14 @@ module SendReceiveNarrow-ModeSystem (P : Preorder 𝑖) {{_ : hasDecidableEquali
   commute-intersecting-SRN (situation4 (x₁ ⨾ id) (x ⨾ x₂ ⨾ δ) (x₃ ⨾ iεₗiξ₀') δ≠id vξ ())
   commute-intersecting-SRN (situation4 (x₁ ⨾ x₃ ⨾ iεₗ') (x ⨾ x₂ ⨾ δ) iεₗiξ₀' δ≠id vξ ())
 
+  ----------------------------------------------------------
+  -- Finally we are able to state the mode system of Kami
+  ----------------------------------------------------------
+  --
+  -- It contains the generating 2-graph `SRN` from the `2Graph.Example` file,
+  -- the commutation law `commuting-intersectin-SRN` stated above,
+  -- and the rewrite law `RewriteCells.Pat-SR` state in the `2Cell.Example` file.
+  --
   SRN-ModeSystem : ModeSystem _
   SRN-ModeSystem = record
       { graph = SRN
