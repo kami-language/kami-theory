@@ -1,4 +1,16 @@
 
+----------------------------------------------------------
+--
+-- Example terms in the Kami language, sending a vector
+--
+-- In this file we build the main example, where a vector
+-- is sent from process `uu` to `vv`. The length of the
+-- vector is common knowledge between these processes,
+-- thus located at "uu ∧ vv". This is required for the induction
+-- to go through. The induction itself is the crisp-induction
+-- for naturals derived in the previous example.
+--
+----------------------------------------------------------
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
 module KamiTheory.Main.Dependent.Typed.Examples.SendingVector where
@@ -10,12 +22,6 @@ open import Data.Vec using ([] ; _∷_ ; _++_) renaming (Vec to StdVec)
 open import Agora.Conventions hiding (_∙_ ; _∷_ ; k ; const ; _∣_)
 open import Agora.Order.Preorder
 open import Agora.Setoid.Definition
--- open import Agora.Order.Lattice
--- open import Agora.Data.Normal.Definition
--- open import Agora.Data.Normal.Instance.Setoid
--- open import Agora.Data.Normal.Instance.Preorder
--- open import Agora.Data.Normal.Instance.Lattice
--- open import Agora.Data.Normal.Instance.DecidableEquality
 
 open import KamiTheory.Basics hiding (typed)
 open import KamiTheory.Order.Preorder.Instances
@@ -34,74 +40,46 @@ open import KamiTheory.Main.Generic.ModeSystem.Modality
 open import KamiTheory.Main.Generic.ModeSystem.Transition
 
 
+open import KamiTheory.Main.Dependent.Typed.Examples.Base
 open import KamiTheory.Main.Dependent.Typed.Examples.CrispInduction
 
-module Examples2 where
-  open Examples
-
-  open Judgements M
-
-  open Typecheck M
-
-  open SendReceiveNarrow-2Graph
-  open 2CellDefinition (graph M) hiding ( [_])
-
-  private variable
-    -- n m : Nat
-    p q : Term M n
-    s t u : Term M n
-    Γ  : Con (Entry M) n
-    A C : Term M n
-    B : Term M m
-    U V W R : P
-    k l o r : Mode M
-    μ : ModeHom M k l
-    η : ModeHom M o r
-    ν : ModeHom M o r
-    μs : Restriction k n
-
-
-
-  -- natrec-crisp2 : ∀{u} -> εε ⊢
-  --   Π (Π NN / ＠ u ▹ UU) / (◻ ◆ ＠ u) ▹
-  --   Π NN / ＠ u ▹
-  --   (x1 ∘[ ＠ u ] zeroₜ) / (◻ ◆ ＠ u) ▹▹
-  --   (Π NN / ＠ u ▹ ((x2 ∘[ ＠ u ] x0) /▹▹ (x2 ∘[ ＠ u ] sucₜ x0))) / (◻ ◆ ＠ u) ▹▹
-  --   (x1[ id ★εᵈˢ★ id ] ∘[ ＠ u ] x0) ∥ []
-  --   ≔ _
-  -- natrec-crisp2 {u = u} =
-  --   lamⱼ proof ↦
-  --   lamⱼ proof ↦
-  --   lamⱼ Univⱼ (x1ⱼ ∘ⱼ zeroⱼ) ↦
-  --   lamⱼ (Πⱼ NNⱼ {{{!!}}} ▹ (Πⱼ Univⱼ (x3ⱼ ∘ⱼ x0ⱼ) ▹ Univⱼ (x4ⱼ ∘ⱼ sucⱼ x1ⱼ))) ↦
-  --     letunmodⱼ[ id ] wk-Term (wk-Term (wk-Term (wk-Term (natrec-crisp-h)))) ∘ⱼ x3ⱼ
-  --       into (Univⱼ (x4[ εᵈˢ ]ⱼ ∘ⱼ x3[ idTⱼ ]ⱼ))
-  --       by
-  --       (
-  --         (wk-Term (wk-Term (wk-Term (wk-Term (wk-Term sync')))) ∘ⱼ (x4[ idTⱼ ]ⱼ ∘ⱼ x3[ id ★ηᵈˢ★ ＠ u ]ⱼ))
-  --         ∘ⱼ
-  --         modⱼ ((x0ⱼ ∘ⱼ x3ⱼ ∘ⱼ modⱼ x2ⱼ ∘ⱼ modⱼ x1ⱼ))
-  --       )
-
-
+module ExamplesSendingVector where
+  open ExamplesBase
+  open ExamplesCrispInduction
 
 
   ---------------------------------------------
-  -- For sending vectors we need the narrowing
-  -- transformation:
+  -- In order for the common knowledge at "uu ∧ vv"
+  -- to be usable for both processes `uu` and `vv`,
+  -- we need the narrowing transformation.
+  --
+  -- We call it τᵈˢ here. Generically, `τᵈˢ ϕ` is a transformation
+  -- between states at `u` and `v` if `u ≤ v` is a smaller element.
 
+
+  -- The narrowing transformation
   τᵈˢ : ∀{u v} -> u ≤ v -> ModeTrans* M all (＠ u) (＠ v)
   τᵈˢ {u = u} ϕ = [ (incl (incl (id ⌟[ narrow ϕ ]⌞ id ⌟) ∷ [])) ∣ incl [] ]
 
+  -- The narrowing transformation with additional identities whiskered-on left and right
   _★τᵈˢ[_]★_ : (μ : ModeHom M k ▲) -> ∀{u v} -> (ϕ : u ≤ v) -> (η : ModeHom M ◯ l) -> ModeTrans* M all ((μ ◆ ＠ u ◆ η)) ((μ ◆ ＠ v ◆ η))
   _★τᵈˢ[_]★_ μ ϕ η = [ (incl (incl (μ ⌟[ narrow ϕ ]⌞ η ⌟) ∷ [])) ∣ incl [] ]
 
+  -- Of course the common location `uu ∧ vv` is smaller than both `uu`
+  -- and `vv` which means that we can narrow.
+  --
   ϕu : uuvv ≤ uu
   ϕu = refl-≤-𝟚 ∷ (step ∷ (refl-≤-𝟚 ∷ []))
-
+  --
   ϕv : uuvv ≤ vv
   ϕv = step ∷ (refl-≤-𝟚 ∷ (refl-≤-𝟚 ∷ []))
 
+
+  ---------------------------------------------
+  -- Sending a vector between processes by sending n elements individually.
+  --
+  -- Conceptually, the example is simple:
+  -- We use crisp induction to 
   send-vec : εε
     ⊢
       Π NN / ＠ uuvv ▹
@@ -144,9 +122,3 @@ module Examples2 where
          ))
 
 
-{-
-      -- ∘ⱼ (lamⱼ NNⱼ ↦ (Πⱼ Vecⱼ BBⱼ ? x0[ id ★τᵈˢ[ ϕu ]★ (◻ ◆ ＠ uuvv) ]ⱼ ▹ Modalⱼ (Vecⱼ BBⱼ x1[ id ★τᵈˢ[ ϕv ]★ (◻ ◆ ＠ uuvv) ]ⱼ)))
-
--- transₑ ({!Π-cong ? ? ?!}) (univ (β-red (NNⱼ) ((Πⱼ Vecⱼ BBⱼ x0[ (id) ★τᵈˢ[ ϕu ]★ {!!} ]ⱼ  ▹ Modalⱼ (Vecⱼ BBⱼ (var (suc zero) {!!})))) x0ⱼ))
-
-      -}
