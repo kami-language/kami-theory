@@ -44,7 +44,8 @@ global computations.
 
 The generic formalization of mode theories is under the path `../Main/Generic/ModeSystem`. Especially the interactions
 between 2-cells required quite some implementation work, to be found in the various subfolders of `ModeSystem/2Cell`.
-The instantiation of the particular mode theory of Kami happens in `../ModeSystem/2Graph/Example.agda` and `../ModeSystem/ModeSystem/Example.agda`.
+The instantiation of the particular mode theory of Kami happens in `../ModeSystem/2Graph/Example.agda`, `../ModeSystem/2Cell/Example.agda`
+and `../ModeSystem/ModeSystem/Example.agda`.
 
 ### Dependencies
 
