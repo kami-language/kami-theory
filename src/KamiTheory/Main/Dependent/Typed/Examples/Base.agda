@@ -187,30 +187,31 @@ module ExamplesBase where
 
 
   postulate
+    wk-Type : Γ ⊢Type A ∥ μs -> Γ ∙ (B / η) ⊢Type wk1 A ∥ (id ∷ μs)
     wk-Term : Γ ⊢ t ∶ A ∥ μs -> Γ ∙ (B / η) ⊢ wk1 t ∶ wk1 A ∥ (id ∷ μs)
 
 
 
-  -- _××ⱼ_  : {μ : ModeHom M k l}
-  --         → Γ ⊢Entry (A / μ)
-  --         → Γ ⊢Entry (B / μ)
-  --         → Γ ⊢Entry ((Σ A // incl (k ↝ k ∋ id) ▹ wk1 B) / μ)
-  -- _××ⱼ_ Ap Bp = Σⱼ Ap ▹ wk-Entry Bp
+  _××ⱼ_  : {M : Restriction k _}
+          → Γ ⊢Type (A ∥ M)
+          → Γ ⊢Type (B ∥ M)
+          → Γ ⊢Type ((Σ A // incl (k ↝ k ∋ id) ▹ wk1 B) ∥ M)
+  _××ⱼ_ Ap Bp = Σⱼ Ap ▹ wk-Type Bp
 
 
   ---------------------------------------------
-  -- Prop (Axiom K): Arbitrary Modal types commute with products
+  -- We show that arbitrary modal types commute with products (Axiom K).
   --
-  -- AxiomK : ε ⊢ Π UU / μ ▹ Π UU / μ ▹ ⟨ x1 ×× x0 ∣ μ ⟩ /▹▹ ⟨ x1 ∣ μ ⟩ ×× ⟨ x0 ∣ μ ⟩ / id
-  --          ≔ lam↦ lam↦ lam↦ letunmod x0 by (mod[ μ ] (fstₜ x0) ,, mod[ μ ] (sndₜ x0))
-  -- AxiomK {μ = μ} = lamⱼ UUⱼ ↦
-  --                  lamⱼ UUⱼ ↦
-  --                  lamⱼ Modalⱼ (Univⱼ x1ⱼ ××ⱼ Univⱼ x0ⱼ) ↦
-  --                  letunmodⱼ x0ⱼ
-  --                    into Modalⱼ (Univⱼ x3ⱼ) ××ⱼ Modalⱼ (Univⱼ x2ⱼ)
-  --                    by
-  --                  introⱼΣ Modalⱼ (Univⱼ x3ⱼ) ▹ Modalⱼ (Univⱼ x3ⱼ)
-  --                    by
-  --                  modⱼ (fstⱼ x0ⱼ) , modⱼ (sndⱼ x0ⱼ)
+  AxiomK : ε ⊢ Π UU / μ ▹ Π UU / μ ▹ ⟨ x1 ×× x0 ∣ μ ⟩ /▹▹ ⟨ x1 ∣ μ ⟩ ×× ⟨ x0 ∣ μ ⟩ ∥ []
+           ≔ (lam↦ lam↦ lam↦ letunmod x0 into _ by (mod[ μ ] (fstₜ x0) ,, mod[ μ ] (sndₜ x0)))
+  AxiomK {μ = μ} = lamⱼ UUⱼ ↦
+                   lamⱼ UUⱼ ↦
+                   lamⱼ Modalⱼ (Univⱼ x1ⱼ ××ⱼ Univⱼ x0ⱼ) ↦
+                   letunmodⱼ x0ⱼ
+                     into Modalⱼ (Univⱼ x3ⱼ) ××ⱼ Modalⱼ (Univⱼ x2ⱼ)
+                     by
+                   introⱼΣ Modalⱼ (Univⱼ x3ⱼ) ▹ Modalⱼ (Univⱼ x3ⱼ)
+                     by
+                   modⱼ (fstⱼ x0ⱼ) , modⱼ (sndⱼ x0ⱼ)
 
 

@@ -91,6 +91,15 @@ module Judgements (P : ModeSystem 𝑖) where
     ω : ModeHom P mm nn
     ρ : ModeHom P mm nn
 
+  ---------------------------------------------
+  -- Before we can give the rules of the type theory,
+  -- we have to introduce the concept of "restrictions"
+  -- for a context, that describe which variables have
+  -- been restricted with which modality.
+  --
+  -- Effectively, it is a list of modalities which matching
+  -- domain/codomain of the same length as the context.
+  --
   data Restriction : (Mode P) -> ℕ -> 𝒰 𝑖 where
     [] : Restriction k 0
     _∷_ : ModeHom P k l -> Restriction l n -> Restriction k (suc n)
@@ -99,10 +108,19 @@ module Judgements (P : ModeSystem 𝑖) where
     M : Restriction k n
     N : Restriction k n
 
+  -- Given a restriction with domain k, we can precompose
+  -- the first modality with a morphism (μ : l → k) to get
+  -- a restriction with domain l.
+  --
+  -- This is the operation denoted by Γ.{μ} in MTT.
+  --
   _↳_ : ModeHom P l k -> Restriction k n -> Restriction l n
   μ ↳ [] = []
   μ ↳ (x ∷ M) = μ ◆ x ∷ M
 
+  --
+  -- We state rewrite rules for restrictions.
+  --
   postulate
     comp-↳ : (ν ◆ μ ↳ M) ≡ ν ↳ μ ↳ M
     id-↳ : (id ↳ M) ≡ M
@@ -110,19 +128,20 @@ module Judgements (P : ModeSystem 𝑖) where
   {-# REWRITE comp-↳ #-}
   {-# REWRITE id-↳ #-}
 
-
+  --
+  -- We write Γ ⊢ t ∶ A ∥ M to say that t is a
+  -- well-formed term in context Γ under a restriction M
+  --
   data Target (n : ℕ) : 𝒰 𝑖 where
     _∥_ : Term P n -> Restriction k n -> Target n
 
-  infix 21 _∥_
-
-  infixr 22 _↳_
-
   pattern _∥[_]_ T k M = _∥_ {k = k} T M
+
+  infix 21 _∥_
+  infixr 22 _↳_
 
 
   private variable
-    ξ ξ₀ ξ₁ : Term P n -- Transitions
     Γ  : Con (Entry P) n
     A B : Term P n
     C D : Term P n
@@ -139,6 +158,11 @@ module Judgements (P : ModeSystem 𝑖) where
   wk1-Entry (A // μ) = wk1 A // μ
 
   -- Well-typed variables
+  --
+  -- When we extract a variable from the context, we need not only
+  -- record its type and its modality annotation (in E), but also record the restriction modality (η)
+  -- under which it was found.
+  --
   data _∶_⇒_∈_∥_ : (x : Fin n) (E : Entry P n) (η : ModeHom P k l) (Γ : Con (Entry P) n) (M : Restriction k n) → 𝒰 𝑖 where
     zero :          x0 ∶ wk1-Entry ((A) / ω) ⇒ η ∈ (Γ ∙ (A / ω)) ∥ (η ∷ M)
     suc  : (h : x ∶ (A / ω) ⇒ η ∈ Γ ∥ M) → (x +1) ∶ wk1-Entry ((A) / ω) ⇒ (μ ◆ η) ∈ (Γ ∙ F) ∥ (μ ∷ M)
@@ -270,17 +294,6 @@ module Judgements (P : ModeSystem 𝑖) where
 
 
 
-
-    -- Transformations between modehoms (transitions)
-    --
-    --
-    -- transformⱼ : ∀ (ζ : ModalityTrans P vis (_ ↝ _ ∋ μ) (_ ↝ _ ∋ η))
-    --              -> Γ ⊢ t ∶ A / μ
-    --              -> Γ ⊢ transform (incl ζ) t ∶ A / η
-
-
-
-
     -- The variable rule is special, and is the main interaction point between
     -- the system of modalities and the terms of the type theory:
     -- Variables are annotated with mode-transformations, which denote transitions
@@ -308,30 +321,27 @@ module Judgements (P : ModeSystem 𝑖) where
               → Γ ⊢ a ∶ A ∥ (η ↳ M)
               → Γ ⊢ g ∘[ η ] a ∶ B [ untransform-Term a ] ∥ M
 
-{-
 
+    -- Introducing and eliminating sigma types is standard. We allow only
+    -- types with identity modality annotation for the bound variable.
     introⱼΣ_▹_by_,_  : ∀ {A B} -> ∀{t u}
-              -> {μ : ModeHom P k l}
-              → (Γ ⊢Type (A / μ))
-              → (Γ ∙ (A / μ) ⊢Type B / μ)
-              → Γ ⊢ t ∶ A / μ
-              → Γ ⊢ u ∶ B [ t ] / μ
-              → Γ ⊢ t ,, u ∶ (Σ A // incl (k ↝ k ∋ id) ▹ B) / μ
+              -> {M : Restriction k _}
+              → (Γ ⊢Type (A ∥ M))
+              → (Γ ∙ (A // (k ↝ k ∋ id)) ⊢Type B ∥ (id ∷ M))
+              → Γ ⊢ t ∶ A ∥ M
+              → Γ ⊢ u ∶ B [ t ] ∥ M
+              → Γ ⊢ t ,, u ∶ (Σ A // incl (k ↝ k ∋ id) ▹ B) ∥ M
 
     fstⱼ      : ∀ {A B} -> ∀{t}
-              -> {μ : ModeHom P k l}
-              -- → {{_ : isTrue (Γ ⊢Type (A / μ))}}
-              -- → {{_ : isTrue (Γ ∙ (A / μ) ⊢Sort B)}}
-              → Γ ⊢ t ∶ (Σ A // incl (k ↝ k ∋ id) ▹ B) / μ
-              → Γ ⊢ fstₜ t ∶ A / μ
+              -> {M : Restriction k _}
+              → Γ ⊢ t ∶ (Σ A // incl (k ↝ k ∋ id) ▹ B) ∥ M
+              → Γ ⊢ fstₜ t ∶ A ∥ M
 
     sndⱼ      : ∀ {A B} -> ∀{t}
-              -> {μ : ModeHom P k l}
-              -- → {{_ : isTrue (Γ ⊢Type (A / μ))}}
-              -- → {{_ : isTrue (Γ ∙ (A / μ) ⊢Sort B)}}
-              → Γ ⊢ t ∶ (Σ A // incl (k ↝ k ∋ id) ▹ B) / μ
-              → Γ ⊢ sndₜ t ∶ B [ fstₜ t ] / μ
-              -}
+              -> {M : Restriction k _}
+              → Γ ⊢ t ∶ (Σ A // incl (k ↝ k ∋ id) ▹ B) ∥ M
+              → Γ ⊢ sndₜ t ∶ B [ fstₜ t ] ∥ M
+
 
 
     -- Introduction and elimination for booleans, standard.

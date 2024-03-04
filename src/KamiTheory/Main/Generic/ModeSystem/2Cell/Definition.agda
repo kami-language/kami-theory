@@ -340,6 +340,11 @@ module 2CellDefinition (G : 2Graph 𝑖) where
   ... | no _ = nothing
   ... | yes (P) = yes ((x ⨾ id) ↷-⊴ P)
 
+  β-checkSplit : ∀{μ : 1Cell G a b} -> checkSplit μ μ ≡ yes (incl (id , refl))
+  β-checkSplit = {!!}
+
+  {-# REWRITE β-checkSplit #-}
+
 
   ----------------------------------------------------------
   -- Merging 2Cells
