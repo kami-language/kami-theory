@@ -1,4 +1,20 @@
 
+----------------------------------------------------------
+--
+-- Example terms in the Kami language, sending a vector - part 2
+--
+-- In the previous example, the length of the vector was common
+-- knowledge of both processes before sending. This was required
+-- for the induction to go through.
+--
+-- But what we actually want is of course the case where the second process
+-- doesn't know the length beforehand.
+--
+-- The interactions between τᵈˢ and ηᵈˢ allow us to construct
+-- such a program very easily on top of the previous example.
+--
+----------------------------------------------------------
+
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
 module KamiTheory.Main.Dependent.Typed.Examples.SendingVector2 where
@@ -28,22 +44,34 @@ open import KamiTheory.Main.Generic.ModeSystem.Modality
 open import KamiTheory.Main.Generic.ModeSystem.Transition
 
 
+open import KamiTheory.Main.Dependent.Typed.Examples.Base
 open import KamiTheory.Main.Dependent.Typed.Examples.CrispInduction
 open import KamiTheory.Main.Dependent.Typed.Examples.SendingVector
 
-module Examples3 where
-  open Examples
-  open Examples2
-
-  open Judgements M
-
-  open Typecheck M
-
-  open SendReceiveNarrow-2Graph
-  open 2CellDefinition (graph M) hiding ( [_])
+module ExamplesSendingVector2 where
+  open ExamplesBase
+  open ExamplesCrispInduction
+  open ExamplesSendingVector
 
 
 
+  -- A function of type
+  --
+  --    (n ∶ ℕ / ＠ u) → (v : Vec BB n / ＠ u) → Vec BB n / ＠ v
+  --
+  -- can be easily given by first sending `n` from `＠ u` to `＠ u ∧ v`,
+  -- and then applying the previous `send-vec`-example.
+  --
+  -- Note that we skipped over the variable annotations in the type, which
+  -- state that the length of the resulting vector is not actually n itself,
+  -- but is the sent value of n.
+  --
+  -- In particular this example only typechecks because a "send to (u ∧ v)" followed by
+  -- a "narrow (u ∧ v) to u" transformations, reduces to a "send to u" transformation;
+  -- and moreover, sending and receiving at the same location reduces to the identity.
+  --
+  -- A detailed explanation will be available elsewhere in a forthcoming document.
+  --
   send-vec2 : εε
     ⊢
       Π NN / ＠ uu ▹
