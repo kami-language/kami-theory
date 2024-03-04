@@ -67,7 +67,7 @@ module Typecheck (P : ModeSystem 𝑖) where
 
 
   {-# TERMINATING #-}
-  derive-Entry : ∀ (Γ : Con (Entry P) n) E -> Result (Γ ⊢Entry E)
+  derive-Entry : ∀ (Γ : Con (Entry P) n) E -> Result (Γ ⊢Type E)
   derive-Ctx : ∀ (Γ : Con (Entry P) n) -> (M : Restriction k n) -> Result (⊢Ctx Γ ∥ M)
   derive-Term-Sort↓,Mod↓ : ∀ Γ -> (t A : Term P n) → (p : Restriction k n) -> Result (Γ ⊢ t ∶ A ∥ p)
 
@@ -346,7 +346,7 @@ module Typecheck (P : ModeSystem 𝑖) where
     isDerivable:Con = record { derive = derive-Ctx _ _ }
 
   instance
-    isDerivable:Entry : isDerivable (Γ ⊢Entry A ∥ M)
+    isDerivable:Entry : isDerivable (Γ ⊢Type A ∥ M)
     isDerivable:Entry = record { derive = derive-Entry _ _ }
   instance
     isDerivable:Term : isDerivable (Γ ⊢ t ∶ A ∥ M)
