@@ -1,7 +1,7 @@
 
 ----------------------------------------------------------
 --
--- Examples terms in the Kami language, Base
+-- Example terms in the Kami language, Base
 --
 -- In this file we setup the Kami language itself,
 -- by instantiating MTT with our SRN mode theory,
@@ -95,10 +95,10 @@ module ExamplesBase where
   M : ModeSystem _
   M = SendReceiveNarrow-ModeSystem.SRN-ModeSystem PP {{it}} {{it}}
 
-  open Judgements M
-  open Typecheck M
-  open SendReceiveNarrow-2Graph
-  open 2CellDefinition (graph M) hiding ( [_])
+  open Judgements M public
+  open Typecheck M public
+  open SendReceiveNarrow-2Graph public
+  open 2CellDefinition (graph M) hiding ( [_]) public
 
 
   -------------------
@@ -139,9 +139,7 @@ module ExamplesBase where
   pattern x3ⱼ' P = var {{P}} (suc (suc (suc zero))) idTⱼ
 
 
-
-
-  private variable
+  variable
     p q : Term M n
     s t u : Term M n
     Γ  : Con (Entry M) n
@@ -154,16 +152,19 @@ module ExamplesBase where
     ν : ModeHom M o r
     μs : Restriction k n
 
+  -- Reversing the order of arguments for term judgements
   _⊢_≔_ : (Γ : Con (Entry M) n) → Target n → Term M n → Set
   Γ ⊢ E ≔ t = Γ ⊢ t ∶ E
 
+  -- The empty context gets a special name
   εε : Con (Entry M) zero
   εε = ε
 
-
+  -- the identity mode hom
   idM : (a : Mode M) -> ModeHom M a a
   idM a = id
 
+  -- patterns for our modalities
   pattern ＠ u = `＠` u ⨾ id
   pattern ◻ = `[]` ⨾ id
 
