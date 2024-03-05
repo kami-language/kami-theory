@@ -1,3 +1,7 @@
+-- SPDX-FileCopyrightText: 2016 Joakim Öhman, Andrea Vezzosi, Andreas Abel
+--
+-- SPDX-License-Identifier: MIT
+
 -- Disjoint sum type; also used as logical disjunction.
 
 {-# OPTIONS --without-K --safe #-}

@@ -1,3 +1,7 @@
+-- SPDX-FileCopyrightText: 2016 Joakim Öhman, Andrea Vezzosi, Andreas Abel
+--
+-- SPDX-License-Identifier: MIT
+
 -- Σ type (also used as existential) and
 -- cartesian product (also used as conjunction).
 

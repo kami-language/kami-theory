@@ -1,3 +1,9 @@
+-- SPDX-FileCopyrightText: 2024 Maxim Urschumzew <mxmurw@determi.io>
+-- SPDX-FileCopyrightText: 2024 Olivia Röhrig
+-- SPDX-FileCopyrightText: 2016 Joakim Öhman, Andrea Vezzosi, Andreas Abel
+--
+-- SPDX-License-Identifier: MIT
+--
 ----------------------------------------------------------
 --
 -- Untyped terms of the Kami language
@@ -7,36 +13,13 @@
 -- which makes the definition of substitution and weakening
 -- very concise.
 --
--- The file is originally from a project by Joakim Öhman et al.,
+-- The file is originally from a project [1] by Joakim Öhman et al.,
 -- but quite some changes were required to integrate a modesystem
 -- into it. The overall structure remains the same.
 --
+-- -[1]: https://github.com/mr-ohman/logrel-mltt/blob/master/Definition/Untyped.agda
+--
 ----------------------------------------------------------
---
--- Original file by Joakim Öhman et al.
--- See here: https://github.com/mr-ohman/logrel-mltt/blob/master/Definition/Untyped.agda
---
--- Original license:
--- ```
---   Copyright (c) 2016 Joakim Öhman, Andrea Vezzosi, Andreas Abel
---   Permission is hereby granted, free of charge, to any person obtaining a copy
---   of this software and associated documentation files (the "Software"), to deal
---   in the Software without restriction, including without limitation the rights
---   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
---   copies of the Software, and to permit persons to whom the Software is
---   furnished to do so, subject to the following conditions:
-
---   The above copyright notice and this permission notice shall be included in all
---   copies or substantial portions of the Software.
-
---   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
---   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
---   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
---   AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
---   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
---   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
---   SOFTWARE.
--- ```
 
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 

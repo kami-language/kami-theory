@@ -1,3 +1,7 @@
+-- SPDX-FileCopyrightText: 2016 Joakim Öhman, Andrea Vezzosi, Andreas Abel
+--
+-- SPDX-License-Identifier: MIT
+
 {-# OPTIONS --without-K --safe #-}
 
 module KamiTheory.ThirdParty.logrel-mltt.Tools.Fin where

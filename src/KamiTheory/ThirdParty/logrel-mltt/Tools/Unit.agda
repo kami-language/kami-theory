@@ -1,3 +1,7 @@
+-- SPDX-FileCopyrightText: 2016 Joakim Öhman, Andrea Vezzosi, Andreas Abel
+--
+-- SPDX-License-Identifier: MIT
+
 -- The unit type; also used as proposition ``Truth''.
 
 {-# OPTIONS --without-K --safe #-}
