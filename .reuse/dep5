@@ -1,0 +1,10 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: kami-theory
+Upstream-Contact: Maxim Urschumzew <mxmurw@determi.io>
+Source: https://github.com/kami-language/kami-theory
+
+# Sample paragraph, commented out:
+#
+# Files: src/*
+# Copyright: $YEAR $NAME <$CONTACT>
+# License: ...

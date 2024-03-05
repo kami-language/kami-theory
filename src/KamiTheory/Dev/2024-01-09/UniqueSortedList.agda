@@ -1,3 +1,7 @@
+-- SPDX-FileCopyrightText: 2024 Olivia Röhrig
+--
+-- SPDX-License-Identifier: MIT
+
 module KamiTheory.Dev.2024-01-09.UniqueSortedList where
 
 open import Agora.Conventions -- using (¬_)

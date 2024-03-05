@@ -1,3 +1,7 @@
+-- SPDX-FileCopyrightText: 2024 Olivia Röhrig
+--
+-- SPDX-License-Identifier: MIT
+
 {-# OPTIONS --allow-unsolved-metas #-}
 
 module KamiTheory.Dev.2024-01-20.BabyProjection where
