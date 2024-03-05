@@ -420,6 +420,9 @@ module Judgements (P : ModeSystem 𝑖) where
 
 
   -- Term equality
+  --
+  -- NOTE: We currently don't most equalities (except β-reduction) for our examples so we skip stating them.
+  -- They would be all very standard.
   data _⊢_＝_∶_ Γ where
     reflₑ          : ∀ {t A}
                   → Γ ⊢ t ∶ A
