@@ -155,7 +155,7 @@ module 2CellDefinition (G : 2Graph 𝑖) where
                 -> 𝒰 𝑖 where
     _⌟ : (μ : 1Cell G a b) -> 2CellGen v [ μ ] (⌞ μ ⌟) (⌞ μ ⌟)
     _⌟[_]⌞_ : (ϕ : 1Cell G a b)
-             -> (ξ : Face G v ξ₀ ξ₁)
+             -> (ξ : Face (of G) v ξ₀ ξ₁)
              -> ∀{ϕs}
              -> {μp : Partition n ϕs μ}
              -> {ηp : Partition n ϕs η}
@@ -164,7 +164,7 @@ module 2CellDefinition (G : 2Graph 𝑖) where
                          (ϕ ⌟[ ξ₀ ]⌞ μp)
                          (ϕ ⌟[ ξ₁ ]⌞ ηp)
 
-  gen←base : ∀{v} -> (ξ : Face G v ξ₀ ξ₁)  -> 2CellGen v _ _ _
+  gen←base : ∀{v} -> (ξ : Face (of G) v ξ₀ ξ₁)  -> 2CellGen v _ _ _
   gen←base ξ = ⌞ id ⌟[ ξ ]⌞ id ⌟
 
   record Some2CellGen (v : Visibility) {a b : 0Cell G}
@@ -289,13 +289,13 @@ module 2CellDefinition (G : 2Graph 𝑖) where
   _↷-⊴_ μ (incl (η₀' , refl)) = incl (η₀' , refl)
 
 
-  cancelₗ-⨾-head : ∀{x y : Edge G a b} -> x ⨾ μ ≡ y ⨾ η -> x ≡ y
+  cancelₗ-⨾-head : ∀{x y : Edge (of G) a b} -> x ⨾ μ ≡ y ⨾ η -> x ≡ y
   cancelₗ-⨾-head refl = refl
 
-  cancelₗ-⨾-tail : ∀{x y : Edge G a b} -> x ⨾ μ ≡ y ⨾ η -> μ ≡ η
+  cancelₗ-⨾-tail : ∀{x y : Edge (of G) a b} -> x ⨾ μ ≡ y ⨾ η -> μ ≡ η
   cancelₗ-⨾-tail refl = refl
 
-  cancelₗ-⨾-point : ∀{x : Edge G a b} {y : Edge G a c} -> x ⨾ μ ≡ y ⨾ η -> b ≡ c
+  cancelₗ-⨾-point : ∀{x : Edge (of G) a b} {y : Edge (of G) a c} -> x ⨾ μ ≡ y ⨾ η -> b ≡ c
   cancelₗ-⨾-point refl = refl
 
 
@@ -370,7 +370,7 @@ module 2CellDefinition (G : 2Graph 𝑖) where
            -- the face are a subcell of μ
            (P : (εₗ ◆ bottom) ⊴ μ)
            -- the face itself
-           (ξ : Face G v top bottom)
+           (ξ : Face (of G) v top bottom)
 
            -- We only return a value if we are succesfull
            -> Maybe (Some2CellGen v (εₗ ◆ top ◆ ⟨ P ⟩ .fst) η)

@@ -273,6 +273,12 @@ module Judgements (P : ModeSystem 𝑖) where
               -> Γ ∙ (X / (η ◆ μ)) ⊢ s ∶ (Y [ mod[ μ ] (var x0 id) ]↑) ∥ (id ∷ M)
               -> Γ ⊢ letunmod[ μ ] t into Y by s ∶ (Y [ t ]) ∥ M
 
+    -------------------------
+    --  The transition rule
+    --
+    --
+    -------------------------
+
 
 
     -- The variable rule is special, and is the main interaction point between

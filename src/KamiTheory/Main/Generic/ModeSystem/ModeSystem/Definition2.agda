@@ -4,7 +4,7 @@
 
 {-# OPTIONS --allow-unsolved-metas --rewriting #-}
 
-module KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition where
+module KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition2 where
 
 open import Agora.Conventions hiding (_∣_)
 open import KamiTheory.Basics
@@ -45,7 +45,7 @@ Mode : ModeSystem 𝑖 -> 𝒰 _
 Mode M = Point (graph M)
 
 ModeHom : (M : ModeSystem 𝑖) -> (m n : Mode M) -> 𝒰 _
-ModeHom M = Path (Edge (of graph M))
+ModeHom M = Path (Edge (graph M))
 
 
 record ModeTrans (M : ModeSystem 𝑖) v {a b : Mode M} (μ η : ModeHom M a b) : 𝒰 𝑖 where
@@ -147,4 +147,3 @@ module _ {M : ModeSystem 𝑖} where
   instance
     hasDecidableEquality:ModeTrans* : {a b : Mode M} -> {μ η : ModeHom M a b} -> hasDecidableEquality (ModeTrans* M r μ η)
     hasDecidableEquality:ModeTrans* = record { _≟_ = decide-≡-ModeTrans* }
-

@@ -35,7 +35,7 @@ module 2CellCommutation (G : 2Graph 𝑖) where
   open Some1Cell public
 
   data isNonTrivial : Some1Cell -> 𝒰 𝑖 where
-    incl : ∀{x : Edge G a b} -> isNonTrivial (incl (x ⨾ μ))
+    incl : ∀{x : Edge (of G) a b} -> isNonTrivial (incl (x ⨾ μ))
 
   nonTrivialBy⊴ : (¬(η ⊴ μ)) -> (p : μ ⊴ η) -> isNonTrivial (incl (⟨ p ⟩ .fst))
   nonTrivialBy⊴ P (incl (id , refl)) = ⊥-elim (P refl-⊴)
@@ -47,7 +47,7 @@ module 2CellCommutation (G : 2Graph 𝑖) where
     field {pb pc} : 0Cell G
     field εₗ : 1Cell G a pb
     field top bottom : 1Cell G pb pc
-    field face : Face G v top bottom
+    field face : Face (of G) v top bottom
     field εᵣ : 1Cell G pc d
     field pf₀ : (εₗ ◆ top ◆ εᵣ) ≡ μ
     field pf₁ : (εₗ ◆ bottom ◆ εᵣ) ≡ η
@@ -113,11 +113,11 @@ module 2CellCommutation (G : 2Graph 𝑖) where
 
                  -- We have a face into the "vξ₁ = vεₗ' ◆ δ"
                  {vξ₀ : 1Cell G a c}
-                 (vξ : Face G vis vξ₀ (vεₗ' ◆ δ))
+                 (vξ : Face (of G) vis vξ₀ (vεₗ' ◆ δ))
 
                  -- And a face out of "iξ₀ = δ ◆ vεᵣ'"
                  {iξ₁ : 1Cell G b d}
-                 (iξ : Face G invis (δ ◆ vεₗvξ₁') iξ₁)
+                 (iξ : Face (of G) invis (δ ◆ vεₗvξ₁') iξ₁)
 
                  -- This means we have an intersection with a boundary
                  -> Intersecting (vξ₀ ◆ vεₗvξ₁') (vεₗ' ◆ iξ₁)
@@ -128,11 +128,11 @@ module 2CellCommutation (G : 2Graph 𝑖) where
 
                  -- We have a face into the "vξ₁ = vεₗ' ◆ δ ◆ iεₗiξ₀'"
                  {vξ₀ : 1Cell G a d}
-                 (vξ : Face G vis vξ₀ (vεₗ' ◆ δ ◆ iεₗiξ₀'))
+                 (vξ : Face (of G) vis vξ₀ (vεₗ' ◆ δ ◆ iεₗiξ₀'))
 
                  -- And a face out of "iξ₀ = δ"
                  {iξ₁ : 1Cell G b c}
-                 (iξ : Face G invis δ iξ₁)
+                 (iξ : Face (of G) invis δ iξ₁)
 
                  -- This means we have an intersection with a boundary
                  -> Intersecting (vξ₀) (vεₗ' ◆ iξ₁ ◆ iεₗiξ₀')
@@ -143,11 +143,11 @@ module 2CellCommutation (G : 2Graph 𝑖) where
 
                  -- We have a face into the "vξ₁ = δ"
                  {vξ₀ : 1Cell G b c}
-                 (vξ : Face G vis vξ₀ δ)
+                 (vξ : Face (of G) vis vξ₀ δ)
 
                  -- And a face out of "iξ₀ = iεₗ' ◆ δ ◆ vεₗvξ₁'"
                  {iξ₁ : 1Cell G a d}
-                 (iξ : Face G invis (iεₗ' ◆ δ ◆ vεₗvξ₁') iξ₁)
+                 (iξ : Face (of G) invis (iεₗ' ◆ δ ◆ vεₗvξ₁') iξ₁)
 
                  -- This means we have an intersection with a boundary
                  -> Intersecting (iεₗ' ◆ vξ₀ ◆ vεₗvξ₁') (iξ₁)
@@ -157,11 +157,11 @@ module 2CellCommutation (G : 2Graph 𝑖) where
 
                  -- ...
                  {vξ₀ : 1Cell G b d}
-                 (vξ : Face G vis vξ₀ (δ ◆ iεₗiξ₀'))
+                 (vξ : Face (of G) vis vξ₀ (δ ◆ iεₗiξ₀'))
 
                  -- ...
                  {iξ₁ : 1Cell G a c}
-                 (iξ : Face G invis (iεₗ' ◆ δ) iξ₁)
+                 (iξ : Face (of G) invis (iεₗ' ◆ δ) iξ₁)
 
                  -- This means we have an intersection with a boundary
                  -> Intersecting (iεₗ' ◆ vξ₀) (iξ₁ ◆ iεₗiξ₀')

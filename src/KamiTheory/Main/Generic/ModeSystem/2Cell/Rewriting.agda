@@ -35,7 +35,7 @@ module 2CellRewriting (G : 2Graph 𝑖) where
     field {pb pc} : 0Cell G
     field idₗ : 1Cell G a pb
     field {cξ₀ cξ₁} : 1Cell G pb pc
-    field face : Face G v cξ₀ cξ₁
+    field face : Face (of G) v cξ₀ cξ₁
     field idᵣ : 1Cell G pc d
 
   open SingleFace public

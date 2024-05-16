@@ -30,6 +30,13 @@ open Structure
 
 
 
+myf : ℕ -> ℕ
+myf zero = ?
+myf (suc a) = ?
+
+
+
+
 -- module _ {X : 𝒰 _} {{_ : DecidablePreorder 𝑗 on X}} where
 module IB {X : 𝒰 𝑖} (independent : X -> X -> 𝒰 𝑗) where
 

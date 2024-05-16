@@ -109,10 +109,10 @@ instance
 -- Input data for a free strict 2-category,
 -- thus a 2-graph. We require the graph to be decidable.
 
-record 2Graph (𝑖 : 𝔏 ^ 3) : 𝒰 (𝑖 ⁺) where
-  field Point : 𝒰 (𝑖 ⌄ 0)
-  field Edge : Point -> Point -> 𝒰 (𝑖 ⌄ 1)
-  field Face : Visibility -> ∀{p q : Point} -> (a b : Path Edge p q) -> 𝒰 (𝑖 ⌄ 2)
+record is2Graph (𝑗 : 𝔏 ^ 2) (Point : 𝒰 𝑖) : 𝒰 (𝑗 ⁺ ､ 𝑖) where
+  -- field Point : 𝒰 (𝑖 ⌄ 0)
+  field Edge : Point -> Point -> 𝒰 (𝑗 ⌄ 0)
+  field Face : Visibility -> ∀{p q : Point} -> (a b : Path Edge p q) -> 𝒰 (𝑗 ⌄ 1)
 
   field {{decide-≡-Point}} : hasDecidableEquality Point
   field {{decide-≡-Edge}} : ∀{a b} -> hasDecidableEquality (Edge a b)
@@ -120,7 +120,14 @@ record 2Graph (𝑖 : 𝔏 ^ 3) : 𝒰 (𝑖 ⁺) where
 
   field {{hasShow:Edge}} : ∀{a b} -> hasShow (Edge a b)
 
-open 2Graph public
+open is2Graph public
+
+2Graph : (𝑖 : 𝔏 ^ 3) -> 𝒰 (𝑖 ⁺)
+2Graph 𝑖 = 𝒰 (𝑖 ⌄ 0) :& is2Graph (𝑖 ⌄ 1 ⋯ 2)
+
+Point : 2Graph 𝑖 -> 𝒰 _
+Point G = ⟨ G ⟩
+
 
 
 ------------------------------------------------------------------------
@@ -137,33 +144,7 @@ open 2Graph public
 -- We describe the 1-cells
 
 1Cell : (G : 2Graph 𝑖) -> (p q : 0Cell G) -> 𝒰 _
-1Cell G = Path (Edge G)
-
----------------------------------------------
--- We describe the 2-cells
-
-
-
-
-------------------------------------------------------------------------
--- A mode system is given by
-
--- record ModeSystem 𝑖 : 𝒰 (𝑖 ⁺) where
---   field Generators : 2Graph 𝑖
-
-
-
-
-
-------------------------------------------------------------------------
--- Decidability
-
--- record isDecidable2Graph (G : 2Graph 𝑖) : 𝒰 𝑖 where
---   field decide-≡-Point : (a b : Point G) -> isDecidable (a ≡ b)
---   field decide-≡-Edge : ∀{a b} -> (p q : Edge G a b) -> isDecidable (p ≡ q)
---   field decide-≡-Face : ∀{a b} -> {p q : Path (Edge G) a b} -> ∀{v} -> {s t : Face G p q v} -> isDecidable (s ≡ t)
-
--- open isDecidable2Graph {{...}} public
+1Cell G = Path (Edge (of G))
 
 
 
