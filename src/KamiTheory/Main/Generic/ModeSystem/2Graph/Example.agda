@@ -157,12 +157,18 @@ module SendReceiveNarrow-2Graph (P : Preorder ùëñ) {{_ : hasDecidableEquality ‚
   --
   -- It consists of exactly the modes, modalities and mode transformations
   -- described above.
-  SRN : 2Graph _
-  SRN = record
-    { Point = Mode-SRN
-    ; Edge = BaseModeHom-SRN
+  is2Graph:Mode-SRN : is2Graph _ Mode-SRN
+  is2Graph:Mode-SRN = record
+    { Edge = BaseModeHom-SRN
     ; Face = BaseModeTrans-SRN
     }
+
+  SRN : 2Graph _
+  SRN = Mode-SRN since is2Graph:Mode-SRN -- record
+    -- { Point = Mode-SRN
+    -- ; Edge = BaseModeHom-SRN
+    -- ; Face = BaseModeTrans-SRN
+    -- }
 
 
 
