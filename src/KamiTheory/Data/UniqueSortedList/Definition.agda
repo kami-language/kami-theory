@@ -7,7 +7,6 @@
 
 module KamiTheory.Data.UniqueSortedList.Definition where
 
-open import Data.Empty using (⊥)
 open import Agda.Builtin.Unit using (⊤; tt)
 open import Agda.Builtin.Equality using (_≡_)
 open import Agda.Primitive using (Level; lsuc; _⊔_)
@@ -22,7 +21,7 @@ open import Relation.Binary.PropositionalEquality using (subst; cong)
 open import KamiTheory.Order.StrictOrder.Base
 open import KamiTheory.Basics
 
-open import Agora.Conventions using (isDecidable ; yes ; no ; isProp ; force-≡)
+open import Agora.Conventions using (isDecidable ; yes ; no ; isProp ; force-≡ ; ⊤-𝒰 ; tt ; ∑_)
 open import Agora.Conventions.Prelude.Classes.DecidableEquality
 open import KamiTheory.Data.List.Definition
 open import KamiTheory.Basics
@@ -255,12 +254,13 @@ open import Agora.Conventions using (
   _:&_; ⟨_⟩; _since_; ′_′; _on_;
   #structureOn; isSetoid; isSetoid:byId; _isUniverseOf[_]_;  _isUniverseOf[_]_:byBase;
   𝑖 ; 𝑗 ; _isUniverseOf[_]_:𝒰 ; _isUniverseOf[_]_:Exp ; isUniverseOf::&
+  ; _+-𝒰_ ; left ; right
   )
 open import Agora.Order.Preorder using
   (isPreorderData; isPreorder;
   _≤_
   )
-open import Agora.Order.Lattice using (hasFiniteJoins)
+open import Agora.Order.Lattice using (hasFiniteJoins ; ⊥)
 
 
 instance
@@ -273,10 +273,14 @@ StrictOrder 𝑖 = (Set 𝑖) :& hasStrictOrder
 UniqueSortedList : (A : StrictOrder 𝑖) -> Set 𝑖
 UniqueSortedList A = List ⟨ A ⟩ :& isUniqueSorted
 
+
+
 -- The fancy name for UniqueSortedList: finite power set over A
 macro
   𝒫ᶠⁱⁿ : StrictOrder 𝑖 -> _
   𝒫ᶠⁱⁿ A = #structureOn (UniqueSortedList A)
+
+
 
 module _ {A : StrictOrder 𝑖} where
 
@@ -327,11 +331,58 @@ module _ {A : StrictOrder 𝑖} where
 
 
 _⋆-StrictOrder_ : StrictOrder 𝑖 -> StrictOrder 𝑗 -> StrictOrder _
-_⋆-StrictOrder_ A B = ′ ⟨ A ⟩ ⊎ ⟨ B ⟩ ′
+_⋆-StrictOrder_ A B = ′ ⟨ A ⟩ +-𝒰 ⟨ B ⟩ ′
 
-𝟙-StrictOrder : StrictOrder _
-𝟙-StrictOrder = ′ ⊤ ′
+𝟙-StrictOrder : ∀ {𝑖} -> StrictOrder _
+𝟙-StrictOrder {𝑖} = ′ ⊤-𝒰 {𝑖} ′
 
+-- nonempty finite power sets over A
+-- module _ (A : StrictOrder 𝑖) where
+--   NonEmptyUniqueSortedList : Set 𝑖
+--   NonEmptyUniqueSortedList = ∑ λ (x : 𝒫ᶠⁱⁿ A) -> ¬ x ≡ ⊥
+
+--   macro 𝒫₊ᶠⁱⁿ = #structureOn NonEmptyUniqueSortedList
+
+-- module _ {A : StrictOrder 𝑖} where
+
+--   record _∼-𝒫₊ᶠⁱⁿ_ (a b : 𝒫₊ᶠⁱⁿ A) : Set 𝑖 where
+--     -- incl : fst a ∼ fst b
+
+{-
+  -- `𝒫₊ᶠⁱⁿ A` forms a setoid with strict equality
+  instance
+    isSetoid:𝒫ᶠⁱⁿ : isSetoid (𝒫ᶠⁱⁿ A)
+    isSetoid:𝒫ᶠⁱⁿ = isSetoid:byId
+
+  -- `𝒫₊ᶠⁱⁿ A` forms a preorder with _⊆_ as relation
+  record _≤-𝒫ᶠⁱⁿ_ (U V : 𝒫ᶠⁱⁿ A) : Set 𝑖 where
+    constructor incl
+    field ⟨_⟩ : ⟨ U ⟩ ⊆ ⟨ V ⟩
+  open _≤-𝒫ᶠⁱⁿ_ {{...}} public
+
+  refl-≤-𝒫ᶠⁱⁿ : ∀{U} -> U ≤-𝒫ᶠⁱⁿ U
+  refl-≤-𝒫ᶠⁱⁿ = incl (λ c x → x)
+
+  _⟡-𝒫ᶠⁱⁿ_ : ∀{U V W} -> U ≤-𝒫ᶠⁱⁿ V -> V ≤-𝒫ᶠⁱⁿ W -> U ≤-𝒫ᶠⁱⁿ W
+  incl p ⟡-𝒫ᶠⁱⁿ incl q = incl (λ c x → q c (p c x))
+
+  instance
+    isPreorderData:≤-𝒫ᶠⁱⁿ : isPreorderData (𝒫ᶠⁱⁿ A) _≤-𝒫ᶠⁱⁿ_
+    isPreorderData:≤-𝒫ᶠⁱⁿ = record
+      { refl-≤ = refl-≤-𝒫ᶠⁱⁿ
+      ; _⟡_ = _⟡-𝒫ᶠⁱⁿ_
+      ; transp-≤ = λ {refl refl x₂ → x₂}
+      }
+
+  -- `𝒫ᶠⁱⁿ A` has finite joins (least upper bounds / maximum / or)
+  instance
+    isPreorder:𝒫ᶠⁱⁿ : isPreorder _ (𝒫ᶠⁱⁿ A)
+    isPreorder:𝒫ᶠⁱⁿ = record { _≤_ = _≤-𝒫ᶠⁱⁿ_ }
+-}
+
+
+----------------------------------------------------------
+-- Morphisms in the category of strict orders
 record isStrictOrderHom {𝑖 𝑗} {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} (hom : ⟨ A ⟩ -> ⟨ B ⟩) : Set (𝑖 ⊔ 𝑗) where
   field
     homPreserves : ∀ {a b : ⟨ A ⟩} → a < b → hom a < hom b
@@ -403,7 +454,7 @@ module _ {A : StrictOrder 𝑖} where
   ⦗_⦘ : ⟨ A ⟩ -> 𝒫ᶠⁱⁿ A
   ⦗_⦘ a = (a ∷ []) since [-]
 
-module _ {𝑖} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
+module _ {𝑖} {A : Set 𝑖} {{AP : hasStrictOrder A}} where
   hasDecidableEquality:byStrictOrder : hasDecidableEquality A
   hasDecidableEquality:byStrictOrder = record { _≟_ = f }
     where
@@ -412,6 +463,10 @@ module _ {𝑖} {A : Set 𝑖} {{_ : hasStrictOrder A}} where
       ... | tri< a<b a≢b a≯b = no λ {refl -> irrefl-< a<b}
       ... | tri≡ a≮b a≡b a≯b = yes a≡b
       ... | tri> a≮b a≢b a>b = no λ {refl -> irrefl-< a>b}
+
+  ≰-singleton : ∀{p q : A} -> (¬ p ≡ q) -> ¬ _≤-𝒫ᶠⁱⁿ_ {A = A since AP} ⦗ p ⦘ ⦗ q ⦘
+  ≰-singleton {p} {q} p≢q P with ⟨ P ⟩ p here
+  ... | here = p≢q refl
 
 open Agora.Conventions hiding (¬_)
 

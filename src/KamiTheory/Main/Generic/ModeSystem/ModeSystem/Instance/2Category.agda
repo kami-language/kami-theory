@@ -23,7 +23,7 @@ import KamiTheory.Main.Generic.ModeSystem.2Cell.Decidability as 2CellDecidabilit
 open import KamiTheory.Main.Generic.ModeSystem.ModeSystem.Definition
 
 
-module _ (𝓂 : ModeSystem 𝑖) where
+module ModeSystemAs2Category (𝓂 : ModeSystem 𝑖) where
   private variable
     a b c : Mode 𝓂
     μ ν η ω : ModeHom 𝓂 a b
@@ -60,21 +60,26 @@ module _ (𝓂 : ModeSystem 𝑖) where
                           ; _◈_ = {!!}
                           }
 
-  isCategory:byModeSystem : isCategory (Mode 𝓂)
-  isCategory:byModeSystem = record { Hom = ModeHom 𝓂 }
+  instance
+    isCategory:byModeSystem : isCategory (Mode 𝓂)
+    isCategory:byModeSystem = record { Hom = ModeHom 𝓂 }
 
-  private instance
-    _ = isCategory:byModeSystem
+  -- private instance
+  --   _ = isCategory:byModeSystem
 
 
 
-  is2Category:byModeSystem : is2Category (Mode 𝓂 since it)
-  is2Category:byModeSystem = record
-    { 2Hom = ModeTrans* 𝓂 all
-    ; 2HomData = it
-    ; isFunctor:Comp = {!!}
-    ; isFunctor:Id = {!!}
-    ; 2celliso = λ x -> ⟨ x ⟩
-    }
+  instance
+    is2Category:byModeSystem : is2Category (Mode 𝓂 since it)
+    is2Category:byModeSystem = record
+      { 2Hom = ModeTrans* 𝓂 all
+      ; 2HomData = it
+      ; isFunctor:Comp = {!!}
+      ; isFunctor:Id = {!!}
+      ; 2celliso = λ x -> ⟨ x ⟩
+      }
+
+  -- ModeSystemAs2Category : 2Category _
+  -- ModeSystemAs2Category = Mode 𝓂 since it
 
 

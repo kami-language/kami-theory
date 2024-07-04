@@ -63,9 +63,9 @@ module SendNarrow-ModeSystem (P : Preorder 𝑖) {{_ : hasDecidableEquality ⟨ 
   commute-intersecting-SN (situation1 (`[]` ⨾ vεₗ') (`＠` U ⨾ id) vεₗvξ₁' δ≠id () iξ)
 
 
-  commute-intersecting-SN (situation2 id (`＠` U ⨾ .id) .(`[]` ⨾ id) (send .U) (narrow x)) = _ , id , incl (id ⌟[ _ ⇒ _ ∋ (send _) ]⌞ id [ refl , refl ])
-  commute-intersecting-SN (situation2 (`＠` U₁ ⨾ `[]` ⨾ id) (`＠` U ⨾ .id) iεₗiξ₀' () (narrow x))
-  commute-intersecting-SN (situation2 (`＠` U₁ ⨾ `[]` ⨾ x₁ ⨾ vεₗ') (`＠` U ⨾ .id) iεₗiξ₀' () (narrow x))
+  -- commute-intersecting-SN (situation2 id (`＠` U ⨾ .id) .(`[]` ⨾ id) (send .U) (narrow x)) = _ , id , incl (id ⌟[ _ ⇒ _ ∋ (send _) ]⌞ id [ refl , refl ])
+  -- commute-intersecting-SN (situation2 (`＠` U₁ ⨾ `[]` ⨾ id) (`＠` U ⨾ .id) iεₗiξ₀' () (narrow x))
+  -- commute-intersecting-SN (situation2 (`＠` U₁ ⨾ `[]` ⨾ x₁ ⨾ vεₗ') (`＠` U ⨾ .id) iεₗiξ₀' () (narrow x))
 
 
   -- commute-intersecting-SN (situation3 .(`＠` _ ⨾ id) id id (recv U) (narrow x)) = _ , incl (id ⌟[ _ ⇒ _ ∋ (narrow x) ]⌞ _ [ refl , refl ]) , incl ((`＠` _ ⨾ id) ⌟[ _ ⇒ _ ∋ (recv _) ]⌞ id [ refl , refl ])
@@ -75,8 +75,8 @@ module SendNarrow-ModeSystem (P : Preorder 𝑖) {{_ : hasDecidableEquality ⟨ 
   commute-intersecting-SN (situation3 (x₂ ⨾ x ⨾ iεₗ') (.(`＠` U) ⨾ .`[]` ⨾ .id) vεₗvξ₁' (send U) ())
 
 
-  commute-intersecting-SN (situation4 id (.(`＠` _) ⨾ .id) id δ≠id () (narrow x))
-  commute-intersecting-SN (situation4 id (`＠` U ⨾ .id) (.`[]` ⨾ .id) δ≠id (send .U) (narrow x)) = _ , id , incl (id ⌟[ _ ⇒ _ ∋ (send _) ]⌞ id [ refl , refl ])
+  -- commute-intersecting-SN (situation4 id (.(`＠` _) ⨾ .id) id δ≠id () (narrow x))
+  -- commute-intersecting-SN (situation4 id (`＠` U ⨾ .id) (.`[]` ⨾ .id) δ≠id (send .U) (narrow x)) = _ , id , incl (id ⌟[ _ ⇒ _ ∋ (send _) ]⌞ id [ refl , refl ])
   commute-intersecting-SN (situation4 (`＠` U₁ ⨾ x ⨾ iεₗ') (.(`＠` U) ⨾ id) .(`[]` ⨾ id) δ≠id (send U) ())
   commute-intersecting-SN (situation4 (x₁ ⨾ id) (x ⨾ x₂ ⨾ δ) id δ≠id vξ ())
   commute-intersecting-SN (situation4 (x₁ ⨾ id) (x ⨾ x₂ ⨾ δ) (x₃ ⨾ iεₗiξ₀') δ≠id vξ ())

@@ -37,8 +37,8 @@ module SendNarrow-2Graph (P : Preorder 𝑖) {{_ : hasDecidableEquality ⟨ P �
   -- mode ◯ corresponds to code related to the whole distributed
   -- system, i.e., in particular synchronization of computations.
   --
-  data Mode-SN : Set where
-    ▲ : Mode-SN -- the local mode
+  data Mode-SN : Set (𝑖 ⌄ 0) where
+    ▲ : ⟨ P ⟩ -> Mode-SN -- the local mode
     ◯ : Mode-SN -- the global mode
 
   ---------------------------------------------
@@ -60,8 +60,8 @@ module SendNarrow-2Graph (P : Preorder 𝑖) {{_ : hasDecidableEquality ⟨ P �
   -- can refer to global computations which it aims to schedule.
   --
   data BaseModeHom-SN : (m n : Mode-SN) -> 𝒰 (𝑖 ⌄ 0) where
-    `＠` : ∀(U : ⟨ P ⟩) -> BaseModeHom-SN ▲ ◯
-    `[]` : BaseModeHom-SN ◯ ▲
+    `＠` : ∀(U : ⟨ P ⟩) -> BaseModeHom-SN (▲ U) ◯
+    `[]` : ∀{U} -> BaseModeHom-SN ◯ (▲ U)
 
   ---------------------------------------------
   -- mode transformations
@@ -87,7 +87,7 @@ module SendNarrow-2Graph (P : Preorder 𝑖) {{_ : hasDecidableEquality ⟨ P �
   -- We also call these transformations "schedule" and "sync" elsewhere.
   --
   data BaseModeTrans-SN : Visibility -> {m n : Mode-SN} (μs ηs : Path BaseModeHom-SN m n) -> 𝒰 𝑖 where
-    narrow : U ≤ V -> BaseModeTrans-SN invis (`＠` U ⨾ id) (`＠` V ⨾ id)
+    -- narrow : U ≤ V -> BaseModeTrans-SN invis (`＠` U ⨾ id) (`＠` V ⨾ id)
     send : ∀ U -> BaseModeTrans-SN vis id (`＠` U ⨾ `[]` ⨾ id)
     -- recv : ∀ U -> BaseModeTrans-SN vis (`[]` ⨾ `＠` U ⨾ id) id
 
@@ -99,9 +99,11 @@ module SendNarrow-2Graph (P : Preorder 𝑖) {{_ : hasDecidableEquality ⟨ P �
   -- have decidable equality.
 
   decide-≡-Mode-SN : (x y : Mode-SN) → isDecidable (x ≡ y)
-  decide-≡-Mode-SN ▲ ▲ = yes refl-≡
-  decide-≡-Mode-SN ▲ ◯ = no (λ ())
-  decide-≡-Mode-SN ◯ ▲ = no (λ ())
+  decide-≡-Mode-SN (▲ U) (▲ V) with U ≟ V
+  ... | no x = no λ {refl -> x refl}
+  ... | yes refl-≡ = yes refl
+  decide-≡-Mode-SN (▲ _) ◯ = no (λ ())
+  decide-≡-Mode-SN ◯ (▲ _) = no (λ ())
   decide-≡-Mode-SN ◯ ◯ = yes refl-≡
 
   instance
@@ -131,8 +133,8 @@ module SendNarrow-2Graph (P : Preorder 𝑖) {{_ : hasDecidableEquality ⟨ P �
   decide-≡-BaseModeTrans-SN : ∀{v a b} -> {μ η : Path BaseModeHom-SN a b} -> (x y : BaseModeTrans-SN v μ η) → isDecidable (x ≡ y)
   decide-≡-BaseModeTrans-SN (send U) (send .U) = yes refl
   -- decide-≡-BaseModeTrans-SN (recv U) (recv .U) = yes refl
-  decide-≡-BaseModeTrans-SN (narrow ϕ) (narrow ψ) with force-≡ ϕ ψ
-  ... | refl = yes refl
+  -- decide-≡-BaseModeTrans-SN (narrow ϕ) (narrow ψ) with force-≡ ϕ ψ
+  -- ... | refl = yes refl
 
   instance
     hasDecidableEquality:BaseModeTrans-SN : ∀{v a b} -> {μ η : Path BaseModeHom-SN a b} -> hasDecidableEquality (BaseModeTrans-SN v μ η)

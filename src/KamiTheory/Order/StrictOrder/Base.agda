@@ -13,7 +13,7 @@ open import Agda.Builtin.Equality using (_≡_)
 open import Agda.Primitive using (Level; lsuc; _⊔_)
 open import Data.Empty.Irrelevant using (⊥-elim)
 open import Relation.Nullary using (¬_)
-open import Data.Sum.Base using (_⊎_; inj₁; inj₂; [_,_]′)
+-- open import Data.Sum.Base using (_+-𝒰_; left; right; [_,_]′)
 open import Data.Product.Base using (_×_)
 open import Agda.Builtin.Sigma using (Σ; _,_; fst)
 open import Data.List.Base using (List; []; _∷_)
@@ -21,7 +21,7 @@ open import Relation.Binary.PropositionalEquality using (subst; cong)
 open import KamiTheory.Basics
 open import Data.Fin.Base using (Fin ; zero ; suc)
 
-open import Agora.Conventions using (isProp)
+open import Agora.Conventions using (isProp ; ⊤-𝒰 ; tt ; _+-𝒰_ ; left ; right ; yes ; no)
 
 
 --------------------------------------------------
@@ -161,52 +161,53 @@ module _ where
 
 module _ {𝑖 𝑗 : Level} {A : Set 𝑖} {B : Set 𝑗} {{_ : hasStrictOrder A}} {{_ : hasStrictOrder B}}  where
 
-  data _<-⊎_ : A ⊎ B → A ⊎ B → Set (𝑖 ⊔ 𝑗) where
-    inj₁ : {a a₁ : A} → a < a₁ → inj₁ a <-⊎ inj₁ a₁
-    inj₂ : {b b₁ : B} → b < b₁ → inj₂ b <-⊎ inj₂ b₁
-    conc : {a : A} → {b : B} → inj₁ a <-⊎ inj₂ b
+  data _<-+-𝒰_ : A +-𝒰 B → A +-𝒰 B → Set (𝑖 ⊔ 𝑗) where
+    left : {a a₁ : A} → a < a₁ → left a <-+-𝒰 left a₁
+    right : {b b₁ : B} → b < b₁ → right b <-+-𝒰 right b₁
+    conc : {a : A} → {b : B} → left a <-+-𝒰 right b
 
   instance
-    isStrictOrder:<-⊎ : isStrictOrder (_<-⊎_)
-    isStrictOrder:<-⊎ = record {
-                                irrefl-< = λ { (inj₁ x) → x ↯ irrefl-< {𝑖} ; (inj₂ x) → x ↯ irrefl-< {𝑗}} ;
-                                trans-< = λ { (inj₁ x) (inj₁ x₁) → inj₁ (trans-< {𝑖} x x₁) ; 
-                                            (inj₂ x) (inj₂ x₁) → inj₂ (trans-< {𝑗} x x₁) ;
-                                                  (inj₁ x) conc → conc ;
-                                                  conc (inj₂ x) → conc} ;
-                                conn-< = λ { (inj₁ x) (inj₁ x₁) → map-Tri< {R = _<_} {S = _<-⊎_} inj₁ (λ { refl → refl})
-                                                                                                (λ {a0 a1 x₂ → inj₁ x₂})
-                                                                                                (λ {a0 a1 (inj₁ x₂) → x₂})
+    isStrictOrder:<-+-𝒰 : isStrictOrder (_<-+-𝒰_)
+    isStrictOrder:<-+-𝒰 = record {
+                                irrefl-< = λ { (left x) → x ↯ irrefl-< {𝑖} ; (right x) → x ↯ irrefl-< {𝑗}} ;
+                                trans-< = λ { (left x) (left x₁) → left (trans-< {𝑖} x x₁) ; 
+                                            (right x) (right x₁) → right (trans-< {𝑗} x x₁) ;
+                                                  (left x) conc → conc ;
+                                                  conc (right x) → conc} ;
+                                conn-< = λ { (left x) (left x₁) → map-Tri< {R = _<_} {S = _<-+-𝒰_} left (λ { refl → refl})
+                                                                                                (λ {a0 a1 x₂ → left x₂})
+                                                                                                (λ {a0 a1 (left x₂) → x₂})
                                                                                                 (conn-< x x₁) ;
-                                            (inj₁ x) (inj₂ y) → tri< conc (λ ()) λ () ;
-                                            (inj₂ y) (inj₁ x) → tri> (λ ()) (λ ()) conc;
-                                            (inj₂ y) (inj₂ y₁) → map-Tri< {R = _<_} {S = _<-⊎_} inj₂ (λ { refl → refl})
-                                                                                                (λ {a0 a1 y₂ → inj₂ y₂})
-                                                                                                (λ {a0 a1 (inj₂ y₂) → y₂})
+                                            (left x) (right y) → tri< conc (λ ()) λ () ;
+                                            (right y) (left x) → tri> (λ ()) (λ ()) conc;
+                                            (right y) (right y₁) → map-Tri< {R = _<_} {S = _<-+-𝒰_} right (λ { refl → refl})
+                                                                                                (λ {a0 a1 y₂ → right y₂})
+                                                                                                (λ {a0 a1 (right y₂) → y₂})
                                                                                                 (conn-< y y₁)  } ;
                                 isProp:< = {!!}
                                                                                                 }
 
   instance
-    hasStrictOrder:⊎ : hasStrictOrder (A ⊎ B)
-    hasStrictOrder:⊎ = record { _<_ = _<-⊎_ }
+    hasStrictOrder:+-𝒰 : hasStrictOrder (A +-𝒰 B)
+    hasStrictOrder:+-𝒰 = record { _<_ = _<-+-𝒰_ }
 
 
 -- The unit type has a strict order
 
-data _<-⊤_ : (a b : ⊤) -> Set where
+module _ {𝑖} where
+  data _<-⊤_ : (a b : ⊤-𝒰 {𝑖}) -> Set 𝑖 where
 
-instance
-  isStrictOrder:<-⊤ : isStrictOrder _<-⊤_
-  isStrictOrder:<-⊤ = record {
-                                irrefl-< = λ ();
-                                trans-< = λ {() ()} ;
-                                conn-< = λ { tt tt → tri≡ (λ ()) refl (λ ()) } ;
-                                isProp:< = {!!}
-                                }
+  instance
+    isStrictOrder:<-⊤ : isStrictOrder _<-⊤_
+    isStrictOrder:<-⊤ = record {
+                                  irrefl-< = λ ();
+                                  trans-< = λ {() ()} ;
+                                  conn-< = λ { tt tt → tri≡ (λ ()) refl (λ ()) } ;
+                                  isProp:< = {!!}
+                                  }
 
-instance
-  hasStrictOrder:Unit : hasStrictOrder ⊤
-  hasStrictOrder:Unit = record { _<_ = _<-⊤_ }
+  instance
+    hasStrictOrder:Unit : hasStrictOrder (⊤-𝒰 {𝑖})
+    hasStrictOrder:Unit = record { _<_ = _<-⊤_ }
 
 
