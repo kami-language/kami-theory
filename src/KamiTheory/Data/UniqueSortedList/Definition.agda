@@ -255,6 +255,7 @@ open import Agora.Conventions using (
   #structureOn; isSetoid; isSetoid:byId; _isUniverseOf[_]_;  _isUniverseOf[_]_:byBase;
   𝑖 ; 𝑗 ; _isUniverseOf[_]_:𝒰 ; _isUniverseOf[_]_:Exp ; isUniverseOf::&
   ; _+-𝒰_ ; left ; right
+  ; isEquivRel ; isEquivRel:≡
   )
 open import Agora.Order.Preorder using
   (isPreorderData; isPreorder;
@@ -284,10 +285,17 @@ macro
 
 module _ {A : StrictOrder 𝑖} where
 
+  _∼-𝒫ᶠⁱⁿ_ : 𝒫ᶠⁱⁿ A -> 𝒫ᶠⁱⁿ A -> Set _
+  _∼-𝒫ᶠⁱⁿ_ xs ys = xs ≡ ys
+
+  instance
+    isEquivRel:∼-𝒫ᶠⁱⁿ : isEquivRel _∼-𝒫ᶠⁱⁿ_
+    isEquivRel:∼-𝒫ᶠⁱⁿ = isEquivRel:≡
+
   -- `𝒫ᶠⁱⁿ A` forms a setoid with strict equality
   instance
     isSetoid:𝒫ᶠⁱⁿ : isSetoid (𝒫ᶠⁱⁿ A)
-    isSetoid:𝒫ᶠⁱⁿ = isSetoid:byId
+    isSetoid:𝒫ᶠⁱⁿ = record { _∼_ = _∼-𝒫ᶠⁱⁿ_ }
 
   -- `𝒫ᶠⁱⁿ A` forms a preorder with _⊆_ as relation
   record _≤-𝒫ᶠⁱⁿ_ (U V : 𝒫ᶠⁱⁿ A) : Set 𝑖 where

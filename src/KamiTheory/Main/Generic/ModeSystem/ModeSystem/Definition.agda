@@ -87,6 +87,7 @@ data ModeTrans* (M : ModeSystem 𝑖) {a b : Mode M} : (r : Range) -> (μ η : M
   [_] : ∀{μ η} -> ModeTrans M vis μ η -> ModeTrans* M vis μ η
   [_∣_] : ∀{μ η ω} -> ModeTrans M invis μ η -> ModeTrans M vis η ω -> ModeTrans* M all μ ω
 
+pattern idT = [ incl [] ∣ incl [] ]
 
 -- private variable
 --   M : ModeSystem 𝑖
