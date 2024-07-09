@@ -21,7 +21,7 @@ open import Relation.Binary.PropositionalEquality using (subst; cong)
 open import KamiTheory.Order.StrictOrder.Base
 open import KamiTheory.Basics
 
-open import Agora.Conventions using (isDecidable ; yes ; no ; isProp ; force-≡ ; ⊤-𝒰 ; tt ; ∑_)
+open import Agora.Conventions using (isDecidable ; yes ; no ; isProp ; force-≡ ; ⊤-𝒰 ; tt ; ∑_ ; map-List ; of_)
 open import Agora.Conventions.Prelude.Classes.DecidableEquality
 open import KamiTheory.Data.List.Definition
 open import KamiTheory.Basics
@@ -261,7 +261,7 @@ open import Agora.Order.Preorder using
   (isPreorderData; isPreorder;
   _≤_
   )
-open import Agora.Order.Lattice using (hasFiniteJoins ; ⊥)
+open import Agora.Order.Lattice using (hasFiniteJoins ; ⊥ ; initial-⊥)
 
 
 instance
@@ -400,6 +400,41 @@ open isStrictOrderHom public
 module _ (A : StrictOrder 𝑖) (B : StrictOrder 𝑗) where
 
   StrictOrderHom = (⟨ A ⟩ → ⟨ B ⟩) :& isStrictOrderHom {A = A} {B}
+
+
+
+module _ {A : StrictOrder 𝑖} {B : StrictOrder 𝑗} where
+  map-isUniqueSorted : ∀{xs} -> (f : StrictOrderHom A B)
+                       -> isUniqueSorted xs
+                       -> isUniqueSorted (map-List ⟨ f ⟩ xs)
+  map-isUniqueSorted f [] = []
+  map-isUniqueSorted f [-] = [-]
+  map-isUniqueSorted f (x ∷ us) = homPreserves (of f) x ∷ map-isUniqueSorted f us
+
+
+
+  module _ (f : StrictOrderHom A B) where
+    mapᵘ-𝒫ᶠⁱⁿ : 𝒫ᶠⁱⁿ A -> 𝒫ᶠⁱⁿ B
+    mapᵘ-𝒫ᶠⁱⁿ (U since Up) = map-List ⟨ f ⟩ U since map-isUniqueSorted f Up
+
+    mapᵘ-𝒫ᶠⁱⁿ-∈ : ∀{x} {U : 𝒫ᶠⁱⁿ A} -> x ∈ ⟨ U ⟩ -> ⟨ f ⟩ x ∈ ⟨ mapᵘ-𝒫ᶠⁱⁿ U ⟩
+    mapᵘ-𝒫ᶠⁱⁿ-∈ here = here
+    mapᵘ-𝒫ᶠⁱⁿ-∈ {U = (_ ∷ U@(_ ∷ _)) since (x ∷ Up)} (there p) = there (mapᵘ-𝒫ᶠⁱⁿ-∈ {U = U since Up} p)
+
+    map-List-∈ : ∀{x} {U : List ⟨ A ⟩} -> x ∈ U -> ⟨ f ⟩ x ∈ map-List ⟨ f ⟩ U
+    map-List-∈ = {!!}
+
+    map-List-⊆ : {U V : List ⟨ A ⟩} -> U ⊆ V -> map-List ⟨ f ⟩ U ⊆ map-List ⟨ f ⟩ V
+    map-List-⊆ {U = []} p = λ x ()
+    map-List-⊆ {U = x ∷ U} p = λ
+      { .(⟨ f ⟩ x) here → map-List-∈ (p _ here)
+      ; x₁ (there y) → map-List-⊆ {U = U} (λ _ q -> p _ (there q)) _ y
+      }
+
+
+    mapᵘ-𝒫ᶠⁱⁿ-≤ : {U V : 𝒫ᶠⁱⁿ A} -> U ≤ V -> mapᵘ-𝒫ᶠⁱⁿ U ≤  mapᵘ-𝒫ᶠⁱⁿ V
+    mapᵘ-𝒫ᶠⁱⁿ-≤ p = incl (map-List-⊆ ⟨ p ⟩)
+
 
 
 -- TODO Naming

@@ -6,7 +6,9 @@ module KamiTheory.Data.UniqueSortedList.NonEmpty where
 open import Agora.Order.Preorder
 open import Agora.Order.Lattice
 open import Agora.Conventions
+open import KamiTheory.Data.List.Definition
 open import KamiTheory.Data.UniqueSortedList.Definition
+open import KamiTheory.Order.StrictOrder.Base
 
 -- nonempty finite power sets over A
 module _ (A : StrictOrder 𝑖) where
@@ -18,6 +20,7 @@ module _ (A : StrictOrder 𝑖) where
 module _ {A : StrictOrder 𝑖} where
   ⦗_⦘₊ : ⟨ A ⟩ -> 𝒫₊ᶠⁱⁿ A
   ⦗_⦘₊ a = ((a ∷ []) since [-]) , λ ()
+
 
 module _ {A : StrictOrder 𝑖} where
 
@@ -78,3 +81,12 @@ module _ {A : StrictOrder 𝑖} where
     isDecidablePreorder:≤-𝒫₊ᶠⁱⁿ : isDecidablePreorder (𝒫₊ᶠⁱⁿ A)
     isDecidablePreorder:≤-𝒫₊ᶠⁱⁿ =
       record { decide-≤ = decide-≤-𝒫₊ᶠⁱⁿ }
+
+
+module _ {A : StrictOrder 𝑖} where
+  singleton-≤-≡ : ∀{qs : 𝒫₊ᶠⁱⁿ A} -> ∀{p} -> qs ≤-𝒫₊ᶠⁱⁿ ⦗ p ⦘₊ -> qs ≡ (⦗_⦘₊ p )
+  singleton-≤-≡ {qs = (([] since []) , rs)} pp = ⊥-elim (rs refl-≡)
+  singleton-≤-≡ {qs = ((p ∷ [] since [-]) , rs)} pp with ⟨ ⟨ pp ⟩ ⟩ _ here
+  ... | here = refl-≡
+  singleton-≤-≡ {qs = ((p ∷ q ∷ ps) since (x ∷ Ps)) , rs} pp with ⟨ ⟨ pp ⟩ ⟩ _ here | ⟨ ⟨ pp ⟩ ⟩ _ (there here)
+  ... | here | here = ⊥-elim (irrefl-< x)
