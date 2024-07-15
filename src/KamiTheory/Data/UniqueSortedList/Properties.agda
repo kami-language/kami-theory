@@ -14,37 +14,20 @@ open import KamiTheory.Order.StrictOrder.Base
 open import KamiTheory.Basics
 
 
-record isFiniteStrictOrder (A : StrictOrder 𝑖): 𝒰 𝑖 where
-  field All : 𝒫ᶠⁱⁿ A
-  field intoAll : ∀{U : 𝒫ᶠⁱⁿ A} -> U ≤ All
-
-open isFiniteStrictOrder {{...}} public
-
-module _ {A : StrictOrder 𝑖} {{_ : isFiniteStrictOrder A}} where
-  ⊤-𝒫ᶠⁱⁿ : 𝒫ᶠⁱⁿ A
-  ⊤-𝒫ᶠⁱⁿ = All
-
-  terminal-⊤-𝒫ᶠⁱⁿ : ∀{U} -> U ≤ ⊤-𝒫ᶠⁱⁿ
-  terminal-⊤-𝒫ᶠⁱⁿ = intoAll
-
-  instance
-    hasFiniteMeets:𝒫ᶠⁱⁿ : hasFiniteMeets (𝒫ᶠⁱⁿ A)
-    hasFiniteMeets:𝒫ᶠⁱⁿ = record
-      { ⊤ = {!!}
-      ; terminal-⊤ = {!!}
-      ; _∧_ = {!!}
-      ; π₀-∧ = {!!}
-      ; π₁-∧ = {!!}
-      ; ⟨_,_⟩-∧ = {!!}
-      }
+module _ {𝑖} {A : Set 𝑖} {{AP : hasStrictOrder A}} where
+  hasDecidableEquality:byStrictOrder : hasDecidableEquality A
+  hasDecidableEquality:byStrictOrder = record { _≟_ = f }
+    where
+      f : (a b : A) -> _
+      f a b with conn-< a b
+      ... | tri< a<b a≢b a≯b = no λ {refl -> irrefl-< a<b}
+      ... | tri≡ a≮b a≡b a≯b = yes a≡b
+      ... | tri> a≮b a≢b a>b = no λ {refl -> irrefl-< a>b}
 
 
-instance
-  isFiniteStrictOrder:𝔽 : ∀{n} -> isFiniteStrictOrder (𝔽 n)
-  isFiniteStrictOrder:𝔽 = {!!}
 
 
-module _ {A : 𝒰 𝑖} {{_ : hasStrictOrder A}} where
+module _ {A : 𝒰 𝑖} {{Ap : hasStrictOrder A}} where
 
 
 
@@ -87,6 +70,36 @@ module _ {A : 𝒰 𝑖} {{_ : hasStrictOrder A}} where
   from-⊆ {as = []} {bs = bs} Pas Pbs p = []≼
   from-⊆ {as = x ∷ as} {bs = bs} Pas Pbs p with split-∈ (p _ here)
   ... | bs0 , bs1 , refl-≡ = ι₁-⋆-≼ {bs = bs0} (take (from-⊆ (drop-isUniqueSorted Pas) (drop-isUniqueSorted (drop*-isUniqueSorted {bs = bs0} Pbs)) (split-⊆ Pas Pbs p)))
+
+  into-⊆ : ∀ {as bs : List A} -> as ≼ bs -> as ⊆ bs
+  into-⊆ done = refl-⊆
+  into-⊆ (skip p) = skip-⊆ (into-⊆ p)
+  into-⊆ (take p) = take-⊆ (into-⊆ p)
+
+
+
+
+  -----------------------------------------
+  -- deciding equality
+
+  private instance _ = hasDecidableEquality:byStrictOrder {{Ap}}
+
+  decide-≼ : (as bs : List A) -> isUniqueSorted as -> isUniqueSorted bs -> isDecidable (as ≼ bs)
+  decide-≼ as bs Pas Pbs with as ⊆? bs
+  ... | no x = no (λ p -> x (into-⊆ p))
+  ... | yes x = yes (from-⊆ Pas Pbs x)
+
+
+module _ {A : StrictOrder 𝑖} where
+
+  ι₀-∪-≼ : ∀ {as bs : UniqueSortedList A} → ⟨ as ⟩ ≼ (⟨ as ⟩ ∪ ⟨ bs ⟩)
+  ι₀-∪-≼ {as = as} {bs} = from-⊆ (of as) (∪-sorted (of as) (of bs)) (ι₀-∪ )
+
+  ι₁-∪-≼ : ∀ {as bs : UniqueSortedList A} → ⟨ bs ⟩ ≼ (⟨ as ⟩ ∪ ⟨ bs ⟩)
+  ι₁-∪-≼ {as = as} {bs} = from-⊆ (of bs) (∪-sorted (of as) (of bs)) (ι₁-∪ {as = ⟨ as ⟩})
+
+  [_,_]-∪-≼ : ∀ {as bs cs : UniqueSortedList A} → ⟨ as ⟩ ≼ ⟨ cs ⟩ -> ⟨ bs ⟩ ≼ ⟨ cs ⟩ -> (⟨ as ⟩ ∪ ⟨ bs ⟩) ≼ ⟨ cs ⟩
+  [_,_]-∪-≼ {as} {bs} {cs} p q = from-⊆ (∪-sorted (of as) (of bs)) (of cs) [ into-⊆ p , into-⊆ q ]-∪
 
 
 

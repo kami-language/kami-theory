@@ -30,6 +30,16 @@ module _ {A : Set 𝑖} where
   _⊆_ : List A → List A → Set 𝑖
   as ⊆ bs = ∀ x → x ∈ as → x ∈ bs
 
+  refl-⊆ : ∀{as : List A} -> as ⊆ as
+  refl-⊆ a p = p
+
+  skip-⊆ : ∀{b} {as bs : List A} -> as ⊆ bs -> as ⊆ (b ∷ bs)
+  skip-⊆ p a q = there (p a q)
+
+  take-⊆ : ∀{b} {as bs : List A} -> as ⊆ bs -> (b ∷ as) ⊆ (b ∷ bs)
+  take-⊆ p a here = here
+  take-⊆ p a (there q) = there (p a q)
+
   ⊈[] : ∀ {as : List A} → ¬ (as ≡ []) → ¬ (as ⊆ [])
   ⊈[] {[]} as≢[] x = refl ↯ as≢[]
   ⊈[] {x₁ ∷ as} as≢[] x = x x₁ here ↯ λ ()
@@ -66,13 +76,22 @@ module _ {A : Set 𝑖} where
     skip : ∀ {a as bs} → as ≼ bs → as ≼ (a ∷ bs)
     take : ∀ {a as bs} → as ≼ bs → (a ∷ as) ≼ (a ∷ bs)
 
+  ⊥-List : List A
+  ⊥-List = []
+
   []≼ : ∀ {bs} → [] ≼ bs
   []≼ {[]} = done
   []≼ {x ∷ bs} = skip ([]≼)
+
+  initial-⊥-List-≼ : ∀{as} -> ⊥-List ≼ as
+  initial-⊥-List-≼ = []≼
     
   id-≼ : ∀ {as : List A} → as ≼ as
   id-≼ {[]} = done
   id-≼ {x ∷ as} = take id-≼
+
+  refl-≼ : ∀ {as : List A} → as ≼ as
+  refl-≼ = id-≼
   
   ∷≼ : ∀ {a : A} {as bs : List A} → (a ∷ as) ≼ bs → as ≼ bs
   ∷≼ (take p) = skip p
