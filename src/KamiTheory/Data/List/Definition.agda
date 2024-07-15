@@ -99,6 +99,17 @@ module _ {A : Set 𝑖} where
   ≼∷ (skip a) = skip (skip a)
   ≼∷ (take a) = (skip (take a))
 
+  -- ι₀-⋆-≼ : as ≼ bs -> as ≼ (bs <> cs)
+
+  ι₁-⋆-∈ : ∀{a} -> {bs cs : List A} -> a ∈ cs -> a ∈ (bs <> cs)
+  ι₁-⋆-∈ {bs = []} x = x
+  ι₁-⋆-∈ {bs = x ∷ bs} p = there (ι₁-⋆-∈ p)
+
+  ι₁-⋆-≼ : ∀{as bs cs : List A} -> as ≼ cs -> as ≼ (bs <> cs)
+  ι₁-⋆-≼ {bs = []} p = p
+  ι₁-⋆-≼ {bs = x ∷ bs} p = skip (ι₁-⋆-≼ p)
+
+
 {-
 -}
 

@@ -6,20 +6,26 @@ module KamiTheory.Data.UniqueSortedList.NonEmpty where
 open import Agora.Order.Preorder
 open import Agora.Order.Lattice
 open import Agora.Conventions
+open import KamiTheory.Basics
 open import KamiTheory.Data.List.Definition
 open import KamiTheory.Data.UniqueSortedList.Definition
 open import KamiTheory.Order.StrictOrder.Base
+open import KamiTheory.Order.StrictOrder.Instances.UniqueSortedList
+
+module _ {A : 𝒰 𝑖} where
+  data isNonEmptyList : (as : List A) -> 𝒰 𝑖 where
+    done : ∀{a as} -> isNonEmptyList (a ∷ as)
 
 -- nonempty finite power sets over A
 module _ (A : StrictOrder 𝑖) where
   NonEmptyUniqueSortedList : Set 𝑖
-  NonEmptyUniqueSortedList = ∑ λ (x : 𝒫ᶠⁱⁿ A) -> ¬ x ≡ ⊥
+  NonEmptyUniqueSortedList = ∑ λ (x : 𝒫ᶠⁱⁿ A) -> isNonEmptyList ⟨ x ⟩
 
   macro 𝒫₊ᶠⁱⁿ = #structureOn NonEmptyUniqueSortedList
 
 module _ {A : StrictOrder 𝑖} where
   ⦗_⦘₊ : ⟨ A ⟩ -> 𝒫₊ᶠⁱⁿ A
-  ⦗_⦘₊ a = ((a ∷ []) since [-]) , λ ()
+  ⦗_⦘₊ a = ((a ∷ []) since [-]) , done
 
 
 module _ {A : StrictOrder 𝑖} where
@@ -82,11 +88,20 @@ module _ {A : StrictOrder 𝑖} where
     isDecidablePreorder:≤-𝒫₊ᶠⁱⁿ =
       record { decide-≤ = decide-≤-𝒫₊ᶠⁱⁿ }
 
+  decide-≡-𝒫₊ᶠⁱⁿ : (u v : 𝒫₊ᶠⁱⁿ A) -> (¬ (u ≡ v)) +-𝒰 (u ≡ v)
+  decide-≡-𝒫₊ᶠⁱⁿ (u , done) (v , done) with u ≟ v
+  ... | no x = no λ p -> x (cong-≡ fst p)
+  ... | yes refl-≡ = yes refl-≡
+
+  instance
+    hasDecidableEquality:𝒫₊ᶠⁱⁿ : hasDecidableEquality (𝒫₊ᶠⁱⁿ A)
+    hasDecidableEquality:𝒫₊ᶠⁱⁿ = record { _≟_ = decide-≡-𝒫₊ᶠⁱⁿ }
+
 
 module _ {A : StrictOrder 𝑖} where
   singleton-≤-≡ : ∀{qs : 𝒫₊ᶠⁱⁿ A} -> ∀{p} -> qs ≤-𝒫₊ᶠⁱⁿ ⦗ p ⦘₊ -> qs ≡ (⦗_⦘₊ p )
-  singleton-≤-≡ {qs = (([] since []) , rs)} pp = ⊥-elim (rs refl-≡)
-  singleton-≤-≡ {qs = ((p ∷ [] since [-]) , rs)} pp with ⟨ ⟨ pp ⟩ ⟩ _ here
+  singleton-≤-≡ {qs = (([] since []) , ())} pp
+  singleton-≤-≡ {qs = ((p ∷ [] since [-]) , done)} pp with ⟨ ⟨ pp ⟩ ⟩ _ here
   ... | here = refl-≡
   singleton-≤-≡ {qs = ((p ∷ q ∷ ps) since (x ∷ Ps)) , rs} pp with ⟨ ⟨ pp ⟩ ⟩ _ here | ⟨ ⟨ pp ⟩ ⟩ _ (there here)
   ... | here | here = ⊥-elim (irrefl-< x)

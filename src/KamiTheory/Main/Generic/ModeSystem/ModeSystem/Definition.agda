@@ -149,3 +149,12 @@ module _ {M : ModeSystem 𝑖} where
     hasDecidableEquality:ModeTrans* : {a b : Mode M} -> {μ η : ModeHom M a b} -> hasDecidableEquality (ModeTrans* M r μ η)
     hasDecidableEquality:ModeTrans* = record { _≟_ = decide-≡-ModeTrans* }
 
+  -- _◆ₘ_ : ∀{r} -> {a b c : Mode M} -> ∀{μ₀ η₀ : ModeHom M a b} {μ₁ η₁ : ModeHom M b c}
+  --     -> ModeTrans M r μ₀ η₀ -> ModeTrans M r μ₁ η₁ -> ModeTrans M r (μ₀ ◆ μ₁) (η₀ ◆ η₁)
+  -- _◆ₘ_ = {!!}
+
+  _◆ₘ*_ : ∀{r} ->  {a b c : Mode M} -> ∀{μ₀ η₀ : ModeHom M a b} {μ₁ η₁ : ModeHom M b c}
+      -> ModeTrans* M r μ₀ η₀ -> ModeTrans* M r μ₁ η₁ -> ModeTrans* M r (μ₀ ◆ μ₁) (η₀ ◆ η₁)
+  _◆ₘ*_ [ incl f ] [ incl g ]  = [ incl (f ⧓ g)]
+  _◆ₘ*_ [ incl f0 ∣ incl f1 ] [ incl g0 ∣ incl g1 ]  = [ incl (f0 ⧓ g0) ∣ incl (f1 ⧓ g1)]
+

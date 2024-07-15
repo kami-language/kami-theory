@@ -31,20 +31,47 @@ module ModeSystemAs2Category (𝓂 : ModeSystem 𝑖) where
   open 2CellDefinition.2CellDefinition (graph 𝓂)
   open 2CellDecidability.2CellDecidability (graph 𝓂)
 
+
+  -- unit-l-◆₂ₘ-2Cell : ∀{r} -> ∀{a b : Mode 𝓂} -> {μ η : ModeHom 𝓂 a b} -> {f : ModeTrans 𝓂 r μ η} 
+  --                  -> incl [] ◆₂ₘ f ≡ f
+  -- unit-l-◆₂ₘ-2Cell = {!!}
+
+  postulate
+    unit-l-◆₂ₘ*-2Cell : ∀{a b : Mode 𝓂} -> {μ η : ModeHom 𝓂 a b} -> {f : ModeTrans* 𝓂 all μ η} 
+                    -> [ incl [] ∣ incl [] ] ◆*₂ₘ f ≡ f
+
+    unit-r-◆₂ₘ*-2Cell : ∀{a b : Mode 𝓂} -> {μ η : ModeHom 𝓂 a b} -> {f : ModeTrans* 𝓂 all μ η} 
+                    -> f ◆*₂ₘ [ incl [] ∣ incl [] ] ≡ f
+
+
+    assoc-l-◆₂ₘ*-2Cell : ∀{a b : Mode 𝓂} -> {μ η ω ϕ : ModeHom 𝓂 a b}
+                       -> {f : ModeTrans* 𝓂 all μ η} 
+                       -> {g : ModeTrans* 𝓂 all η ω} 
+                       -> {h : ModeTrans* 𝓂 all ω ϕ} 
+                    -> (f ◆*₂ₘ g) ◆*₂ₘ h ≡ f ◆*₂ₘ (g ◆*₂ₘ h)
+    -- unit-l-◆₂ₘ*-2Cell {f = [ _ ∣ _ ]}= {!!}
+
+  -- {-# REWRITE unit-r-◆₂ₘ*-2Cell #-}
+  -- {-# REWRITE unit-l-◆₂ₘ*-2Cell #-}
+  -- {-# REWRITE assoc-l-◆₂ₘ*-2Cell #-}
+
   instance
     isCategoryData:ModeTrans* : isCategoryData (ModeHom 𝓂 a b) (ModeTrans* 𝓂 all)
     isCategoryData:ModeTrans* = record
                                 { isSetoid:Hom = isSetoid:byId
                                 ; id = [ incl [] ∣ incl [] ]
-                                ; _◆_ = {!!}
-                                ; unit-l-◆ = {!!}
-                                ; unit-r-◆ = {!!}
-                                ; unit-2-◆ = {!!}
-                                ; assoc-l-◆ = {!!}
-                                ; assoc-r-◆ = {!!}
-                                ; _◈_ = {!!}
+                                ; _◆_ = _◆*₂ₘ_
+                                ; unit-l-◆ = incl unit-l-◆₂ₘ*-2Cell -- λ {{[ incl f0 ∣ incl f1 ]} -> ?}
+                                ; unit-r-◆ = incl unit-r-◆₂ₘ*-2Cell
+                                ; unit-2-◆ = incl (unit-r-◆₂ₘ*-2Cell {f = [ incl [] ∣ incl [] ]})
+                                ; assoc-l-◆ = incl assoc-l-◆₂ₘ*-2Cell
+                                ; assoc-r-◆ = incl (sym-≡ assoc-l-◆₂ₘ*-2Cell)
+                                ; _◈_ = λ { (incl refl-≡) (incl refl-≡) → incl refl-≡}
                                 }
 
+  private instance
+    isCategory:ModeHom : isCategory (ModeHom 𝓂 a b)
+    isCategory:ModeHom = record { Hom = ModeTrans* 𝓂 all }
 
   instance
     isCategoryData:Path : isCategoryData (Mode 𝓂) (ModeHom 𝓂)
@@ -52,12 +79,16 @@ module ModeSystemAs2Category (𝓂 : ModeSystem 𝑖) where
                           { isSetoid:Hom = isSetoid:byCategoryData
                           ; id = id'
                           ; _◆_ = _◆'_
-                          ; unit-l-◆ = {!!}
-                          ; unit-r-◆ = {!!}
-                          ; unit-2-◆ = {!!}
-                          ; assoc-l-◆ = {!!}
-                          ; assoc-r-◆ = {!!}
-                          ; _◈_ = {!!}
+                          ; unit-l-◆ = incl refl-≅
+                          ; unit-r-◆ = incl refl-≅
+                          ; unit-2-◆ = incl refl-≅
+                          ; assoc-l-◆ = incl refl-≅
+                          ; assoc-r-◆ = incl refl-≅
+                          ; _◈_ = λ p q -> incl ((⟨ ⟨ p ⟩ ⟩ ◆ₘ* ⟨ ⟨ q ⟩ ⟩  ) since record
+                                { inverse-◆ = (⟨ ⟨ p ⟩ ⟩⁻¹ ◆ₘ* ⟨ ⟨ q ⟩ ⟩⁻¹)
+                                ; inv-r-◆ = {!!}
+                                ; inv-l-◆ = {!!}
+                                })
                           }
 
   instance
@@ -81,5 +112,4 @@ module ModeSystemAs2Category (𝓂 : ModeSystem 𝑖) where
 
   -- ModeSystemAs2Category : 2Category _
   -- ModeSystemAs2Category = Mode 𝓂 since it
-
 
