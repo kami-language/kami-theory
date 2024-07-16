@@ -12,6 +12,7 @@ open import KamiTheory.Basics
 open import KamiTheory.Order.StrictOrder.Base
 open import KamiTheory.Order.StrictOrder.Instances.List
 open import KamiTheory.Data.UniqueSortedList.Definition
+open import KamiTheory.Data.UniqueSortedList.Instance.Preorder
 open import KamiTheory.Data.List.Definition
 
 open import Agora.Order.Preorder
@@ -31,8 +32,8 @@ open Structure
 
 
 myf : ℕ -> ℕ
-myf zero = ?
-myf (suc a) = ?
+myf zero = {!!}
+myf (suc a) = {!!}
 
 
 

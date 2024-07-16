@@ -1,4 +1,6 @@
 
+{-# OPTIONS --allow-unsolved-metas #-}
+
 module KamiTheory.Data.UniqueSortedList.Instance.Preorder where
 
 open import Agora.Conventions
@@ -294,6 +296,14 @@ module _ {𝑖} {A : Set 𝑖} {{AP : hasStrictOrder A}} where
   ≰-singleton {p} {.p} p≢q (incl (take x)) = ⊥-elim (p≢q refl-≡)
   -- with ⟨ P ⟩ p here
   -- ... | here = p≢q refl
+
+  conv-∈,≼ : ∀{a} {as : List A} -> a ∈ as -> (a ∷ []) ≼ as
+  conv-∈,≼ here = take initial-⊥-List-≼
+  conv-∈,≼ (there p) = skip (conv-∈,≼ p)
+
+  conv-≼,∈ : ∀{a} {as : List A} -> (a ∷ []) ≼ as -> a ∈ as
+  conv-≼,∈ (skip p) = there (conv-≼,∈ p)
+  conv-≼,∈ (take p) = here
 
 
 open Agora.Conventions hiding (¬_)

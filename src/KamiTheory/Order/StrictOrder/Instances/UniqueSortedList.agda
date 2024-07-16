@@ -12,6 +12,8 @@ open import KamiTheory.Basics
 open import KamiTheory.Order.StrictOrder.Base
 open import KamiTheory.Order.StrictOrder.Instances.List
 open import KamiTheory.Data.UniqueSortedList.Definition
+open import KamiTheory.Data.UniqueSortedList.Properties
+open import KamiTheory.Data.UniqueSortedList.Instance.Preorder
 
 -- we show that 𝒫ᶠⁱⁿ has a strict order (inherited from list)
 

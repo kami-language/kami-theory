@@ -141,6 +141,7 @@ module Examples where
 
   open import KamiTheory.Data.Open.Definition
   open import KamiTheory.Data.UniqueSortedList.Definition
+  open import KamiTheory.Data.UniqueSortedList.Instance.Preorder
   open import KamiTheory.Order.StrictOrder.Base
   open import KamiTheory.Order.StrictOrder.Instances.UniqueSortedList
 

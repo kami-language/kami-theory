@@ -9,6 +9,8 @@ open import Agora.Conventions
 open import KamiTheory.Basics
 open import KamiTheory.Data.List.Definition
 open import KamiTheory.Data.UniqueSortedList.Definition
+open import KamiTheory.Data.UniqueSortedList.Properties
+open import KamiTheory.Data.UniqueSortedList.Instance.Preorder
 open import KamiTheory.Order.StrictOrder.Base
 open import KamiTheory.Order.StrictOrder.Instances.UniqueSortedList
 
@@ -100,8 +102,14 @@ module _ {A : StrictOrder 𝑖} where
 
 module _ {A : StrictOrder 𝑖} where
   singleton-≤-≡ : ∀{qs : 𝒫₊ᶠⁱⁿ A} -> ∀{p} -> qs ≤-𝒫₊ᶠⁱⁿ ⦗ p ⦘₊ -> qs ≡ (⦗_⦘₊ p )
-  singleton-≤-≡ {qs = (([] since []) , ())} pp
-  singleton-≤-≡ {qs = ((p ∷ [] since [-]) , done)} pp with ⟨ ⟨ pp ⟩ ⟩ _ here
-  ... | here = refl-≡
-  singleton-≤-≡ {qs = ((p ∷ q ∷ ps) since (x ∷ Ps)) , rs} pp with ⟨ ⟨ pp ⟩ ⟩ _ here | ⟨ ⟨ pp ⟩ ⟩ _ (there here)
-  ... | here | here = ⊥-elim (irrefl-< x)
+  singleton-≤-≡ {qs = ′ .[] ′ , ()} (incl (incl (skip done)))
+  singleton-≤-≡ {qs = ((_ ∷ []) since [-]) , done} (incl (incl (take done))) = refl-≡
+
+
+
+
+  -- singleton-≤-≡ {qs = (([] since []) , ())} pp
+  -- singleton-≤-≡ {qs = ((p ∷ [] since [-]) , done)} pp with ⟨ ⟨ pp ⟩ ⟩ _ here
+  -- ... | here = refl-≡
+  -- singleton-≤-≡ {qs = ((p ∷ q ∷ ps) since (x ∷ Ps)) , rs} pp with ⟨ ⟨ pp ⟩ ⟩ _ here | ⟨ ⟨ pp ⟩ ⟩ _ (there here)
+  -- ... | here | here = ⊥-elim (irrefl-< x)
